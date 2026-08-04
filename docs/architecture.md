@@ -159,9 +159,13 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
 - Parameterized queries only (plugin + Drizzle).
 - Zod validation at every trust boundary (form input, use-case arguments).
 - Tauri **capabilities** restrict IPC: the frontend is granted
-  `sql:default` + `sql:allow-execute`; more plugins (dialog/fs) are scoped
-  when introduced.
-- CSP is currently `null` for development; tightened in the Phase 12 polish.
+  `sql:default` + `sql:allow-execute`; dialog/fs are scoped per feature.
+  `fs` scopes include `$APPCONFIG/**` (the live DB lives in a hidden
+  `~/.config` dir that `$HOME/**` globs do not match).
+- **CSP** (set in `tauri.conf.json`) is strict: `default-src 'self'`,
+  `connect-src ipc: http://ipc.localhost`, `style-src 'unsafe-inline' 'self'`
+  (inline width/color styles are used in progress bars/charts),
+  `font-src 'self' data:`, `img-src 'self' data:`, `script-src 'self'`.
 
 ## Arabic / RTL
 
@@ -173,9 +177,23 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
 - Numbers force `numberingSystem: "latn"` in both locales
   (`src/lib/utils/format.ts`).
 
-## TODO
+## Settings, backup & polish (Phases 12–13)
 
-- [ ] Error boundary + friendly error dialogs (Phase 2/12).
-- [ ] Backup/restore closes the DB pool, copies the file, then reloads (Phase 11).
-- [ ] Database export + restore UI (Phase 11).
-- [ ] Tighten CSP (Phase 12).
+- `src/features/settings/`:
+  - `infrastructure/backup-service.ts` — `liveDbPath()`, `liveDbSize()`,
+    `backupDatabase(dest)` via `VACUUM INTO` (consistent snapshot of a live
+    WAL db in one statement).
+  - `application/settings-cases.ts` — `createBackup()` (native save dialog)
+    and `restoreFromBackup()` (open dialog → validate SQLite magic →
+    confirm → close pool → copy over live db → remove stale `-wal`/`-shm` →
+    reopen + sanity check → reload).
+  - `ui/SettingsPage.tsx` — Appearance card (language/theme rows via
+    `src/shared/AppearanceControls.tsx`) + Data card (db path, size,
+    backup/restore buttons).
+- Error boundary active at the root (`src/shared/ErrorBoundary.tsx`) plus a
+  router `errorElement`; the SQL plugin applies embedded migrations on launch.
+- Polish: modal enter animation via `tw-animate-css` (`open:animate-in`) with
+  a global `prefers-reduced-motion` guard; fonts trimmed to used subsets
+  (Inter latin, IBM Plex Sans Arabic arabic); release builds produce
+  `.deb`/`.rpm`/`.AppImage` (AppImage requires `NO_STRIP=1` — linuxdeploy's
+  strip chokes on `.relr.dyn` in modern system libs).

@@ -24,7 +24,6 @@ internet required.
 | i18n      | react-i18next (Arabic RTL + English LTR)                     |
 | Date      | dayjs                                                        |
 | Export    | pdf-lib (PDF), xlsx (Excel)                                  |
-| Toasts    | Sonner                                                       |
 
 ## Development
 
