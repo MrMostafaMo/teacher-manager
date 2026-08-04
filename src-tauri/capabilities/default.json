@@ -2,7 +2,9 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "sql:default",
@@ -11,10 +13,98 @@
     {
       "identifier": "fs:allow-write-file",
       "allow": [
-        { "path": "$HOME/**" },
-        { "path": "$DOWNLOAD/**" },
-        { "path": "$DOCUMENT/**" },
-        { "path": "$DESKTOP/**" }
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$DESKTOP/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-file",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$DESKTOP/**"
+        },
+        {
+          "path": "$APPCONFIG/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-copy-file",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$DESKTOP/**"
+        },
+        {
+          "path": "$APPCONFIG/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$DESKTOP/**"
+        },
+        {
+          "path": "$APPCONFIG/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$DESKTOP/**"
+        },
+        {
+          "path": "$APPCONFIG/**"
+        }
       ]
     }
   ]

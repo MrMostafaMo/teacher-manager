@@ -17,7 +17,7 @@ next begins, and ends with a review checkpoint.
 | 9    | Skills, weak points, per-student analytics | ✅ Done |
 | 10   | Reports: PDF + Excel exports | ✅ Done |
 | 11   | Dashboard analytics, charts, KPIs | ✅ Done |
-| 12   | Backup/restore, settings, DB export | pending |
+| 12   | Backup/restore, settings, DB export | ✅ Done |
 | 13   | Polish: animations, a11y, performance, packaging | pending |
 
 ## Phase 0 — completed
@@ -368,3 +368,28 @@ next begins, and ends with a review checkpoint.
   links render, dashboard welcome heading and the attendance trend legend
   (the former crash site) render with live data; no route/boundary error.
 - `tsc --noEmit` clean, production build passes.
+
+## Phase 12 — completed
+
+- Settings feature (`src/features/settings/`):
+  - `infrastructure/backup-service.ts` — `liveDbPath()`, `liveDbSize()`,
+    `backupDatabase(dest)` via `VACUUM INTO` (consistent snapshot of a live
+    WAL db in one statement; checkpoint+copy fallback).
+  - `application/settings-cases.ts` — `createBackup()` (native save dialog +
+    `VACUUM INTO`) and `restoreFromBackup(confirmMessage)` (open dialog →
+    validate SQLite magic → warning confirm → close pool → copy backup over
+    live db → remove stale `-wal`/`-shm` → reopen + sanity check → reload).
+  - `ui/SettingsPage.tsx` — Appearance card (language/theme rows) + Data card
+    (db path, live size, backup/restore buttons, status/error states).
+- Language + theme switchers extracted from the header into
+  `src/shared/AppearanceControls.tsx`; `Header.tsx` reduced to the page title.
+- i18n: full `settings.*` namespace in both locales (incl. `restoreConfirm`).
+- Capability fixes found by E2E: `fs:allow-stat` was missing (db size showed
+  `0 B`), and `$HOME/**` does **not** match hidden dirs (`require_literal_leading_dot`
+  on Unix) so `~/.config/...` was forbidden — added `$APPCONFIG/**` to the
+  read/copy/remove/stat scopes. Restore + size now work.
+- Verified in the real Tauri window via AT-SPI + xdotool: backup creates a
+  valid snapshot (sqlite3 integrity check), restore replaces live data and
+  drops stale WAL sidecars, cancel keeps data intact, non-SQLite file shows
+  the invalid-backup error, db path/size render, language/theme switchers
+  persist. `tsc --noEmit` clean.

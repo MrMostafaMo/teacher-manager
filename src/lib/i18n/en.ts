@@ -274,9 +274,26 @@ export const en = {
     reports: {
       description: "Generate and export PDF and Excel reports.",
     },
-    settings: {
-      description: "Theme, language, data backup and restore.",
-    },
+  },
+  settings: {
+    subtitle: "Manage app appearance and your local data.",
+    appearance: "Appearance",
+    data: "Data",
+    dbPath: "Database location",
+    dbSize: "Database size",
+    backupAction: "Create backup",
+    backingUp: "Creating backup…",
+    backupDone: "Backup saved.",
+    backupError: "Backup failed. Try another folder.",
+    backupHint: "Exports a copy of the database as a .db file you can keep anywhere.",
+    restoreAction: "Restore from backup",
+    restoring: "Restoring…",
+    restoreDone: "Restore complete. Reloading…",
+    restoreError: "Restore failed. Pick a backup of this app's database.",
+    restoreHint: "Replaces the current database with the selected backup file.",
+    restoreConfirm:
+      "This will replace all current data with the selected backup. A backup from an older app version may not match the current database. Continue?",
+    invalidBackup: "The selected file is not a valid database backup.",
   },
   homework: {
     subtitle: "Assign homework and track completion per student.",
