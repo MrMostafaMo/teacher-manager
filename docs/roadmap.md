@@ -18,7 +18,7 @@ next begins, and ends with a review checkpoint.
 | 10   | Reports: PDF + Excel exports | ✅ Done |
 | 11   | Dashboard analytics, charts, KPIs | ✅ Done |
 | 12   | Backup/restore, settings, DB export | ✅ Done |
-| 13   | Polish: animations, a11y, performance, packaging | pending |
+| 13   | Polish: animations, a11y, performance, packaging | ✅ Done |
 
 ## Phase 0 — completed
 
@@ -393,3 +393,38 @@ next begins, and ends with a review checkpoint.
   drops stale WAL sidecars, cancel keeps data intact, non-SQLite file shows
   the invalid-backup error, db path/size render, language/theme switchers
   persist. `tsc --noEmit` clean.
+
+## Phase 13 — completed
+
+- Accessibility:
+  - `Modal.tsx`: close button uses the translated `common.close` label
+    (was hardcoded English); dialog now sets `aria-labelledby` to its title.
+  - `globals.css`: global `prefers-reduced-motion` guard — animations and
+    transitions collapse for users who request reduced motion.
+- Animations: modal enter animation via `tw-animate-css` utilities
+  (`open:animate-in open:zoom-in-95` + backdrop `fade-in`). Exit animation
+  deliberately skipped (native `<dialog>` closes synchronously).
+- Performance:
+  - Fonts trimmed to the subsets the UI actually renders — Inter `latin-*`
+    and IBM Plex Sans Arabic `arabic-*` only (was importing every subset:
+    cyrillic/greek/vietnamese/latin-ext).
+  - Removed unused `sonner` dependency (no Toaster mounted anywhere).
+  - `recharts` chunk left as-is (desktop app loads from disk; code-splitting
+    a 1.4 MB chunk is not worth the risk for this use case).
+- Packaging:
+  - `tauri.conf.json`: strict CSP replacing `null` —
+    `default-src 'self'`, `connect-src ipc: http://ipc.localhost`,
+    `style-src 'unsafe-inline' 'self'` (inline styles are used), `font-src`,
+    `img-src`, `script-src 'self'`. Verified end-to-end in the release binary.
+  - `pnpm tauri build` produces all three Linux bundles:
+    `.deb`, `.rpm`, and `.AppImage`.
+  - AppImage needed `NO_STRIP=1` — the bundled linuxdeploy's old `strip`
+    chokes on `.relr.dyn` sections in modern (Fedora) system libs.
+- Release verification (non-visual, deterministic):
+  - Release binary launches with a rendered dark UI (screenshot pixel
+    analysis, 98% dark — no white-screen from the CSP).
+  - Launched with a fresh `XDG_CONFIG_HOME`: SQL plugin applied all 4 embedded
+    migrations and created the full 15-table schema automatically — IPC +
+    CSP + DB pipeline all working in the production build.
+- `tsc --noEmit` clean, `pnpm build` passes, `AGENTS.md` created with
+  project commands, architecture, conventions and gotchas.

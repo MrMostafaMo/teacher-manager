@@ -14,6 +14,7 @@ export const ar: Messages = {
     system: "النظام",
     retry: "إعادة المحاولة",
     loading: "جارٍ التحميل…",
+    close: "إغلاق",
   },
   db: {
     checking: "جارٍ الاتصال بقاعدة البيانات المحلية…",

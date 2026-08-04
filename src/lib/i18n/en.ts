@@ -12,6 +12,7 @@ export const en = {
     system: "System",
     retry: "Retry",
     loading: "Loading…",
+    close: "Close",
   },
   db: {
     checking: "Connecting to local database…",
