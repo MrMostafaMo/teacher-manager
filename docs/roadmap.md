@@ -16,7 +16,7 @@ next begins, and ends with a review checkpoint.
 | 8    | Exams: creation, grades, avg/high/low | ✅ Done |
 | 9    | Skills, weak points, per-student analytics | ✅ Done |
 | 10   | Reports: PDF + Excel exports | ✅ Done |
-| 11   | Dashboard analytics, charts, KPIs | pending |
+| 11   | Dashboard analytics, charts, KPIs | ✅ Done |
 | 12   | Backup/restore, settings, DB export | pending |
 | 13   | Polish: animations, a11y, performance, packaging | pending |
 
@@ -346,3 +346,25 @@ next begins, and ends with a review checkpoint.
 - `tsc --noEmit` clean, production build passes, E2E verified: 5 tabs render
   live data, both exports save valid files (Excel re-read with xlsx; PDF
   rendered and inspected for shaped glyphs).
+
+## Phase 11 — completed
+
+- Dashboard feature (`src/features/dashboard/`):
+  - `application/dashboard-cases.ts` — `getDashboardData()` aggregates across
+    repos (students active/all, monthly attendance, monthly dues, homework
+    counts, exam average, weak skills) into one `DashboardData` shape.
+  - `ui/DashboardPage.tsx` — 6 KPI cards (total/active students, attendance
+    rate, collected, homework completion, exam average) + Recharts charts:
+    stacked attendance trend bar (present/late/absent per month, 6 months),
+    homework status pie with legend, and a weak-skills bar list.
+  - i18n: full `dashboard.*` namespace in both locales.
+- Close-out bug fixed: `monthShort()` destructured `YYYY-MM-DD` but the
+  attendance trend returns `YYYY-MM`, so `yy.slice(2)` threw
+  (`undefined is not an object`) and react-router's `RouteErrorPage` blanked
+  the whole window — only visible in the real Tauri window (headless DOM
+  checks never reach the chart because the data fetch needs `invoke`).
+  Fixed to `const [y, m] = iso.split("-")`, handles both shapes.
+- Verified in the real Tauri (WebKit) window via AT-SPI: shell + all 10 nav
+  links render, dashboard welcome heading and the attendance trend legend
+  (the former crash site) render with live data; no route/boundary error.
+- `tsc --noEmit` clean, production build passes.
