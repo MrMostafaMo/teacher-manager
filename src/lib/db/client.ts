@@ -43,10 +43,17 @@ const remote: AsyncRemoteCallback = async (sql, params, method) => {
   }
 
   const rows = await connection.select<Record<string, unknown>[]>(sql, params as unknown[]);
-  if (method === "values") {
-    return { rows: rows.map((row) => Object.values(row)) };
+  if (method === "get") {
+    // drizzle 0.45's sqlite-proxy treats a truthy-but-empty `rows` array as a
+    // real row and maps it to `{}`, so `get()` never returned `undefined` on
+    // empty results — which made every "does this row exist?" check see a
+    // phantom row (upserts always took the update branch, inserts never ran).
+    // A falsy `rows` is what makes the driver resolve `get()` to `undefined`.
+    // `null` here is falsy, which is what makes the driver's `get()` resolve to
+    // `undefined`; cast to satisfy the proxy's `rows: any[]` signature.
+    return { rows: (rows.length ? Object.values(rows[0]) : null) as unknown as unknown[] };
   }
-  return { rows };
+  return { rows: rows.map((row) => Object.values(row)) };
 };
 
 export const db = drizzle(remote, { schema });

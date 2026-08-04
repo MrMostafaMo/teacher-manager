@@ -8,6 +8,27 @@
       "when": 1785693195404,
       "tag": "0000_optimal_alex_power",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1785701371933,
+      "tag": "0001_tiny_young_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785768428152,
+      "tag": "0002_fat_fantastic_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1785772979847,
+      "tag": "0003_condemned_sumo",
+      "breakpoints": true
     }
   ]
 }

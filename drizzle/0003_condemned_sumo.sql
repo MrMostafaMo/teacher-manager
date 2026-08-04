@@ -1,0 +1,1 @@
+ALTER TABLE `students` ADD `plan_id` text REFERENCES plans(id);

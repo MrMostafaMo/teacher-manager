@@ -52,7 +52,90 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
   exclusively through Drizzle query builders).
 - Drizzle runs in the frontend through the **`sqlite-proxy` driver**
   (`src/lib/db/client.ts`), mapping `run|all|values|get` to the plugin's
-  `execute`/`select`.
+  `execute`/`select`. The plugin returns rows as column objects; the proxy
+  converts them to **positional value arrays** (Drizzle's `mapResultRow` reads
+  `row[columnIndex]`) — returning objects silently emptied every `get`/`all`
+  and broke inserts.
+
+### Persistence layer
+
+- `src/lib/db/schema.ts` — single source of truth; Drizzle tables + exported
+  types. `drizzle-kit generate` produces migrations from it.
+- `src/lib/db/repository.ts` — generic CRUD (`findById/list/count/insert/
+  update/remove`), one thin typed wrapper per table; application use-cases
+  depend on it, never raw SQL. All timestamps (`created_at`/`updated_at`)
+  are set by repositories as unix-ms.
+- `src/lib/activity-log.ts` — audit trail. Every mutation use-case calls
+  `logActivity({ action, entityType, entityId?, details? })`; the service
+  swallows failures so logging never breaks a write. `listRecentActivity`
+  returns newest-first.
+
+### Feature pattern (Phase 3–4: students, attendance)
+
+- `students/domain.ts` exports a Zod `studentInputSchema`; optional fields
+  go through `optionalText` (blank → `undefined`) so empty inputs never
+  persist as empty strings.
+- `students/infrastructure/student-repo.ts` builds a typed repository from
+  the generic CRUD and adds `search({ query, status })` — `like` on
+  name/phone/guardianName plus an optional `eq(status)`; results ordered by
+  name. Search filters compose into a single Drizzle `where`.
+- `students/application/student-cases.ts` owns mutations: parse with the
+  schema, write through the repository, and `logActivity` the outcome
+  (`student.create` carries `{ name }` details; deletes log the id only).
+- `students/ui/` renders the list (search + status filter + count badge +
+  loading/empty/no-results states) and two native-`<dialog>` modals — an
+  add/edit form with per-field Zod errors and a read-only profile with a
+  two-step delete confirmation. Error strings are i18n keys, never raw
+  exceptions.
+- `attendance/` follows the same split (domain → repository → cases → UI).
+  The daily save persists **one row per student** for the date (present
+  included) so the monthly view counts a saved day exactly once per student;
+  `attendance.save` activity carries full-day counts.
+- **Drizzle proxy pitfall:** `drizzle-orm/sqlite-proxy` 0.45 maps an empty
+  `get()` result to `{}`, not `undefined` — existence checks then see a
+  phantom row. `src/lib/db/client.ts` returns a falsy `rows` for empty
+  `get()` results, which is the single fix point for `findById`,
+  `byStudentAndDate`, `getMeta`, and `count`.
+
+### Feature pattern (Phase 5: study groups)
+
+- `groups/` mirrors the students split (domain → repository → cases → UI).
+  `study_groups` and the `student_groups` join table predate the feature
+  (migration 0001), so no schema change was needed.
+- `group-repo.ts` adds the many-to-many queries: `members`/`nonMembers`
+  (active students not yet in a group), `addMember`, `removeMember`, and
+  `clearMembers`. SQLite FKs are off in the Rust plugin, so `ON DELETE
+  CASCADE` never fires — `deleteGroup` calls `clearMembers` before `remove`.
+- **Drizzle proxy pitfall #2:** `select().innerJoin(...)` through the proxy
+  driver auto-splits joined rows into `{ table: {...} }` shapes that arrive
+  mis-mapped (the join table's columns leaked into the students object). Fix:
+  select the joined table's columns explicitly with a `{ id, name, ... }`
+  object instead of `select()` with no columns — same for any future join.
+- The daily attendance sheet accepts an optional `groupId`; the case
+  resolves students via `groupRepository.members(groupId)` when set, so the
+  sheet doubles as a group register.
+
+### Feature pattern (Phase 6: payments)
+
+- `payments/` follows the same split. Two tables share the feature: `plans`
+  (name, integer amount in EGP, billing interval) and `payments`
+  (studentId, optional planId, amount, `period` as YYYY-MM, method, paidAt).
+- **Subscription model:** a student's current plan lives on the student row
+  (`students.plan_id` → `plans.id`, added in migration 0003). `plans` had to
+  move above `students` in `schema.ts` — drizzle resolves FK thunks eagerly
+  at table build, so forward references hit a TDZ error.
+- Because the SQL plugin runs with `PRAGMA foreign_keys` off, no cascade or
+  `ON DELETE SET NULL` ever fires: `deletePlan` first nulls every affected
+  `students.plan_id` via `studentRepository.clearPlan`, then removes the row.
+- `monthlyDues(period)` is computed in the application layer from three
+  parallel reads (active students, plans, that period's payments), summed
+  in JS — due = the student's plan amount, paid = sum of period payments,
+  remaining = due − paid. No SQL joins; student/plan names in the history
+  view are resolved the same way (avoids the proxy join pitfall entirely).
+- Selects with an empty value (blank `<option value="">`) normalize to
+  `undefined` through an `optionalId` transform, matching `optionalText`.
+- The dues table and payment history live in one page with two tabs; a
+  `reloadKey` bumped on every mutation refreshes both.
 
 ### Initialization
 
@@ -92,8 +175,6 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
 
 ## TODO
 
-- [ ] Activity log service — implements a `logActivity(action, entity, refs)`
-      API; every mutation use-case calls it (Phase 2).
 - [ ] Error boundary + friendly error dialogs (Phase 2/12).
 - [ ] Backup/restore closes the DB pool, copies the file, then reloads (Phase 11).
 - [ ] Database export + restore UI (Phase 11).

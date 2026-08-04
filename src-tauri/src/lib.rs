@@ -7,12 +7,32 @@ use tauri_plugin_sql::{Migration, MigrationKind};
 ///
 /// ponytail: ordered list; add one entry per synced migration file.
 fn migrations() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "init",
-        sql: include_str!("../migrations/0000_optimal_alex_power.sql"),
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "init",
+            sql: include_str!("../migrations/0000_optimal_alex_power.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "core schema",
+            sql: include_str!("../migrations/0001_tiny_young_avengers.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 3,
+            description: "attendance per student per date",
+            sql: include_str!("../migrations/0002_fat_fantastic_four.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "student subscription plan",
+            sql: include_str!("../migrations/0003_condemned_sumo.sql"),
+            kind: MigrationKind::Up,
+        },
+    ]
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -23,6 +43,8 @@ pub fn run() {
                 .add_migrations("sqlite:teacher-manager.db", migrations())
                 .build(),
         )
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

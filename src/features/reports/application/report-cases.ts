@@ -1,0 +1,208 @@
+import { desc } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import {
+  attendance,
+  examResults,
+  exams,
+  payments,
+  skills,
+  studentGroups,
+  studentSkills,
+  students,
+  studyGroups,
+  type Exam,
+  type Payment,
+  type Skill,
+  type Student,
+} from "@/lib/db/schema";
+import { planRepository } from "@/features/payments/infrastructure/plan-repo";
+import type { ReportData, ReportKey } from "@/features/reports/domain";
+
+/**
+ * Report data builders. Every report is a flat table over current DB state;
+ * the rows are strings/numbers so Excel and PDF exporters share one shape.
+ * Queries live here (read-only aggregates) rather than a repository because
+ * each report crosses tables.
+ */
+export type ReportTranslations = {
+  title: string;
+  headers: string[];
+  status: (s: string) => string;
+};
+
+export async function buildReportData(
+  key: ReportKey,
+  t: ReportTranslations,
+): Promise<ReportData> {
+  switch (key) {
+    case "students":
+      return studentsReport(t);
+    case "attendance":
+      return attendanceReport(t);
+    case "exams":
+      return examsReport(t);
+    case "payments":
+      return paymentsReport(t);
+    case "skills":
+      return skillsReport(t);
+  }
+}
+
+async function studentsReport(t: ReportTranslations): Promise<ReportData> {
+  const [rows, groups, memberships, allPlans] = await Promise.all([
+    db.select().from(students).orderBy(students.name),
+    db.select().from(studyGroups).orderBy(studyGroups.name),
+    db.select().from(studentGroups),
+    planRepository.list(),
+  ]);
+  const groupName = new Map((groups as typeof studyGroups.$inferSelect[]).map((g) => [g.id, g.name]));
+  const planById = new Map(allPlans.map((p) => [p.id, p.name]));
+  const studentGroupsMap = new Map<string, string[]>();
+  for (const m of memberships) {
+    const g = groupName.get(m.groupId);
+    if (g) studentGroupsMap.set(m.studentId, [...(studentGroupsMap.get(m.studentId) ?? []), g]);
+  }
+  return {
+    key: "students",
+    title: t.title,
+    headers: [
+      t.headers[0], // name
+      t.headers[1], // phone
+      t.headers[2], // guardian
+      t.headers[3], // plan
+      t.headers[4], // groups
+      t.headers[5], // status
+    ],
+    rows: (rows as Student[]).map((s) => [
+      s.name,
+      s.phone ?? "—",
+      s.guardianName ?? "—",
+      s.planId ? (planById.get(s.planId) ?? "—") : "—",
+      (studentGroupsMap.get(s.id) ?? []).join("، "),
+      t.status(s.status),
+    ]),
+  };
+}
+
+async function attendanceReport(t: ReportTranslations): Promise<ReportData> {
+  const rows = (await db.select().from(attendance)) as typeof attendance.$inferSelect[];
+  const perStudent = new Map<string, { present: number; absent: number; late: number }>();
+  for (const r of rows) {
+    const cur = perStudent.get(r.studentId) ?? { present: 0, absent: 0, late: 0 };
+    if (r.status === "present") cur.present++;
+    else if (r.status === "absent") cur.absent++;
+    else cur.late++;
+    perStudent.set(r.studentId, cur);
+  }
+  const allStudents = (await db.select({ id: students.id, name: students.name }).from(students).orderBy(students.name)) as Array<{ id: string; name: string }>;
+  return {
+    key: "attendance",
+    title: t.title,
+    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4]],
+    rows: allStudents.map((s) => {
+      const c = perStudent.get(s.id) ?? { present: 0, absent: 0, late: 0 };
+      return [s.name, c.present, c.absent, c.late, c.present + c.absent + c.late];
+    }),
+  };
+}
+
+async function examsReport(t: ReportTranslations): Promise<ReportData> {
+  const [examsRows, results, groupsRows, memberships, allStudents] = await Promise.all([
+    db.select().from(exams).orderBy(desc(exams.createdAt)),
+    db.select().from(examResults),
+    db.select().from(studyGroups),
+    db.select().from(studentGroups),
+    db.select().from(students),
+  ]);
+  const groupName = new Map((groupsRows as typeof studyGroups.$inferSelect[]).map((g) => [g.id, g.name]));
+  const resultsByExam = new Map<string, typeof examResults.$inferSelect[]>();
+  for (const r of results) {
+    resultsByExam.set(r.examId, [...(resultsByExam.get(r.examId) ?? []), r]);
+  }
+  const memberCount = new Map<string, number>();
+  for (const m of memberships) memberCount.set(m.groupId, (memberCount.get(m.groupId) ?? 0) + 1);
+  const names = new Map((allStudents as Student[]).map((s) => [s.id, s.name]));
+
+  const rows: (string | number)[][] = [];
+  for (const e of examsRows as Exam[]) {
+    const rs = resultsByExam.get(e.id) ?? [];
+    const scores = rs.map((r) => r.score);
+    const avg = scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : null;
+    const total = memberCount.get(e.groupId) ?? 0;
+    const passMark = Math.ceil(e.maxScore / 2);
+    const pass = scores.length ? Math.round((scores.filter((s) => s >= passMark).length / scores.length) * 100) : null;
+    rows.push([
+      e.title,
+      groupName.get(e.groupId) ?? "—",
+      e.date ?? "—",
+      e.maxScore,
+      total ? Math.round((rs.length / total) * 100) : 0,
+      avg ?? "—",
+      pass ?? "—",
+    ]);
+    for (const r of rs.sort((a, b) => a.score - b.score)) {
+      rows.push(["   " + (names.get(r.studentId) ?? "—"), "", "", "", "", r.score, ""]);
+    }
+  }
+  return {
+    key: "exams",
+    title: t.title,
+    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4], t.headers[5], t.headers[6]],
+    rows,
+  };
+}
+
+async function paymentsReport(t: ReportTranslations): Promise<ReportData> {
+  const [allPayments, allPlans] = await Promise.all([
+    db.select().from(payments),
+    planRepository.list(),
+  ]);
+  const planAmount = new Map(allPlans.map((p) => [p.id, p.amount]));
+  const totals = new Map<string, { plan: number | null; paid: number }>();
+  for (const p of allPayments as Payment[]) {
+    const cur = totals.get(p.studentId) ?? { plan: p.planId ? (planAmount.get(p.planId) ?? null) : null, paid: 0 };
+    cur.paid += p.amount;
+    totals.set(p.studentId, cur);
+  }
+  const allStudents = (await db.select({ id: students.id, name: students.name }).from(students).orderBy(students.name)) as Array<{ id: string; name: string }>;
+  return {
+    key: "payments",
+    title: t.title,
+    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3]],
+    rows: allStudents.map((s) => {
+      const c = totals.get(s.id) ?? { plan: null, paid: 0 };
+      const due = c.plan ?? 0;
+      return [s.name, due, c.paid, due - c.paid];
+    }),
+  };
+}
+
+async function skillsReport(t: ReportTranslations): Promise<ReportData> {
+  const [skillsRows, skillLevels] = await Promise.all([
+    db.select().from(skills).orderBy(skills.name),
+    db.select().from(studentSkills),
+  ]);
+  const skillName = new Map((skillsRows as Skill[]).map((s) => [s.id, s.name]));
+  const perStudent = new Map<string, { tracked: number; weak: number; weakList: string[] }>();
+  for (const sl of skillLevels) {
+    const name = skillName.get(sl.skillId);
+    if (!name || sl.level === null) continue;
+    const cur = perStudent.get(sl.studentId) ?? { tracked: 0, weak: 0, weakList: [] };
+    cur.tracked++;
+    if (sl.level <= 2) {
+      cur.weak++;
+      cur.weakList.push(`${name} (${sl.level})`);
+    }
+    perStudent.set(sl.studentId, cur);
+  }
+  const allStudents = (await db.select({ id: students.id, name: students.name }).from(students).orderBy(students.name)) as Array<{ id: string; name: string }>;
+  return {
+    key: "skills",
+    title: t.title,
+    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3]],
+    rows: allStudents.map((s) => {
+      const c = perStudent.get(s.id) ?? { tracked: 0, weak: 0, weakList: [] };
+      return [s.name, c.tracked, c.weak, c.weakList.join("، ") || "—"];
+    }),
+  };
+}
