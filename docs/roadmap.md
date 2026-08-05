@@ -43,6 +43,9 @@ next begins, and ends with a review checkpoint.
   the shared `StatusPicker`); separate from daily center attendance by design.
 - Timetable polish: member count on cards, room-conflict detection (same day +
   room + overlapping times), day/group view toggle.
+- Session-attendance monthly stats: the attendance monthly view gained a
+  separate "Group-session attendance" table (per-student session
+  present/absent/late + rate), kept distinct from the daily table by design.
 - `tsc --noEmit` clean, `pnpm build` passes.
 
 ## Phase 15 — planned

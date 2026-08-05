@@ -293,6 +293,21 @@ function MonthlyView({ month, onMonthChange }: { month: string; onMonthChange: (
     };
   }, [rows]);
 
+  const sessionSummary = useMemo(() => {
+    let sessions = 0;
+    let rates: number[] = [];
+    for (const r of rows) {
+      const total = r.sessionPresent + r.sessionAbsent + r.sessionLate;
+      if (total === 0) continue;
+      sessions += total;
+      rates.push((r.sessionPresent + r.sessionLate) / total);
+    }
+    return {
+      sessions,
+      avgRate: rates.length > 0 ? rates.reduce((a, b) => a + b, 0) / rates.length : null,
+    };
+  }, [rows]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -373,6 +388,70 @@ function MonthlyView({ month, onMonthChange }: { month: string; onMonthChange: (
           )}
         </CardContent>
       </Card>
+
+      {!loading && rows.length > 0 && (
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
+            <h3 className="text-sm font-semibold">{t("attendance.sessionsTitle")}</h3>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">
+                <CalendarCheck className="size-3.5" />
+                {t("attendance.sessions")}: {sessionSummary.sessions}
+              </Badge>
+              {sessionSummary.avgRate !== null && (
+                <Badge variant="secondary">
+                  {t("attendance.avgRate")}: {formatPercent(sessionSummary.avgRate)}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-xs text-muted-foreground">
+                    <th className="px-4 py-2.5 text-start font-medium">
+                      {t("attendance.columns.student")}
+                    </th>
+                    <th className="px-4 py-2.5 text-start font-medium">
+                      {t("attendance.columns.sessionPresent")}
+                    </th>
+                    <th className="px-4 py-2.5 text-start font-medium">
+                      {t("attendance.columns.sessionAbsent")}
+                    </th>
+                    <th className="px-4 py-2.5 text-start font-medium">
+                      {t("attendance.columns.sessionLate")}
+                    </th>
+                    <th className="px-4 py-2.5 text-start font-medium">
+                      {t("attendance.columns.percentage")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => {
+                    const total = r.sessionPresent + r.sessionAbsent + r.sessionLate;
+                    return (
+                      <tr key={r.studentId} className="border-b last:border-0 hover:bg-muted/50">
+                        <td className="px-4 py-2.5 font-medium">{r.name}</td>
+                        <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400">
+                          {r.sessionPresent}
+                        </td>
+                        <td className="px-4 py-2.5 text-destructive">{r.sessionAbsent}</td>
+                        <td className="px-4 py-2.5 text-amber-600 dark:text-amber-400">
+                          {r.sessionLate}
+                        </td>
+                        <td className="px-4 py-2.5 text-muted-foreground">
+                          {total > 0 ? formatPercent((r.sessionPresent + r.sessionLate) / total) : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

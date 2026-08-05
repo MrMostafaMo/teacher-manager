@@ -103,5 +103,6 @@ and Linux installers: .deb/.rpm/.AppImage). Phase 14 added the weekly
 timetable: recurring `group_sessions` per day+time, `/schedule` page with a
 7-day grid, a "today's sessions" card on the dashboard, per-session
 attendance sheets (`session_attendance`, one row per member per occurrence),
-and timetable polish (member counts, room-conflict detection, day/group
-view toggle).
+timetable polish (member counts, room-conflict detection, day/group
+view toggle), and separate session-attendance monthly statistics in the
+attendance report.

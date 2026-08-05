@@ -31,22 +31,32 @@ export interface StudentMonthlyRow {
   present: number;
   absent: number;
   late: number;
+  /** Group-session sheets, kept separate from the daily counts. */
+  sessionPresent: number;
+  sessionAbsent: number;
+  sessionLate: number;
 }
 
 export async function getMonthly(month: string): Promise<StudentMonthlyRow[]> {
-  const [students, stats] = await Promise.all([
+  const [students, stats, sessionStats] = await Promise.all([
     studentRepository.search({ status: "active" }),
     attendanceRepository.monthlyStats(month),
+    attendanceRepository.sessionMonthlyStats(month),
   ]);
   const byId = new Map(stats.map((s) => [s.studentId, s]));
+  const sessionById = new Map(sessionStats.map((s) => [s.studentId, s]));
   return students.map((s) => {
     const stat = byId.get(s.id);
+    const session = sessionById.get(s.id);
     return {
       studentId: s.id,
       name: s.name,
       present: stat?.present ?? 0,
       absent: stat?.absent ?? 0,
       late: stat?.late ?? 0,
+      sessionPresent: session?.present ?? 0,
+      sessionAbsent: session?.absent ?? 0,
+      sessionLate: session?.late ?? 0,
     };
   });
 }

@@ -1,6 +1,6 @@
 import { and, count, eq, gte, like, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { attendance, type Attendance } from "@/lib/db/schema";
+import { attendance, sessionAttendance, type Attendance } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
 import type { AttendanceStatus } from "@/features/attendance/domain";
@@ -62,6 +62,35 @@ export const attendanceRepository = {
       .from(attendance)
       .where(like(attendance.date, `${month}-%`))
       .groupBy(attendance.studentId, attendance.status)) as Array<{
+      studentId: string;
+      status: AttendanceStatus;
+      n: number;
+    }>;
+
+    const byId = new Map<string, StudentMonthlyStat>();
+    for (const row of rows) {
+      const stat = byId.get(row.studentId) ?? { studentId: row.studentId, present: 0, absent: 0, late: 0 };
+      stat[row.status] = row.n;
+      byId.set(row.studentId, stat);
+    }
+    return [...byId.values()];
+  },
+
+  /**
+   * Per-student status counts from group-session sheets for one month.
+   * ponytail: mirrors monthlyStats; each session_attendance row is one
+   * (session, date, student) occurrence, so rows count directly.
+   */
+  async sessionMonthlyStats(month: string): Promise<StudentMonthlyStat[]> {
+    const rows = (await db
+      .select({
+        studentId: sessionAttendance.studentId,
+        status: sessionAttendance.status,
+        n: count(),
+      })
+      .from(sessionAttendance)
+      .where(like(sessionAttendance.date, `${month}-%`))
+      .groupBy(sessionAttendance.studentId, sessionAttendance.status)) as Array<{
       studentId: string;
       status: AttendanceStatus;
       n: number;
