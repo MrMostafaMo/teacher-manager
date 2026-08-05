@@ -84,6 +84,30 @@ export const studentGroups = sqliteTable(
 );
 
 /**
+ * Recurring weekly sessions of a study group (the weekly timetable).
+ * `dayOfWeek` follows JS `Date#getDay()`: 0=Sunday … 6=Saturday.
+ * `startTime`/`endTime` are "HH:mm" strings.
+ */
+export const groupSessions = sqliteTable(
+  "group_sessions",
+  {
+    id: id(),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => studyGroups.id, { onDelete: "cascade" }),
+    dayOfWeek: integer("day_of_week").notNull(),
+    startTime: text("start_time").notNull(),
+    endTime: text("end_time").notNull(),
+    room: text("room"),
+    ...timestamps,
+  },
+  (t) => [
+    index("group_sessions_group").on(t.groupId),
+    uniqueIndex("group_sessions_group_day_start").on(t.groupId, t.dayOfWeek, t.startTime),
+  ],
+);
+
+/**
  * Daily attendance — one row per student per date.
  *
  * `group_id` is nullable: there is no study-groups feature yet, so attendance
@@ -260,6 +284,7 @@ export type AppMeta = typeof appMeta.$inferSelect;
 export type AppMetaInsert = typeof appMeta.$inferInsert;
 export type Student = typeof students.$inferSelect;
 export type StudyGroup = typeof studyGroups.$inferSelect;
+export type GroupSession = typeof groupSessions.$inferSelect;
 export type Attendance = typeof attendance.$inferSelect;
 export type Plan = typeof plans.$inferSelect;
 export type Payment = typeof payments.$inferSelect;

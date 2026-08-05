@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import {
   CalendarCheck,
+  CalendarDays,
   ClipboardList,
   GraduationCap,
   UserCheck,
@@ -114,6 +115,32 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm font-medium">{t("dashboard.today.title")}</CardTitle>
+          <CalendarDays className="size-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          {data.todaySessions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("dashboard.today.empty")}</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {data.todaySessions.map((s) => (
+                <div key={s.id} className="rounded-lg border bg-muted/40 p-3">
+                  <p className="truncate text-sm font-medium">{s.groupName}</p>
+                  <p className="text-xs tabular-nums text-muted-foreground">
+                    {s.startTime} – {s.endTime}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.room ? `${t("schedule.room")}: ${s.room}` : t("schedule.noRoom")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">

@@ -5,6 +5,7 @@ import {
 } from "@/features/groups/infrastructure/group-repo";
 import { homeworkRepository } from "@/features/homework/infrastructure/homework-repo";
 import { examRepository } from "@/features/exams/infrastructure/exam-repo";
+import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
 import { logActivity } from "@/lib/activity-log";
 import type { Student, StudyGroup } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
@@ -65,6 +66,7 @@ export async function deleteGroup(id: string): Promise<void> {
   // FKs are off — clear this group's homework + submissions or they orphan.
   await homeworkRepository.clearForGroup(id);
   await examRepository.clearForGroup(id);
+  await scheduleRepository.clearForGroup(id);
   const removed = await groupRepository.remove(id);
   if (!removed) throw new Error(`group ${id} not found`);
   await logActivity({ action: "group.delete", entityType: "group", entityId: id });

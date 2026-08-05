@@ -32,6 +32,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0003_condemned_sumo.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 5,
+            description: "recurring weekly group sessions (timetable)",
+            sql: include_str!("../migrations/0004_nasty_ulik.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

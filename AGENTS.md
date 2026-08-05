@@ -97,6 +97,8 @@ Dev app runs via `pnpm tauri dev`. To drive the real window from the CLI:
 
 ## Status
 
-Phases 1–13 complete (roadmap: `docs/roadmap.md`). Phase 13 delivered polish
+Phases 1–14 complete (roadmap: `docs/roadmap.md`). Phase 13 delivered polish
 (modal animation + reduced-motion, a11y labels, font subset trimming, CSP,
-and Linux installers: .deb/.rpm/.AppImage).
+and Linux installers: .deb/.rpm/.AppImage). Phase 14 added the weekly
+timetable: recurring `group_sessions` per day+time, `/schedule` page with a
+7-day grid, and a "today's sessions" card on the dashboard.

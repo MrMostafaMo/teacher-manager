@@ -19,6 +19,30 @@ next begins, and ends with a review checkpoint.
 | 11   | Dashboard analytics, charts, KPIs | ✅ Done |
 | 12   | Backup/restore, settings, DB export | ✅ Done |
 | 13   | Polish: animations, a11y, performance, packaging | ✅ Done |
+| 14   | Weekly timetable (الجدول): recurring group sessions, grid page, dashboard "today" | ✅ Done |
+
+## Phase 14 — completed
+
+- Schema: new `group_sessions` table (migration v5) — `groupId` FK to
+  `study_groups` (cascade), `dayOfWeek` (0=Sun … 6=Sat), `startTime`/`endTime`
+  "HH:mm", optional `room`, unique `(groupId, dayOfWeek, startTime)` so a group
+  can't double-book the same slot.
+- Feature: `src/features/schedule/` (domain zod → application cases → infra
+  repo joining group name/status; `clearForGroup` cleanup on group delete).
+- UI: `SchedulePage` — 7-column day grid (today's column ring-highlighted),
+  session cards (group, time, room) with edit/delete (two-click confirm);
+  `ScheduleFormDialog` — group picker, day, native `input type="time"`,
+  room; end-after-start validation.
+- Integration: `/schedule` route + sidebar item (`CalendarDays`, phase 14);
+  dashboard "Today's sessions" card (next 4 active sessions, navigates from
+  the same schedule data).
+- i18n: `schedule.*` namespace + `nav.schedule` + `dashboard.today.*` (en/ar).
+- `tsc --noEmit` clean, `pnpm build` passes.
+
+## Phase 15 — planned
+
+- TBD (teacher requested features: e.g. release v1.0.0, print layouts,
+  multi-teacher, session attendance per group).
 
 ## Phase 0 — completed
 

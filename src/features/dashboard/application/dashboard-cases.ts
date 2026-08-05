@@ -4,6 +4,7 @@ import { monthlyDues } from "@/features/payments/application/payment-cases";
 import { listHomeworks } from "@/features/homework/application/homework-cases";
 import { listExams } from "@/features/exams/application/exam-cases";
 import { listSkills } from "@/features/skills/application/skill-cases";
+import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 
 /**
@@ -26,6 +27,7 @@ export interface DashboardData {
   homeworkLate: number;
   examAverage: number | null;
   weakSkills: Array<{ name: string; count: number }>;
+  todaySessions: Array<{ id: string; groupName: string; startTime: string; endTime: string; room: string | null }>;
 }
 
 function currentMonth(): string {
@@ -35,7 +37,7 @@ function currentMonth(): string {
 
 export async function getDashboardData(): Promise<DashboardData> {
   const month = currentMonth();
-  const [students, monthly, dues, homeworks, exams, skills, trend] = await Promise.all([
+  const [students, monthly, dues, homeworks, exams, skills, trend, schedule] = await Promise.all([
     listStudents({ status: "all" }),
     getMonthly(month),
     monthlyDues(month),
@@ -43,6 +45,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     listExams(),
     listSkills(),
     attendanceRepository.monthlyTrend(6),
+    listSchedule(),
   ]);
 
   const totalStudents = students.length;
@@ -74,6 +77,18 @@ export async function getDashboardData(): Promise<DashboardData> {
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
+  const today = new Date().getDay();
+  const todaySessions = schedule
+    .filter((s) => s.groupStatus === "active" && s.dayOfWeek === today)
+    .map((s) => ({
+      id: s.id,
+      groupName: s.groupName,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      room: s.room,
+    }))
+    .slice(0, 4);
+
   return {
     totalStudents,
     activeStudents,
@@ -88,5 +103,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     homeworkLate,
     examAverage,
     weakSkills,
+    todaySessions,
   };
 }

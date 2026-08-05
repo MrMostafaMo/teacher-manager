@@ -197,3 +197,19 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
   (Inter latin, IBM Plex Sans Arabic arabic); release builds produce
   `.deb`/`.rpm`/`.AppImage` (AppImage requires `NO_STRIP=1` — linuxdeploy's
   strip chokes on `.relr.dyn` in modern system libs).
+
+## Weekly timetable (Phase 14)
+
+- `group_sessions` table: recurring weekly sessions, `dayOfWeek` 0–6
+  (Sunday-first, matching `Date#getDay()`), "HH:mm" text times, optional
+  `room`; unique `(groupId, dayOfWeek, startTime)` prevents double-booking a
+  group into the same slot.
+- `src/features/schedule/`: `domain.ts` (zod, end-after-start), `application/
+  schedule-cases.ts`, `infrastructure/schedule-repo.ts` (`listAll` joins the
+  group name/status; `clearForGroup` runs on group delete since FKs are off).
+- `ui/SchedulePage.tsx`: 7-column grid (one per day), today's column gets a
+  ring highlight; session cards offer edit + two-click-confirm delete.
+  `ScheduleFormDialog.tsx` reuses `Modal`; time pickers are native
+  `input type="time"`.
+- Dashboard reads the same `listSchedule()` data for its "Today's sessions"
+  card (active groups only), so it can't disagree with the schedule page.

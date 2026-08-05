@@ -4,6 +4,7 @@ import {
   Users,
   Users2,
   CalendarCheck,
+  CalendarDays,
   Wallet,
   NotebookPen,
   ClipboardList,
@@ -31,6 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/homework", labelKey: "nav.homework", icon: NotebookPen, phase: 7 },
   { to: "/exams", labelKey: "nav.exams", icon: ClipboardList, phase: 8 },
   { to: "/skills", labelKey: "nav.skills", icon: Target, phase: 9 },
+  { to: "/schedule", labelKey: "nav.schedule", icon: CalendarDays, phase: 14 },
   { to: "/reports", labelKey: "nav.reports", icon: BarChart3, phase: 10 },
   { to: "/settings", labelKey: "nav.settings", icon: Settings, phase: 12 },
 ];
