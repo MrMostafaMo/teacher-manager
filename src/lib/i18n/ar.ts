@@ -220,6 +220,7 @@ export const ar: Messages = {
     tabHistory: "السجل",
     month: "الشهر",
     record: "تسجيل دفعة",
+    edit: "تعديل الدفعة",
     managePlans: "إدارة الخطط",
     student: "الطالب",
     plan: "الخطة",
@@ -259,6 +260,7 @@ export const ar: Messages = {
     subtitle: "تتبّع النفقات الخارجة — جوائز، أقلام وقرطاسية، فواتير وغيرها.",
     month: "الشهر",
     record: "تسجيل مصروف",
+    edit: "تعديل المصروف",
     title: "العنوان",
     category: "التصنيف",
     categories: {

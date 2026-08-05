@@ -156,3 +156,11 @@ changes — Excel/PDF are generic over `ReportData`):
   expenses from `expenses.spentAt` (dayjs month), net = collected − expenses.
 - Report keys now: students, attendance, exams, payments, expenses, finances,
   skills.
+
+Phase 19 added editing for the last two create-only features:
+
+- `updatePayment` / `updateExpense` use-cases (same Zod schemas as create,
+  generic repo `update`, activity-logged). `RecordPaymentDialog` and
+  `RecordExpenseDialog` accept an optional row prop for edit mode: prefilled
+  fields, «تعديل الدفعة»/«تعديل المصروف» titles. Pencil buttons sit next to
+  the delete action in the payments history and expenses tables.

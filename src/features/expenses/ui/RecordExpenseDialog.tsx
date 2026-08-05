@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Modal } from "@/features/students/ui/Modal";
 import { expenseCategorySchema, expenseInputSchema } from "@/features/expenses/domain";
-import { recordExpense } from "@/features/expenses/application/expense-cases";
+import { recordExpense, updateExpense } from "@/features/expenses/application/expense-cases";
+import type { Expense } from "@/lib/db/schema";
 
 interface RecordExpenseDialogProps {
   open: boolean;
+  expense?: Expense | null;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -23,7 +25,7 @@ interface FormState {
   note: string;
 }
 
-export function RecordExpenseDialog({ open, onClose, onSaved }: RecordExpenseDialogProps) {
+export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordExpenseDialogProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<FormState>(emptyForm());
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -32,10 +34,10 @@ export function RecordExpenseDialog({ open, onClose, onSaved }: RecordExpenseDia
 
   useEffect(() => {
     if (!open) return;
-    setForm(emptyForm());
+    setForm(expense ? formFromExpense(expense) : emptyForm());
     setErrors({});
     setFatal("");
-  }, [open]);
+  }, [open, expense]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -68,7 +70,8 @@ export function RecordExpenseDialog({ open, onClose, onSaved }: RecordExpenseDia
         spentAt: dayjs(form.date).startOf("day").valueOf(),
       };
       expenseInputSchema.parse(input);
-      await recordExpense(input);
+      if (expense) await updateExpense(expense.id, input);
+      else await recordExpense(input);
       onSaved();
       onClose();
     } catch (error) {
@@ -80,7 +83,7 @@ export function RecordExpenseDialog({ open, onClose, onSaved }: RecordExpenseDia
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={t("expenses.record")}>
+    <Modal open={open} onClose={onClose} title={expense ? t("expenses.edit") : t("expenses.record")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="expense-title">
@@ -174,5 +177,15 @@ function emptyForm(): FormState {
     amount: "",
     date: dayjs().format("YYYY-MM-DD"),
     note: "",
+  };
+}
+
+function formFromExpense(expense: Expense): FormState {
+  return {
+    title: expense.title,
+    category: expense.category,
+    amount: String(expense.amount),
+    date: dayjs(expense.spentAt).format("YYYY-MM-DD"),
+    note: expense.note ?? "",
   };
 }

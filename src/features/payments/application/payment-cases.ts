@@ -31,6 +31,19 @@ export async function deletePayment(id: string): Promise<void> {
   await logActivity({ action: "payment.delete", entityType: "payment", entityId: id });
 }
 
+export async function updatePayment(id: string, input: PaymentInput): Promise<Payment> {
+  const parsed = paymentInputSchema.parse(input);
+  const row = await paymentRepository.update(id, parsed);
+  if (!row) throw new Error(`payment ${id} not found`);
+  await logActivity({
+    action: "payment.update",
+    entityType: "payment",
+    entityId: id,
+    details: { studentId: row.studentId, amount: row.amount, period: row.period },
+  });
+  return row;
+}
+
 export interface DuesRow {
   student: Student;
   plan: Plan | null;

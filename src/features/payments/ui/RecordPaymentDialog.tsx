@@ -6,14 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { paymentInputSchema } from "@/features/payments/domain";
 import { listPlans } from "@/features/payments/application/plan-cases";
-import { recordPayment } from "@/features/payments/application/payment-cases";
+import { recordPayment, updatePayment } from "@/features/payments/application/payment-cases";
 import { listStudents } from "@/features/students/application/student-cases";
-import type { Plan, Student } from "@/lib/db/schema";
+import type { Payment, Plan, Student } from "@/lib/db/schema";
 import { Modal } from "@/features/students/ui/Modal";
 
 interface RecordPaymentDialogProps {
   open: boolean;
   defaultPeriod: string;
+  payment?: Payment | null;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -30,6 +31,7 @@ interface FormState {
 export function RecordPaymentDialog({
   open,
   defaultPeriod,
+  payment,
   onClose,
   onSaved,
 }: RecordPaymentDialogProps) {
@@ -43,7 +45,7 @@ export function RecordPaymentDialog({
 
   useEffect(() => {
     if (!open) return;
-    setForm(emptyForm(defaultPeriod));
+    setForm(payment ? formFromPayment(payment) : emptyForm(defaultPeriod));
     setErrors({});
     setFatal("");
     void listStudents({ status: "active" })
@@ -52,7 +54,7 @@ export function RecordPaymentDialog({
     void listPlans()
       .then(setPlans)
       .catch(() => setPlans([]));
-  }, [open, defaultPeriod]);
+  }, [open, defaultPeriod, payment]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -102,7 +104,8 @@ export function RecordPaymentDialog({
         note: form.note,
       };
       paymentInputSchema.parse(input);
-      await recordPayment(input);
+      if (payment) await updatePayment(payment.id, input);
+      else await recordPayment(input);
       onSaved();
       onClose();
     } catch (error) {
@@ -114,7 +117,7 @@ export function RecordPaymentDialog({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={t("payments.record")}>
+    <Modal open={open} onClose={onClose} title={payment ? t("payments.edit") : t("payments.record")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="payment-student">
@@ -225,4 +228,15 @@ export function RecordPaymentDialog({
 
 function emptyForm(period: string): FormState {
   return { studentId: "", planId: "", amount: "", period, method: "cash", note: "" };
+}
+
+function formFromPayment(payment: Payment): FormState {
+  return {
+    studentId: payment.studentId,
+    planId: payment.planId ?? "",
+    amount: String(payment.amount),
+    period: payment.period ?? "",
+    method: payment.method ?? "cash",
+    note: payment.note ?? "",
+  };
 }

@@ -2,6 +2,12 @@
 
 ## v0.1.2
 
+- **Edit payments & expenses**: pencil buttons in the payments history and
+  expenses tables open the record dialogs prefilled in edit mode
+  («تعديل الدفعة» / «تعديل المصروف»); saving updates the existing row instead
+  of creating a new one. Payments and expenses were the last features missing
+  an edit path.
+
 - **About**: new "حول التطبيق" card in settings showing app name, version, and
   the offline-tagline. The sidebar footer now displays the app version instead
   of the internal phase milestone.

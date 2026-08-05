@@ -218,6 +218,7 @@ export const en = {
     tabHistory: "History",
     month: "Month",
     record: "Record payment",
+    edit: "Edit payment",
     managePlans: "Manage plans",
     student: "Student",
     plan: "Plan",
@@ -257,6 +258,7 @@ export const en = {
     subtitle: "Track outgoing costs — prizes, stationery, utilities and more.",
     month: "Month",
     record: "Record expense",
+    edit: "Edit expense",
     title: "Title",
     category: "Category",
     categories: {

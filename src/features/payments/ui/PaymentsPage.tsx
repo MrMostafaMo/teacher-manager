@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import { CreditCard, History, PiggyBank, Plus, Trash2, Wallet } from "lucide-react";
+import { CreditCard, History, Pencil, PiggyBank, Plus, Trash2, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import {
 } from "@/features/payments/application/payment-cases";
 import { listMemberships } from "@/features/groups/application/group-cases";
 import { listStudents } from "@/features/students/application/student-cases";
-import type { Student } from "@/lib/db/schema";
+import type { Payment, Student } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
@@ -28,6 +28,7 @@ export default function PaymentsPage() {
   const [view, setView] = useState<"dues" | "history">("dues");
   const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
   const [recordOpen, setRecordOpen] = useState(false);
+  const [editing, setEditing] = useState<Payment | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -53,7 +54,10 @@ export default function PaymentsPage() {
               </Button>
             ))}
           </div>
-          <Button onClick={() => setRecordOpen(true)}>
+          <Button onClick={() => {
+            setEditing(null);
+            setRecordOpen(true);
+          }}>
             <Plus />
             {t("payments.record")}
           </Button>
@@ -67,13 +71,24 @@ export default function PaymentsPage() {
       {view === "dues" ? (
         <DuesView month={month} onMonthChange={setMonth} reloadKey={reloadKey} />
       ) : (
-        <HistoryView reloadKey={reloadKey} onChanged={bump} />
+        <HistoryView
+          reloadKey={reloadKey}
+          onChanged={bump}
+          onEdit={(p) => {
+            setEditing(p);
+            setRecordOpen(true);
+          }}
+        />
       )}
 
       <RecordPaymentDialog
         open={recordOpen}
         defaultPeriod={month}
-        onClose={() => setRecordOpen(false)}
+        payment={editing}
+        onClose={() => {
+          setRecordOpen(false);
+          setEditing(null);
+        }}
         onSaved={bump}
       />
       <PlansDialog open={plansOpen} onClose={() => setPlansOpen(false)} onChanged={bump} />
@@ -282,9 +297,11 @@ function DuesBadge({ status }: { status: "noPlan" | "paid" | "outstanding" }) {
 function HistoryView({
   reloadKey,
   onChanged,
+  onEdit,
 }: {
   reloadKey: number;
   onChanged: () => void;
+  onEdit: (payment: Payment) => void;
 }) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<PaymentHistoryRow[]>([]);
@@ -387,6 +404,14 @@ function HistoryView({
                 </td>
                 <td className="px-4 py-2.5">
                   <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={t("payments.edit")}
+                      onClick={() => onEdit(payment)}
+                    >
+                      <Pencil />
+                    </Button>
                     <Button
                       variant={deletingId === payment.id ? "destructive" : "ghost"}
                       size="icon-sm"

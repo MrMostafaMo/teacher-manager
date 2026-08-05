@@ -27,6 +27,19 @@ export async function deleteExpense(id: string): Promise<void> {
   await logActivity({ action: "expense.delete", entityType: "expense", entityId: id });
 }
 
+export async function updateExpense(id: string, input: ExpenseInput): Promise<Expense> {
+  const parsed = expenseInputSchema.parse(input);
+  const row = await expenseRepository.update(id, parsed);
+  if (!row) throw new Error(`expense ${id} not found`);
+  await logActivity({
+    action: "expense.update",
+    entityType: "expense",
+    entityId: id,
+    details: { title: row.title, amount: row.amount, category: row.category },
+  });
+  return row;
+}
+
 /** Expenses spent inside the given ISO month (YYYY-MM), newest first. */
 export async function listExpenses(period: string): Promise<Expense[]> {
   return expenseRepository.byMonth(period);

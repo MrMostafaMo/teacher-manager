@@ -23,6 +23,26 @@ next begins, and ends with a review checkpoint.
 | 15   | Collapsible per-group sections + group-form timetable editor + per-group payments | ✅ Done |
 | 16   | Expenses (المصروفات): outgoing costs with categories + net on dashboard | ✅ Done |
 | 17   | Reports: expenses table + monthly financial summary (collected/expenses/net) | ✅ Done |
+| 18   | v0.1.2: About card + version in sidebar + changelog | ✅ Done |
+| 19   | Edit payments + expenses (تعديل الدفعات والمصروفات) | ✅ Done |
+
+## Phase 19 — completed
+
+- Payments and expenses were the last two features without an edit path (only
+  record + delete). Both now support editing:
+  - `updatePayment` / `updateExpense` use-cases validate the same Zod input
+    schemas used on create and write through the generic `createRepository`
+    `update`, then activity-log the change.
+  - `RecordPaymentDialog` and `RecordExpenseDialog` gained an optional
+    `payment`/`expense` prop → edit mode: title «تعديل الدفعة»/«تعديل المصروف»,
+    fields prefilled from the row, submit calls the update use-case.
+  - Pencil buttons (`payments.edit` / `expenses.edit` aria-labels) next to the
+    existing delete action in the payments history table and the expenses table.
+- i18n keys `payments.edit` + `expenses.edit` in both locales.
+- E2E verified in the running app: edit dialogs open with rows prefilled
+  correctly (expense جائزة تفوق/150/05-08-2026, payment 200/2026-08/cash) and
+  saving in edit mode updates the existing row (id preserved, no duplicate).
+  Seed data cleaned up afterwards. `pnpm build` clean.
 
 ## Phase 17 — completed
 
