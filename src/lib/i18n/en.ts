@@ -2,7 +2,6 @@ export const en = {
   app: {
     name: "Teacher Manager",
     tagline: "Manage your educational center — fully offline.",
-    phase: "Phase",
   },
   common: {
     language: "Language",
@@ -335,6 +334,9 @@ export const en = {
   },
   settings: {
     subtitle: "Manage app appearance and your local data.",
+    about: "About",
+    aboutVersion: "Version",
+    aboutTagline: "Fully offline — all your data lives in a local SQLite database.",
     appearance: "Appearance",
     data: "Data",
     dbPath: "Database location",

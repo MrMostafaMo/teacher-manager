@@ -1,16 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { NavLink, useLocation } from "react-router";
+import { NavLink } from "react-router";
 import { GraduationCap } from "lucide-react";
-import { NAV_ITEMS } from "@/app/navigation";
+import { APP_VERSION, NAV_ITEMS } from "@/app/navigation";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const { t } = useTranslation();
-  const { pathname } = useLocation();
-  const activePhase = NAV_ITEMS.find((item) =>
-    item.to === "/" ? pathname === "/" : pathname.startsWith(item.to),
-  )?.phase;
-  const phase = activePhase ?? NAV_ITEMS[0].phase;
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-e bg-background">
@@ -43,7 +38,7 @@ export function Sidebar() {
       </nav>
 
       <div className="shrink-0 border-t px-4 py-3 text-xs text-muted-foreground">
-        {t("app.name")} · {t("app.phase")} {phase}
+        {t("app.name")} · v{APP_VERSION}
       </div>
     </aside>
   );

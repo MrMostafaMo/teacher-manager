@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DatabaseBackup, Download, HardDrive, Languages, RotateCcw, Settings2, Upload } from "lucide-react";
+import { DatabaseBackup, Download, HardDrive, Info, Languages, RotateCcw, Settings2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LanguageSelector, ThemeSelector } from "@/shared/AppearanceControls";
+import { APP_VERSION } from "@/app/navigation";
 import {
   createBackup,
   restoreFromBackup,
@@ -81,6 +82,25 @@ export default function SettingsPage() {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
       {saved && <p className="text-sm text-emerald-600">{saved}</p>}
+
+      <Card>
+        <CardContent className="p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <Info className="size-4" />
+            {t("settings.about")}
+          </div>
+          <div className="space-y-1 text-sm">
+            <p className="text-lg font-semibold">{t("app.name")}</p>
+            <p className="flex items-center gap-1.5 text-muted-foreground">
+              <span>{t("settings.aboutVersion")}</span>
+              <span className="font-mono text-foreground" dir="ltr">
+                {APP_VERSION}
+              </span>
+            </p>
+            <p className="pt-1 text-xs text-muted-foreground">{t("settings.aboutTagline")}</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="p-4">

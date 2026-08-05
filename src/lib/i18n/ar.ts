@@ -4,7 +4,6 @@ export const ar: Messages = {
   app: {
     name: "مدير المعلم",
     tagline: "أدر مركزك التعليمي — دون اتصال بالإنترنت.",
-    phase: "المرحلة",
   },
   common: {
     language: "اللغة",
@@ -337,6 +336,9 @@ export const ar: Messages = {
   },
   settings: {
     subtitle: "إدارة مظهر التطبيق وبياناتك المحلية.",
+    about: "حول التطبيق",
+    aboutVersion: "الإصدار",
+    aboutTagline: "يعمل دون اتصال بالإنترنت — كل بياناتك مخزنة محليًا في قاعدة بيانات SQLite.",
     appearance: "المظهر",
     data: "البيانات",
     dbPath: "موقع قاعدة البيانات",
