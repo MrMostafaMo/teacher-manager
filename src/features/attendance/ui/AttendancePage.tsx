@@ -18,21 +18,7 @@ import type { AttendanceStatus } from "@/features/attendance/domain";
 import type { Student } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import { formatPercent } from "@/lib/utils/format";
-
-const STATUS_LABEL_KEY: Record<AttendanceStatus, string> = {
-  present: "attendance.statusPresent",
-  absent: "attendance.statusAbsent",
-  late: "attendance.statusLate",
-};
-
-const STATUS_BADGE: Record<
-  AttendanceStatus,
-  string
-> = {
-  present: "border-emerald-600 bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
-  absent: "border-destructive bg-destructive/10 text-destructive",
-  late: "border-amber-600 bg-amber-600/15 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
-};
+import { StatusPicker } from "@/shared/StatusPicker";
 
 const inputClass =
   "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring";
@@ -268,36 +254,6 @@ function SummaryCards({
           <p className="text-xs text-muted-foreground">{t(c.key)}</p>
           <p className={cn("text-lg font-semibold", c.className)}>{c.value}</p>
         </div>
-      ))}
-    </div>
-  );
-}
-
-function StatusPicker({
-  value,
-  onChange,
-}: {
-  value: AttendanceStatus;
-  onChange: (s: AttendanceStatus) => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="flex gap-1">
-      {(["present", "absent", "late"] as const).map((status) => (
-        <button
-          key={status}
-          type="button"
-          aria-pressed={value === status}
-          onClick={() => onChange(status)}
-          className={cn(
-            "rounded-md border px-2.5 py-1 text-xs transition-colors",
-            value === status
-              ? STATUS_BADGE[status]
-              : "border-input text-muted-foreground hover:bg-muted/50",
-          )}
-        >
-          {t(STATUS_LABEL_KEY[status])}
-        </button>
       ))}
     </div>
   );

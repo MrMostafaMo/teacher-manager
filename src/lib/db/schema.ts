@@ -132,6 +132,32 @@ export const attendance = sqliteTable(
   ],
 );
 
+/**
+ * Per-session attendance — one row per student per session occurrence
+ * (a recurring group session on a concrete date). Separate from the daily
+ * `attendance` table so session sheets don't collide with center-wide
+ * daily sheets (a student can sit two sessions in one day).
+ */
+export const sessionAttendance = sqliteTable(
+  "session_attendance",
+  {
+    id: id(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => groupSessions.id, { onDelete: "cascade" }),
+    studentId: text("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    date: text("date").notNull(),
+    status: text("status", { enum: ["present", "absent", "late"] as const }).notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("session_attendance_session_date_student").on(t.sessionId, t.date, t.studentId),
+    index("session_attendance_session_date").on(t.sessionId, t.date),
+  ],
+);
+
 /** Payment records. `period` is the billed ISO month (YYYY-MM), when applicable. */
 export const payments = sqliteTable(
   "payments",
@@ -286,6 +312,7 @@ export type Student = typeof students.$inferSelect;
 export type StudyGroup = typeof studyGroups.$inferSelect;
 export type GroupSession = typeof groupSessions.$inferSelect;
 export type Attendance = typeof attendance.$inferSelect;
+export type SessionAttendance = typeof sessionAttendance.$inferSelect;
 export type Plan = typeof plans.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type Homework = typeof homeworks.$inferSelect;

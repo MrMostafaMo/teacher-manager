@@ -6,6 +6,7 @@ import { paymentRepository } from "@/features/payments/infrastructure/payment-re
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { homeworkRepository } from "@/features/homework/infrastructure/homework-repo";
 import { examRepository } from "@/features/exams/infrastructure/exam-repo";
+import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
 import { logActivity } from "@/lib/activity-log";
 import type { Student } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
@@ -54,6 +55,7 @@ export async function deleteStudent(id: string): Promise<void> {
     groupRepository.clearForStudent(id),
     homeworkRepository.clearForStudent(id),
     examRepository.clearForStudent(id),
+    scheduleRepository.clearAttendanceForStudent(id),
   ]);
   const removed = await studentRepository.remove(id);
   if (!removed) throw new Error(`student ${id} not found`);

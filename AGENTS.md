@@ -101,4 +101,7 @@ Phases 1–14 complete (roadmap: `docs/roadmap.md`). Phase 13 delivered polish
 (modal animation + reduced-motion, a11y labels, font subset trimming, CSP,
 and Linux installers: .deb/.rpm/.AppImage). Phase 14 added the weekly
 timetable: recurring `group_sessions` per day+time, `/schedule` page with a
-7-day grid, and a "today's sessions" card on the dashboard.
+7-day grid, a "today's sessions" card on the dashboard, per-session
+attendance sheets (`session_attendance`, one row per member per occurrence),
+and timetable polish (member counts, room-conflict detection, day/group
+view toggle).

@@ -37,12 +37,18 @@ next begins, and ends with a review checkpoint.
   dashboard "Today's sessions" card (next 4 active sessions, navigates from
   the same schedule data).
 - i18n: `schedule.*` namespace + `nav.schedule` + `dashboard.today.*` (en/ar).
+- Session sheets: `session_attendance` table (migration v6) — per (session,
+  date) occurrence, unique `(sessionId, date, studentId)`; per-session
+  attendance dialog opened from each card (members + present/absent/late via
+  the shared `StatusPicker`); separate from daily center attendance by design.
+- Timetable polish: member count on cards, room-conflict detection (same day +
+  room + overlapping times), day/group view toggle.
 - `tsc --noEmit` clean, `pnpm build` passes.
 
 ## Phase 15 — planned
 
 - TBD (teacher requested features: e.g. release v1.0.0, print layouts,
-  multi-teacher, session attendance per group).
+  multi-teacher, session-attendance statistics).
 
 ## Phase 0 — completed
 

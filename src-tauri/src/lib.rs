@@ -38,6 +38,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0004_nasty_ulik.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 6,
+            description: "per-session attendance sheets",
+            sql: include_str!("../migrations/0005_calm_punisher.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
