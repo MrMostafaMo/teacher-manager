@@ -567,6 +567,16 @@ export const en = {
         title: "Payments Report",
         headers: ["Student", "Plan amount", "Paid", "Balance"],
       },
+      expenses: {
+        label: "Expenses",
+        title: "Expenses Report",
+        headers: ["Date", "Title", "Category", "Amount", "Note"],
+      },
+      finances: {
+        label: "Financial Summary",
+        title: "Financial Report",
+        headers: ["Month", "Collected", "Expenses", "Net"],
+      },
       skills: {
         label: "Skills",
         title: "Skills Report",

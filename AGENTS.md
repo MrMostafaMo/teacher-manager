@@ -145,3 +145,14 @@ stationery, utilities, maintenance):
   (native `input type="date"` → unix-ms `spentAt`).
 - Dashboard gains two KPIs: `expensesMonth` and `net` (collected − expenses);
   the KPI grid is now `md:grid-cols-4` (8 cards). KPI card count is 8.
+
+Phase 17 added two report types in `src/features/reports/` (no exporter
+changes — Excel/PDF are generic over `ReportData`):
+
+- `expenses`: flat table over the `expenses` table — date, title, localized
+  category name, amount, note — newest first. `ReportTranslations` gains an
+  optional `category` translate callback for the localized category labels.
+- `finances`: per-month financial summary — collected from `payments.period`,
+  expenses from `expenses.spentAt` (dayjs month), net = collected − expenses.
+- Report keys now: students, attendance, exams, payments, expenses, finances,
+  skills.

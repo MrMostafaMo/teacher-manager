@@ -4,6 +4,7 @@ import {
   attendance,
   examResults,
   exams,
+  expenses,
   payments,
   skills,
   studentGroups,
@@ -11,10 +12,12 @@ import {
   students,
   studyGroups,
   type Exam,
+  type Expense,
   type Payment,
   type Skill,
   type Student,
 } from "@/lib/db/schema";
+import dayjs from "dayjs";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
 
@@ -28,6 +31,8 @@ export type ReportTranslations = {
   title: string;
   headers: string[];
   status: (s: string) => string;
+  /** Expense category name (localized). */
+  category?: (c: string) => string;
 };
 
 export async function buildReportData(
@@ -43,6 +48,10 @@ export async function buildReportData(
       return examsReport(t);
     case "payments":
       return paymentsReport(t);
+    case "expenses":
+      return expensesReport(t);
+    case "finances":
+      return financesReport(t);
     case "skills":
       return skillsReport(t);
   }
@@ -174,6 +183,58 @@ async function paymentsReport(t: ReportTranslations): Promise<ReportData> {
       const due = c.plan ?? 0;
       return [s.name, due, c.paid, due - c.paid];
     }),
+  };
+}
+
+async function expensesReport(t: ReportTranslations): Promise<ReportData> {
+  const rows = (await db
+    .select()
+    .from(expenses)
+    .orderBy(desc(expenses.spentAt))) as Expense[];
+  return {
+    key: "expenses",
+    title: t.title,
+    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4]],
+    rows: rows.map((e) => [
+      dayjs(e.spentAt).format("YYYY-MM-DD"),
+      e.title,
+      t.category?.(e.category) ?? e.category,
+      e.amount,
+      e.note ?? "—",
+    ]),
+  };
+}
+
+async function financesReport(t: ReportTranslations): Promise<ReportData> {
+  const [allPayments, allExpenses] = await Promise.all([
+    db.select().from(payments),
+    db.select().from(expenses),
+  ]);
+  const byMonth = new Map<string, { collected: number; expenses: number }>();
+  for (const p of allPayments as Payment[]) {
+    if (!p.period) continue;
+    const m = byMonth.get(p.period) ?? { collected: 0, expenses: 0 };
+    m.collected += p.amount;
+    byMonth.set(p.period, m);
+  }
+  for (const e of allExpenses as Expense[]) {
+    const month = dayjs(e.spentAt).format("YYYY-MM");
+    const m = byMonth.get(month) ?? { collected: 0, expenses: 0 };
+    m.expenses += e.amount;
+    byMonth.set(month, m);
+  }
+  return {
+    key: "finances",
+    title: t.title,
+    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3]],
+    rows: [...byMonth.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([month, { collected, expenses }]) => [
+        month,
+        collected,
+        expenses,
+        collected - expenses,
+      ]),
   };
 }
 

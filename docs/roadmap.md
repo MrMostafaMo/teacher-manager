@@ -22,6 +22,25 @@ next begins, and ends with a review checkpoint.
 | 14   | Weekly timetable (الجدول): recurring group sessions, grid page, dashboard "today" | ✅ Done |
 | 15   | Collapsible per-group sections + group-form timetable editor + per-group payments | ✅ Done |
 | 16   | Expenses (المصروفات): outgoing costs with categories + net on dashboard | ✅ Done |
+| 17   | Reports: expenses table + monthly financial summary (collected/expenses/net) | ✅ Done |
+
+## Phase 17 — completed
+
+- Two new report types in `src/features/reports/` (no exporter changes — both
+  Excel and PDF are generic over `ReportData`):
+  - `expenses`: flat table over the `expenses` table — date (YYYY-MM-DD),
+    title, localized category name, amount, note — newest first.
+  - `finances`: per-month financial summary — `collected` from
+    `payments.period`, `expenses` from `expenses.spentAt` (dayjs month),
+    net = collected − expenses; months sorted ascending.
+- `ReportTranslations` gains an optional `category` translate callback used
+  by the expenses report for localized category labels.
+- i18n: `reports.types.expenses` + `reports.types.finances` in both locales.
+- E2E verified in the running app: both buttons render, the expenses report
+  lists the seeded rows (correct localized categories, desc order), the
+  financial summary computed 1000 collected / 555 expenses / 445 net for
+  2026-08; seed data cleaned up afterwards.
+- `pnpm build` clean.
 
 ## Phase 16 — completed
 

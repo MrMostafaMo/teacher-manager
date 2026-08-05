@@ -7,7 +7,15 @@ import { buildReportData, type ReportTranslations } from "@/features/reports/app
 import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
 
-const REPORT_KEYS: ReportKey[] = ["students", "attendance", "exams", "payments", "skills"];
+const REPORT_KEYS: ReportKey[] = [
+  "students",
+  "attendance",
+  "exams",
+  "payments",
+  "expenses",
+  "finances",
+  "skills",
+];
 
 export default function ReportsPage() {
   const { t, i18n } = useTranslation();
@@ -24,6 +32,7 @@ export default function ReportsPage() {
       title: t(`reports.types.${key}.title`),
       headers: (t(`reports.types.${key}.headers`, { returnObjects: true }) as unknown as string[]) ?? [],
       status: (s) => (s === "active" ? t("students.statusActive") : t("students.statusInactive")),
+      category: (c) => t(`expenses.categories.${c}`),
     }),
     [t, key],
   );

@@ -248,3 +248,14 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
 - The dashboard calls `monthlyExpenseTotal(currentMonth)` alongside
   `monthlyDues` and exposes `expensesMonth` + `net` (collected − expenses)
   as the 7th/8th KPI cards (`md:grid-cols-4`).
+
+## Expense reports (Phase 17)
+
+- Report keys in `reports/domain.ts` now include `expenses` and `finances`;
+  `buildReportData` dispatches to the new builders in `report-cases.ts`.
+- `expensesReport`: flat table over `expenses` (date, title, localized
+  category via the new `ReportTranslations.category` callback, amount, note).
+- `financesReport`: aggregates `payments` by their `period` column and
+  `expenses` by the dayjs month of `spentAt`, then emits one row per month
+  (collected / expenses / net), ascending.
+- Exporters are untouched — both consume the shared `ReportData` shape.
