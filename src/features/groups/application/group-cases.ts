@@ -19,6 +19,12 @@ export function listGroups(): Promise<GroupWithCount[]> {
   return groupRepository.list();
 }
 
+export function listMemberships(): Promise<
+  Array<{ studentId: string; groupId: string; groupName: string }>
+> {
+  return groupRepository.memberships();
+}
+
 export interface GroupDetail {
   group: StudyGroup;
   members: Student[];

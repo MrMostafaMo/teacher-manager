@@ -13,6 +13,8 @@ interface ExamFormDialogProps {
   open: boolean;
   exam: Exam | null;
   groups: StudyGroup[];
+  /** Group preselected when adding from a section header. */
+  defaultGroupId?: string;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -24,7 +26,7 @@ interface FormState {
   date: string;
 }
 
-export function ExamFormDialog({ open, exam, groups, onClose, onSaved }: ExamFormDialogProps) {
+export function ExamFormDialog({ open, exam, groups, defaultGroupId, onClose, onSaved }: ExamFormDialogProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<FormState>({
     groupId: "",
@@ -39,7 +41,7 @@ export function ExamFormDialog({ open, exam, groups, onClose, onSaved }: ExamFor
   useEffect(() => {
     if (open) {
       setForm({
-        groupId: exam?.groupId ?? groups[0]?.id ?? "",
+        groupId: exam?.groupId ?? defaultGroupId ?? groups[0]?.id ?? "",
         title: exam?.title ?? "",
         maxScore: String(exam?.maxScore ?? 100),
         date: exam?.date ?? "",
@@ -47,7 +49,7 @@ export function ExamFormDialog({ open, exam, groups, onClose, onSaved }: ExamFor
       setErrors({});
       setFatal("");
     }
-  }, [open, exam, groups]);
+  }, [open, exam, groups, defaultGroupId]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));

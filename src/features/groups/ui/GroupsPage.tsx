@@ -8,11 +8,14 @@ import {
   deleteGroup,
   listGroups,
 } from "@/features/groups/application/group-cases";
+import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
-import type { StudyGroup } from "@/lib/db/schema";
+import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
 import { GroupDetailDialog } from "./GroupDetailDialog";
 import { GroupFormDialog } from "./GroupFormDialog";
+
+const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 export default function GroupsPage() {
   const { t } = useTranslation();
@@ -22,11 +25,18 @@ export default function GroupsPage() {
   const [editing, setEditing] = useState<StudyGroup | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sessionsByGroup, setSessionsByGroup] = useState<Record<string, GroupSession[]>>({});
 
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      setRows(await listGroups());
+      const [groups, sessions] = await Promise.all([listGroups(), listSchedule()]);
+      setRows(groups);
+      const byGroup: Record<string, GroupSession[]> = {};
+      for (const s of sessions) {
+        (byGroup[s.groupId] ??= []).push(s);
+      }
+      setSessionsByGroup(byGroup);
     } catch (error) {
       console.error("Failed to load groups", error);
       setRows([]);
@@ -50,6 +60,14 @@ export default function GroupsPage() {
     setDetailId(null);
     setEditing(group);
     setFormOpen(true);
+  }
+
+  function renderSchedule(g: GroupWithCount) {
+    const sessions = sessionsByGroup[g.id] ?? [];
+    if (sessions.length === 0) return g.schedule ?? "—";
+    return sessions
+      .map((s) => `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${s.startTime}`)
+      .join(" · ");
   }
 
   async function handleRowDelete(group: StudyGroup) {
@@ -120,7 +138,7 @@ export default function GroupsPage() {
                     <tr key={g.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="px-4 py-2.5 font-medium">{g.name}</td>
                       <td className="px-4 py-2.5 text-muted-foreground">{g.subject ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{g.schedule ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground">{renderSchedule(g)}</td>
                       <td className="px-4 py-2.5 text-muted-foreground">{g.memberCount}</td>
                       <td className="px-4 py-2.5">
                         <StatusBadge status={g.status} />

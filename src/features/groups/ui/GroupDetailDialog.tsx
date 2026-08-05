@@ -8,10 +8,13 @@ import {
   getGroupDetail,
   removeStudentFromGroup,
 } from "@/features/groups/application/group-cases";
+import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { GroupDetail } from "@/features/groups/application/group-cases";
-import type { StudyGroup } from "@/lib/db/schema";
+import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { Modal } from "@/features/students/ui/Modal";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
+
+const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 interface GroupDetailDialogProps {
   group: StudyGroup;
@@ -27,6 +30,13 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
   const [error, setError] = useState("");
   const [addingId, setAddingId] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sessions, setSessions] = useState<GroupSession[]>([]);
+
+  useEffect(() => {
+    void listSchedule()
+      .then((all) => setSessions(all.filter((s) => s.groupId === group.id)))
+      .catch(() => setSessions([]));
+  }, [group.id]);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -84,7 +94,14 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
             <p className="truncate text-lg font-semibold">{group.name}</p>
             <p className="text-sm text-muted-foreground">
               {group.subject ? `${group.subject} · ` : ""}
-              {group.schedule ?? t("groups.noSchedule")}
+              {sessions.length > 0
+                ? sessions
+                    .map(
+                      (s) =>
+                        `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${s.startTime}–${s.endTime}`,
+                    )
+                    .join(" · ")
+                : (group.schedule ?? t("groups.noSchedule"))}
             </p>
           </div>
           <StatusBadge status={group.status} />

@@ -25,6 +25,13 @@ export interface DashboardData {
   homeworkSubmitted: number;
   homeworkPending: number;
   homeworkLate: number;
+  overdueHomeworks: Array<{
+    id: string;
+    title: string;
+    groupName: string | null;
+    dueDate: string | null;
+    pending: number;
+  }>;
   examAverage: number | null;
   weakSkills: Array<{ name: string; count: number }>;
   todaySessions: Array<{ id: string; groupName: string; startTime: string; endTime: string; room: string | null }>;
@@ -66,6 +73,18 @@ export async function getDashboardData(): Promise<DashboardData> {
   const homeworkPending = homeworks.reduce((a, h) => a + h.pending, 0);
   const homeworkLate = homeworks.reduce((a, h) => a + h.late, 0);
 
+  const overdueHomeworks = homeworks
+    .filter((h) => h.overdue)
+    .sort((a, b) => (a.dueDate ?? "").localeCompare(b.dueDate ?? ""))
+    .slice(0, 5)
+    .map((h) => ({
+      id: h.id,
+      title: h.title,
+      groupName: h.groupName,
+      dueDate: h.dueDate,
+      pending: h.pending,
+    }));
+
   const graded = exams.filter((e) => e.average !== null);
   const scoreSum = graded.reduce((a, e) => a + (e.average ?? 0) * e.resultCount, 0);
   const scoreCount = graded.reduce((a, e) => a + e.resultCount, 0);
@@ -101,6 +120,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     homeworkSubmitted,
     homeworkPending,
     homeworkLate,
+    overdueHomeworks,
     examAverage,
     weakSkills,
     todaySessions,

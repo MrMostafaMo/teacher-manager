@@ -4,8 +4,13 @@ import { CheckCircle2, Clock3, PencilLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/utils/format";
 import { SUBMISSION_STATUSES, type SubmissionStatus } from "@/features/homework/domain";
-import { getHomeworkDetail, setSubmissionStatus } from "@/features/homework/application/homework-cases";
+import {
+  getHomeworkDetail,
+  setAllSubmissionStatus,
+  setSubmissionStatus,
+} from "@/features/homework/application/homework-cases";
 import type { HomeworkDetail } from "@/features/homework/application/homework-cases";
 import { Modal } from "@/features/students/ui/Modal";
 
@@ -33,6 +38,7 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
   const [detail, setDetail] = useState<HomeworkDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
     if (!homeworkId) return;
@@ -52,7 +58,8 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
   }, [open, load]);
 
   async function handleStatus(studentId: string, status: SubmissionStatus) {
-    if (!homeworkId) return;
+    if (!homeworkId || busy) return;
+    setBusy(true);
     try {
       await setSubmissionStatus(homeworkId, studentId, status);
       onChanged();
@@ -60,6 +67,23 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
     } catch (e) {
       console.error("Failed to set submission status", e);
       setError(t("homework.loadError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSetAll(status: SubmissionStatus) {
+    if (!homeworkId || busy) return;
+    setBusy(true);
+    try {
+      await setAllSubmissionStatus(homeworkId, status);
+      onChanged();
+      load();
+    } catch (e) {
+      console.error("Failed to set all submission statuses", e);
+      setError(t("homework.loadError"));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -108,15 +132,47 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
             </p>
           )}
 
+          {!empty && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => void handleSetAll("submitted")}
+              >
+                <CheckCircle2 />
+                {t("homework.markAllSubmitted")}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => void handleSetAll("late")}
+              >
+                <Clock3 />
+                {t("homework.markAllLate")}
+              </Button>
+            </div>
+          )}
+
           {empty ? (
             <p className="py-8 text-center text-sm text-muted-foreground">{t("homework.noStudents")}</p>
           ) : (
             <div className="overflow-hidden rounded-lg border">
               <table className="w-full text-sm">
                 <tbody>
-                  {detail.students.map(({ student, status }) => (
+                  {detail.students.map(({ student, status, submittedAt }) => (
                     <tr key={student.id} className="border-b last:border-0">
-                      <td className="px-3 py-2 font-medium">{student.name}</td>
+                      <td className="px-3 py-2">
+                        <p className="font-medium">{student.name}</p>
+                        {status === "pending" && detail.overdue ? (
+                          <p className="text-xs text-destructive">{t("homework.notSubmitted")}</p>
+                        ) : submittedAt ? (
+                          <p className="text-xs text-muted-foreground" dir="ltr">
+                            {t("homework.submittedAt")} {formatDate(submittedAt, "YYYY-MM-DD HH:mm")}
+                          </p>
+                        ) : null}
+                      </td>
                       <td className="px-3 py-2">
                         <div className="flex gap-1">
                           {SUBMISSION_STATUSES.map((s) => (

@@ -80,8 +80,21 @@ export const groupRepository = {
     await db.delete(studentGroups).where(eq(studentGroups.groupId, groupId));
   },
 
-  /** Delete every membership of a student (used on student delete). */
+  /** Every membership of a student (used on student delete). */
   async clearForStudent(studentId: string): Promise<void> {
     await db.delete(studentGroups).where(eq(studentGroups.studentId, studentId));
+  },
+
+  /** Every membership joined with its group name (for payments grouping). */
+  async memberships(): Promise<Array<{ studentId: string; groupId: string; groupName: string }>> {
+    const rows = await db
+      .select({
+        studentId: studentGroups.studentId,
+        groupId: studentGroups.groupId,
+        groupName: studyGroups.name,
+      })
+      .from(studentGroups)
+      .innerJoin(studyGroups, eq(studentGroups.groupId, studyGroups.id));
+    return rows as Array<{ studentId: string; groupId: string; groupName: string }>;
   },
 };

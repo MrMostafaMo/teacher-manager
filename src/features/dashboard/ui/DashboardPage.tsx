@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import {
   Bar,
   BarChart,
@@ -18,6 +19,7 @@ import {
   CalendarDays,
   ClipboardList,
   GraduationCap,
+  NotebookPen,
   UserCheck,
   Users,
   Wallet,
@@ -138,6 +140,39 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm font-medium">{t("dashboard.overdue.title")}</CardTitle>
+          <NotebookPen className="size-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          {data.overdueHomeworks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("dashboard.overdue.empty")}</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {data.overdueHomeworks.map((h) => (
+                <div key={h.id} className="rounded-lg border bg-muted/40 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium">{h.title}</p>
+                    <span className="shrink-0 text-xs tabular-nums text-destructive" dir="ltr">
+                      {h.dueDate}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {h.groupName ?? "—"} · {t("dashboard.overdue.pending", { count: h.pending })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+          {data.overdueHomeworks.length > 0 && (
+            <Link to="/homework" className="mt-3 inline-block text-xs font-medium hover:underline">
+              {t("dashboard.overdue.viewAll")}
+            </Link>
           )}
         </CardContent>
       </Card>

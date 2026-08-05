@@ -37,7 +37,7 @@ export const homeworkRepository = {
   ...createRepository(homeworks),
 
   async list(): Promise<HomeworkListItem[]> {
-    const [rows, groups, counts] = await Promise.all([
+    const [rows, groups, counts, members] = await Promise.all([
       db.select().from(homeworks).orderBy(desc(homeworks.createdAt)),
       db.select({ id: studyGroups.id, name: studyGroups.name }).from(studyGroups),
       db
@@ -48,19 +48,35 @@ export const homeworkRepository = {
         })
         .from(homeworkSubmissions)
         .groupBy(homeworkSubmissions.homeworkId, homeworkSubmissions.status),
+      db
+        .select({ groupId: studentGroups.groupId, n: count() })
+        .from(studentGroups)
+        .groupBy(studentGroups.groupId),
     ]);
     const groupName = new Map((groups as StudyGroup[]).map((g) => [g.id, g.name]));
+    const memberCount = new Map(
+      (members as Array<{ groupId: string; n: number }>).map((m) => [m.groupId, m.n]),
+    );
     const byHomework: Record<string, SubmissionCounts> = {};
     for (const c of counts as Array<{ homeworkId: string; status: SubmissionStatus; n: number }>) {
       const cur = byHomework[c.homeworkId] ?? { submitted: 0, pending: 0, late: 0 };
       cur[c.status] = c.n;
       byHomework[c.homeworkId] = cur;
     }
-    return (rows as Homework[]).map((h) => ({
-      ...h,
-      groupName: groupName.get(h.groupId) ?? null,
-      ...(byHomework[h.id] ?? { submitted: 0, pending: 0, late: 0 }),
-    }));
+    return (rows as Homework[]).map((h) => {
+      const counts = byHomework[h.id] ?? { submitted: 0, pending: 0, late: 0 };
+      const submitted = counts.submitted;
+      const late = counts.late;
+      // Submission rows are lazy — a member without a row counts as pending.
+      const pending = Math.max(0, (memberCount.get(h.groupId) ?? 0) - submitted - late);
+      return {
+        ...h,
+        groupName: groupName.get(h.groupId) ?? null,
+        submitted,
+        pending,
+        late,
+      };
+    });
   },
 
   /** Submission rows for one homework, keyed by studentId. */

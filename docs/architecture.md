@@ -213,3 +213,22 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
   `input type="time"`.
 - Dashboard reads the same `listSchedule()` data for its "Today's sessions"
   card (active groups only), so it can't disagree with the schedule page.
+
+## Per-group sections (Phase 15)
+
+- `src/shared/CollapsibleSection.tsx` — a Card with a collapsible header:
+  chevron toggle button (aria-labelled `common.expand`/`common.collapse`) +
+  title + `meta` + `actions`. Collapse state is owned by the caller
+  (`useState<Record<string, boolean>>`), in-memory only.
+- Homework, exams and payments (dues + history) render one section per group.
+  A student in several groups appears in each of their sections; the global
+  dues/history totals count unique students only. Students with no group land
+  in a trailing "No group" section. Payments fetch the student→groups map via
+  `groupRepository.memberships()` (`listMemberships()` in group-cases).
+- `GroupFormDialog` edits the timetable directly: day + start/end + room rows
+  validated by `groupSessionInputSchema`, written to `group_sessions` through
+  the schedule use-cases (`createSession` for new rows, `deleteSession` for
+  removed ones). The free-text `study_groups.schedule` column is legacy — no
+  longer edited, but still the display fallback for groups with no sessions.
+- The groups list and detail dialog render the timetable from
+  `group_sessions` instead of the legacy text column.

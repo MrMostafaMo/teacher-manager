@@ -13,6 +13,8 @@ interface HomeworkFormDialogProps {
   open: boolean;
   homework: Homework | null;
   groups: StudyGroup[];
+  /** Group preselected when adding from a section header. */
+  defaultGroupId?: string;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -28,6 +30,7 @@ export function HomeworkFormDialog({
   open,
   homework,
   groups,
+  defaultGroupId,
   onClose,
   onSaved,
 }: HomeworkFormDialogProps) {
@@ -45,7 +48,7 @@ export function HomeworkFormDialog({
   useEffect(() => {
     if (open) {
       setForm({
-        groupId: homework?.groupId ?? groups[0]?.id ?? "",
+        groupId: homework?.groupId ?? defaultGroupId ?? groups[0]?.id ?? "",
         title: homework?.title ?? "",
         description: homework?.description ?? "",
         dueDate: homework?.dueDate ?? "",
@@ -53,7 +56,7 @@ export function HomeworkFormDialog({
       setErrors({});
       setFatal("");
     }
-  }, [open, homework, groups]);
+  }, [open, homework, groups, defaultGroupId]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));

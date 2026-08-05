@@ -7,6 +7,7 @@ import {
 } from "@/features/homework/domain";
 import { logActivity } from "@/lib/activity-log";
 import { uuid } from "@/lib/utils/uuid";
+import { formatDate } from "@/lib/utils/format";
 import type { Student } from "@/lib/db/schema";
 
 /**
@@ -18,6 +19,7 @@ export interface HomeworkDetail extends HomeworkListItem {
   students: Array<{
     student: Pick<Student, "id" | "name">;
     status: SubmissionStatus;
+    submittedAt: number | null;
   }>;
 }
 
@@ -27,6 +29,13 @@ export interface HomeworkListItem extends Homework {
   pending: number;
   late: number;
   completion: number;
+  /** Past due date with at least one student still pending. */
+  overdue: boolean;
+}
+
+/** A homework is overdue when its due date has passed and someone is pending. */
+export function isOverdue(h: { dueDate: string | null; pending: number }): boolean {
+  return h.dueDate !== null && h.dueDate < formatDate(new Date()) && h.pending > 0;
 }
 
 export async function listHomeworks(): Promise<HomeworkListItem[]> {
@@ -34,6 +43,7 @@ export async function listHomeworks(): Promise<HomeworkListItem[]> {
   return rows.map((r) => ({
     ...r,
     completion: completionOf(r.submitted, r.pending, r.late),
+    overdue: isOverdue(r),
   }));
 }
 
@@ -45,10 +55,14 @@ export async function getHomeworkDetail(id: string): Promise<HomeworkDetail> {
   if (!homework) throw new Error(`homework ${id} not found`);
   const members = await homeworkRepository.members(homework.groupId);
 
-  const students = members.map((m) => ({
-    student: { id: m.id, name: m.name },
-    status: (submissions.get(m.id)?.status ?? "pending") as SubmissionStatus,
-  }));
+  const students = members.map((m) => {
+    const submission = submissions.get(m.id);
+    return {
+      student: { id: m.id, name: m.name },
+      status: (submission?.status ?? "pending") as SubmissionStatus,
+      submittedAt: submission?.submittedAt ?? null,
+    };
+  });
 
   let submittedCount = 0;
   let pendingCount = 0;
@@ -66,6 +80,7 @@ export async function getHomeworkDetail(id: string): Promise<HomeworkDetail> {
     pending: pendingCount,
     late: lateCount,
     completion: completionOf(submittedCount, pendingCount, lateCount),
+    overdue: isOverdue({ dueDate: homework.dueDate, pending: pendingCount }),
     students,
   };
 }
@@ -145,5 +160,24 @@ export async function setSubmissionStatus(
     entityType: "homework",
     entityId: homeworkId,
     details: { studentId, status },
+  });
+}
+
+/** Set one status for every current member of the homework's group. */
+export async function setAllSubmissionStatus(
+  homeworkId: string,
+  status: SubmissionStatus,
+): Promise<void> {
+  const homework = await homeworkRepository.findById(homeworkId);
+  if (!homework) throw new Error(`homework ${homeworkId} not found`);
+  const members = await homeworkRepository.members(homework.groupId);
+  for (const m of members) {
+    await homeworkRepository.upsertSubmission(homeworkId, m.id, status);
+  }
+  await logActivity({
+    action: "homework.submitAll",
+    entityType: "homework",
+    entityId: homeworkId,
+    details: { status, count: members.length },
   });
 }

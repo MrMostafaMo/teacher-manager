@@ -48,8 +48,13 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
 
 Other top-level dirs: `src/app/` (entry, routes, providers, app shell),
 `src/components/ui/` (shadcn primitives), `src/shared/` (feature-agnostic UI:
-PageHeader, DataTable, ConfirmDialog, AppearanceControls…),
+PageHeader, DataTable, ConfirmDialog, AppearanceControls, CollapsibleSection…),
 `src/lib/db/` (schema, repository, client), `src/styles/` (Tailwind theme).
+
+`CollapsibleSection` (`src/shared/CollapsibleSection.tsx`) is a Card with a
+collapsible header (chevron button + title + `meta` + `actions`). Collapse
+state is owned by the caller (`useState<Record<string, boolean>>`, in-memory
+only). It is used to group per-group lists in homework, exams, and payments.
 
 ## Conventions
 
@@ -89,9 +94,14 @@ PageHeader, DataTable, ConfirmDialog, AppearanceControls…),
 
 Dev app runs via `pnpm tauri dev`. To drive the real window from the CLI:
 
-- Helpers in `/tmp/opencode/`: `a11y_click.py` (click by role+name),
-  `a11y_v3.py` / `a11y_text.py` (accessibility tree dump),
-  `a11y_dump_text.py`.
+- Helpers in `/tmp/opencode/` (recreate after `/tmp` is wiped — keep them out
+  of git): `click.py` (prints screen coords for role+name+idx),
+  `dump.py` / `dumpall.py` (accessibility tree dump; `dumpall` shows raw
+  text on every node). Combine with `xdotool mousemove … click 1`.
+- **Modal quirk**: xdotool clicks/keys reach page buttons (nav, tabs, table
+  rows, collapse toggles) but NOT buttons inside native `<dialog>` modals —
+  a WebKitGTK automation limitation, not a product bug. Verify modal-heavy
+  flows by seeding the SQLite DB directly and re-navigating the page.
 - GTK file dialog: Ctrl+L to type a path.
 - Static check before commit: `pnpm build` (tsc + vite).
 
@@ -106,3 +116,18 @@ attendance sheets (`session_attendance`, one row per member per occurrence),
 timetable polish (member counts, room-conflict detection, day/group
 view toggle), and separate session-attendance monthly statistics in the
 attendance report.
+
+Phase 15 grouped per-group lists behind `CollapsibleSection` and made the
+group form's "schedule" field a live timetable editor. Specifically:
+
+- Homework, exams, and payments (both dues and history) render one
+  collapsible section per group; a student in several groups appears in each
+  of their sections, while global totals in payments count unique students
+  only. Students with no group land in a trailing "No group" section.
+- The group form (create/edit) now edits recurring sessions directly: day +
+  start/end + room rows that write to `group_sessions` via the schedule
+  use-cases (`createSession`/`deleteSession`/`listSchedule`). The free-text
+  `study_groups.schedule` column is legacy — no longer edited, but still the
+  display fallback for groups with no sessions.
+- Group list + detail dialogs render the timetable from `group_sessions`;
+  `group-repo.memberships()` / `listMemberships()` feed the payments grouping.

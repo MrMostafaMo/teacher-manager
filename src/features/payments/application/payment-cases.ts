@@ -2,6 +2,7 @@ import { paymentInputSchema, type PaymentInput } from "@/features/payments/domai
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
+import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { logActivity } from "@/lib/activity-log";
 import type { Payment, Plan, Student } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
@@ -36,15 +37,23 @@ export interface DuesRow {
   due: number;
   paid: number;
   remaining: number;
+  groups: Array<{ id: string; name: string }>;
 }
 
 export async function monthlyDues(period: string): Promise<DuesRow[]> {
-  const [activeStudents, plans, payments] = await Promise.all([
+  const [activeStudents, plans, payments, memberships] = await Promise.all([
     studentRepository.search({ status: "active" }),
     planRepository.list(),
     paymentRepository.byPeriod(period),
+    groupRepository.memberships(),
   ]);
   const planById = new Map(plans.map((p) => [p.id, p]));
+  const groupsByStudent = new Map<string, Array<{ id: string; name: string }>>();
+  for (const m of memberships) {
+    const arr = groupsByStudent.get(m.studentId) ?? [];
+    arr.push({ id: m.groupId, name: m.groupName });
+    groupsByStudent.set(m.studentId, arr);
+  }
   const paidByStudent = new Map<string, number>();
   for (const p of payments) {
     paidByStudent.set(p.studentId, (paidByStudent.get(p.studentId) ?? 0) + p.amount);
@@ -53,7 +62,14 @@ export async function monthlyDues(period: string): Promise<DuesRow[]> {
     const plan = student.planId ? (planById.get(student.planId) ?? null) : null;
     const due = plan?.amount ?? 0;
     const paid = paidByStudent.get(student.id) ?? 0;
-    return { student, plan, due, paid, remaining: due - paid };
+    return {
+      student,
+      plan,
+      due,
+      paid,
+      remaining: due - paid,
+      groups: groupsByStudent.get(student.id) ?? [],
+    };
   });
 }
 
