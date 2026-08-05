@@ -76,4 +76,4 @@ See `docs/architecture.md`.
 
 ## Milestones
 
-See `docs/roadmap.md` for the 15-phase build plan and current status.
+See `docs/roadmap.md` for the 16-phase build plan and current status.

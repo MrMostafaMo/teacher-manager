@@ -43,6 +43,13 @@
       "when": 1785889540568,
       "tag": "0005_calm_punisher",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1785923730962,
+      "tag": "0006_purple_multiple_man",
+      "breakpoints": true
     }
   ]
 }

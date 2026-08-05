@@ -232,3 +232,19 @@ Cross-cutting concerns (activity log, i18n, theme, backup) live under
   longer edited, but still the display fallback for groups with no sessions.
 - The groups list and detail dialog render the timetable from
   `group_sessions` instead of the legacy text column.
+
+## Expenses (Phase 16)
+
+- `expenses` table (migration v7): `title`, fixed `category` enum
+  (`prizes`/`stationery`/`utilities`/`maintenance`/`other`), `amount`,
+  optional `note`, `spentAt` (unix-ms). No student linking by design.
+- `src/features/expenses/`: `expense-repo.ts` adds a `byMonth(period)` range
+  query on `spentAt` over the generic CRUD; `expense-cases.ts` exposes
+  `recordExpense`/`deleteExpense`/`listExpenses`/`monthlyExpenseTotal`, all
+  mutations activity-logged.
+- `ExpensesPage` mirrors the payments month selector + total badge; deletes
+  use the two-click confirm pattern. `RecordExpenseDialog` converts a native
+  `input type="date"` value to unix-ms via dayjs.
+- The dashboard calls `monthlyExpenseTotal(currentMonth)` alongside
+  `monthlyDues` and exposes `expensesMonth` + `net` (collected − expenses)
+  as the 7th/8th KPI cards (`md:grid-cols-4`).

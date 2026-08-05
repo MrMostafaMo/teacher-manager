@@ -20,9 +20,11 @@ import {
   ClipboardList,
   GraduationCap,
   NotebookPen,
+  Receipt,
   UserCheck,
   Users,
   Wallet,
+  Scale,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardData, type DashboardData } from "@/features/dashboard/application/dashboard-cases";
@@ -93,6 +95,8 @@ export default function DashboardPage() {
     { key: "activeStudents", value: data.activeStudents, icon: UserCheck },
     { key: "attendanceRate", value: `${data.attendanceRate}%`, icon: CalendarCheck },
     { key: "collected", value: data.collected.toLocaleString("ar-EG"), icon: Wallet },
+    { key: "expensesMonth", value: data.expensesMonth.toLocaleString("ar-EG"), icon: Receipt },
+    { key: "net", value: data.net.toLocaleString("ar-EG"), icon: Scale },
     { key: "homeworkCompletion", value: `${data.homeworkCompletion}%`, icon: ClipboardList },
     { key: "examAverage", value: data.examAverage === null ? "—" : String(data.examAverage), icon: GraduationCap },
   ];
@@ -104,7 +108,7 @@ export default function DashboardPage() {
         <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {kpis.map(({ key, value, icon: Icon }) => (
           <Card key={key}>
             <CardContent className="space-y-2 p-4">

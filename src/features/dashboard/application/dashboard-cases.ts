@@ -1,6 +1,7 @@
 import { listStudents } from "@/features/students/application/student-cases";
 import { getMonthly } from "@/features/attendance/application/attendance-cases";
 import { monthlyDues } from "@/features/payments/application/payment-cases";
+import { monthlyExpenseTotal } from "@/features/expenses/application/expense-cases";
 import { listHomeworks } from "@/features/homework/application/homework-cases";
 import { listExams } from "@/features/exams/application/exam-cases";
 import { listSkills } from "@/features/skills/application/skill-cases";
@@ -19,6 +20,8 @@ export interface DashboardData {
   attendanceRate: number;
   attendanceTrend: Array<{ month: string; present: number; absent: number; late: number }>;
   collected: number;
+  expensesMonth: number;
+  net: number;
   outstanding: number;
   homeworkCompletion: number;
   homeworkCount: number;
@@ -44,16 +47,18 @@ function currentMonth(): string {
 
 export async function getDashboardData(): Promise<DashboardData> {
   const month = currentMonth();
-  const [students, monthly, dues, homeworks, exams, skills, trend, schedule] = await Promise.all([
-    listStudents({ status: "all" }),
-    getMonthly(month),
-    monthlyDues(month),
-    listHomeworks(),
-    listExams(),
-    listSkills(),
-    attendanceRepository.monthlyTrend(6),
-    listSchedule(),
-  ]);
+  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, expensesMonth] =
+    await Promise.all([
+      listStudents({ status: "all" }),
+      getMonthly(month),
+      monthlyDues(month),
+      listHomeworks(),
+      listExams(),
+      listSkills(),
+      attendanceRepository.monthlyTrend(6),
+      listSchedule(),
+      monthlyExpenseTotal(month),
+    ]);
 
   const totalStudents = students.length;
   const activeStudents = students.filter((s) => s.status === "active").length;
@@ -114,6 +119,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     attendanceRate,
     attendanceTrend: trend,
     collected,
+    expensesMonth,
+    net: collected - expensesMonth,
     outstanding,
     homeworkCompletion,
     homeworkCount: homeworks.length,

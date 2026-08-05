@@ -131,3 +131,17 @@ group form's "schedule" field a live timetable editor. Specifically:
   display fallback for groups with no sessions.
 - Group list + detail dialogs render the timetable from `group_sessions`;
   `group-repo.memberships()` / `listMemberships()` feed the payments grouping.
+
+Phase 16 added expense tracking (المصروفات — money *out*: prizes,
+stationery, utilities, maintenance):
+
+- New `expenses` table (migration v7): `title`, fixed `category` enum
+  (`prizes`/`stationery`/`utilities`/`maintenance`/`other`), `amount`,
+  optional `note`, `spentAt` (unix-ms) — no student linking by design.
+- `src/features/expenses/` follows the standard feature split (domain/
+  application/infrastructure/ui). `ExpensesPage` has a month selector + a
+  per-month total badge, a table of that month's expenses (date, title,
+  category badge, amount, two-click-confirm delete), and a `RecordExpenseDialog`
+  (native `input type="date"` → unix-ms `spentAt`).
+- Dashboard gains two KPIs: `expensesMonth` and `net` (collected − expenses);
+  the KPI grid is now `md:grid-cols-4` (8 cards). KPI card count is 8.

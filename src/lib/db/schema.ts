@@ -182,6 +182,29 @@ export const payments = sqliteTable(
   ],
 );
 
+/** Outgoing costs (prizes, stationery, utilities…) — money spent by the center. */
+export const expenseCategories = [
+  "prizes",
+  "stationery",
+  "utilities",
+  "maintenance",
+  "other",
+] as const;
+
+export const expenses = sqliteTable(
+  "expenses",
+  {
+    id: id(),
+    title: text("title").notNull(),
+    category: text("category", { enum: expenseCategories }).notNull(),
+    amount: integer("amount").notNull(),
+    note: text("note"),
+    spentAt: integer("spent_at").notNull(),
+    ...timestamps,
+  },
+  (t) => [index("expenses_spent_at").on(t.spentAt)],
+);
+
 /** Homework assignments, scoped to a study group. */
 export const homeworks = sqliteTable(
   "homeworks",
@@ -315,6 +338,7 @@ export type Attendance = typeof attendance.$inferSelect;
 export type SessionAttendance = typeof sessionAttendance.$inferSelect;
 export type Plan = typeof plans.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
+export type Expense = typeof expenses.$inferSelect;
 export type Homework = typeof homeworks.$inferSelect;
 export type HomeworkSubmission = typeof homeworkSubmissions.$inferSelect;
 export type Exam = typeof exams.$inferSelect;

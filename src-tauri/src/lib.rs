@@ -44,6 +44,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0005_calm_punisher.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 7,
+            description: "expenses (outgoing costs)",
+            sql: include_str!("../migrations/0006_purple_multiple_man.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

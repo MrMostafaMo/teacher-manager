@@ -21,6 +21,32 @@ next begins, and ends with a review checkpoint.
 | 13   | Polish: animations, a11y, performance, packaging | ✅ Done |
 | 14   | Weekly timetable (الجدول): recurring group sessions, grid page, dashboard "today" | ✅ Done |
 | 15   | Collapsible per-group sections + group-form timetable editor + per-group payments | ✅ Done |
+| 16   | Expenses (المصروفات): outgoing costs with categories + net on dashboard | ✅ Done |
+
+## Phase 16 — completed
+
+- New `expenses` table (migration v7): `title`, fixed `category` enum
+  (`prizes`/`stationery`/`utilities`/`maintenance`/`other`), `amount`
+  (integer EGP), optional `note`, `spentAt` (unix-ms), timestamps. No student
+  linking by design — every expense is a center-level outgoing cost.
+- `src/features/expenses/` follows the standard split: `domain.ts`
+  (`expenseInputSchema`), `infrastructure/expense-repo.ts` (`byMonth` range
+  on `spentAt`), `application/expense-cases.ts` (`recordExpense`,
+  `deleteExpense`, `listExpenses`, `monthlyExpenseTotal`, activity-logged),
+  `ui/ExpensesPage.tsx` + `RecordExpenseDialog.tsx`.
+- `ExpensesPage`: month selector (`input type="month"`) + per-month total
+  badge, a table of that month's expenses (date, title, category badge,
+  amount, note, two-click-confirm delete), empty + loading states.
+  `RecordExpenseDialog` uses native `input type="date"` → unix-ms `spentAt`.
+- Dashboard gains two KPIs — `expensesMonth` and `net` (collected −
+  expenses) — so the KPI grid is now `md:grid-cols-4` with 8 cards.
+- i18n: `nav.expenses` + full `expenses` namespace + two `dashboard.kpis`
+  keys, both locales.
+- E2E verified in the running app: nav renders, seeded rows show in the
+  table with delete buttons, dashboard shows expensesMonth = 555 and
+  net = −55 against 500 collected, the record dialog opens with all fields
+  and today's date default; test data cleaned up afterwards.
+- `pnpm build` clean.
 
 ## Phase 14 — completed
 
