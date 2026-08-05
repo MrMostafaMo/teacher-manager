@@ -170,6 +170,11 @@
     font-feature-settings: "tnum";
   }
 
+  /* LTR-only values (dates/numbers/phones) align with their text-start headers in RTL */
+  [dir="rtl"] td[dir="ltr"] {
+    text-align: right;
+  }
+
   ::selection {
     @apply bg-primary text-primary-foreground;
   }
