@@ -16,7 +16,9 @@ import { listMemberships } from "@/features/groups/application/group-cases";
 import { listStudents } from "@/features/students/application/student-cases";
 import type { Payment, Student } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { formatMoney } from "@/lib/utils/format";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
+import { MonthPicker } from "@/shared/DatePicker";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { PlansDialog } from "./PlansDialog";
 
@@ -179,10 +181,10 @@ function DuesView({
                     {r.plan ? r.plan.name : "—"}
                   </td>
                   <td className="px-4 py-2.5" dir="ltr">
-                    {r.due > 0 ? r.due : "—"}
+                    {r.due > 0 ? formatMoney(r.due) : "—"}
                   </td>
                   <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400" dir="ltr">
-                    {r.paid > 0 ? r.paid : "—"}
+                    {r.paid > 0 ? formatMoney(r.paid) : "—"}
                   </td>
                   <td
                     className={cn(
@@ -191,7 +193,7 @@ function DuesView({
                     )}
                     dir="ltr"
                   >
-                    {r.due > 0 ? Math.max(r.remaining, 0) : "—"}
+                    {r.due > 0 ? formatMoney(Math.max(r.remaining, 0)) : "—"}
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex justify-end">
@@ -212,16 +214,16 @@ function DuesView({
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           {t("payments.month")}
-          <input
-            type="month"
+          <MonthPicker
             value={month}
-            onChange={(e) => e.target.value && onMonthChange(e.target.value)}
+            onChange={(v) => v && onMonthChange(v)}
+            ariaLabel={t("payments.month")}
             className={inputClass}
           />
         </label>
         <Badge variant="secondary">
           <Wallet className="size-3.5" />
-          {t("payments.remaining")}: {totals()}
+          {t("payments.remaining")}: {formatMoney(totals())}
         </Badge>
       </div>
 
@@ -250,7 +252,7 @@ function DuesView({
               <CollapsibleSection
                 key={sec.id}
                 title={sec.name}
-                meta={`${sec.rows.length} · ${subtotal(sec.rows)}`}
+                meta={`${sec.rows.length} · ${formatMoney(subtotal(sec.rows))}`}
                 collapsed={isCollapsed}
                 onToggle={() => setCollapsed((c) => ({ ...c, [sec.id]: !isCollapsed }))}
               >
@@ -262,7 +264,7 @@ function DuesView({
             <CollapsibleSection
               key="__ungrouped"
               title={t("payments.ungrouped")}
-              meta={`${ungrouped.length} · ${subtotal(ungrouped)}`}
+              meta={`${ungrouped.length} · ${formatMoney(subtotal(ungrouped))}`}
               collapsed={!!collapsed.__ungrouped}
               onToggle={() =>
                 setCollapsed((c) => ({ ...c, __ungrouped: !collapsed.__ungrouped }))
@@ -395,7 +397,7 @@ function HistoryView({
                   {payment.period}
                 </td>
                 <td className="px-4 py-2.5 font-medium" dir="ltr">
-                  {payment.amount}
+                  {formatMoney(payment.amount)}
                 </td>
                 <td className="px-4 py-2.5">
                   <Badge variant="secondary">
@@ -503,7 +505,7 @@ function HistoryView({
               <CollapsibleSection
                 key={sec.id}
                 title={sec.name}
-                meta={`${sec.list.length} · ${sectionTotal(sec.list)}`}
+                meta={`${sec.list.length} · ${formatMoney(sectionTotal(sec.list))}`}
                 collapsed={isCollapsed}
                 onToggle={() => setCollapsed((c) => ({ ...c, [sec.id]: !isCollapsed }))}
               >
@@ -515,7 +517,7 @@ function HistoryView({
             <CollapsibleSection
               key="__ungrouped"
               title={t("payments.ungrouped")}
-              meta={`${ungrouped.length} · ${sectionTotal(ungrouped)}`}
+              meta={`${ungrouped.length} · ${formatMoney(sectionTotal(ungrouped))}`}
               collapsed={!!collapsed.__ungrouped}
               onToggle={() =>
                 setCollapsed((c) => ({ ...c, __ungrouped: !collapsed.__ungrouped }))

@@ -8,6 +8,7 @@ import { deletePlan, listPlans } from "@/features/payments/application/plan-case
 import type { PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import type { Plan } from "@/lib/db/schema";
 import { Modal } from "@/features/students/ui/Modal";
+import { formatMoney } from "@/lib/utils/format";
 import { PlanFormDialog } from "./PlanFormDialog";
 
 interface PlansDialogProps {
@@ -118,7 +119,7 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
                       <tr key={p.id} className="border-b last:border-0 hover:bg-muted/50">
                         <td className="px-4 py-2.5 font-medium">{p.name}</td>
                         <td className="px-4 py-2.5" dir="ltr">
-                          {p.amount}
+                          {formatMoney(p.amount)}
                         </td>
                         <td className="px-4 py-2.5">
                           <Badge variant="secondary">{t(intervalKey[p.billingInterval])}</Badge>

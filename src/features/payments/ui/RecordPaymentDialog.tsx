@@ -8,8 +8,10 @@ import { paymentInputSchema } from "@/features/payments/domain";
 import { listPlans } from "@/features/payments/application/plan-cases";
 import { recordPayment, updatePayment } from "@/features/payments/application/payment-cases";
 import { listStudents } from "@/features/students/application/student-cases";
+import { MonthPicker } from "@/shared/DatePicker";
 import type { Payment, Plan, Student } from "@/lib/db/schema";
 import { Modal } from "@/features/students/ui/Modal";
+import { formatMoney } from "@/lib/utils/format";
 
 interface RecordPaymentDialogProps {
   open: boolean;
@@ -128,7 +130,7 @@ export function RecordPaymentDialog({
             value={form.studentId}
             onChange={(e) => handleStudentChange(e.target.value)}
             aria-invalid={!!errors.studentId}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
           >
             <option value="">{t("payments.studentPlaceholder")}</option>
             {students.map((s) => (
@@ -147,12 +149,12 @@ export function RecordPaymentDialog({
               id="payment-plan"
               value={form.planId}
               onChange={(e) => handlePlanChange(e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="">{t("payments.noPlan")}</option>
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} — {p.amount}
+                  {p.name} — {formatMoney(p.amount)}
                 </option>
               ))}
             </select>
@@ -177,13 +179,11 @@ export function RecordPaymentDialog({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="payment-period">{t("payments.period")}</Label>
-            <Input
-              id="payment-period"
-              dir="ltr"
-              type="month"
+            <MonthPicker
               value={form.period}
-              onChange={(e) => e.target.value && setField("period", e.target.value)}
-              className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              onChange={(v) => v && setField("period", v)}
+              ariaLabel={t("payments.period")}
+              className="w-full"
             />
           </div>
           <div className="space-y-1.5">
@@ -192,7 +192,7 @@ export function RecordPaymentDialog({
               id="payment-method"
               value={form.method}
               onChange={(e) => setField("method", e.target.value as FormState["method"])}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="cash">{t("payments.cash")}</option>
               <option value="card">{t("payments.card")}</option>
@@ -207,7 +207,7 @@ export function RecordPaymentDialog({
             id="payment-note"
             value={form.note}
             onChange={(e) => setField("note", e.target.value)}
-            className="min-h-20 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground"
+            className="min-h-20 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted/50"
           />
         </div>
 

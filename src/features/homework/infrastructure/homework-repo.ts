@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   homeworkSubmissions,
@@ -27,46 +27,54 @@ export interface HomeworkListItem extends Homework {
   late: number;
 }
 
-export interface SubmissionCounts {
-  submitted: number;
-  pending: number;
-  late: number;
-}
-
 export const homeworkRepository = {
   ...createRepository(homeworks),
 
   async list(): Promise<HomeworkListItem[]> {
-    const [rows, groups, counts, members] = await Promise.all([
+    const [rows, groups, subRows, memberships] = await Promise.all([
       db.select().from(homeworks).orderBy(desc(homeworks.createdAt)),
       db.select({ id: studyGroups.id, name: studyGroups.name }).from(studyGroups),
       db
         .select({
           homeworkId: homeworkSubmissions.homeworkId,
           status: homeworkSubmissions.status,
+          studentId: homeworkSubmissions.studentId,
           n: count(),
         })
         .from(homeworkSubmissions)
-        .groupBy(homeworkSubmissions.homeworkId, homeworkSubmissions.status),
+        .groupBy(
+          homeworkSubmissions.homeworkId,
+          homeworkSubmissions.status,
+          homeworkSubmissions.studentId,
+        ),
       db
-        .select({ groupId: studentGroups.groupId, n: count() })
-        .from(studentGroups)
-        .groupBy(studentGroups.groupId),
+        .select({
+          groupId: studentGroups.groupId,
+          studentId: studentGroups.studentId,
+        })
+        .from(studentGroups),
     ]);
     const groupName = new Map((groups as StudyGroup[]).map((g) => [g.id, g.name]));
-    const memberCount = new Map(
-      (members as Array<{ groupId: string; n: number }>).map((m) => [m.groupId, m.n]),
-    );
-    const byHomework: Record<string, SubmissionCounts> = {};
-    for (const c of counts as Array<{ homeworkId: string; status: SubmissionStatus; n: number }>) {
-      const cur = byHomework[c.homeworkId] ?? { submitted: 0, pending: 0, late: 0 };
-      cur[c.status] = c.n;
-      byHomework[c.homeworkId] = cur;
+    // Stats reflect *current* members only — a former member's stale
+    // submission must not inflate submitted/late or drag completion negative.
+    const membersOf = new Map<string, Set<string>>();
+    const memberCount = new Map<string, number>();
+    for (const m of memberships) {
+      const set = membersOf.get(m.groupId) ?? new Set<string>();
+      set.add(m.studentId);
+      membersOf.set(m.groupId, set);
+      memberCount.set(m.groupId, (memberCount.get(m.groupId) ?? 0) + 1);
     }
     return (rows as Homework[]).map((h) => {
-      const counts = byHomework[h.id] ?? { submitted: 0, pending: 0, late: 0 };
-      const submitted = counts.submitted;
-      const late = counts.late;
+      const memberIds = membersOf.get(h.groupId);
+      let submitted = 0;
+      let late = 0;
+      for (const c of subRows) {
+        if (c.homeworkId !== h.id) continue;
+        if (memberIds && !memberIds.has(c.studentId)) continue;
+        if (c.status === "submitted") submitted += c.n;
+        else if (c.status === "late") late += c.n;
+      }
       // Submission rows are lazy — a member without a row counts as pending.
       const pending = Math.max(0, (memberCount.get(h.groupId) ?? 0) - submitted - late);
       return {
@@ -139,10 +147,43 @@ export const homeworkRepository = {
     await db.delete(homeworks).where(eq(homeworks.groupId, groupId));
   },
 
+  /** One student's submissions for a group's homeworks (used on membership removal). */
+  async clearForStudentInGroup(studentId: string, groupId: string): Promise<void> {
+    const hw = (await db
+      .select({ id: homeworks.id })
+      .from(homeworks)
+      .where(eq(homeworks.groupId, groupId))) as Array<{ id: string }>;
+    if (hw.length === 0) return;
+    await db
+      .delete(homeworkSubmissions)
+      .where(
+        and(
+          inArray(homeworkSubmissions.homeworkId, hw.map((h) => h.id)),
+          eq(homeworkSubmissions.studentId, studentId),
+        ),
+      );
+  },
+
   async clearForHomework(homeworkId: string): Promise<void> {
     await db
       .delete(homeworkSubmissions)
       .where(eq(homeworkSubmissions.homeworkId, homeworkId));
+  },
+
+  /** Drop submissions from students no longer in the group (used when the group changes). */
+  async pruneSubmissionsToMembers(homeworkId: string, groupId: string): Promise<void> {
+    const memberIds = db
+      .select({ studentId: studentGroups.studentId })
+      .from(studentGroups)
+      .where(eq(studentGroups.groupId, groupId));
+    await db
+      .delete(homeworkSubmissions)
+      .where(
+        and(
+          eq(homeworkSubmissions.homeworkId, homeworkId),
+          notInArray(homeworkSubmissions.studentId, memberIds),
+        ),
+      );
   },
 
   /** Every submission of a student (used on student delete). */

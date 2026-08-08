@@ -125,7 +125,7 @@ export function PlanFormDialog({ open, plan, onClose, onSaved }: PlanFormDialogP
               id="plan-interval"
               value={form.billingInterval}
               onChange={(e) => setField("billingInterval", e.target.value as FormState["billingInterval"])}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="monthly">{t("plans.monthly")}</option>
               <option value="term">{t("plans.term")}</option>

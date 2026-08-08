@@ -18,12 +18,24 @@ import * as schema from "@/lib/db/schema";
 const DB_URI = "sqlite:teacher-manager.db";
 
 let sqlite: Database | null = null;
+let connecting: Promise<Database> | null = null;
 
-async function connect(): Promise<Database> {
-  if (!sqlite) {
-    sqlite = await Database.load(DB_URI);
-  }
-  return sqlite;
+/**
+ * Return the shared connection, opening it at most once. The promise is
+ * memoized so concurrent callers during first load share a single
+ * `Database.load` instead of racing to open separate pools.
+ */
+function connect(): Promise<Database> {
+  if (sqlite) return Promise.resolve(sqlite);
+  connecting ??= Database.load(DB_URI)
+    .then((db) => {
+      sqlite = db;
+      return db;
+    })
+    .finally(() => {
+      connecting = null;
+    });
+  return connecting;
 }
 
 /** Bridge between Drizzle's proxy driver and the Tauri SQL plugin. */
@@ -57,6 +69,16 @@ const remote: AsyncRemoteCallback = async (sql, params, method) => {
 };
 
 export const db = drizzle(remote, { schema });
+
+/** Run one raw SELECT and return its first row (used by restore validation). */
+export async function queryFirst<T = Record<string, unknown>>(
+  sql: string,
+  params: unknown[] = [],
+): Promise<T | undefined> {
+  const connection = await connect();
+  const rows = await connection.select<Record<string, unknown>[]>(sql, params as unknown[]);
+  return (rows[0] ?? undefined) as T | undefined;
+}
 
 /** Close the connection pool (used by backup/restore and on shutdown). */
 export async function closeDatabase(): Promise<void> {

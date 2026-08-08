@@ -117,6 +117,7 @@ export async function updateHomework(
   input: HomeworkInput,
 ): Promise<Homework | undefined> {
   const data = homeworkInputSchema.parse(input);
+  const existing = await homeworkRepository.findById(id);
   const homework = await homeworkRepository.update(id, {
     groupId: data.groupId,
     title: data.title,
@@ -124,6 +125,9 @@ export async function updateHomework(
     dueDate: data.dueDate ?? null,
   });
   if (homework) {
+    if (existing && existing.groupId !== data.groupId) {
+      await homeworkRepository.pruneSubmissionsToMembers(id, data.groupId);
+    }
     await logActivity({
       action: "homework.update",
     entityType: "homework",
@@ -154,6 +158,12 @@ export async function setSubmissionStatus(
   studentId: string,
   status: SubmissionStatus,
 ): Promise<void> {
+  const homework = await homeworkRepository.findById(homeworkId);
+  if (!homework) throw new Error(`homework ${homeworkId} not found`);
+  const members = await homeworkRepository.members(homework.groupId);
+  if (!members.some((m) => m.id === studentId)) {
+    throw new Error(`student ${studentId} is not a member of the homework's group`);
+  }
   await homeworkRepository.upsertSubmission(homeworkId, studentId, status);
   await logActivity({
     action: "homework.submit",

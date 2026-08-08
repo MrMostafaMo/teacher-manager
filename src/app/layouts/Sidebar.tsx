@@ -16,7 +16,7 @@ export function Sidebar() {
         <span className="truncate text-sm font-semibold">{t("app.name")}</span>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
+      <nav className="flex-1 space-y-1 overflow-y-auto overscroll-none p-2">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.to}

@@ -20,6 +20,7 @@ import {
 import dayjs from "dayjs";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
+import { formatDateString } from "@/lib/utils/format";
 
 /**
  * Report data builders. Every report is a flat table over current DB state;
@@ -95,22 +96,23 @@ async function studentsReport(t: ReportTranslations): Promise<ReportData> {
 
 async function attendanceReport(t: ReportTranslations): Promise<ReportData> {
   const rows = (await db.select().from(attendance)) as typeof attendance.$inferSelect[];
-  const perStudent = new Map<string, { present: number; absent: number; late: number }>();
+  const perStudent = new Map<string, { present: number; absent: number; late: number; excused: number }>();
   for (const r of rows) {
-    const cur = perStudent.get(r.studentId) ?? { present: 0, absent: 0, late: 0 };
+    const cur = perStudent.get(r.studentId) ?? { present: 0, absent: 0, late: 0, excused: 0 };
     if (r.status === "present") cur.present++;
     else if (r.status === "absent") cur.absent++;
-    else cur.late++;
+    else if (r.status === "late") cur.late++;
+    else cur.excused++;
     perStudent.set(r.studentId, cur);
   }
   const allStudents = (await db.select({ id: students.id, name: students.name }).from(students).orderBy(students.name)) as Array<{ id: string; name: string }>;
   return {
     key: "attendance",
     title: t.title,
-    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4]],
+    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4], t.headers[5]],
     rows: allStudents.map((s) => {
-      const c = perStudent.get(s.id) ?? { present: 0, absent: 0, late: 0 };
-      return [s.name, c.present, c.absent, c.late, c.present + c.absent + c.late];
+      const c = perStudent.get(s.id) ?? { present: 0, absent: 0, late: 0, excused: 0 };
+      return [s.name, c.present, c.absent, c.late, c.excused, c.present + c.absent + c.late + c.excused];
     }),
   };
 }
@@ -143,7 +145,7 @@ async function examsReport(t: ReportTranslations): Promise<ReportData> {
     rows.push([
       e.title,
       groupName.get(e.groupId) ?? "—",
-      e.date ?? "—",
+      formatDateString(e.date),
       e.maxScore,
       total ? Math.round((rs.length / total) * 100) : 0,
       avg ?? "—",
@@ -162,26 +164,29 @@ async function examsReport(t: ReportTranslations): Promise<ReportData> {
 }
 
 async function paymentsReport(t: ReportTranslations): Promise<ReportData> {
-  const [allPayments, allPlans] = await Promise.all([
+  const [allPayments, allPlans, allStudents] = await Promise.all([
     db.select().from(payments),
     planRepository.list(),
+    db
+      .select({ id: students.id, name: students.name, planId: students.planId })
+      .from(students)
+      .orderBy(students.name),
   ]);
   const planAmount = new Map(allPlans.map((p) => [p.id, p.amount]));
-  const totals = new Map<string, { plan: number | null; paid: number }>();
+  // Due amount comes from the student's *current* plan, paid is the sum of
+  // every payment — never from a payment row's historical planId.
+  const paidByStudent = new Map<string, number>();
   for (const p of allPayments as Payment[]) {
-    const cur = totals.get(p.studentId) ?? { plan: p.planId ? (planAmount.get(p.planId) ?? null) : null, paid: 0 };
-    cur.paid += p.amount;
-    totals.set(p.studentId, cur);
+    paidByStudent.set(p.studentId, (paidByStudent.get(p.studentId) ?? 0) + p.amount);
   }
-  const allStudents = (await db.select({ id: students.id, name: students.name }).from(students).orderBy(students.name)) as Array<{ id: string; name: string }>;
   return {
     key: "payments",
     title: t.title,
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3]],
     rows: allStudents.map((s) => {
-      const c = totals.get(s.id) ?? { plan: null, paid: 0 };
-      const due = c.plan ?? 0;
-      return [s.name, due, c.paid, due - c.paid];
+      const due = s.planId ? (planAmount.get(s.planId) ?? 0) : 0;
+      const paid = paidByStudent.get(s.id) ?? 0;
+      return [s.name, due, paid, Math.max(due - paid, 0)];
     }),
   };
 }
@@ -196,7 +201,7 @@ async function expensesReport(t: ReportTranslations): Promise<ReportData> {
     title: t.title,
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4]],
     rows: rows.map((e) => [
-      dayjs(e.spentAt).format("YYYY-MM-DD"),
+      dayjs(e.spentAt).format("DD-MM-YYYY"),
       e.title,
       t.category?.(e.category) ?? e.category,
       e.amount,
@@ -230,7 +235,7 @@ async function financesReport(t: ReportTranslations): Promise<ReportData> {
     rows: [...byMonth.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([month, { collected, expenses }]) => [
-        month,
+        dayjs(`${month}-01`).format("MM-YYYY"),
         collected,
         expenses,
         collected - expenses,

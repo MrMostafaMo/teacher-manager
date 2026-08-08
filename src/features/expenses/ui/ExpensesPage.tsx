@@ -10,7 +10,9 @@ import {
   listExpenses,
 } from "@/features/expenses/application/expense-cases";
 import type { Expense } from "@/lib/db/schema";
+import { formatDate, formatMoney } from "@/lib/utils/format";
 import { RecordExpenseDialog } from "./RecordExpenseDialog";
+import { MonthPicker } from "@/shared/DatePicker";
 
 const inputClass =
   "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring";
@@ -78,16 +80,16 @@ export default function ExpensesPage() {
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           {t("expenses.month")}
-          <input
-            type="month"
+          <MonthPicker
             value={month}
-            onChange={(e) => e.target.value && setMonth(e.target.value)}
+            onChange={(v) => v && setMonth(v)}
+            ariaLabel={t("expenses.month")}
             className={inputClass}
           />
         </label>
         <Badge variant="secondary">
           <Receipt className="size-3.5" />
-          {t("expenses.total")}: {total}
+          {t("expenses.total")}: {formatMoney(total)}
         </Badge>
       </div>
 
@@ -127,14 +129,14 @@ export default function ExpensesPage() {
                   {rows.map((r) => (
                     <tr key={r.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="px-4 py-2.5 tabular-nums text-muted-foreground" dir="ltr">
-                        {dayjs(r.spentAt).format("YYYY-MM-DD")}
+                        {formatDate(r.spentAt, "DD-MM-YYYY")}
                       </td>
                       <td className="px-4 py-2.5 font-medium">{r.title}</td>
                       <td className="px-4 py-2.5">
                         <Badge variant="secondary">{t(`expenses.categories.${r.category}`)}</Badge>
                       </td>
                       <td className="px-4 py-2.5 tabular-nums" dir="ltr">
-                        {r.amount}
+                        {formatMoney(r.amount)}
                       </td>
                       <td className="max-w-48 truncate px-4 py-2.5 text-muted-foreground">
                         {r.note ?? "—"}

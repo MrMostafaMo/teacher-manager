@@ -35,6 +35,8 @@ export async function buildReportPdf(
   const font = fontkit.create(fontBuffer);
 
   // Column widths: proportional to the longest cell, capped at 40% of the page.
+  // After capping the widths no longer sum to the table width, so they are
+  // re-normalized to fill it exactly (avoids a gap at the far edge in RTL).
   const tableWidth = PAGE_WIDTH - MARGIN * 2;
   const widths = data.headers.map((h, i) => {
     let max = textWidth(font, h);
@@ -44,15 +46,35 @@ export async function buildReportPdf(
     return max;
   });
   const total = widths.reduce((a, b) => a + b, 0);
-  const colWidths = widths.map((w) => Math.min((w / total) * tableWidth, tableWidth * 0.4));
+  const capped = total > 0 ? widths.map((w) => Math.min((w / total) * tableWidth, tableWidth * 0.4)) : widths.map(() => tableWidth / widths.length || tableWidth);
+  const cappedTotal = capped.reduce((a, b) => a + b, 0);
+  const colWidths = capped.map((w) => (w / cappedTotal) * tableWidth);
 
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - MARGIN;
+
+  function drawHeaderRow() {
+    y -= HEADER_HEIGHT + 4;
+    let hx = opts.rtl ? PAGE_WIDTH - MARGIN : MARGIN;
+    const headerBaseline = y + 16;
+    data.headers.forEach((h, i) => {
+      const colX = opts.rtl ? hx - colWidths[i] : hx;
+      page.drawRectangle({ x: colX, y, width: colWidths[i], height: HEADER_HEIGHT, color: rgb(0.93, 0.95, 0.97) });
+      const savedY = y;
+      y = headerBaseline;
+      cellText(h, colX, colWidths[i], headerColor);
+      y = savedY;
+      hx += opts.rtl ? -colWidths[i] : colWidths[i];
+    });
+    y -= HEADER_HEIGHT;
+  }
 
   function ensureSpace(needed: number) {
     if (y - needed < MARGIN) {
       page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
       y = PAGE_HEIGHT - MARGIN;
+      // Repeat the header row on every continuation page.
+      drawHeaderRow();
     }
   }
 
@@ -90,19 +112,7 @@ export async function buildReportPdf(
   drawTitle(opts.subtitle, opts.rtl ? PAGE_WIDTH - MARGIN : MARGIN, SUBTITLE_SIZE, mutedColor);
 
   // Header row.
-  y -= HEADER_HEIGHT + 4;
-  let hx = opts.rtl ? PAGE_WIDTH - MARGIN : MARGIN;
-  const headerBaseline = y + 16;
-  data.headers.forEach((h, i) => {
-    const colX = opts.rtl ? hx - colWidths[i] : hx;
-    page.drawRectangle({ x: colX, y, width: colWidths[i], height: HEADER_HEIGHT, color: rgb(0.93, 0.95, 0.97) });
-    const savedY = y;
-    y = headerBaseline;
-    cellText(h, colX, colWidths[i], headerColor);
-    y = savedY;
-    hx += opts.rtl ? -colWidths[i] : colWidths[i];
-  });
-  y -= HEADER_HEIGHT;
+  drawHeaderRow();
 
   // Data rows.
   for (const row of data.rows) {

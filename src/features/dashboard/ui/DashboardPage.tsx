@@ -27,11 +27,15 @@ import {
   Scale,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { getDashboardData, type DashboardData } from "@/features/dashboard/application/dashboard-cases";
+import { cn } from "@/lib/utils";
+import { formatDateString, formatMoney, formatTime } from "@/lib/utils/format";
+import { useTimeStore } from "@/lib/time-store";
 
 type ChartStatus = "loading" | "ready" | "error";
 
-const ATTENDANCE_COLORS = { present: "#10b981", late: "#f59e0b", absent: "#f43f5e" };
+const ATTENDANCE_COLORS = { present: "#10b981", late: "#f59e0b", absent: "#f43f5e", excused: "#8b5cf6" };
 const HOMEWORK_COLORS = { submitted: "#10b981", pending: "#94a3b8", late: "#f59e0b" };
 const HOMEWORK_STATUS_KEYS = {
   submitted: "homework.statusSubmitted",
@@ -46,6 +50,7 @@ function monthShort(iso: string): string {
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const hour24 = useTimeStore((s) => s.hour24);
   const [status, setStatus] = useState<ChartStatus>("loading");
   const [data, setData] = useState<DashboardData | null>(null);
 
@@ -54,12 +59,13 @@ export default function DashboardPage() {
     void (async () => {
       try {
         const d = await getDashboardData();
-        if (!cancelled) setData(d);
+        if (!cancelled) {
+          setData(d);
+          setStatus("ready");
+        }
       } catch (error) {
         console.error("Dashboard load failed", error);
         if (!cancelled) setStatus("error");
-      } finally {
-        if (!cancelled) setStatus("ready");
       }
     })();
     return () => {
@@ -82,6 +88,7 @@ export default function DashboardPage() {
     present: r.present,
     late: r.late,
     absent: r.absent,
+    excused: r.excused,
   }));
 
   const homeworkPie = [
@@ -94,9 +101,9 @@ export default function DashboardPage() {
     { key: "totalStudents", value: data.totalStudents, icon: Users },
     { key: "activeStudents", value: data.activeStudents, icon: UserCheck },
     { key: "attendanceRate", value: `${data.attendanceRate}%`, icon: CalendarCheck },
-    { key: "collected", value: data.collected.toLocaleString("ar-EG"), icon: Wallet },
-    { key: "expensesMonth", value: data.expensesMonth.toLocaleString("ar-EG"), icon: Receipt },
-    { key: "net", value: data.net.toLocaleString("ar-EG"), icon: Scale },
+    { key: "collected", value: formatMoney(data.collected), icon: Wallet },
+    { key: "expensesMonth", value: formatMoney(data.expensesMonth), icon: Receipt },
+    { key: "net", value: formatMoney(data.net), icon: Scale },
     { key: "homeworkCompletion", value: `${data.homeworkCompletion}%`, icon: ClipboardList },
     { key: "examAverage", value: data.examAverage === null ? "—" : String(data.examAverage), icon: GraduationCap },
   ];
@@ -133,10 +140,23 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {data.todaySessions.map((s) => (
-                <div key={s.id} className="rounded-lg border bg-muted/40 p-3">
-                  <p className="truncate text-sm font-medium">{s.groupName}</p>
+                <div
+                  key={s.id}
+                  className={cn(
+                    "rounded-lg border p-3",
+                    s.finished ? "bg-muted/20 opacity-70" : "bg-muted/40",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium">{s.groupName}</p>
+                    {s.finished && (
+                      <Badge variant="secondary" className="shrink-0 text-[10px]">
+                        {t("dashboard.today.finished")}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs tabular-nums text-muted-foreground">
-                    {s.startTime} – {s.endTime}
+                    {formatTime(s.startTime, hour24)} – {formatTime(s.endTime, hour24)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {s.room ? `${t("schedule.room")}: ${s.room}` : t("schedule.noRoom")}
@@ -163,7 +183,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-medium">{h.title}</p>
                     <span className="shrink-0 text-xs tabular-nums text-destructive" dir="ltr">
-                      {h.dueDate}
+                      {formatDateString(h.dueDate)}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -198,6 +218,7 @@ export default function DashboardPage() {
                   <Bar dataKey="present" stackId="a" fill={ATTENDANCE_COLORS.present} name={t("attendance.statusPresent")} />
                   <Bar dataKey="late" stackId="a" fill={ATTENDANCE_COLORS.late} name={t("attendance.statusLate")} />
                   <Bar dataKey="absent" stackId="a" fill={ATTENDANCE_COLORS.absent} name={t("attendance.statusAbsent")} />
+                  <Bar dataKey="excused" stackId="a" fill={ATTENDANCE_COLORS.excused} name={t("attendance.statusExcused")} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -1,4 +1,4 @@
-import { and, avg, count, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   examResults,
@@ -29,39 +29,50 @@ export const examRepository = {
   ...createRepository(exams),
 
   async list(): Promise<ExamListItem[]> {
-    const [rows, groups, counts, avgs, members] = await Promise.all([
+    const [rows, groups, resultRows, memberships] = await Promise.all([
       db.select().from(exams).orderBy(desc(exams.createdAt)),
       db.select({ id: studyGroups.id, name: studyGroups.name }).from(studyGroups),
       db
-        .select({ examId: examResults.examId, n: count() })
-        .from(examResults)
-        .groupBy(examResults.examId),
+        .select({
+          examId: examResults.examId,
+          studentId: examResults.studentId,
+          score: examResults.score,
+        })
+        .from(examResults),
       db
-        .select({ examId: examResults.examId, value: avg(examResults.score) })
-        .from(examResults)
-        .groupBy(examResults.examId),
-      db
-        .select({ groupId: studentGroups.groupId, n: count() })
-        .from(studentGroups)
-        .groupBy(studentGroups.groupId),
+        .select({
+          groupId: studentGroups.groupId,
+          studentId: studentGroups.studentId,
+        })
+        .from(studentGroups),
     ]);
     const groupName = new Map((groups as StudyGroup[]).map((g) => [g.id, g.name]));
-    const resultCount = new Map(
-      (counts as Array<{ examId: string; n: number }>).map((c) => [c.examId, c.n]),
-    );
-    const average = new Map(
-      (avgs as Array<{ examId: string; value: number | null }>).map((a) => [a.examId, a.value]),
-    );
-    const memberCount = new Map(
-      (members as Array<{ groupId: string; n: number }>).map((m) => [m.groupId, m.n]),
-    );
-    return (rows as Exam[]).map((e) => ({
-      ...e,
-      groupName: groupName.get(e.groupId) ?? null,
-      memberCount: memberCount.get(e.groupId) ?? 0,
-      resultCount: resultCount.get(e.id) ?? 0,
-      average: average.get(e.id) ?? null,
-    }));
+    // Stats reflect *current* members only — a former member's stale result
+    // must not inflate resultCount/average or the completion percentage.
+    const membersOf = new Map<string, Set<string>>();
+    const memberCount = new Map<string, number>();
+    for (const m of memberships) {
+      const set = membersOf.get(m.groupId) ?? new Set<string>();
+      set.add(m.studentId);
+      membersOf.set(m.groupId, set);
+      memberCount.set(m.groupId, (memberCount.get(m.groupId) ?? 0) + 1);
+    }
+    return (rows as Exam[]).map((e) => {
+      const memberIds = membersOf.get(e.groupId);
+      const scores = resultRows
+        .filter((r) => r.examId === e.id && (!memberIds || memberIds.has(r.studentId)))
+        .map((r) => r.score);
+      return {
+        ...e,
+        groupName: groupName.get(e.groupId) ?? null,
+        memberCount: memberCount.get(e.groupId) ?? 0,
+        resultCount: scores.length,
+        average:
+          scores.length > 0
+            ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
+            : null,
+      };
+    });
   },
 
   /** Result rows for one exam, keyed by studentId. */
@@ -113,6 +124,22 @@ export const examRepository = {
     await db.delete(examResults).where(eq(examResults.examId, examId));
   },
 
+  /** Drop results from students no longer in the group (used when the group changes). */
+  async pruneResultsToMembers(examId: string, groupId: string): Promise<void> {
+    const memberIds = db
+      .select({ studentId: studentGroups.studentId })
+      .from(studentGroups)
+      .where(eq(studentGroups.groupId, groupId));
+    await db
+      .delete(examResults)
+      .where(
+        and(
+          eq(examResults.examId, examId),
+          notInArray(examResults.studentId, memberIds),
+        ),
+      );
+  },
+
   /** Every result of a student (used on student delete). */
   async clearForStudent(studentId: string): Promise<void> {
     await db.delete(examResults).where(eq(examResults.studentId, studentId));
@@ -129,6 +156,23 @@ export const examRepository = {
       .delete(examResults)
       .where(inArray(examResults.examId, examsOfGroup.map((e) => e.id)));
     await db.delete(exams).where(eq(exams.groupId, groupId));
+  },
+
+  /** One student's results for a group's exams (used on membership removal). */
+  async clearForStudentInGroup(studentId: string, groupId: string): Promise<void> {
+    const examsOfGroup = (await db
+      .select({ id: exams.id })
+      .from(exams)
+      .where(eq(exams.groupId, groupId))) as Array<{ id: string }>;
+    if (examsOfGroup.length === 0) return;
+    await db
+      .delete(examResults)
+      .where(
+        and(
+          inArray(examResults.examId, examsOfGroup.map((e) => e.id)),
+          eq(examResults.studentId, studentId),
+        ),
+      );
   },
 
   async groupName(groupId: string): Promise<string | undefined> {

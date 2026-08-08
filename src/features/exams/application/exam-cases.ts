@@ -104,6 +104,7 @@ export async function updateExam(
   input: ExamInput,
 ): Promise<Exam | undefined> {
   const data = examInputSchema.parse(input);
+  const existing = await examRepository.findById(id);
   const exam = await examRepository.update(id, {
     groupId: data.groupId,
     title: data.title,
@@ -111,6 +112,9 @@ export async function updateExam(
     maxScore: data.maxScore,
   });
   if (exam) {
+    if (existing && existing.groupId !== data.groupId) {
+      await examRepository.pruneResultsToMembers(id, data.groupId);
+    }
     await logActivity({
       action: "exam.update",
       entityType: "exam",
@@ -141,6 +145,8 @@ export async function saveExamResults(examId: string, inputs: ExamResultInput[])
   const exam = await examRepository.findById(examId);
   if (!exam) throw new Error(`exam ${examId} not found`);
   const maxScore = exam.maxScore;
+  const members = await examRepository.members(exam.groupId);
+  const memberIds = new Set(members.map((m) => m.id));
 
   for (const raw of inputs) {
     const input = examResultSchema.parse(raw);
@@ -150,6 +156,9 @@ export async function saveExamResults(examId: string, inputs: ExamResultInput[])
     }
     if (input.score < 0 || input.score > maxScore) {
       throw new Error(`score out of range (0..${maxScore})`);
+    }
+    if (!memberIds.has(input.studentId)) {
+      throw new Error(`student ${input.studentId} is not a member of the exam's group`);
     }
     await examRepository.upsertResult(examId, input.studentId, input.score, input.note ?? null);
     await logActivity({

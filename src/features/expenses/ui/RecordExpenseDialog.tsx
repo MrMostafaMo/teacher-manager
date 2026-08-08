@@ -9,6 +9,7 @@ import { Modal } from "@/features/students/ui/Modal";
 import { expenseCategorySchema, expenseInputSchema } from "@/features/expenses/domain";
 import { recordExpense, updateExpense } from "@/features/expenses/application/expense-cases";
 import type { Expense } from "@/lib/db/schema";
+import { DatePicker } from "@/shared/DatePicker";
 
 interface RecordExpenseDialogProps {
   open: boolean;
@@ -107,7 +108,7 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
               id="expense-category"
               value={form.category}
               onChange={(e) => setField("category", e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               {expenseCategorySchema.options.map((c) => (
                 <option key={c} value={c}>
@@ -135,13 +136,11 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
 
         <div className="space-y-1.5">
           <Label htmlFor="expense-date">{t("expenses.date")}</Label>
-          <Input
-            id="expense-date"
-            dir="ltr"
-            type="date"
+          <DatePicker
             value={form.date}
-            onChange={(e) => e.target.value && setField("date", e.target.value)}
-            className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+            onChange={(v) => v && setField("date", v)}
+            ariaLabel={t("expenses.date")}
+            className="w-full"
           />
         </div>
 
@@ -151,7 +150,7 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
             id="expense-note"
             value={form.note}
             onChange={(e) => setField("note", e.target.value)}
-            className="min-h-20 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground"
+            className="min-h-20 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted/50"
           />
         </div>
 

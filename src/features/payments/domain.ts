@@ -31,7 +31,7 @@ export const paymentInputSchema = z.object({
   planId: optionalId,
   amount: amountSchema,
   /** Billed ISO month (YYYY-MM), the period this payment covers. */
-  period: z.string().regex(/^\d{4}-\d{2}$/, "period must be YYYY-MM"),
+  period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "period must be a valid YYYY-MM"),
   method: z.enum(["cash", "card", "transfer"]),
   note: optionalText(2000),
 });

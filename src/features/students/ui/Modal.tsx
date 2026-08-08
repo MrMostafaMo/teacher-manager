@@ -36,7 +36,7 @@ export function Modal({ open, title, onClose, children, className }: ModalProps)
         if (e.target === ref.current) onClose();
       }}
       className={cn(
-        "m-auto w-full max-w-md overflow-hidden rounded-xl bg-background text-foreground shadow-xl ring-1 ring-foreground/10 backdrop:bg-black/50 backdrop:animate-in backdrop:fade-in backdrop:duration-200 open:animate-in open:zoom-in-95 open:duration-200",
+        "m-auto w-full max-w-md overflow-hidden rounded-xl bg-background text-foreground shadow-lg ring-1 ring-foreground/20 backdrop:bg-black/50",
         className,
       )}
     >

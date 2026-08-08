@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buildReportData, type ReportTranslations } from "@/features/reports/application/report-cases";
 import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
+import { formatDate, formatMoney } from "@/lib/utils/format";
 
 const REPORT_KEYS: ReportKey[] = [
   "students",
@@ -16,6 +17,13 @@ const REPORT_KEYS: ReportKey[] = [
   "finances",
   "skills",
 ];
+
+/** Column indexes that hold EGP amounts per report key (0-based). */
+const MONEY_COLUMNS: Partial<Record<ReportKey, number[]>> = {
+  payments: [1, 2, 3],
+  expenses: [3],
+  finances: [1, 2, 3],
+};
 
 export default function ReportsPage() {
   const { t, i18n } = useTranslation();
@@ -61,7 +69,7 @@ export default function ReportsPage() {
           ? await exportReportExcel(data)
           : await exportReportPdf(data, {
               rtl,
-              subtitle: t("reports.generated", { date: new Date().toLocaleString() }),
+              subtitle: t("reports.generated", { date: formatDate(Date.now(), "DD-MM-YYYY") }),
             });
       if (ok) setSaved(kind);
     } catch (e) {
@@ -135,7 +143,9 @@ export default function ReportsPage() {
                     <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
                       {row.map((cell, j) => (
                         <td key={j} className="px-4 py-2.5 whitespace-nowrap">
-                          {String(cell)}
+                          {typeof cell === "number" && MONEY_COLUMNS[key]?.includes(j)
+                            ? formatMoney(cell)
+                            : String(cell)}
                         </td>
                       ))}
                     </tr>
