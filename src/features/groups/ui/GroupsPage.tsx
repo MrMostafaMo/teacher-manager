@@ -14,11 +14,14 @@ import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
 import { GroupDetailDialog } from "./GroupDetailDialog";
 import { GroupFormDialog } from "./GroupFormDialog";
+import { formatTime } from "@/lib/utils/format";
+import { useTimeStore } from "@/lib/time-store";
 
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 export default function GroupsPage() {
   const { t } = useTranslation();
+  const hour24 = useTimeStore((s) => s.hour24);
   const [rows, setRows] = useState<GroupWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -66,7 +69,10 @@ export default function GroupsPage() {
     const sessions = sessionsByGroup[g.id] ?? [];
     if (sessions.length === 0) return g.schedule ?? "—";
     return sessions
-      .map((s) => `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${s.startTime}`)
+      .map(
+        (s) =>
+          `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${formatTime(s.startTime, hour24)}–${formatTime(s.endTime, hour24)}`,
+      )
       .join(" · ");
   }
 

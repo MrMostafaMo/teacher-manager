@@ -50,6 +50,34 @@
       "when": 1785923730962,
       "tag": "0006_purple_multiple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1786028072271,
+      "tag": "0007_kind_scalphunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1786032594339,
+      "tag": "0008_brave_hobgoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1786107970926,
+      "tag": "0009_aspiring_daimon_hellstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1786110555753,
+      "tag": "0010_slow_the_stranger",
+      "breakpoints": true
     }
   ]
 }

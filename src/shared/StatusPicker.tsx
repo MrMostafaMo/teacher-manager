@@ -6,20 +6,23 @@ const STATUS_LABEL_KEY: Record<AttendanceStatus, string> = {
   present: "attendance.statusPresent",
   absent: "attendance.statusAbsent",
   late: "attendance.statusLate",
+  excused: "attendance.statusExcused",
 };
 
 const STATUS_BADGE: Record<AttendanceStatus, string> = {
   present: "border-emerald-600 bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
   absent: "border-destructive bg-destructive/10 text-destructive",
   late: "border-amber-600 bg-amber-600/15 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
+  excused: "border-violet-600 bg-violet-600/15 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400",
 };
 
-/** Present / absent / late segmented control. Shared by daily & session sheets. */
+/** Present / absent / late / excused segmented control. Shared by daily & session sheets. */
 export function StatusPicker({
   value,
   onChange,
 }: {
-  value: AttendanceStatus;
+  /** Undefined = no status chosen yet (e.g. a future day). */
+  value?: AttendanceStatus;
   onChange: (s: AttendanceStatus) => void;
 }) {
   const { t } = useTranslation();

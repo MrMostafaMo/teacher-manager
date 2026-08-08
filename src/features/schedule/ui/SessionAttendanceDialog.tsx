@@ -11,11 +11,14 @@ import {
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { AttendanceStatus } from "@/features/attendance/domain";
 import type { Student } from "@/lib/db/schema";
+import { formatTime } from "@/lib/utils/format";
+import { useTimeStore } from "@/lib/time-store";
 import { Modal } from "@/features/students/ui/Modal";
 import { StatusPicker } from "@/shared/StatusPicker";
+import { DatePicker } from "@/shared/DatePicker";
 
 const inputClass =
-  "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring";
+  "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
 
 interface SessionAttendanceDialogProps {
   open: boolean;
@@ -31,6 +34,7 @@ export function SessionAttendanceDialog({
   onSaved,
 }: SessionAttendanceDialogProps) {
   const { t } = useTranslation();
+  const hour24 = useTimeStore((s) => s.hour24);
   const [date, setDate] = useState(() => dayjs().format("YYYY-MM-DD"));
   const [students, setStudents] = useState<Student[]>([]);
   const [draft, setDraft] = useState<Record<string, AttendanceStatus>>({});
@@ -52,7 +56,7 @@ export function SessionAttendanceDialog({
         AttendanceStatus
       >;
       setStudents(students);
-      setDraft(Object.fromEntries(students.map((s) => [s.id, byId[s.id] ?? "present"])));
+      setDraft(Object.fromEntries(students.map((s) => [s.id, byId[s.id]])));
     } catch (e) {
       console.error("Failed to load session attendance", e);
       setError(t("schedule.errors.loadAttendance"));
@@ -76,7 +80,12 @@ export function SessionAttendanceDialog({
 
   async function handleSave() {
     if (!session) return;
-    const entries = students.map((s) => ({ studentId: s.id, status: draft[s.id] ?? "present" }));
+    // Only students with a chosen status are written — an untouched row stays
+    // unrecorded instead of silently becoming "present".
+    const entries = students.flatMap((s) => {
+      const status = draft[s.id];
+      return status ? [{ studentId: s.id, status }] : [];
+    });
     if (entries.length === 0) return;
     setSaving(true);
     setError("");
@@ -98,16 +107,16 @@ export function SessionAttendanceDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title={session ? `${session.groupName} — ${session.startTime} – ${session.endTime}` : ""}
+      title={session ? `${session.groupName} — ${formatTime(session.startTime, hour24)} – ${formatTime(session.endTime, hour24)}` : ""}
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             {t("schedule.attendanceDate")}
-            <input
-              type="date"
+            <DatePicker
               value={date}
-              onChange={(e) => e.target.value && setDate(e.target.value)}
+              onChange={(v) => v && setDate(v)}
+              ariaLabel={t("schedule.attendanceDate")}
               className={inputClass}
             />
           </label>
@@ -154,7 +163,7 @@ export function SessionAttendanceDialog({
                     <td className="px-2 py-2 font-medium">{s.name}</td>
                     <td className="px-2 py-2">
                       <StatusPicker
-                        value={draft[s.id] ?? "present"}
+                        value={draft[s.id]}
                         onChange={(status) => setDraft((d) => ({ ...d, [s.id]: status }))}
                       />
                     </td>

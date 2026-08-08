@@ -1,13 +1,17 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
+import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { studentInputSchema } from "@/features/students/domain";
 import { createStudent, updateStudent } from "@/features/students/application/student-cases";
 import { listPlans } from "@/features/payments/application/plan-cases";
+import { listGroups, listMemberships, setStudentGroup } from "@/features/groups/application/group-cases";
+import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { Plan, Student } from "@/lib/db/schema";
+import { DatePicker } from "@/shared/DatePicker";
 import { Modal } from "./Modal";
 
 interface StudentFormDialogProps {
@@ -24,7 +28,9 @@ interface FormState {
   guardianPhone: string;
   status: "active" | "inactive";
   planId: string;
+  groupId: string;
   notes: string;
+  enrolledOn: string;
 }
 
 const emptyForm: FormState = {
@@ -34,7 +40,9 @@ const emptyForm: FormState = {
   guardianPhone: "",
   status: "active",
   planId: "",
+  groupId: "",
   notes: "",
+  enrolledOn: "",
 };
 
 export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFormDialogProps) {
@@ -44,6 +52,14 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
   const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [groups, setGroups] = useState<GroupWithCount[]>([]);
+  // Current membership (so an unchanged selection doesn't wipe memberships)
+  // + readiness guard so a submit can't race the async membership load.
+  const [loadedGroupId, setLoadedGroupId] = useState<string | null>(null);
+  const [membershipReady, setMembershipReady] = useState(false);
+  // Set once the student row exists — a later membership failure must not
+  // let a resubmit create a duplicate student.
+  const studentCreated = useRef(false);
 
   useEffect(() => {
     if (open) {
@@ -54,13 +70,33 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
         guardianPhone: student?.guardianPhone ?? "",
         status: student?.status ?? "active",
         planId: student?.planId ?? "",
+        groupId: "",
         notes: student?.notes ?? "",
+        enrolledOn: student ? (student.enrolledOn ?? "") : dayjs().format("YYYY-MM-DD"),
       });
       setErrors({});
       setFatal("");
+      setSaving(false);
+      setLoadedGroupId(null);
+      setMembershipReady(!student);
+      studentCreated.current = false;
       void listPlans()
         .then(setPlans)
         .catch(() => setPlans([]));
+      void listGroups()
+        .then(setGroups)
+        .catch(() => setGroups([]));
+      if (student) {
+        void listMemberships()
+          .then((m) => {
+            const member = m.find((x) => x.studentId === student.id);
+            const groupId = member?.groupId ?? "";
+            setLoadedGroupId(groupId || null);
+            setForm((f) => ({ ...f, groupId }));
+          })
+          .catch(() => undefined)
+          .finally(() => setMembershipReady(true));
+      }
     }
   }, [open, student]);
 
@@ -87,19 +123,35 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (saving) return;
+    if (saving || (student && !membershipReady)) return;
     setSaving(true);
     setErrors({});
     setFatal("");
     try {
       studentInputSchema.parse(form);
-      if (student) await updateStudent(student.id, form);
-      else await createStudent(form);
+      if (student) {
+        await updateStudent(student.id, form);
+        const wantsGroup = form.groupId || null;
+        if (loadedGroupId !== wantsGroup) {
+          await setStudentGroup(student.id, wantsGroup);
+        }
+      } else {
+        const row = await createStudent(form);
+        studentCreated.current = true;
+        if (form.groupId) await setStudentGroup(row.id, form.groupId);
+      }
       onSaved();
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
-      else setFatal(String(error));
+      else {
+        setFatal(String(error));
+        // The student already exists — closing prevents a retry duplicating them.
+        if (studentCreated.current) {
+          onSaved();
+          onClose();
+        }
+      }
     } finally {
       setSaving(false);
     }
@@ -121,6 +173,17 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
           {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
         </div>
 
+        <div className="space-y-1.5">
+          <Label htmlFor="student-enrolled-on">{t("students.fields.enrolledOn")}</Label>
+          <DatePicker
+            value={form.enrolledOn}
+            onChange={(v) => setField("enrolledOn", v)}
+            ariaLabel={t("students.fields.enrolledOn")}
+            className="w-full"
+          />
+          {errors.enrolledOn && <p className="text-xs text-destructive">{errors.enrolledOn}</p>}
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="student-phone">{t("students.fields.phone")}</Label>
@@ -139,7 +202,7 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
               id="student-status"
               value={form.status}
               onChange={(e) => setField("status", e.target.value as FormState["status"])}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="active">{t("students.statusActive")}</option>
               <option value="inactive">{t("students.statusInactive")}</option>
@@ -180,7 +243,7 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
               id="student-plan"
               value={form.planId}
               onChange={(e) => setField("planId", e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="">{t("students.noPlan")}</option>
               {plans.map((p) => (
@@ -190,7 +253,22 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
               ))}
             </select>
           </div>
-          <div className="hidden sm:block" />
+          <div className="space-y-1.5">
+            <Label htmlFor="student-class">{t("students.fields.class")}</Label>
+            <select
+              id="student-class"
+              value={form.groupId}
+              onChange={(e) => setField("groupId", e.target.value)}
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
+            >
+              <option value="">{t("students.noClass")}</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="space-y-1.5">
@@ -200,7 +278,7 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
             value={form.notes}
             onChange={(e) => setField("notes", e.target.value)}
             placeholder={t("students.notesPlaceholder")}
-            className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground"
+            className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted/50"
           />
           {errors.notes && <p className="text-xs text-destructive">{errors.notes}</p>}
         </div>

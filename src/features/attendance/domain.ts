@@ -1,12 +1,14 @@
 import { z } from "zod";
 
 /**
- * Attendance domain. `present | absent | late`, one row per student per date.
+ * Attendance domain. `present | absent | late | excused`, one row per student
+ * per date. `excused` marks a justified absence (no session / allowed to skip)
+ * and counts as attended in the attendance-rate calculations.
  * Framework-free; the application layer validates every write through the
  * schema below.
  */
 
-export const ATTENDANCE_STATUSES = ["present", "absent", "late"] as const;
+export const ATTENDANCE_STATUSES = ["present", "absent", "late", "excused"] as const;
 export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
 
 export const attendanceStatusSchema = z.enum(ATTENDANCE_STATUSES);

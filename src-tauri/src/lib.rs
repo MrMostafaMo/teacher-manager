@@ -50,6 +50,30 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0006_purple_multiple_man.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 8,
+            description: "monthly session plans per group + per-group sessions-per-month",
+            sql: include_str!("../migrations/0007_kind_scalphunter.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 9,
+            description: "remove monthly session plans (rolled back)",
+            sql: include_str!("../migrations/0008_brave_hobgoblin.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 10,
+            description: "group weekly-session start date",
+            sql: include_str!("../migrations/0009_aspiring_daimon_hellstrom.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 11,
+            description: "student enrollment date (backfilled from created_at)",
+            sql: include_str!("../migrations/0010_slow_the_stranger.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

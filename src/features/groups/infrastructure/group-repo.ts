@@ -36,6 +36,7 @@ export const groupRepository = {
         guardianPhone: students.guardianPhone,
         status: students.status,
         notes: students.notes,
+        enrolledOn: students.enrolledOn,
         createdAt: students.createdAt,
         updatedAt: students.updatedAt,
       })
@@ -46,16 +47,13 @@ export const groupRepository = {
     return rows as Student[];
   },
 
-  /** Active students not yet in a group, name-asc (candidates to add). */
-  async nonMembers(groupId: string): Promise<Student[]> {
-    const memberIds = db
-      .select({ id: studentGroups.studentId })
-      .from(studentGroups)
-      .where(eq(studentGroups.groupId, groupId));
+  /** Active students with no group at all, name-asc (candidates to add — one class per student). */
+  async nonMembers(): Promise<Student[]> {
+    const anyMemberIds = db.select({ id: studentGroups.studentId }).from(studentGroups);
     const rows = await db
       .select()
       .from(students)
-      .where(and(eq(students.status, "active"), notInArray(students.id, memberIds)))
+      .where(and(eq(students.status, "active"), notInArray(students.id, anyMemberIds)))
       .orderBy(asc(students.name));
     return rows as Student[];
   },

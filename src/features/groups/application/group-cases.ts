@@ -36,7 +36,7 @@ export async function getGroupDetail(groupId: string): Promise<GroupDetail> {
   const [group, members, available] = await Promise.all([
     groupRepository.findById(groupId),
     groupRepository.members(groupId),
-    groupRepository.nonMembers(groupId),
+    groupRepository.nonMembers(),
   ]);
   if (!group) throw new Error(`group ${groupId} not found`);
   return { group, members, available };
@@ -91,8 +91,26 @@ export async function addStudentToGroup(studentId: string, groupId: string): Pro
 export async function removeStudentFromGroup(studentId: string, groupId: string): Promise<void> {
   const removed = await groupRepository.removeMember(studentId, groupId);
   if (!removed) throw new Error(`membership ${studentId}/${groupId} not found`);
+  // FKs are off — the student's homework submissions + exam results for this
+  // group's items would otherwise orphan (and skew its stats).
+  await homeworkRepository.clearForStudentInGroup(studentId, groupId);
+  await examRepository.clearForStudentInGroup(studentId, groupId);
+  await scheduleRepository.clearAttendanceForStudentInGroup(studentId, groupId);
   await logActivity({
     action: "group.member.remove",
+    entityType: "group",
+    entityId: groupId,
+    details: { studentId },
+  });
+}
+
+/** One class per student: replace every membership with a single one (or none). */
+export async function setStudentGroup(studentId: string, groupId: string | null): Promise<void> {
+  await groupRepository.clearForStudent(studentId);
+  if (!groupId) return;
+  await groupRepository.addMember(studentId, groupId);
+  await logActivity({
+    action: "group.member.add",
     entityType: "group",
     entityId: groupId,
     details: { studentId },

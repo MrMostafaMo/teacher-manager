@@ -18,7 +18,7 @@ export interface DashboardData {
   totalStudents: number;
   activeStudents: number;
   attendanceRate: number;
-  attendanceTrend: Array<{ month: string; present: number; absent: number; late: number }>;
+  attendanceTrend: Array<{ month: string; present: number; absent: number; late: number; excused: number }>;
   collected: number;
   expensesMonth: number;
   net: number;
@@ -37,7 +37,19 @@ export interface DashboardData {
   }>;
   examAverage: number | null;
   weakSkills: Array<{ name: string; count: number }>;
-  todaySessions: Array<{ id: string; groupName: string; startTime: string; endTime: string; room: string | null }>;
+  todaySessions: Array<{
+    id: string;
+    groupName: string;
+    startTime: string;
+    endTime: string;
+    room: string | null;
+    finished: boolean;
+  }>;
+}
+
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
 }
 
 function currentMonth(): string {
@@ -63,8 +75,8 @@ export async function getDashboardData(): Promise<DashboardData> {
   const totalStudents = students.length;
   const activeStudents = students.filter((s) => s.status === "active").length;
 
-  const marked = monthly.reduce((a, r) => a + r.present + r.absent + r.late, 0);
-  const attended = monthly.reduce((a, r) => a + r.present + r.late, 0);
+  const marked = monthly.reduce((a, r) => a + r.present + r.absent + r.late + r.excused, 0);
+  const attended = monthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
   const attendanceRate = marked > 0 ? Math.round((attended / marked) * 100) : 0;
 
   const collected = dues.reduce((a, r) => a + r.paid, 0);
@@ -101,17 +113,25 @@ export async function getDashboardData(): Promise<DashboardData> {
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  const today = new Date().getDay();
+  const now = new Date();
+  const today = now.getDay();
+  const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const todaySessions = schedule
-    .filter((s) => s.groupStatus === "active" && s.dayOfWeek === today)
+    .filter(
+      (s) =>
+        s.groupStatus === "active" &&
+        s.dayOfWeek === today &&
+        (s.groupStartsOn == null || s.groupStartsOn <= todayIso),
+    )
     .map((s) => ({
       id: s.id,
       groupName: s.groupName,
       startTime: s.startTime,
       endTime: s.endTime,
       room: s.room,
-    }))
-    .slice(0, 4);
+      finished: nowMinutes > timeToMinutes(s.endTime),
+    }));
 
   return {
     totalStudents,

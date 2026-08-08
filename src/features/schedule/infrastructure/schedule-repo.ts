@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   groupSessions,
@@ -8,11 +8,14 @@ import {
 } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
+import type { AttendanceStatus } from "@/features/attendance/domain";
 
 /** A session joined with its group's name + status (for the timetable). */
 export interface SessionWithGroup extends GroupSession {
   groupName: string;
   groupStatus: "active" | "inactive";
+  /** First date the group's sessions take effect; NULL = no bound. */
+  groupStartsOn: string | null;
 }
 
 export const scheduleRepository = {
@@ -32,6 +35,7 @@ export const scheduleRepository = {
         updatedAt: groupSessions.updatedAt,
         groupName: studyGroups.name,
         groupStatus: studyGroups.status,
+        groupStartsOn: studyGroups.startsOn,
       })
       .from(groupSessions)
       .innerJoin(studyGroups, eq(groupSessions.groupId, studyGroups.id))
@@ -41,6 +45,22 @@ export const scheduleRepository = {
 
   /** Delete every session of a group (used when the group is deleted). */
   async clearForGroup(groupId: string): Promise<void> {
+    // SQLite FKs are off — clear each session's attendance rows first or the
+    // session rows orphan their sheets.
+    const sessions = (await db
+      .select({ id: groupSessions.id })
+      .from(groupSessions)
+      .where(eq(groupSessions.groupId, groupId))) as Array<{ id: string }>;
+    if (sessions.length > 0) {
+      await db
+        .delete(sessionAttendance)
+        .where(
+          inArray(
+            sessionAttendance.sessionId,
+            sessions.map((s) => s.id),
+          ),
+        );
+    }
     await db.delete(groupSessions).where(eq(groupSessions.groupId, groupId));
   },
 
@@ -63,7 +83,7 @@ export const scheduleRepository = {
   async replaceSessionAttendance(
     sessionId: string,
     date: string,
-    entries: Array<{ studentId: string; status: "present" | "absent" | "late" }>,
+    entries: Array<{ studentId: string; status: AttendanceStatus }>,
   ): Promise<void> {
     await db
       .delete(sessionAttendance)
@@ -92,5 +112,21 @@ export const scheduleRepository = {
   /** Delete a student's session-attendance rows (used when the student is deleted). */
   async clearAttendanceForStudent(studentId: string): Promise<void> {
     await db.delete(sessionAttendance).where(eq(sessionAttendance.studentId, studentId));
+  },
+
+  /** Delete a student's rows on a group's session sheets (used on member removal). */
+  async clearAttendanceForStudentInGroup(studentId: string, groupId: string): Promise<void> {
+    const sessions = db
+      .select({ id: groupSessions.id })
+      .from(groupSessions)
+      .where(eq(groupSessions.groupId, groupId));
+    await db
+      .delete(sessionAttendance)
+      .where(
+        and(
+          eq(sessionAttendance.studentId, studentId),
+          inArray(sessionAttendance.sessionId, sessions),
+        ),
+      );
   },
 };

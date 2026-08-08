@@ -8,6 +8,7 @@ import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { logActivity } from "@/lib/activity-log";
 import type { GroupSession, SessionAttendance, Student } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
+import dayjs from "dayjs";
 import { z } from "zod";
 
 /**
@@ -65,7 +66,12 @@ export async function getSessionAttendance(
     groupRepository.members(session.groupId),
     scheduleRepository.sessionAttendanceBy(session.id, date),
   ]);
-  return { students, rows };
+  return {
+    students: students.filter(
+      (s) => s.status === "active" && (s.enrolledOn == null || s.enrolledOn <= date),
+    ),
+    rows,
+  };
 }
 
 const sessionAttendanceInputSchema = z.object({
@@ -82,9 +88,20 @@ export async function saveSessionAttendance(input: {
   const parsed = sessionAttendanceInputSchema.parse(input);
   if (parsed.entries.length === 0) return;
 
+  // Guard the sheet: no future dates, the session must exist, and the date
+  // must fall on the session's weekday — otherwise rows land under a session
+  // that never runs that day.
+  const today = dayjs().format("YYYY-MM-DD");
+  if (parsed.date > today) throw new Error("session attendance cannot be saved for a future date");
+  const session = await scheduleRepository.findById(parsed.sessionId);
+  if (!session) throw new Error(`session ${parsed.sessionId} not found`);
+  if (dayjs(parsed.date).day() !== session.dayOfWeek) {
+    throw new Error("date does not match the session's weekday");
+  }
+
   await scheduleRepository.replaceSessionAttendance(parsed.sessionId, parsed.date, parsed.entries);
 
-  const counts: Record<AttendanceStatus, number> = { present: 0, absent: 0, late: 0 };
+  const counts: Record<AttendanceStatus, number> = { present: 0, absent: 0, late: 0, excused: 0 };
   for (const entry of parsed.entries) counts[entry.status] += 1;
   await logActivity({
     action: "schedule.attendance.save",

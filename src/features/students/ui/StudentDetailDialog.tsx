@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import dayjs from "dayjs";
 import { Pencil, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { deleteStudent } from "@/features/students/application/student-cases";
 import { listPlans } from "@/features/payments/application/plan-cases";
+import { listGroups, listMemberships, setStudentGroup } from "@/features/groups/application/group-cases";
+import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import { getStudentSkills } from "@/features/skills/application/skill-cases";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
 import type { Student } from "@/lib/db/schema";
+import { formatDateString } from "@/lib/utils/format";
 import { Modal } from "./Modal";
 import { StatusBadge } from "./StatusBadge";
 
@@ -26,11 +28,49 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
   const [planName, setPlanName] = useState<string | null>(null);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [skillSummary, setSkillSummary] = useState<{ tracked: number; weak: number } | null>(null);
+  const [groups, setGroups] = useState<GroupWithCount[]>([]);
+  const [groupId, setGroupId] = useState("");
 
   useEffect(() => {
     setConfirming(false);
     setError("");
   }, [student.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void listGroups()
+      .then((all) => {
+        if (cancelled) return;
+        setGroups(all);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setGroups([]);
+      });
+    void listMemberships()
+      .then((m) => {
+        if (cancelled) return;
+        const member = m.find((x) => x.studentId === student.id);
+        setGroupId(member?.groupId ?? "");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setGroupId("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [student.id]);
+
+  async function handleClassChange(next: string) {
+    setGroupId(next);
+    try {
+      await setStudentGroup(student.id, next || null);
+      setError("");
+    } catch {
+      setError(t("students.classError"));
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -90,7 +130,7 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
           <div className="min-w-0">
             <p className="truncate text-lg font-semibold">{student.name}</p>
             <p className="text-sm text-muted-foreground">
-              {t("students.registered")} {dayjs(student.createdAt).format("YYYY-MM-DD")}
+              {t("students.registered")} {formatDateString(student.enrolledOn)}
             </p>
           </div>
           <StatusBadge status={student.status} />
@@ -117,6 +157,24 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
         <div className="space-y-1.5">
           <p className="text-xs font-medium text-muted-foreground">{t("students.fields.plan")}</p>
           <p className="text-sm">{planName ?? t("students.noPlan")}</p>
+        </div>
+
+        <Separator />
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground">{t("students.fields.class")}</p>
+          <select
+            value={groupId}
+            onChange={(e) => void handleClassChange(e.target.value)}
+            aria-label={t("students.fields.class")}
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
+          >
+            <option value="">{t("students.noClass")}</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <Separator />

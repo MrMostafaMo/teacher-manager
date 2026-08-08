@@ -13,6 +13,8 @@ import type { GroupDetail } from "@/features/groups/application/group-cases";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { Modal } from "@/features/students/ui/Modal";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
+import { formatTime, formatDateString } from "@/lib/utils/format";
+import { useTimeStore } from "@/lib/time-store";
 
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
@@ -25,10 +27,12 @@ interface GroupDetailDialogProps {
 
 export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDetailDialogProps) {
   const { t } = useTranslation();
+  const hour24 = useTimeStore((s) => s.hour24);
   const [detail, setDetail] = useState<GroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [addingId, setAddingId] = useState("");
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [sessions, setSessions] = useState<GroupSession[]>([]);
 
@@ -70,7 +74,13 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
   }
 
   async function handleRemove(studentId: string) {
+    if (removingId !== studentId) {
+      setRemovingId(studentId);
+      setTimeout(() => setRemovingId((cur) => (cur === studentId ? null : cur)), 2500);
+      return;
+    }
     if (busy) return;
+    setRemovingId(null);
     setBusy(true);
     try {
       await removeStudentFromGroup(studentId, group.id);
@@ -94,11 +104,12 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
             <p className="truncate text-lg font-semibold">{group.name}</p>
             <p className="text-sm text-muted-foreground">
               {group.subject ? `${group.subject} · ` : ""}
+              {group.startsOn ? `${t("groups.fields.startsOn")}: ${formatDateString(group.startsOn)} · ` : ""}
               {sessions.length > 0
                 ? sessions
                     .map(
                       (s) =>
-                        `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${s.startTime}–${s.endTime}`,
+                        `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${formatTime(s.startTime, hour24)}–${formatTime(s.endTime, hour24)}`,
                     )
                     .join(" · ")
                 : (group.schedule ?? t("groups.noSchedule"))}
@@ -130,9 +141,11 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
                 <li key={m.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm">
                   <span className="truncate">{m.name}</span>
                   <Button
-                    variant="ghost"
+                    variant={removingId === m.id ? "destructive" : "ghost"}
                     size="icon-sm"
-                    aria-label={t("groups.removeMember")}
+                    aria-label={
+                      removingId === m.id ? t("groups.confirmDelete") : t("groups.removeMember")
+                    }
                     onClick={() => void handleRemove(m.id)}
                   >
                     <Trash2 />
@@ -149,7 +162,7 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
               value={addingId}
               onChange={(e) => setAddingId(e.target.value)}
               aria-label={t("groups.addMember")}
-              className="h-8 flex-1 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              className="h-8 flex-1 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="">{t("groups.addMemberHint")}</option>
               {available.map((s) => (

@@ -48,6 +48,8 @@ export const students = sqliteTable(
     status: text("status", activeStatus).notNull().default("active"),
     notes: text("notes"),
     planId: text("plan_id").references(() => plans.id, { onDelete: "set null" }),
+    /** First date ("YYYY-MM-DD") the student attends; NULL = no bound (legacy). */
+    enrolledOn: text("enrolled_on"),
     ...timestamps,
   },
   (t) => [index("students_name").on(t.name)],
@@ -59,6 +61,8 @@ export const studyGroups = sqliteTable("study_groups", {
   name: text("name").notNull(),
   subject: text("subject"),
   schedule: text("schedule"),
+  /** First date ("YYYY-MM-DD") the group's weekly sessions take effect; NULL = no bound. */
+  startsOn: text("starts_on"),
   status: text("status", activeStatus).notNull().default("active"),
   notes: text("notes"),
   ...timestamps,
@@ -122,7 +126,7 @@ export const attendance = sqliteTable(
       .references(() => students.id, { onDelete: "cascade" }),
     groupId: text("group_id").references(() => studyGroups.id, { onDelete: "cascade" }),
     date: text("date").notNull(),
-    status: text("status", { enum: ["present", "absent", "late"] as const }).notNull(),
+    status: text("status", { enum: ["present", "absent", "late", "excused"] as const }).notNull(),
     notes: text("notes"),
     ...timestamps,
   },
@@ -149,7 +153,7 @@ export const sessionAttendance = sqliteTable(
       .notNull()
       .references(() => students.id, { onDelete: "cascade" }),
     date: text("date").notNull(),
-    status: text("status", { enum: ["present", "absent", "late"] as const }).notNull(),
+    status: text("status", { enum: ["present", "absent", "late", "excused"] as const }).notNull(),
     ...timestamps,
   },
   (t) => [

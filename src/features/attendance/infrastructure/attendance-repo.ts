@@ -1,6 +1,6 @@
 import { and, count, eq, gte, like, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { attendance, sessionAttendance, type Attendance } from "@/lib/db/schema";
+import { attendance, type Attendance } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
 import type { AttendanceStatus } from "@/features/attendance/domain";
@@ -14,6 +14,7 @@ export interface StudentMonthlyStat {
   present: number;
   absent: number;
   late: number;
+  excused: number;
 }
 
 export interface MonthlyTrendRow {
@@ -21,6 +22,7 @@ export interface MonthlyTrendRow {
   present: number;
   absent: number;
   late: number;
+  excused: number;
 }
 
 export const attendanceRepository = {
@@ -69,7 +71,7 @@ export const attendanceRepository = {
 
     const byId = new Map<string, StudentMonthlyStat>();
     for (const row of rows) {
-      const stat = byId.get(row.studentId) ?? { studentId: row.studentId, present: 0, absent: 0, late: 0 };
+      const stat = byId.get(row.studentId) ?? { studentId: row.studentId, present: 0, absent: 0, late: 0, excused: 0 };
       stat[row.status] = row.n;
       byId.set(row.studentId, stat);
     }
@@ -77,35 +79,8 @@ export const attendanceRepository = {
   },
 
   /**
-   * Per-student status counts from group-session sheets for one month.
-   * ponytail: mirrors monthlyStats; each session_attendance row is one
-   * (session, date, student) occurrence, so rows count directly.
+   * Every attendance row of a student (used on student delete).
    */
-  async sessionMonthlyStats(month: string): Promise<StudentMonthlyStat[]> {
-    const rows = (await db
-      .select({
-        studentId: sessionAttendance.studentId,
-        status: sessionAttendance.status,
-        n: count(),
-      })
-      .from(sessionAttendance)
-      .where(like(sessionAttendance.date, `${month}-%`))
-      .groupBy(sessionAttendance.studentId, sessionAttendance.status)) as Array<{
-      studentId: string;
-      status: AttendanceStatus;
-      n: number;
-    }>;
-
-    const byId = new Map<string, StudentMonthlyStat>();
-    for (const row of rows) {
-      const stat = byId.get(row.studentId) ?? { studentId: row.studentId, present: 0, absent: 0, late: 0 };
-      stat[row.status] = row.n;
-      byId.set(row.studentId, stat);
-    }
-    return [...byId.values()];
-  },
-
-  /** Every attendance row of a student (used on student delete). */
   async clearForStudent(studentId: string): Promise<void> {
     await db.delete(attendance).where(eq(attendance.studentId, studentId));
   },
@@ -133,10 +108,10 @@ export const attendanceRepository = {
     }>;
     const byMonth = new Map<string, MonthlyTrendRow>();
     for (const r of rows) {
-      const cur = byMonth.get(r.month) ?? { month: r.month, present: 0, absent: 0, late: 0 };
+      const cur = byMonth.get(r.month) ?? { month: r.month, present: 0, absent: 0, late: 0, excused: 0 };
       cur[r.status] = r.n;
       byMonth.set(r.month, cur);
     }
-    return labels.map((m) => byMonth.get(m) ?? { month: m, present: 0, absent: 0, late: 0 });
+    return labels.map((m) => byMonth.get(m) ?? { month: m, present: 0, absent: 0, late: 0, excused: 0 });
   },
 };

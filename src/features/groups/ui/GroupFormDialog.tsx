@@ -15,6 +15,10 @@ import {
 } from "@/features/schedule/application/schedule-cases";
 import type { StudyGroup } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
+import { formatTime } from "@/lib/utils/format";
+import { useTimeStore } from "@/lib/time-store";
+import { TimePicker } from "@/shared/TimePicker";
+import { DatePicker } from "@/shared/DatePicker";
 import { Modal } from "@/features/students/ui/Modal";
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
@@ -39,15 +43,23 @@ interface GroupFormDialogProps {
 interface FormState {
   name: string;
   subject: string;
+  startsOn: string;
   status: "active" | "inactive";
   notes: string;
 }
 
-const emptyForm: FormState = { name: "", subject: "", status: "active", notes: "" };
+const emptyForm: FormState = {
+  name: "",
+  subject: "",
+  startsOn: "",
+  status: "active",
+  notes: "",
+};
 const emptyDraft = { dayOfWeek: 0, startTime: "", endTime: "", room: "" };
 
 export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDialogProps) {
   const { t } = useTranslation();
+  const hour24 = useTimeStore((s) => s.hour24);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fatal, setFatal] = useState("");
@@ -55,13 +67,18 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
   const [sessions, setSessions] = useState<SessionDraft[]>([]);
   const [draft, setDraft] = useState(emptyDraft);
   const [draftError, setDraftError] = useState("");
+  const [removingKey, setRemovingKey] = useState<string | null>(null);
   const loadedIds = useRef<string[]>([]);
+  // Set once the group row itself has been written — if a later step (session
+  // sync) fails, we must not let a resubmit create a duplicate group.
+  const groupPersisted = useRef(false);
 
   useEffect(() => {
     if (!open) return;
     setForm({
       name: group?.name ?? "",
       subject: group?.subject ?? "",
+      startsOn: group?.startsOn ?? "",
       status: group?.status ?? "active",
       notes: group?.notes ?? "",
     });
@@ -71,7 +88,9 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     setSessions([]);
     setDraft(emptyDraft);
     setDraftError("");
+    setRemovingKey(null);
     loadedIds.current = [];
+    groupPersisted.current = false;
     void listSchedule()
       .then((all) => {
         const own = all.filter((s) => s.groupId === group?.id);
@@ -95,10 +114,20 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
   }
 
   function addSession() {
-    try {
-      groupSessionInputSchema.parse({ groupId: "x", ...draft });
-    } catch (error) {
-      setDraftError(t("groups.sessionInvalid"));
+    if (!draft.startTime || !draft.endTime) {
+      setDraftError(t("groups.sessionTimesRequired"));
+      return;
+    }
+    const parsed = groupSessionInputSchema.safeParse({ groupId: "x", ...draft });
+    if (!parsed.success) {
+      const endAfterStart = parsed.error.issues.some(
+        (i) => i.path[0] === "endTime" && i.message === "end after start",
+      );
+      setDraftError(endAfterStart ? t("groups.sessionEndAfterStart") : t("groups.sessionInvalid"));
+      return;
+    }
+    if (sessions.some((s) => s.dayOfWeek === draft.dayOfWeek && s.startTime === draft.startTime)) {
+      setDraftError(t("groups.sessionDuplicate"));
       return;
     }
     setDraftError("");
@@ -106,7 +135,18 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     setDraft(emptyDraft);
   }
 
+  function updateDraft(patch: Partial<SessionDraft>) {
+    setDraftError("");
+    setDraft((d) => ({ ...d, ...patch }));
+  }
+
   function removeSession(key: string) {
+    if (removingKey !== key) {
+      setRemovingKey(key);
+      setTimeout(() => setRemovingKey((cur) => (cur === key ? null : cur)), 2500);
+      return;
+    }
+    setRemovingKey(null);
     setSessions((s) => s.filter((x) => x.key !== key));
   }
 
@@ -132,9 +172,18 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     setErrors({});
     setFatal("");
     try {
-      const input = { ...form, schedule: group?.schedule ?? "" };
+      const input = {
+        ...form,
+        schedule: group?.schedule ?? "",
+      };
       studyGroupInputSchema.parse(input);
       const row = group ? await updateGroup(group.id, input) : await createGroup(input);
+      groupPersisted.current = true;
+      // Removed sessions first: re-adding a session at a freed (day, start)
+      // slot must not collide with the still-present old row.
+      for (const id of loadedIds.current) {
+        if (!sessions.some((s) => s.id === id)) await deleteSession(id);
+      }
       for (const s of sessions) {
         if (s.id) continue;
         await createSession({
@@ -145,14 +194,18 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
           room: s.room || undefined,
         });
       }
-      for (const id of loadedIds.current) {
-        if (!sessions.some((s) => s.id === id)) await deleteSession(id);
-      }
       onSaved();
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
-      else setFatal(String(error));
+      else {
+        setFatal(String(error));
+        // The group already exists — closing prevents a retry from duplicating it.
+        if (groupPersisted.current) {
+          onSaved();
+          onClose();
+        }
+      }
     } finally {
       setSaving(false);
     }
@@ -191,12 +244,23 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
               id="group-status"
               value={form.status}
               onChange={(e) => setField("status", e.target.value as FormState["status"])}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+              className="h-8 w-full rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted"
             >
               <option value="active">{t("groups.statusActive")}</option>
               <option value="inactive">{t("groups.statusInactive")}</option>
             </select>
           </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="group-starts-on">{t("groups.fields.startsOn")}</Label>
+          <DatePicker
+            value={form.startsOn}
+            onChange={(v) => setField("startsOn", v)}
+            ariaLabel={t("groups.fields.startsOn")}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground">{t("groups.startsOnHint")}</p>
         </div>
 
         <div className="space-y-1.5">
@@ -209,17 +273,22 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
                 {sessions.map((s) => (
                   <li
                     key={s.key}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm"
+                    className="flex items-center justify-between gap-2 rounded-lg bg-muted px-2.5 py-1.5 text-sm"
                   >
                     <span className="truncate" dir="ltr">
-                      {t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} · {s.startTime}–{s.endTime}
+                      {t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} · {formatTime(s.startTime, hour24)}
+                      –{formatTime(s.endTime, hour24)}
                       {s.room ? ` · ${s.room}` : ""}
                     </span>
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant={removingKey === s.key ? "destructive" : "ghost"}
                       size="icon-sm"
-                      aria-label={t("groups.sessionRemove")}
+                      aria-label={
+                        removingKey === s.key
+                          ? t("groups.confirmDelete")
+                          : t("groups.sessionRemove")
+                      }
                       onClick={() => removeSession(s.key)}
                     >
                       <Trash2 />
@@ -237,8 +306,8 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
                 <select
                   id="session-day"
                   value={draft.dayOfWeek}
-                  onChange={(e) => setDraft((d) => ({ ...d, dayOfWeek: Number(e.target.value) }))}
-                  className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+                  onChange={(e) => updateDraft({ dayOfWeek: Number(e.target.value) })}
+                  className="h-8 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted"
                 >
                   {DAYS.map((d) => (
                     <option key={d} value={d}>
@@ -251,24 +320,22 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
                 <Label htmlFor="session-start" className="text-xs text-muted-foreground">
                   {t("schedule.fields.startTime")}
                 </Label>
-                <Input
-                  id="session-start"
-                  type="time"
-                  className="h-8 w-28"
+                <TimePicker
+                  ariaLabel={t("schedule.fields.startTime")}
+                  className="w-28"
                   value={draft.startTime}
-                  onChange={(e) => setDraft((d) => ({ ...d, startTime: e.target.value }))}
+                  onChange={(v) => updateDraft({ startTime: v })}
                 />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="session-end" className="text-xs text-muted-foreground">
                   {t("schedule.fields.endTime")}
                 </Label>
-                <Input
-                  id="session-end"
-                  type="time"
-                  className="h-8 w-28"
+                <TimePicker
+                  ariaLabel={t("schedule.fields.endTime")}
+                  className="w-28"
                   value={draft.endTime}
-                  onChange={(e) => setDraft((d) => ({ ...d, endTime: e.target.value }))}
+                  onChange={(v) => updateDraft({ endTime: v })}
                 />
               </div>
               <div className="space-y-1">
@@ -279,7 +346,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
                   id="session-room"
                   className="h-8 w-28"
                   value={draft.room}
-                  onChange={(e) => setDraft((d) => ({ ...d, room: e.target.value }))}
+                  onChange={(e) => updateDraft({ room: e.target.value })}
                 />
               </div>
               <Button type="button" variant="outline" size="sm" onClick={addSession}>
@@ -298,7 +365,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
             value={form.notes}
             onChange={(e) => setField("notes", e.target.value)}
             placeholder={t("groups.notesPlaceholder")}
-            className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground"
+            className="min-h-24 w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted"
           />
           {errors.notes && <p className="text-xs text-destructive">{errors.notes}</p>}
         </div>

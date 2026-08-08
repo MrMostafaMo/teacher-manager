@@ -15,6 +15,7 @@ export const studyGroupInputSchema = z.object({
   name: z.string().trim().pipe(z.string().min(1).max(100)),
   subject: optionalText(100),
   schedule: optionalText(100),
+  startsOn: optionalText(10),
   status: z.enum(["active", "inactive"]),
   notes: optionalText(2000),
 });
