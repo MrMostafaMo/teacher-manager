@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DatabaseBackup, Download, HardDrive, Info, Languages, RotateCcw, Settings2, Upload } from "lucide-react";
+import { Clock, DatabaseBackup, Download, HardDrive, Info, Languages, RotateCcw, Settings2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LanguageSelector, ThemeSelector } from "@/shared/AppearanceControls";
+import { useTimeStore } from "@/lib/time-store";
 import { APP_VERSION } from "@/app/navigation";
 import {
   createBackup,
@@ -20,6 +21,8 @@ function formatSize(bytes: number): string {
 
 export default function SettingsPage() {
   const { t } = useTranslation();
+  const hour24 = useTimeStore((s) => s.hour24);
+  const setHour24 = useTimeStore((s) => s.setHour24);
   const [dbPath, setDbPath] = useState("");
   const [dbSize, setDbSize] = useState<number | null>(null);
   const [busy, setBusy] = useState<"backup" | "restore" | null>(null);
@@ -122,6 +125,19 @@ export default function SettingsPage() {
                 {t("common.theme")}
               </div>
               <ThemeSelector />
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="size-4 text-muted-foreground" />
+                {t("settings.clock24")}
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setHour24(!hour24)}
+              >
+                <Clock className="size-4" />
+                {t(hour24 ? "settings.clock24" : "settings.clock12")}
+              </Button>
             </div>
           </div>
         </CardContent>

@@ -8,6 +8,7 @@ import { homeworkInputSchema } from "@/features/homework/domain";
 import { createHomework, updateHomework } from "@/features/homework/application/homework-cases";
 import type { Homework, StudyGroup } from "@/lib/db/schema";
 import { Modal } from "@/features/students/ui/Modal";
+import { DatePicker } from "@/shared/DatePicker";
 
 interface HomeworkFormDialogProps {
   open: boolean;
@@ -111,7 +112,7 @@ export function HomeworkFormDialog({
             value={form.groupId}
             onChange={(e) => setField("groupId", e.target.value)}
             aria-invalid={!!errors.groupId}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
           >
             {groups.map((g) => (
               <option key={g.id} value={g.id}>
@@ -138,11 +139,11 @@ export function HomeworkFormDialog({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="homework-due">{t("homework.fields.dueDate")}</Label>
-            <Input
-              id="homework-due"
-              type="date"
+            <DatePicker
               value={form.dueDate}
-              onChange={(e) => setField("dueDate", e.target.value)}
+              onChange={(v) => setField("dueDate", v)}
+              ariaLabel={t("homework.fields.dueDate")}
+              className="w-full"
             />
           </div>
         </div>
@@ -154,7 +155,7 @@ export function HomeworkFormDialog({
             value={form.description}
             onChange={(e) => setField("description", e.target.value)}
             placeholder={t("homework.descriptionPlaceholder")}
-            className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground"
+            className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted/50"
           />
           {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
         </div>

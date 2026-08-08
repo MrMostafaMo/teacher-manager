@@ -4,6 +4,7 @@ import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { formatDateString } from "@/lib/utils/format";
 import {
   getExamDetail,
   saveExamResults,
@@ -112,7 +113,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
             </span>
             {detail.date && (
               <span className="text-muted-foreground" dir="ltr">
-                {detail.date}
+                {formatDateString(detail.date)}
               </span>
             )}
           </div>

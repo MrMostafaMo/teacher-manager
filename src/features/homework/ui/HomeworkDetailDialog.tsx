@@ -4,7 +4,8 @@ import { CheckCircle2, Clock3, PencilLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/lib/utils/format";
+import { formatDateString, formatDateTime } from "@/lib/utils/format";
+import { useTimeStore } from "@/lib/time-store";
 import { SUBMISSION_STATUSES, type SubmissionStatus } from "@/features/homework/domain";
 import {
   getHomeworkDetail,
@@ -35,6 +36,7 @@ interface HomeworkDetailDialogProps {
 
 export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: HomeworkDetailDialogProps) {
   const { t } = useTranslation();
+  const hour24 = useTimeStore((s) => s.hour24);
   const [detail, setDetail] = useState<HomeworkDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -103,7 +105,7 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
             )}
             {detail.dueDate && (
               <Badge variant="outline" dir="ltr">
-                {detail.dueDate}
+                {formatDateString(detail.dueDate)}
               </Badge>
             )}
           </div>
@@ -169,7 +171,7 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
                           <p className="text-xs text-destructive">{t("homework.notSubmitted")}</p>
                         ) : submittedAt ? (
                           <p className="text-xs text-muted-foreground" dir="ltr">
-                            {t("homework.submittedAt")} {formatDate(submittedAt, "YYYY-MM-DD HH:mm")}
+                            {t("homework.submittedAt")} {formatDateTime(submittedAt, hour24)}
                           </p>
                         ) : null}
                       </td>

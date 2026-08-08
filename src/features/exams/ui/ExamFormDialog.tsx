@@ -8,6 +8,7 @@ import { examInputSchema } from "@/features/exams/domain";
 import { createExam, updateExam } from "@/features/exams/application/exam-cases";
 import type { Exam, StudyGroup } from "@/lib/db/schema";
 import { Modal } from "@/features/students/ui/Modal";
+import { DatePicker } from "@/shared/DatePicker";
 
 interface ExamFormDialogProps {
   open: boolean;
@@ -106,7 +107,7 @@ export function ExamFormDialog({ open, exam, groups, defaultGroupId, onClose, on
             value={form.groupId}
             onChange={(e) => setField("groupId", e.target.value)}
             aria-invalid={!!errors.groupId}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
           >
             {groups.map((g) => (
               <option key={g.id} value={g.id}>
@@ -133,11 +134,11 @@ export function ExamFormDialog({ open, exam, groups, defaultGroupId, onClose, on
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="exam-date">{t("exams.fields.date")}</Label>
-            <Input
-              id="exam-date"
-              type="date"
+            <DatePicker
               value={form.date}
-              onChange={(e) => setField("date", e.target.value)}
+              onChange={(v) => setField("date", v)}
+              ariaLabel={t("exams.fields.date")}
+              className="w-full"
             />
           </div>
           <div className="space-y-1.5">

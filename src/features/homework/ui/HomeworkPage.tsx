@@ -12,6 +12,7 @@ import {
 } from "@/features/homework/application/homework-cases";
 import { listGroups } from "@/features/groups/application/group-cases";
 import type { Homework, StudyGroup } from "@/lib/db/schema";
+import { formatDateString } from "@/lib/utils/format";
 import { HomeworkFormDialog } from "./HomeworkFormDialog";
 import { HomeworkDetailDialog } from "./HomeworkDetailDialog";
 
@@ -152,7 +153,7 @@ export default function HomeworkPage() {
                             <td className="px-4 py-2.5">
                               <div className="flex items-center gap-2">
                                 <span className="text-muted-foreground" dir="ltr">
-                                  {h.dueDate ?? "—"}
+                                  {formatDateString(h.dueDate)}
                                 </span>
                                 {h.overdue && (
                                   <Badge variant="destructive">{t("homework.statusOverdue")}</Badge>

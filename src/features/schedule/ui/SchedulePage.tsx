@@ -9,6 +9,9 @@ import { deleteSession, listSchedule } from "@/features/schedule/application/sch
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { formatTime } from "@/lib/utils/format";
+import { useTimeStore } from "@/lib/time-store";
+import WeekGrid from "./WeekGrid";
 import { ScheduleFormDialog } from "./ScheduleFormDialog";
 import { SessionAttendanceDialog } from "./SessionAttendanceDialog";
 
@@ -25,7 +28,6 @@ export default function SchedulePage() {
   const [editing, setEditing] = useState<GroupSession | null>(null);
   const [attendanceSession, setAttendanceSession] = useState<SessionWithGroup | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const today = new Date().getDay();
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -161,42 +163,14 @@ export default function SchedulePage() {
           </CardContent>
         </Card>
       ) : view === "day" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
-          {byDay.map((daySessions, day) => (
-            <div
-              key={day}
-              className={cn(
-                "flex flex-col gap-2 rounded-xl border bg-card p-3",
-                day === today && "ring-2 ring-ring",
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">{t(`schedule.days.${DAYS[day]}`)}</h3>
-                {day === today && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    {t("schedule.today")}
-                  </Badge>
-                )}
-              </div>
-              {daySessions.length === 0 ? (
-                <p className="text-xs text-muted-foreground">{t("schedule.noRoom")}</p>
-              ) : (
-                daySessions.map((s) => (
-                  <SessionCard
-                    key={s.id}
-                    session={s}
-                    memberCount={memberCounts[s.groupId] ?? 0}
-                    conflicted={conflicts.has(s.id)}
-                    deleting={deletingId === s.id}
-                    onEdit={openEdit}
-                    onDelete={() => void handleDelete(s)}
-                    onAttend={() => setAttendanceSession(s)}
-                  />
-                ))
-              )}
-            </div>
-          ))}
-        </div>
+        <WeekGrid
+          byDay={byDay}
+          conflicts={conflicts}
+          deletingId={deletingId}
+          onEdit={openEdit}
+          onDelete={(s) => void handleDelete(s)}
+          onAttend={(s) => setAttendanceSession(s)}
+        />
       ) : (
         <div className="space-y-4">
           {byGroup.map(([groupId, groupSessions]) => (
@@ -265,6 +239,7 @@ function SessionCard({
   onAttend: () => void;
 }) {
   const { t } = useTranslation();
+  const hour24 = useTimeStore((s) => s.hour24);
   return (
     <div
       className={cn(
@@ -276,7 +251,7 @@ function SessionCard({
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{session.groupName}</p>
           <p className="text-xs text-muted-foreground">
-            {session.startTime} – {session.endTime}
+            {formatTime(session.startTime, hour24)} – {formatTime(session.endTime, hour24)}
           </p>
           <p className="text-xs text-muted-foreground">
             {session.room ? `${t("schedule.room")}: ${session.room}` : t("schedule.noRoom")}

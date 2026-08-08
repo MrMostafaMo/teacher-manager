@@ -10,6 +10,7 @@ import {
   updateSession,
 } from "@/features/schedule/application/schedule-cases";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
+import { TimePicker } from "@/shared/TimePicker";
 import { Modal } from "@/features/students/ui/Modal";
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
@@ -71,6 +72,8 @@ export function ScheduleFormDialog({
       if (field === "groupId") mapped.groupId = t("schedule.errors.groupRequired");
       else if (issue.message === "end after start")
         mapped.endTime = t("schedule.errors.endAfterStart");
+      else if (issue.message === "invalid time")
+        mapped.startTime = t("schedule.errors.timeRequired");
       else mapped[field] = t("schedule.errors.tooLong");
     }
     return mapped;
@@ -108,7 +111,7 @@ export function ScheduleFormDialog({
             value={form.groupId}
             onChange={(e) => setField("groupId", e.target.value)}
             aria-invalid={!!errors.groupId}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
           >
             {groups.map((g) => (
               <option key={g.id} value={g.id}>
@@ -127,7 +130,7 @@ export function ScheduleFormDialog({
             id="session-day"
             value={form.dayOfWeek}
             onChange={(e) => setField("dayOfWeek", Number(e.target.value))}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring"
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
           >
             {DAYS.map((d) => (
               <option key={d} value={d}>
@@ -142,12 +145,11 @@ export function ScheduleFormDialog({
             <Label htmlFor="session-start">
               {t("schedule.fields.startTime")} <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="session-start"
-              type="time"
+            <TimePicker
+              ariaLabel={t("schedule.fields.startTime")}
+              className="w-full"
               value={form.startTime}
-              onChange={(e) => setField("startTime", e.target.value)}
-              aria-invalid={!!errors.startTime}
+              onChange={(v) => setField("startTime", v)}
             />
             {errors.startTime && <p className="text-xs text-destructive">{errors.startTime}</p>}
           </div>
@@ -155,12 +157,11 @@ export function ScheduleFormDialog({
             <Label htmlFor="session-end">
               {t("schedule.fields.endTime")} <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="session-end"
-              type="time"
+            <TimePicker
+              ariaLabel={t("schedule.fields.endTime")}
+              className="w-full"
               value={form.endTime}
-              onChange={(e) => setField("endTime", e.target.value)}
-              aria-invalid={!!errors.endTime}
+              onChange={(v) => setField("endTime", v)}
             />
             {errors.endTime && <p className="text-xs text-destructive">{errors.endTime}</p>}
           </div>

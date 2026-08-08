@@ -21,6 +21,42 @@ export function formatPercent(value: number, digits = 0): string {
   return formatNumber(value, { style: "percent", maximumFractionDigits: digits });
 }
 
+/** Money amounts: Latin digits with thousands separators, no currency symbol. */
+export function formatMoney(value: number): string {
+  return formatNumber(value, { maximumFractionDigits: 0 });
+}
+
 export function formatDate(date: number | Date, pattern = "YYYY-MM-DD"): string {
   return dayjs(date).format(pattern);
+}
+
+/**
+ * 24h "HH:mm" -> 12h "hh:mm AM/PM". Built by hand, not dayjs,
+ * because the dayjs `ar` locale's postformat would emit Arabic-Indic digits,
+ * violating the Latin-digits rule.
+ *
+ * Wrapped in LRI/PDI (U+2066/U+2069) so the Latin time token is a single
+ * bidi-isolated unit inside Arabic (RTL) paragraphs — otherwise WebKit reorders
+ * the digits (e.g. "04:30" → "30:04").
+ */
+export function formatTime(time: string, hour24: boolean): string {
+  const out = hour24
+    ? time
+    : (() => {
+        const [h, m] = time.split(":").map(Number);
+        const hr = ((h % 12) || 12).toString().padStart(2, "0");
+        const suffix = h < 12 ? "AM" : "PM";
+        return `${hr}:${String(m).padStart(2, "0")} ${suffix}`;
+      })();
+  return `\u2066${out}\u2069`;
+}
+
+export function formatDateTime(ms: number, hour24: boolean): string {
+  return `${formatDate(ms, "DD-MM-YYYY")} ${formatTime(dayjs(ms).format("HH:mm"), hour24)}`;
+}
+
+/** Stored ISO date strings ("YYYY-MM-DD") → "DD-MM-YYYY". Schema guarantees the format. */
+export function formatDateString(iso: string | null): string {
+  if (!iso) return "—";
+  return iso.split("-").reverse().join("-");
 }

@@ -7,6 +7,7 @@ import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { deleteExam, listExams, type ExamListItem } from "@/features/exams/application/exam-cases";
 import { listGroups } from "@/features/groups/application/group-cases";
 import type { Exam, StudyGroup } from "@/lib/db/schema";
+import { formatDateString } from "@/lib/utils/format";
 import { ExamFormDialog } from "./ExamFormDialog";
 import { ExamDetailDialog } from "./ExamDetailDialog";
 
@@ -147,7 +148,7 @@ export default function ExamsPage() {
                           <tr key={e.id} className="border-b last:border-0 hover:bg-muted/50">
                             <td className="px-4 py-2.5 font-medium">{e.title}</td>
                             <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                              {e.date ?? "—"}
+                              {formatDateString(e.date)}
                             </td>
                             <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
                               {e.maxScore}
