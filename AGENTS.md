@@ -67,6 +67,10 @@ only). It is used to group per-group lists in homework, exams, and payments.
   imported in `globals.css`). Respect `prefers-reduced-motion`.
 - **Timestamps**: `created_at`/`updated_at` are unix-ms, set by repositories
   (not by callers).
+- **Date/time display**: display dates as `DD-MM-YYYY`; keep native date/month
+  input values and stored date keys as ISO (`YYYY-MM-DD` / `YYYY-MM`). Session
+  times are stored as 24h `HH:mm` but displayed via `formatTime()` and the
+  persisted `tm-time` setting.
 - **Icon-only buttons**: must have `aria-label` or `sr-only`.
 - **State**: Zustand stores for UI state; repositories for persistence.
 - **Forms**: React Hook Form + Zod resolvers.
@@ -99,9 +103,13 @@ Dev app runs via `pnpm tauri dev`. To drive the real window from the CLI:
   `dump.py` / `dumpall.py` (accessibility tree dump; `dumpall` shows raw
   text on every node). Combine with `xdotool mousemove … click 1`.
 - **Modal quirk**: xdotool clicks/keys reach page buttons (nav, tabs, table
-  rows, collapse toggles) but NOT buttons inside native `<dialog>` modals —
-  a WebKitGTK automation limitation, not a product bug. Verify modal-heavy
-  flows by seeding the SQLite DB directly and re-navigating the page.
+  rows, collapse toggles) but NOT buttons inside native `<dialog>` modals — a
+  WebKitGTK automation limitation, not a product bug. Verify modal-heavy flows
+  by seeding the SQLite DB directly and re-navigating the page. The custom
+  date/month picker popovers (`src/shared/DatePicker.tsx`) have the same
+  quirk: their internals aren't clickable via xdotool. Verify picker logic in
+  a real browser against the vite dev server (e.g. playwright + chromium),
+  or by seeding data.
 - GTK file dialog: Ctrl+L to type a path.
 - Static check before commit: `pnpm build` (tsc + vite).
 
@@ -164,3 +172,64 @@ Phase 19 added editing for the last two create-only features:
   `RecordExpenseDialog` accept an optional row prop for edit mode: prefilled
   fields, «تعديل الدفعة»/«تعديل المصروف» titles. Pencil buttons sit next to
   the delete action in the payments history and expenses tables.
+
+Phase 20 standardized display formats: dates render as `DD-MM-YYYY` on-screen
+and in reports, while timetable/session times use a persisted Settings toggle
+for 12-hour vs 24-hour display with Arabic/English meridiem labels.
+
+Phase 21 was rolled back: per-group monthly session plans (حصص الصف) were
+removed because their attendance shared `session_attendance` with the weekly
+timetable sheets, so the monthly view's session stats were mixing two
+systems. Removed in full: the `monthly_sessions` table and
+`study_groups.sessions_per_month` (migration v9 DROPs both), the
+`src/features/sessions/` feature, the attendance page's third tab, the
+`tm-sessions-per-month` settings + group-form field.
+
+Phase 23 removed the weekly session-attendance statistics from the monthly
+attendance view: the «حضور الجلسات الأسبوعية» card (session summary cards,
+per-group `MonthlySessionTable`, and the `session*` fields of
+`StudentMonthlyRow`) and its data path (`sessionMonthlyStats` in
+`attendance-repo.ts`) are gone — the monthly view keeps only the daily
+monthly summary. The `session_attendance` table and the per-session sheets
+on the timetable page are unaffected.
+
+The daily attendance tab lists only today's scheduled groups: with no group
+filter, the roster is the (deduped, active) members of the groups that have a
+`group_sessions` row on the selected date's weekday; a "no sessions today"
+empty state shows when the schedule has nothing that day. The manual group
+filter still overrides to show any group's members.
+
+Phase 22 tightened which students appear on attendance rosters and how
+attendance statuses are counted:
+
+- Groups gained an optional start date (`study_groups.starts_on`, migration
+  v10, edited via the group form's «تاريخ البدء» field and shown in the group
+  detail dialog); a group whose `starts_on` is after the roster date is hidden
+  from the daily roster and "today's sessions" until it begins.
+- The attendance status enum gained `excused` (معذور): a fourth purple button
+  in `StatusPicker`, persisted to `attendance`/`session_attendance`, and
+  counted in every rate (daily / monthly / dashboard KPI / reports) plus the
+  monthly tables' `excused`/`sessionExcused` columns (the `attendanceReport`
+  else-branch bug that mis-tallied unknown statuses as `late` was fixed too).
+- Students gained an enrollment date (`students.enrolled_on`, migration v11):
+  recorded in the student form (defaults to today; legacy rows backfilled from
+  `created_at`) and shown in the profile as «تاريخ التسجيل:». Rosters filter
+  by it via `attendsOn()` in `attendance-cases.ts`
+  (`getDaily`/`rosterForDate`/`getMonthly`) and `schedule-cases.ts`
+  (`getSessionAttendance`): a student appears from their first day, and in the
+  monthly view/rates from their first month. NULL (legacy) means no bound.
+
+Phase 24 was a review round (no schema change):
+
+- Money display standardized via `formatMoney()` in `src/lib/utils/format.ts`:
+  Latin digits with thousands separators plus a localized ج.م / EGP suffix.
+  Used by the dashboard KPIs (collected / expenses / net), expenses page,
+  payments page (due/paid/remaining, totals, per-group section metas,
+  history), plans dialog, and the record-payment plan option. Report previews
+  format money columns (`MONEY_COLUMNS` in `ReportsPage.tsx`); exported
+  Excel/PDF stay numeric.
+- Defensive guards: strict payment-period regex, `paymentsReport` remaining
+  clamped at zero, active-member filters in the `getDaily`/`getSessionAttendance`
+  group branch, membership guard in `setSubmissionStatus`, `session_attendance`
+  cleanup on `removeStudentFromGroup`, and submissions/results pruning when a
+  student's group changes.

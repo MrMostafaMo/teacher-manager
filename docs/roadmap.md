@@ -25,6 +25,79 @@ next begins, and ends with a review checkpoint.
 | 17   | Reports: expenses table + monthly financial summary (collected/expenses/net) | ✅ Done |
 | 18   | v0.1.2: About card + version in sidebar + changelog | ✅ Done |
 | 19   | Edit payments + expenses (تعديل الدفعات والمصروفات) | ✅ Done |
+| 20   | Display standardization: DD-MM-YYYY everywhere + 12/24h time toggle | ✅ Done |
+| 21   | Per-group monthly session plans (حصص الصف) | ↩️ Rolled back |
+| 22   | Roster tightening: group start date, excused status, enrollment date | ✅ Done |
+| 23   | Remove weekly session-attendance stats from the monthly view | ✅ Done |
+| 24   | Review round: formatMoney display + defensive guards + data cleanup | ✅ Done |
+
+## Phase 20 — completed
+
+- Dates render `DD-MM-YYYY` on-screen and in exported reports, while native
+  date/month input values and stored date keys stay ISO (`YYYY-MM-DD` /
+  `YYYY-MM`).
+- Timetable/session times respect a new persisted Settings toggle (`tm-time`,
+  `src/lib/time-store.ts`) for 12-hour vs 24-hour display, with localized
+  AM/PM markers; `formatTime()` wraps the token in LRI/PDI bidi isolates.
+- New shared pickers (`src/shared/DatePicker.tsx`, `TimePicker.tsx`) replace
+  native pickers where WebKitGTK's AT-SPI couldn't drive them.
+
+## Phase 21 — rolled back
+
+- Per-group monthly session plans (حصص الصف) were removed in full: their
+  attendance shared `session_attendance` with the weekly timetable sheets, so
+  the monthly view's session stats were mixing two systems.
+- Removed: the `monthly_sessions` table and `study_groups.sessions_per_month`
+  (migration v9 DROPs both), the `src/features/sessions/` feature, the
+  attendance page's third tab, and the `tm-sessions-per-month` setting +
+  group-form field.
+
+## Phase 22 — completed
+
+- Groups gained an optional start date (`study_groups.starts_on`, migration
+  v10); a group whose `starts_on` is after the roster date is hidden from the
+  daily roster and "today's sessions" until it begins.
+- The attendance status enum gained `excused` (معذور): a fourth purple button
+  in `StatusPicker`, persisted to `attendance`/`session_attendance`, counted in
+  every rate (daily / monthly / dashboard KPI / reports) and the monthly
+  tables' `excused`/`sessionExcused` columns.
+- Students gained an enrollment date (`students.enrolled_on`, migration v11):
+  recorded in the student form (defaults to today; legacy rows backfilled from
+  `created_at`) and shown in the profile. Rosters filter by it via `attendsOn()`.
+
+## Phase 23 — completed
+
+- The weekly session-attendance statistics were removed from the monthly
+  attendance view: the «حضور الجلسات الأسبوعية» card (session summary cards,
+  per-group `MonthlySessionTable`, `session*` fields of `StudentMonthlyRow`) and
+  its data path (`sessionMonthlyStats`) are gone — the monthly view keeps only
+  the daily monthly summary. The `session_attendance` table and the per-session
+  sheets on the timetable page are unaffected.
+- The daily tab lists only today's scheduled groups: with no group filter, the
+  roster is the (deduped, active) members of groups that have a `group_sessions`
+  row on the selected weekday; a "no sessions today" empty state shows when the
+  schedule has nothing that day. The manual group filter still overrides.
+
+## Phase 24 — completed
+
+- Money display standardized via `formatMoney()` (`src/lib/utils/format.ts`):
+  Latin digits with thousands separators, suffix ج.م / EGP per language.
+  Applied across the dashboard KPIs (collected / expenses / net), expenses
+  page, payments page (due / paid / remaining, totals, per-group section
+  metas, history), plans dialog, and the record-payment plan option label.
+  Report previews format money columns per report key while exports stay
+  numeric.
+- Defensive guards from a review round:
+  - `payments/domain.ts` — the period regex is now strictly `^\d{4}-\d{2}$`.
+  - `report-cases.ts` — `paymentsReport` clamps `remaining` at 0.
+  - `attendance-cases.ts` / `schedule-cases.ts` — the `groupId` branch of
+    `getDaily` and `getSessionAttendance` filter to active members only.
+  - `homework-cases.ts` — `setSubmissionStatus` rejects students not in the
+    homework's group.
+  - `group-cases.ts` — `removeStudentFromGroup` also clears the student's
+    `session_attendance` rows; changing a student's group prunes their
+    submissions/results for the previous group.
+- `ReportsPage` export subtitle uses `DD-MM-YYYY` per the display convention.
 
 ## Phase 19 — completed
 
