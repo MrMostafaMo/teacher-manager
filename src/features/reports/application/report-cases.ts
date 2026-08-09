@@ -19,6 +19,7 @@ import {
 } from "@/lib/db/schema";
 import dayjs from "dayjs";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
+import { studentStatement } from "@/features/payments/application/payment-cases";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
 import { formatDateString } from "@/lib/utils/format";
 import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
@@ -56,6 +57,10 @@ export async function buildReportData(
       return financesReport(t);
     case "skills":
       return skillsReport(t);
+    case "statement":
+      // The student statement is scoped to a single student; use
+      // buildStudentStatementReport(studentId, t) instead.
+      throw new Error("statement report requires a student id");
   }
 }
 
@@ -306,5 +311,69 @@ async function skillsReport(t: ReportTranslations): Promise<ReportData> {
         const c = perStudent.get(s.id) ?? { tracked: 0, weak: 0, weakList: [] };
         return [s.name, c.tracked, c.weak, c.weakList.join("، ") || "—"];
       }),
+  };
+}
+
+export type StatementTranslations = {
+  title: string;
+  /** [date, description, amount, balance] */
+  headers: string[];
+  monthDues: string;
+  total: string;
+  method: (m: string) => string;
+};
+
+/**
+ * Student statement as a chronological ledger: each month's dues entry is
+ * followed by that month's payments, all with a running balance. Amounts are
+ * the final column's net (total due − total paid) in the closing row.
+ */
+export async function buildStudentStatementReport(
+  studentId: string,
+  t: StatementTranslations,
+): Promise<ReportData> {
+  const st = await studentStatement(studentId);
+  const paidIn = new Map<string, typeof st.payments>();
+  for (const p of st.payments) {
+    const period = p.payment.period ?? "";
+    const arr = paidIn.get(period) ?? [];
+    arr.push(p);
+    paidIn.set(period, arr);
+  }
+
+  const rows: (string | number)[][] = [];
+  let running = 0;
+  for (const m of st.months) {
+    running += m.due;
+    rows.push([m.period.split("-").reverse().join("-"), t.monthDues, m.due, running]);
+    for (const p of paidIn.get(m.period) ?? []) {
+      running -= p.payment.amount;
+      rows.push([
+        dayjs(p.payment.paidAt).format("DD-MM-YYYY"),
+        t.method(p.payment.method),
+        p.payment.amount,
+        running,
+      ]);
+    }
+  }
+  // Payments recorded outside the billed range (missing/other period).
+  for (const p of st.payments) {
+    const period = p.payment.period ?? "";
+    if (st.months.some((m) => m.period === period)) continue;
+    running -= p.payment.amount;
+    rows.push([
+      dayjs(p.payment.paidAt).format("DD-MM-YYYY"),
+      t.method(p.payment.method),
+      p.payment.amount,
+      running,
+    ]);
+  }
+  rows.push([t.total, "", st.totalPaid, st.totalBalance]);
+
+  return {
+    key: "statement",
+    title: t.title,
+    headers: t.headers,
+    rows,
   };
 }

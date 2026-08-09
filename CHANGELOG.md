@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.6
+
+- **Student statement of account (كشف الحساب)**: a «كشف الحساب» button in the
+  student profile header opens a modal with the monthly summary (due/paid/
+  balance + running balance per month since enrollment) and the chronological
+  payment ledger. Running balances can go negative when the student pays in
+  advance. The statement exports to Excel/PDF through the generic report
+  exporters.
+
 ## v0.1.5
 
 - **Nile visual identity**: refreshed palette (indigo gradient primary button,

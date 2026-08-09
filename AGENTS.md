@@ -339,3 +339,22 @@ change):
 - **Profile edit**: the student profile header gained an «تعديل الطالب» button
   opening `StudentFormDialog` in edit mode; saving refreshes the profile.
 - `DataTable` lost its unused `stickyHeader` prop.
+
+Phase 30 added a per-student statement of account (كشف الحساب — no schema
+change):
+
+- `studentStatement(studentId)` in `payment-cases.ts` builds a monthly
+  summary from the student's enrollment month (or first paid period) through
+  today, charging the *current* plan amount each month and crediting that
+  month's payments (`due`/`paid`/`balance` + a cumulative `running` that can
+  go negative = advance), plus a chronological payment ledger with the running
+  paid total.
+- `buildStudentStatementReport(studentId, t)` in `report-cases.ts` turns the
+  statement into a chronological ledger `ReportData` (month-due rows followed
+  by that month's payments, closing total row); `statement` was added to the
+  `ReportKey` union, and `buildReportData`'s switch throws on it since the
+  statement needs a student id.
+- `StudentStatementDialog` (`src/features/student-profile/ui/`): a modal with
+  the monthly summary table, totals line, and payment ledger; Excel/PDF export
+  reuse the generic exporters. A «كشف الحساب» button in the profile header
+  (next to «تعديل الطالب») opens it.

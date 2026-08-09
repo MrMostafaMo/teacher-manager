@@ -10,6 +10,7 @@ import {
   Layers,
   Pencil,
   Phone,
+  ReceiptText,
   Sparkles,
   StickyNote,
   User,
@@ -34,6 +35,7 @@ import type { Attendance } from "@/lib/db/schema";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
 import { StudentFormDialog } from "@/features/students/ui/StudentFormDialog";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
+import { StudentStatementDialog } from "@/features/student-profile/ui/StudentStatementDialog";
 import { isOverdue } from "@/features/homework/application/homework-cases";
 import { ACTION_KEYS } from "@/features/activity/ui/ActivityPage";
 import { PageHeader } from "@/shared/PageHeader";
@@ -86,6 +88,7 @@ export default function StudentProfilePage() {
   const [error, setError] = useState("");
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [statementOpen, setStatementOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -205,6 +208,10 @@ export default function StudentProfilePage() {
               <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
                 <Pencil className="size-4" />
                 {t("students.edit")}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setStatementOpen(true)}>
+                <ReceiptText className="size-4" />
+                {t("profile.statement.open")}
               </Button>
               <Avatar name={student.name} className="size-9 text-xs" />
               <StatusBadge status={student.status} />
@@ -562,6 +569,13 @@ export default function StudentProfilePage() {
           setEditOpen(false);
           setReloadKey((k) => k + 1);
         }}
+      />
+
+      <StudentStatementDialog
+        open={statementOpen}
+        studentId={student.id}
+        studentName={student.name}
+        onClose={() => setStatementOpen(false)}
       />
     </div>
   );

@@ -10,7 +10,8 @@ export type ReportKey =
   | "payments"
   | "expenses"
   | "finances"
-  | "skills";
+  | "skills"
+  | "statement";
 
 export interface ReportData {
   key: ReportKey;
