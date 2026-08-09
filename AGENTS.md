@@ -358,3 +358,20 @@ change):
   the monthly summary table, totals line, and payment ledger; Excel/PDF export
   reuse the generic exporters. A «كشف الحساب» button in the profile header
   (next to «تعديل الطالب») opens it.
+
+Phase 31 added per-student trend charts (التحليلات — no schema change):
+
+- `buildStudentTrends` (`student-trends.ts`): a pure function over the
+  already-loaded `StudentProfileData` (no new queries) returning four series
+  for the profile page — attendance per month (present/late/absent/excused
+  counts), exam scores (percent of max, ordered by date, latest 15), homework
+  completion per month, and payments per month (from `payments.period` or
+  `paidAt`). Monthly series cover the latest 8 months with the dashboard's
+  `MM/YY` label format.
+- `StudentTrendsSection` (`src/features/student-profile/ui/`): a «التحليلات»
+  section between the stats grid and the record tables, holding a
+  `md:grid-cols-2` grid of four recharts cards (stacked attendance bars,
+  exam-score line, homework bars, payment bars). Charts are `dir="ltr"` with a
+  theme-aware tooltip; each card has a localized «لا توجد بيانات بعد» empty
+  state. Money/pct in tooltips reuse `formatMoney` / `formatNumber`.
+- i18n: `profile.sections.trends` + `profile.trends.*` in both locales.

@@ -35,6 +35,8 @@ next begins, and ends with a review checkpoint.
 | 27   | Final polish: profile page header, bidi/Excel RTL in reports, a11y sweep | ✅ Done |
 | 28   | Visual identity + shared components: Nile theme, DataTable, CommandPalette, Avatar, toasts, dashboard hero/deltas/finance charts | ✅ Done |
 | 29   | Global create actions (command palette + dashboard quick actions open real dialogs) + week navigation + profile edit | ✅ Done |
+| 30   | Per-student statement of account (كشف الحساب): monthly summary + payment ledger + export | ✅ Done |
+| 31   | Per-student trend charts (التحليلات): attendance, exams, homework, payments | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -731,3 +733,24 @@ next begins, and ends with a review checkpoint.
     CSP + DB pipeline all working in the production build.
 - `tsc --noEmit` clean, `pnpm build` passes, `AGENTS.md` created with
   project commands, architecture, conventions and gotchas.
+
+## Phase 31 — completed
+
+- **Per-student trend charts** in the student profile (no schema change):
+  - `buildStudentTrends` (`src/features/student-profile/application/
+    student-trends.ts`): a pure function over the already-loaded
+    `StudentProfileData` (no new queries) producing four chart series:
+    attendance per month (present/late/absent/excused counts), exam scores
+    (percentage of max, ordered by date, latest 15), homework completion per
+    month, and payments per month (from `payments.period` or `paidAt`).
+    Monthly series cover the latest 8 months and reuse the dashboard's
+    `MM/YY` label format.
+  - `StudentTrendsSection` (`src/features/student-profile/ui/
+    StudentTrendsSection.tsx`): a new «التحليلات» section rendered between
+    the stats grid and the rest of the profile, holding a responsive
+    `md:grid-cols-2` grid of four recharts cards — stacked attendance bars,
+    exam-score line, homework-completion bars, and payment bars. Charts are
+    `dir="ltr"` with a theme-aware tooltip (money formatted via
+    `formatMoney`); each card shows a «لا توجد بيانات بعد» empty state.
+  - i18n keys `profile.sections.trends` + `profile.trends.*` in both locales.
+- `tsc --noEmit` clean, `pnpm build` passes.

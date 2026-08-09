@@ -201,6 +201,17 @@ export const ar: Messages = {
       sessions: "حضور الجلسات",
       skills: "المهارات",
       activity: "آخر الأنشطة",
+      trends: "التحليلات",
+    },
+    trends: {
+      attendance: "الحضور حسب الشهر",
+      exams: "درجات الاختبارات",
+      homework: "إنجاز الواجبات",
+      payments: "المدفوعات حسب الشهر",
+      noData: "لا توجد بيانات بعد.",
+      examScore: "الدرجة",
+      homeworkDone: "المُنجز",
+      paymentsAmount: "المبلغ",
     },
     columns: {
       date: "التاريخ",

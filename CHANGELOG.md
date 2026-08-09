@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.7
+
+- **Per-student trend charts (التحليلات)**: the student profile gains a new
+  "Trends" section (between the stats grid and the record tables) with four
+  recharts cards — stacked monthly attendance bars, an exam-score line chart,
+  monthly homework-completion bars, and monthly payment bars. Series come from
+  a pure `buildStudentTrends` helper over the already-loaded profile data (no
+  new queries); each card falls back to a localized empty state. Money and
+  percentages in tooltips are formatted via the shared formatters.
+
 ## v0.1.6
 
 - **Student statement of account (كشف الحساب)**: a «كشف الحساب» button in the

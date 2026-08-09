@@ -36,6 +36,7 @@ import { StatusBadge } from "@/features/students/ui/StatusBadge";
 import { StudentFormDialog } from "@/features/students/ui/StudentFormDialog";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
 import { StudentStatementDialog } from "@/features/student-profile/ui/StudentStatementDialog";
+import { StudentTrendsSection } from "@/features/student-profile/ui/StudentTrendsSection";
 import { isOverdue } from "@/features/homework/application/homework-cases";
 import { ACTION_KEYS } from "@/features/activity/ui/ActivityPage";
 import { PageHeader } from "@/shared/PageHeader";
@@ -262,6 +263,8 @@ export default function StudentProfilePage() {
           </Card>
         ))}
       </div>
+
+      <StudentTrendsSection data={data} />
 
       <Separator />
 

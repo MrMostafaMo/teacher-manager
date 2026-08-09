@@ -199,6 +199,17 @@ export const en = {
       sessions: "Session attendance",
       skills: "Skills",
       activity: "Recent activity",
+      trends: "Trends",
+    },
+    trends: {
+      attendance: "Attendance by month",
+      exams: "Exam scores",
+      homework: "Homework completion",
+      payments: "Payments by month",
+      noData: "No data yet.",
+      examScore: "Score",
+      homeworkDone: "Completed",
+      paymentsAmount: "Amount",
     },
     columns: {
       date: "Date",
