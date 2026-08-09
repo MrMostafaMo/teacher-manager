@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { Avatar } from "@/shared/Avatar";
 import { SearchInput } from "@/shared/SearchInput";
 import { Select } from "@/components/ui/select";
 import {
@@ -96,85 +98,75 @@ export default function StudentsPage() {
   }
 
   function StudentsTable({ list }: { list: Student[] }) {
-    return (
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-xs text-muted-foreground">
-              <th className="px-4 py-2.5 text-start font-medium">
-                {t("students.columns.name")}
-              </th>
-              <th className="px-4 py-2.5 text-start font-medium">
-                {t("students.columns.guardian")}
-              </th>
-              <th className="px-4 py-2.5 text-start font-medium">
-                {t("students.columns.phone")}
-              </th>
-              <th className="px-4 py-2.5 text-start font-medium">
-                {t("students.columns.status")}
-              </th>
-              <th className="px-4 py-2.5" />
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((s) => (
-              <tr key={s.id} className="border-b last:border-0 hover:bg-muted/50">
-                <td className="px-4 py-2.5">
-                  <Button
-                    variant="ghost"
-                    className="h-auto px-0 py-0 font-medium"
-                    title={t("students.profile")}
-                    onClick={() => navigate(`/students/${s.id}`)}
-                  >
-                    {s.name}
-                  </Button>
-                </td>
-                <td className="px-4 py-2.5 text-muted-foreground">{s.guardianName ?? "—"}</td>
-                <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                  {s.phone ?? "—"}
-                </td>
-                <td className="px-4 py-2.5">
-                  <StatusBadge status={s.status} />
-                </td>
-                <td className="px-4 py-2.5">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={t("students.view")}
-                      title={t("students.profile")}
-                      onClick={() => navigate(`/students/${s.id}`)}
-                    >
-                      <Eye />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={t("students.edit")}
-                      onClick={() => openEdit(s)}
-                    >
-                      <Pencil />
-                    </Button>
-                    <Button
-                      variant={deletingId === s.id ? "destructive" : "ghost"}
-                      size="icon-sm"
-                      aria-label={
-                        deletingId === s.id
-                          ? t("students.confirmDelete")
-                          : t("students.delete")
-                      }
-                      onClick={() => void handleRowDelete(s)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
+    const columns: DataTableColumn<Student>[] = [
+      {
+        header: t("students.columns.name"),
+        render: (s) => (
+          <span className="flex items-center gap-2.5">
+            <Avatar name={s.name} className="size-8 text-xs" />
+            <Button
+              variant="ghost"
+              className="h-auto px-0 py-0 font-medium"
+              title={t("students.profile")}
+              onClick={() => navigate(`/students/${s.id}`)}
+            >
+              {s.name}
+            </Button>
+          </span>
+        ),
+      },
+      {
+        header: t("students.columns.guardian"),
+        className: "text-muted-foreground",
+        render: (s) => s.guardianName ?? "—",
+      },
+      {
+        header: t("students.columns.phone"),
+        className: "text-muted-foreground",
+        render: (s) => <span dir="ltr">{s.phone ?? "—"}</span>,
+      },
+      {
+        header: t("students.columns.status"),
+        render: (s) => <StatusBadge status={s.status} />,
+      },
+      {
+        header: "",
+        className: "text-end",
+        headerClassName: "text-end",
+        render: (s) => (
+          <div className="flex justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("students.view")}
+              title={t("students.profile")}
+              onClick={() => navigate(`/students/${s.id}`)}
+            >
+              <Eye />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("students.edit")}
+              onClick={() => openEdit(s)}
+            >
+              <Pencil />
+            </Button>
+            <Button
+              variant={deletingId === s.id ? "destructive" : "ghost"}
+              size="icon-sm"
+              aria-label={
+                deletingId === s.id ? t("students.confirmDelete") : t("students.delete")
+              }
+              onClick={() => void handleRowDelete(s)}
+            >
+              <Trash2 />
+            </Button>
+          </div>
+        ),
+      },
+    ];
+    return <DataTable<Student> columns={columns} rows={list} getRowKey={(s) => s.id} />;
   }
 
   const { sections, ungrouped } = (() => {

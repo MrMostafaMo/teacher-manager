@@ -23,6 +23,8 @@ import { Segmented } from "@/shared/Segmented";
 import { MonthPicker } from "@/shared/DatePicker";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { Avatar } from "@/shared/Avatar";
 import { PageHeader } from "@/shared/PageHeader";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { PlansDialog } from "./PlansDialog";
@@ -159,56 +161,60 @@ function DuesView({
   }
 
   function DuesTable({ list }: { list: DuesRow[] }) {
-    return (
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-xs text-muted-foreground">
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.student")}</th>
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.plan")}</th>
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.due")}</th>
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.paid")}</th>
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.remaining")}</th>
-              <th className="px-4 py-2.5 text-start font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((r) => {
-              const status =
-                r.due === 0 ? "noPlan" : r.remaining <= 0 ? "paid" : "outstanding";
-              return (
-                <tr key={r.student.id} className="border-b last:border-0 hover:bg-muted/50">
-                  <td className="px-4 py-2.5 font-medium">{r.student.name}</td>
-                  <td className="px-4 py-2.5 text-muted-foreground">
-                    {r.plan ? r.plan.name : "—"}
-                  </td>
-                  <td className="px-4 py-2.5" dir="ltr">
-                    {r.due > 0 ? formatMoney(r.due) : "—"}
-                  </td>
-                  <td className="px-4 py-2.5 text-success" dir="ltr">
-                    {r.paid > 0 ? formatMoney(r.paid) : "—"}
-                  </td>
-                  <td
-                    className={cn(
-                      "px-4 py-2.5",
-                      r.remaining > 0 && "text-destructive",
-                    )}
-                    dir="ltr"
-                  >
-                    {r.due > 0 ? formatMoney(Math.max(r.remaining, 0)) : "—"}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <div className="flex justify-end">
-                      <DuesBadge status={status} />
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
+    const columns: DataTableColumn<DuesRow>[] = [
+      {
+        header: t("payments.student"),
+        className: "font-medium",
+        render: (r) => (
+          <span className="flex items-center gap-2.5">
+            <Avatar name={r.student.name} className="size-8 text-xs" />
+            {r.student.name}
+          </span>
+        ),
+      },
+      {
+        header: t("payments.plan"),
+        className: "text-muted-foreground",
+        render: (r) => (r.plan ? r.plan.name : "—"),
+      },
+      {
+        header: t("payments.due"),
+        className: "tabular-nums",
+        render: (r) => (r.due > 0 ? <span dir="ltr">{formatMoney(r.due)}</span> : "—"),
+      },
+      {
+        header: t("payments.paid"),
+        className: "tabular-nums text-success",
+        render: (r) => (r.paid > 0 ? <span dir="ltr">{formatMoney(r.paid)}</span> : "—"),
+      },
+      {
+        header: t("payments.remaining"),
+        className: "tabular-nums",
+        render: (r) =>
+          r.due > 0 ? (
+            <span dir="ltr" className={cn(r.remaining > 0 && "text-destructive")}>
+              {formatMoney(Math.max(r.remaining, 0))}
+            </span>
+          ) : (
+            "—"
+          ),
+      },
+      {
+        header: "",
+        className: "text-end",
+        headerClassName: "text-end",
+        render: (r) => {
+          const status =
+            r.due === 0 ? "noPlan" : r.remaining <= 0 ? "paid" : "outstanding";
+          return (
+            <div className="flex justify-end">
+              <DuesBadge status={status} />
+            </div>
+          );
+        },
+      },
+    ];
+    return <DataTable<DuesRow> columns={columns} rows={list} getRowKey={(r) => r.student.id} />;
   }
 
   return (
@@ -370,64 +376,69 @@ function HistoryView({
   };
 
   function HistoryTable({ list }: { list: PaymentHistoryRow[] }) {
+    const columns: DataTableColumn<PaymentHistoryRow>[] = [
+      {
+        header: t("payments.student"),
+        className: "font-medium",
+        render: ({ studentName }) => studentName,
+      },
+      {
+        header: t("payments.plan"),
+        className: "text-muted-foreground",
+        render: ({ planName }) => planName ?? "—",
+      },
+      {
+        header: t("payments.period"),
+        className: "text-muted-foreground",
+        render: ({ payment }) => <span dir="ltr">{payment.period}</span>,
+      },
+      {
+        header: t("payments.amount"),
+        className: "font-medium tabular-nums",
+        render: ({ payment }) => <span dir="ltr">{formatMoney(payment.amount)}</span>,
+      },
+      {
+        header: t("payments.method"),
+        render: ({ payment }) => (
+          <Badge variant="secondary">
+            {t(methodKey[payment.method] ?? "payments.cash")}
+          </Badge>
+        ),
+      },
+      {
+        header: "",
+        className: "text-end",
+        headerClassName: "text-end",
+        render: ({ payment }) => (
+          <div className="flex justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("payments.edit")}
+              onClick={() => onEdit(payment)}
+            >
+              <Pencil />
+            </Button>
+            <Button
+              variant={deletingId === payment.id ? "destructive" : "ghost"}
+              size="icon-sm"
+              aria-label={
+                deletingId === payment.id ? t("payments.confirmDelete") : t("payments.delete")
+              }
+              onClick={() => void handleDelete(payment.id)}
+            >
+              <Trash2 />
+            </Button>
+          </div>
+        ),
+      },
+    ];
     return (
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-xs text-muted-foreground">
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.student")}</th>
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.plan")}</th>
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.period")}</th>
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.amount")}</th>
-              <th className="px-4 py-2.5 text-start font-medium">{t("payments.method")}</th>
-              <th className="px-4 py-2.5 text-start font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {list.map(({ payment, studentName, planName }) => (
-              <tr key={payment.id} className="border-b last:border-0 hover:bg-muted/50">
-                <td className="px-4 py-2.5 font-medium">{studentName}</td>
-                <td className="px-4 py-2.5 text-muted-foreground">{planName ?? "—"}</td>
-                <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                  {payment.period}
-                </td>
-                <td className="px-4 py-2.5 font-medium" dir="ltr">
-                  {formatMoney(payment.amount)}
-                </td>
-                <td className="px-4 py-2.5">
-                  <Badge variant="secondary">
-                    {t(methodKey[payment.method] ?? "payments.cash")}
-                  </Badge>
-                </td>
-                <td className="px-4 py-2.5">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={t("payments.edit")}
-                      onClick={() => onEdit(payment)}
-                    >
-                      <Pencil />
-                    </Button>
-                    <Button
-                      variant={deletingId === payment.id ? "destructive" : "ghost"}
-                      size="icon-sm"
-                      aria-label={
-                        deletingId === payment.id
-                          ? t("payments.confirmDelete")
-                          : t("payments.delete")
-                      }
-                      onClick={() => void handleDelete(payment.id)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable<PaymentHistoryRow>
+        columns={columns}
+        rows={list}
+        getRowKey={(row) => row.payment.id}
+      />
     );
   }
 

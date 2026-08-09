@@ -8,6 +8,7 @@ import {
   ClipboardList,
   GraduationCap,
   Layers,
+  Pencil,
   Phone,
   Sparkles,
   StickyNote,
@@ -20,14 +21,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CardSkeleton } from "@/shared/Skeletons";
+import { Avatar } from "@/shared/Avatar";
 import {
   getStudentProfile,
   type StudentProfileData,
+  type ProfileHomework,
+  type ProfileExam,
+  type ProfileSessionAttendance,
 } from "@/features/student-profile/application/student-profile-cases";
+import type { PaymentHistoryRow } from "@/features/payments/application/payment-cases";
+import type { Attendance } from "@/lib/db/schema";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
+import { StudentFormDialog } from "@/features/students/ui/StudentFormDialog";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
 import { isOverdue } from "@/features/homework/application/homework-cases";
 import { ACTION_KEYS } from "@/features/activity/ui/ActivityPage";
+import { PageHeader } from "@/shared/PageHeader";
+import { DataTable } from "@/shared/DataTable";
 import { useTimeStore } from "@/lib/time-store";
 import { formatDate, formatDateString, formatDateTime, formatMoney, formatTime } from "@/lib/utils/format";
 import { ATTENDANCE_STATUSES, type AttendanceStatus } from "@/features/attendance/domain";
@@ -75,6 +85,7 @@ export default function StudentProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [skillsOpen, setSkillsOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -94,7 +105,7 @@ export default function StudentProfilePage() {
       <div className="space-y-6">
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <Skeleton className="size-20 shrink-0 rounded-full" />
+            <Skeleton className="size-9 shrink-0 rounded-full" />
             <div className="space-y-2">
               <Skeleton className="h-5 w-40" />
               <Skeleton className="h-4 w-64 max-w-full" />
@@ -150,12 +161,6 @@ export default function StudentProfilePage() {
     { key: "profile.stats.sessionsAttended", value: String(sessionAttendance.length), icon: Layers },
   ];
 
-  const nameWords = student.name.trim().split(/\s+/).filter(Boolean);
-  const initials =
-    nameWords.length > 1
-      ? `${Array.from(nameWords[0])[0] ?? ""}${Array.from(nameWords[1])[0] ?? ""}`
-      : (Array.from(nameWords[0] ?? "").slice(0, 2).join("") || "؟");
-
   const facts = [
     { key: "profile.plan", value: planName ?? t("students.noPlan"), icon: BookMarked, ltr: false },
     {
@@ -179,31 +184,36 @@ export default function StudentProfilePage() {
 
   return (
     <div className="space-y-6">
-      <Link
-        to="/students"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowRight className="size-4 rtl:rotate-180" />
-        {t("profile.back")}
-      </Link>
+      <div className="space-y-3">
+        <Link
+          to="/students"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowRight className="size-4 rtl:rotate-180" />
+          {t("profile.back")}
+        </Link>
 
-      <Card className="overflow-hidden">
-        <div className="flex items-center gap-4 border-b p-5">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-semibold">{student.name}</h2>
+        <PageHeader
+          title={student.name}
+          description={
+            student.enrolledOn
+              ? `${t("students.registered")} ${formatDateString(student.enrolledOn)}`
+              : undefined
+          }
+          actions={
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil className="size-4" />
+                {t("students.edit")}
+              </Button>
+              <Avatar name={student.name} className="size-9 text-xs" />
               <StatusBadge status={student.status} />
             </div>
-            {student.enrolledOn ? (
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {t("students.registered")} {formatDateString(student.enrolledOn)}
-              </p>
-            ) : null}
-          </div>
-        </div>
+          }
+        />
+      </div>
+
+      <Card className="overflow-hidden">
         <CardContent className="grid gap-x-6 gap-y-4 p-5 sm:grid-cols-2">
           {facts.map(({ key, value, icon: Icon, ltr }) => (
             <div key={key} className="flex items-center gap-3">
@@ -266,27 +276,24 @@ export default function StudentProfilePage() {
           <p className="py-4 text-center text-sm text-muted-foreground">{t("profile.empty.attendance")}</p>
         ) : (
           <Card>
-            <CardContent className="overflow-x-auto p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.date")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.status")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {attendanceHistory.map((r) => (
-                    <tr key={r.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                        {formatDateString(r.date)}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Badge className={STATUS_BADGE[r.status]}>{t(STATUS_LABEL[r.status])}</Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <CardContent className="p-0">
+              <DataTable<Attendance>
+                columns={[
+                  {
+                    header: t("profile.columns.date"),
+                    className: "text-muted-foreground tabular-nums",
+                    render: (r) => <span dir="ltr">{formatDateString(r.date)}</span>,
+                  },
+                  {
+                    header: t("profile.columns.status"),
+                    render: (r) => (
+                      <Badge className={STATUS_BADGE[r.status]}>{t(STATUS_LABEL[r.status])}</Badge>
+                    ),
+                  },
+                ]}
+                rows={attendanceHistory}
+                getRowKey={(r) => r.id}
+              />
             </CardContent>
           </Card>
         )}
@@ -300,37 +307,36 @@ export default function StudentProfilePage() {
           <p className="py-4 text-center text-sm text-muted-foreground">{t("profile.empty.payments")}</p>
         ) : (
           <Card>
-            <CardContent className="overflow-x-auto p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.date")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.period")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.amount")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.method")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map(({ payment }) => (
-                    <tr key={payment.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                        {formatDate(payment.paidAt)}
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                        {payment.period ?? "—"}
-                      </td>
-                      <td className="px-4 py-2.5 font-medium tabular-nums" dir="ltr">
-                        {formatMoney(payment.amount)}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <Badge variant="secondary">
-                          {t(PAYMENT_METHOD_LABEL[payment.method] ?? "payments.cash")}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <CardContent className="p-0">
+              <DataTable<PaymentHistoryRow>
+                columns={[
+                  {
+                    header: t("profile.columns.date"),
+                    className: "text-muted-foreground tabular-nums",
+                    render: ({ payment }) => <span dir="ltr">{formatDate(payment.paidAt)}</span>,
+                  },
+                  {
+                    header: t("profile.columns.period"),
+                    className: "text-muted-foreground",
+                    render: ({ payment }) => <span dir="ltr">{payment.period ?? "—"}</span>,
+                  },
+                  {
+                    header: t("profile.columns.amount"),
+                    className: "font-medium tabular-nums",
+                    render: ({ payment }) => <span dir="ltr">{formatMoney(payment.amount)}</span>,
+                  },
+                  {
+                    header: t("profile.columns.method"),
+                    render: ({ payment }) => (
+                      <Badge variant="secondary">
+                        {t(PAYMENT_METHOD_LABEL[payment.method] ?? "payments.cash")}
+                      </Badge>
+                    ),
+                  },
+                ]}
+                rows={payments}
+                getRowKey={({ payment }) => payment.id}
+              />
             </CardContent>
           </Card>
         )}
@@ -344,36 +350,48 @@ export default function StudentProfilePage() {
           <p className="py-4 text-center text-sm text-muted-foreground">{t("profile.empty.homework")}</p>
         ) : (
           <Card>
-            <CardContent className="overflow-x-auto p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.title")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.group")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.dueDate")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.status")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {homeworks.map((h) => {
-                    const overdue = isOverdue({ dueDate: h.dueDate, pending: h.status === "pending" ? 1 : 0 });
-                    return (
-                      <tr key={h.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="px-4 py-2.5 font-medium">{h.title}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{h.groupName ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                          {h.dueDate ? formatDateString(h.dueDate) : "—"}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Badge className={overdue ? "bg-destructive/10 text-destructive" : SUBMISSION_BADGE[h.status]}>
-                            {overdue ? t("homework.statusOverdue") : t(SUBMISSION_LABEL[h.status])}
-                          </Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <CardContent className="p-0">
+              <DataTable<ProfileHomework>
+                columns={[
+                  {
+                    header: t("profile.columns.title"),
+                    className: "font-medium",
+                    render: (h) => h.title,
+                  },
+                  {
+                    header: t("profile.columns.group"),
+                    className: "text-muted-foreground",
+                    render: (h) => h.groupName ?? "—",
+                  },
+                  {
+                    header: t("profile.columns.dueDate"),
+                    className: "text-muted-foreground tabular-nums",
+                    render: (h) => (
+                      <span dir="ltr">{h.dueDate ? formatDateString(h.dueDate) : "—"}</span>
+                    ),
+                  },
+                  {
+                    header: t("profile.columns.status"),
+                    render: (h) => {
+                      const overdue = isOverdue({
+                        dueDate: h.dueDate,
+                        pending: h.status === "pending" ? 1 : 0,
+                      });
+                      return (
+                        <Badge
+                          className={
+                            overdue ? "bg-destructive/10 text-destructive" : SUBMISSION_BADGE[h.status]
+                          }
+                        >
+                          {overdue ? t("homework.statusOverdue") : t(SUBMISSION_LABEL[h.status])}
+                        </Badge>
+                      );
+                    },
+                  },
+                ]}
+                rows={homeworks}
+                getRowKey={(h) => h.id}
+              />
             </CardContent>
           </Card>
         )}
@@ -387,31 +405,39 @@ export default function StudentProfilePage() {
           <p className="py-4 text-center text-sm text-muted-foreground">{t("profile.empty.exams")}</p>
         ) : (
           <Card>
-            <CardContent className="overflow-x-auto p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.title")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.group")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.date")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.score")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exams.map((e) => (
-                    <tr key={e.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="px-4 py-2.5 font-medium">{e.title}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{e.groupName ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                        {e.date ? formatDateString(e.date) : "—"}
-                      </td>
-                      <td className="px-4 py-2.5 font-medium tabular-nums" dir="ltr">
+            <CardContent className="p-0">
+              <DataTable<ProfileExam>
+                columns={[
+                  {
+                    header: t("profile.columns.title"),
+                    className: "font-medium",
+                    render: (e) => e.title,
+                  },
+                  {
+                    header: t("profile.columns.group"),
+                    className: "text-muted-foreground",
+                    render: (e) => e.groupName ?? "—",
+                  },
+                  {
+                    header: t("profile.columns.date"),
+                    className: "text-muted-foreground tabular-nums",
+                    render: (e) => (
+                      <span dir="ltr">{e.date ? formatDateString(e.date) : "—"}</span>
+                    ),
+                  },
+                  {
+                    header: t("profile.columns.score"),
+                    className: "font-medium tabular-nums",
+                    render: (e) => (
+                      <span dir="ltr">
                         {e.score === null ? t("exams.ungraded") : `${e.score} / ${e.maxScore}`}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </span>
+                    ),
+                  },
+                ]}
+                rows={exams}
+                getRowKey={(e) => e.id}
+              />
             </CardContent>
           </Card>
         )}
@@ -425,37 +451,43 @@ export default function StudentProfilePage() {
           <p className="py-4 text-center text-sm text-muted-foreground">{t("profile.empty.sessions")}</p>
         ) : (
           <Card>
-            <CardContent className="overflow-x-auto p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.date")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.day")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.time")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.group")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.status")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessionAttendance.map((r) => (
-                    <tr key={r.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                        {formatDateString(r.date)}
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground">
-                        {t(`schedule.days.${DAY_KEYS[r.dayOfWeek] ?? "sun"}`)}
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
+            <CardContent className="p-0">
+              <DataTable<ProfileSessionAttendance>
+                columns={[
+                  {
+                    header: t("profile.columns.date"),
+                    className: "text-muted-foreground tabular-nums",
+                    render: (r) => <span dir="ltr">{formatDateString(r.date)}</span>,
+                  },
+                  {
+                    header: t("profile.columns.day"),
+                    className: "text-muted-foreground",
+                    render: (r) => t(`schedule.days.${DAY_KEYS[r.dayOfWeek] ?? "sun"}`),
+                  },
+                  {
+                    header: t("profile.columns.time"),
+                    className: "text-muted-foreground tabular-nums",
+                    render: (r) => (
+                      <span dir="ltr">
                         {formatTime(r.startTime, hour24)} – {formatTime(r.endTime, hour24)}
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{r.groupName}</td>
-                      <td className="px-4 py-2.5">
-                        <Badge className={STATUS_BADGE[r.status]}>{t(STATUS_LABEL[r.status])}</Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </span>
+                    ),
+                  },
+                  {
+                    header: t("profile.columns.group"),
+                    className: "text-muted-foreground",
+                    render: (r) => r.groupName,
+                  },
+                  {
+                    header: t("profile.columns.status"),
+                    render: (r) => (
+                      <Badge className={STATUS_BADGE[r.status]}>{t(STATUS_LABEL[r.status])}</Badge>
+                    ),
+                  },
+                ]}
+                rows={sessionAttendance}
+                getRowKey={(r) => r.id}
+              />
             </CardContent>
           </Card>
         )}
@@ -491,27 +523,23 @@ export default function StudentProfilePage() {
           <section className="space-y-3">
             <h3 className="text-base font-semibold">{t("profile.sections.activity")}</h3>
             <Card>
-              <CardContent className="overflow-x-auto p-0">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-xs text-muted-foreground">
-                      <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.time")}</th>
-                      <th className="px-4 py-2.5 text-start font-medium">{t("profile.columns.action")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activity.slice(0, 10).map((row) => (
-                      <tr key={row.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                          {formatDateTime(row.createdAt, hour24)}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          {t(`activity.actions.${ACTION_KEYS[row.action] ?? "unknown"}`)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <CardContent className="p-0">
+                <DataTable<{ id: string; action: string; createdAt: number }>
+                  columns={[
+                    {
+                      header: t("profile.columns.time"),
+                      className: "text-muted-foreground tabular-nums",
+                      render: (row) => <span dir="ltr">{formatDateTime(row.createdAt, hour24)}</span>,
+                    },
+                    {
+                      header: t("profile.columns.action"),
+                      render: (row) =>
+                        t(`activity.actions.${ACTION_KEYS[row.action] ?? "unknown"}`),
+                    },
+                  ]}
+                  rows={activity.slice(0, 10)}
+                  getRowKey={(row) => row.id}
+                />
               </CardContent>
             </Card>
           </section>
@@ -524,6 +552,16 @@ export default function StudentProfilePage() {
         studentName={student.name}
         onClose={() => setSkillsOpen(false)}
         onChanged={() => setReloadKey((k) => k + 1)}
+      />
+
+      <StudentFormDialog
+        open={editOpen}
+        student={student}
+        onClose={() => setEditOpen(false)}
+        onSaved={() => {
+          setEditOpen(false);
+          setReloadKey((k) => k + 1);
+        }}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lte, notInArray, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   examResults,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
+import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
 
 /**
  * Exam repository: generic CRUD over `exams` plus result reads/aggregates.
@@ -43,29 +44,33 @@ export const examRepository = {
         .select({
           groupId: studentGroups.groupId,
           studentId: studentGroups.studentId,
+          enrolledOn: students.enrolledOn,
         })
-        .from(studentGroups),
+        .from(studentGroups)
+        .innerJoin(students, eq(studentGroups.studentId, students.id)),
     ]);
     const groupName = new Map((groups as StudyGroup[]).map((g) => [g.id, g.name]));
-    // Stats reflect *current* members only — a former member's stale result
-    // must not inflate resultCount/average or the completion percentage.
-    const membersOf = new Map<string, Set<string>>();
-    const memberCount = new Map<string, number>();
+    // Stats reflect *current* members who were already enrolled by the exam's
+    // effective date only — a later-joined student's stale result must not
+    // inflate resultCount/average or the completion percentage.
+    const membersOf = new Map<string, Array<{ studentId: string; enrolledOn: string | null }>>();
     for (const m of memberships) {
-      const set = membersOf.get(m.groupId) ?? new Set<string>();
-      set.add(m.studentId);
-      membersOf.set(m.groupId, set);
-      memberCount.set(m.groupId, (memberCount.get(m.groupId) ?? 0) + 1);
+      const arr = membersOf.get(m.groupId) ?? [];
+      arr.push({ studentId: m.studentId, enrolledOn: m.enrolledOn });
+      membersOf.set(m.groupId, arr);
     }
     return (rows as Exam[]).map((e) => {
-      const memberIds = membersOf.get(e.groupId);
+      const refDate = effectiveDate(e.date, e.createdAt);
+      const eligibleIds = new Set(
+        (membersOf.get(e.groupId) ?? []).filter((m) => enrolledBy(m, refDate)).map((m) => m.studentId),
+      );
       const scores = resultRows
-        .filter((r) => r.examId === e.id && (!memberIds || memberIds.has(r.studentId)))
+        .filter((r) => r.examId === e.id && eligibleIds.has(r.studentId))
         .map((r) => r.score);
       return {
         ...e,
         groupName: groupName.get(e.groupId) ?? null,
-        memberCount: memberCount.get(e.groupId) ?? 0,
+        memberCount: eligibleIds.size,
         resultCount: scores.length,
         average:
           scores.length > 0
@@ -166,18 +171,31 @@ export const examRepository = {
     await db.delete(examResults).where(eq(examResults.examId, examId));
   },
 
-  /** Drop results from students no longer in the group (used when the group changes). */
+  /** Drop results from students no longer in the group or not yet enrolled (used when the group changes). */
   async pruneResultsToMembers(examId: string, groupId: string): Promise<void> {
-    const memberIds = db
+    const exam = (await db
+      .select({ date: exams.date, createdAt: exams.createdAt })
+      .from(exams)
+      .where(eq(exams.id, examId))
+      .get()) as { date: string | null; createdAt: number } | undefined;
+    if (!exam) return;
+    const refDate = effectiveDate(exam.date, exam.createdAt);
+    const eligibleIds = db
       .select({ studentId: studentGroups.studentId })
       .from(studentGroups)
-      .where(eq(studentGroups.groupId, groupId));
+      .innerJoin(students, eq(studentGroups.studentId, students.id))
+      .where(
+        and(
+          eq(studentGroups.groupId, groupId),
+          or(isNull(students.enrolledOn), lte(students.enrolledOn, refDate)),
+        ),
+      );
     await db
       .delete(examResults)
       .where(
         and(
           eq(examResults.examId, examId),
-          notInArray(examResults.studentId, memberIds),
+          notInArray(examResults.studentId, eligibleIds),
         ),
       );
   },
@@ -237,6 +255,7 @@ export const examRepository = {
         guardianPhone: students.guardianPhone,
         status: students.status,
         notes: students.notes,
+        enrolledOn: students.enrolledOn,
         createdAt: students.createdAt,
         updatedAt: students.updatedAt,
       })

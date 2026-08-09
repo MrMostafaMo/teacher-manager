@@ -7,6 +7,8 @@ import { listExams } from "@/features/exams/application/exam-cases";
 import { listSkills } from "@/features/skills/application/skill-cases";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
+import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
+import { expenseRepository } from "@/features/expenses/infrastructure/expense-repo";
 
 /**
  * Dashboard use-case. Read-only aggregation over the existing per-feature
@@ -19,11 +21,19 @@ export interface DashboardData {
   activeStudents: number;
   attendanceRate: number;
   attendanceTrend: Array<{ month: string; present: number; absent: number; late: number; excused: number }>;
+  financeTrend: Array<{ month: string; collected: number; expenses: number }>;
   collected: number;
   expensesMonth: number;
   net: number;
   outstanding: number;
   topDebtors: Array<{ id: string; name: string; remaining: number }>;
+  deltas: {
+    collected: number | null;
+    expenses: number | null;
+    net: number | null;
+    attendanceRate: number | null;
+    newStudents: number;
+  };
   homeworkCompletion: number;
   homeworkCount: number;
   homeworkSubmitted: number;
@@ -58,9 +68,33 @@ function currentMonth(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function previousMonth(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** ISO month keys for the last `n` months, oldest first. */
+function lastMonths(n: number): string[] {
+  const months: string[] = [];
+  const d = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const dd = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    months.push(`${dd.getFullYear()}-${String(dd.getMonth() + 1).padStart(2, "0")}`);
+  }
+  return months;
+}
+
+function percentDelta(current: number, previous: number): number | null {
+  if (previous === 0) return null;
+  return Math.round(((current - previous) / previous) * 100);
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
   const month = currentMonth();
-  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, expensesMonth] =
+  const prevMonth = previousMonth();
+  const trendMonths = lastMonths(6);
+  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, expensesMonth, prevMonthly, prevDues, prevExpenses, financePayments, financeExpenses] =
     await Promise.all([
       listStudents({ status: "all" }),
       getMonthly(month),
@@ -71,6 +105,11 @@ export async function getDashboardData(): Promise<DashboardData> {
       attendanceRepository.monthlyTrend(6),
       listSchedule(),
       monthlyExpenseTotal(month),
+      getMonthly(prevMonth),
+      monthlyDues(prevMonth),
+      monthlyExpenseTotal(prevMonth),
+      Promise.all(trendMonths.map((m) => paymentRepository.byPeriod(m))),
+      Promise.all(trendMonths.map((m) => expenseRepository.byMonth(m))),
     ]);
 
   const totalStudents = students.length;
@@ -82,6 +121,22 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   const collected = dues.reduce((a, r) => a + r.paid, 0);
   const outstanding = dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
+
+  const prevMarked = prevMonthly.reduce((a, r) => a + r.present + r.absent + r.late + r.excused, 0);
+  const prevAttended = prevMonthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
+  const prevAttendanceRate = prevMarked > 0 ? Math.round((prevAttended / prevMarked) * 100) : 0;
+  const prevCollected = prevDues.reduce((a, r) => a + r.paid, 0);
+  const prevNet = prevCollected - prevExpenses;
+
+  const monthPrefix = month.slice(0, 7);
+  const monthStart = Date.parse(`${monthPrefix}-01T00:00:00`);
+  const d = new Date(monthStart);
+  d.setMonth(d.getMonth() + 1);
+  const nextMonthStart = d.getTime();
+  const newStudents = students.filter((s) => {
+    const enrolled = s.enrolledOn ? Date.parse(s.enrolledOn) : s.createdAt;
+    return Number.isFinite(enrolled) && enrolled >= monthStart && enrolled < nextMonthStart;
+  }).length;
   const topDebtors = dues
     .filter((r) => r.remaining > 0)
     .sort((a, b) => b.remaining - a.remaining)
@@ -139,16 +194,30 @@ export async function getDashboardData(): Promise<DashboardData> {
       finished: nowMinutes > timeToMinutes(s.endTime),
     }));
 
+  const financeTrend = trendMonths.map((m, i) => ({
+    month: m,
+    collected: financePayments[i].reduce((a, p) => a + p.amount, 0),
+    expenses: financeExpenses[i].reduce((a, e) => a + e.amount, 0),
+  }));
+
   return {
     totalStudents,
     activeStudents,
     attendanceRate,
     attendanceTrend: trend,
+    financeTrend,
     collected,
     expensesMonth,
     net: collected - expensesMonth,
     outstanding,
     topDebtors,
+    deltas: {
+      collected: percentDelta(collected, prevCollected),
+      expenses: percentDelta(expensesMonth, prevExpenses),
+      net: percentDelta(collected - expensesMonth, prevNet),
+      attendanceRate: percentDelta(attendanceRate, prevAttendanceRate),
+      newStudents,
+    },
     homeworkCompletion,
     homeworkCount: homeworks.length,
     homeworkSubmitted,

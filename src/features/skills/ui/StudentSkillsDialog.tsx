@@ -14,6 +14,7 @@ import {
 import { Modal } from "@/shared/Modal";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { useSaveFeedback } from "@/shared/useSaveFeedback";
+import { toast } from "@/lib/toast-store";
 
 interface StudentSkillsDialogProps {
   open: boolean;
@@ -79,6 +80,7 @@ export function StudentSkillsDialog({
         await saveStudentSkills(studentId, inputs);
         onChanged();
         load();
+        toast(t("skills.saved"));
       });
     } catch (e) {
       console.error("Failed to save student skills", e);

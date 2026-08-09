@@ -8,6 +8,7 @@ import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { PageHeader } from "@/shared/PageHeader";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import {
   deleteHomework,
   listHomeworks,
@@ -84,6 +85,68 @@ export default function HomeworkPage() {
     setFormOpen(true);
   }
 
+  const columns: DataTableColumn<HomeworkListItem>[] = [
+    {
+      header: t("homework.columns.title"),
+      className: "font-medium",
+      render: (h) => h.title,
+    },
+    {
+      header: t("homework.columns.dueDate"),
+      render: (h) => (
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground tabular-nums" dir="ltr">
+            {formatDateString(h.dueDate)}
+          </span>
+          {h.overdue && <Badge variant="destructive">{t("homework.statusOverdue")}</Badge>}
+        </div>
+      ),
+    },
+    {
+      header: t("homework.columns.completion"),
+      render: (h) => (
+        <div className="flex items-center gap-2">
+          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-success"
+              style={{ width: `${h.completion}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground tabular-nums" dir="ltr">
+            {h.completion}%
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: "",
+      className: "text-end",
+      headerClassName: "text-end",
+      render: (h) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="icon-sm" onClick={() => setDetailId(h.id)}>
+            <Users />
+            <span className="sr-only">{t("homework.detail")}</span>
+          </Button>
+          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(h)}>
+            <CalendarDays />
+            <span className="sr-only">{t("homework.edit")}</span>
+          </Button>
+          <Button
+            variant={deletingId === h.id ? "destructive" : "ghost"}
+            size="icon-sm"
+            aria-label={
+              deletingId === h.id ? t("homework.confirmDelete") : t("homework.delete")
+            }
+            onClick={() => void handleDelete(h.id)}
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -131,72 +194,11 @@ export default function HomeworkPage() {
                     {t("homework.sectionEmpty")}
                   </p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-xs text-muted-foreground">
-                          <th className="px-4 py-2.5 text-start font-medium">{t("homework.columns.title")}</th>
-                          <th className="px-4 py-2.5 text-start font-medium">{t("homework.columns.dueDate")}</th>
-                          <th className="px-4 py-2.5 text-start font-medium">{t("homework.columns.completion")}</th>
-                          <th className="px-4 py-2.5 text-start font-medium" />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((h) => (
-                          <tr key={h.id} className="border-b last:border-0 hover:bg-muted/50">
-                            <td className="px-4 py-2.5 font-medium">{h.title}</td>
-                            <td className="px-4 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground" dir="ltr">
-                                  {formatDateString(h.dueDate)}
-                                </span>
-                                {h.overdue && (
-                                  <Badge variant="destructive">{t("homework.statusOverdue")}</Badge>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-                                  <div
-                                    className="h-full rounded-full bg-success"
-                                    style={{ width: `${h.completion}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs text-muted-foreground" dir="ltr">
-                                  {h.completion}%
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <div className="flex justify-end gap-1">
-                                <Button variant="ghost" size="icon-sm" onClick={() => setDetailId(h.id)}>
-                                  <Users />
-                                  <span className="sr-only">{t("homework.detail")}</span>
-                                </Button>
-                                <Button variant="ghost" size="icon-sm" onClick={() => openEdit(h)}>
-                                  <CalendarDays />
-                                  <span className="sr-only">{t("homework.edit")}</span>
-                                </Button>
-                                <Button
-                                  variant={deletingId === h.id ? "destructive" : "ghost"}
-                                  size="icon-sm"
-                                  aria-label={
-                                    deletingId === h.id
-                                      ? t("homework.confirmDelete")
-                                      : t("homework.delete")
-                                  }
-                                  onClick={() => void handleDelete(h.id)}
-                                >
-                                  <Trash2 />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <DataTable<HomeworkListItem>
+                    columns={columns}
+                    rows={items}
+                    getRowKey={(h) => h.id}
+                  />
                 )}
               </CollapsibleSection>
             );

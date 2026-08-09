@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import { deletePlan, listPlans } from "@/features/payments/application/plan-cases";
 import type { PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import type { Plan } from "@/lib/db/schema";
@@ -77,6 +78,53 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
     yearly: "plans.yearly",
   };
 
+  const columns: DataTableColumn<PlanWithCount>[] = [
+    {
+      header: t("plans.name"),
+      className: "font-medium",
+      render: (p) => p.name,
+    },
+    {
+      header: t("plans.amount"),
+      className: "tabular-nums",
+      render: (p) => <span dir="ltr">{formatMoney(p.amount)}</span>,
+    },
+    {
+      header: t("plans.interval"),
+      render: (p) => <Badge variant="secondary">{t(intervalKey[p.billingInterval])}</Badge>,
+    },
+    {
+      header: t("plans.subscribers"),
+      className: "text-muted-foreground tabular-nums",
+      render: (p) => p.memberCount,
+    },
+    {
+      header: "",
+      className: "text-end",
+      headerClassName: "text-end",
+      render: (p) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("plans.edit")}
+            onClick={() => openEdit(p)}
+          >
+            <Pencil />
+          </Button>
+          <Button
+            variant={deletingId === p.id ? "destructive" : "ghost"}
+            size="icon-sm"
+            aria-label={deletingId === p.id ? t("plans.confirmDelete") : t("plans.delete")}
+            onClick={() => void handleDelete(p)}
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <Modal open={open} onClose={onClose} title={t("plans.title")} className="max-w-2xl">
       <div className="space-y-4">
@@ -99,55 +147,11 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
             ) : rows.length === 0 ? (
               <EmptyState icon={CreditCard} title={t("plans.empty")} description={t("plans.emptyHint")} className="py-14" />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-xs text-muted-foreground">
-                      <th className="px-4 py-2.5 text-start font-medium">{t("plans.name")}</th>
-                      <th className="px-4 py-2.5 text-start font-medium">{t("plans.amount")}</th>
-                      <th className="px-4 py-2.5 text-start font-medium">{t("plans.interval")}</th>
-                      <th className="px-4 py-2.5 text-start font-medium">{t("plans.subscribers")}</th>
-                      <th className="px-4 py-2.5" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((p) => (
-                      <tr key={p.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="px-4 py-2.5 font-medium">{p.name}</td>
-                        <td className="px-4 py-2.5" dir="ltr">
-                          {formatMoney(p.amount)}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Badge variant="secondary">{t(intervalKey[p.billingInterval])}</Badge>
-                        </td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{p.memberCount}</td>
-                        <td className="px-4 py-2.5">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label={t("plans.edit")}
-                              onClick={() => openEdit(p)}
-                            >
-                              <Pencil />
-                            </Button>
-                            <Button
-                              variant={deletingId === p.id ? "destructive" : "ghost"}
-                              size="icon-sm"
-                              aria-label={
-                                deletingId === p.id ? t("plans.confirmDelete") : t("plans.delete")
-                              }
-                              onClick={() => void handleDelete(p)}
-                            >
-                              <Trash2 />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable<PlanWithCount>
+                columns={columns}
+                rows={rows}
+                getRowKey={(p) => p.id}
+              />
             )}
           </CardContent>
         </Card>

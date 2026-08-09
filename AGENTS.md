@@ -282,3 +282,60 @@ Phase 26 was a UI-polish / shared-component round (no schema change):
   daily-attendance view. `run(fn)` guards re-entry and rethrows so callers keep
   their localized error handling. SettingsPage and ReportsPage keep their own
   `"which operation"` string-union state on purpose.
+
+Phase 27 was a final-polish round (no schema change): the student profile
+adopted `PageHeader`, PDF text gained cell-level bidi segmentation, Excel
+exports set the worksheet RTL flag for Arabic, and an a11y sweep ensured every
+icon-only button has an `aria-label` and modals close on Escape.
+
+Phase 28 was a visual-identity + shared-components round (no schema change):
+
+- **Nile identity**: `globals.css` now defines the new palette — `--primary`
+  indigo gradient button, `--chart-1..5`, `--primary-strong`, etc.; Cairo
+  display font for headings (via `@fontsource/cairo`, trimmed subset) with
+  Inter + IBM Plex Sans Arabic for body.
+- **App shell**: `Sidebar` (grouped nav, active states, logo badge) and
+  `Header` (current page title + section, date, Ctrl K search button) rebuilt
+  on the new identity.
+- **`DataTable`** (`src/shared/DataTable.tsx`): generic typed table
+  (`DataTableColumn<T>` + `getRowKey(row, index)`)
+  adopted by every table in the app — students, dues/history, expenses,
+  activity, groups, skills, rosters/monthly, exams, homework, plans, reports
+  and the student profile.
+- **`CommandPalette`** (`src/shared/CommandPalette.tsx`): Ctrl+K / Cmd+K (and
+  the Header button) opens a searchable page menu driven by `NAV_ITEMS`;
+  arrows/Enter/Escape, state in `src/lib/command-store.ts`.
+- **`Avatar`** (`src/shared/Avatar.tsx`): deterministic-initials avatar with a
+  5-tone palette; used for student names, the profile header and dashboard
+  debtors.
+- **Toasts** (`src/lib/toast-store.ts` + `src/shared/ToastViewport.tsx`):
+  lightweight zustand toast stack (success/error/info) wired into the
+  `useSaveFeedback` save flows (skills, exam results, session attendance,
+  daily attendance).
+- **Dashboard**: quick-action hero row, prev-month deltas (`data.deltas`) on
+  the attendance/collected/expenses/net KPIs (expenses delta is inverted:
+  a rise is red), a new student-count "new this month" figure, and two new
+  finance trend area charts (collected/expenses + net over 6 months) computed
+  in `dashboard-cases.ts` via `paymentRepository.byPeriod` +
+  `expenseRepository.byMonth`.
+
+Phase 29 wired global create actions and added week navigation (no schema
+change):
+
+- **Global dialog store** (`src/lib/dialog-store.ts`): a zustand store holding
+  which create dialog should be open (`GlobalDialogId` =
+  student/payment/expense/group/schedule/homework/exam/skill). `GlobalDialogs`
+  (`src/shared/GlobalDialogs.tsx`, mounted once in `AppLayout`) renders the
+  matching dialog; on save it closes and dispatches `tm:data-changed`, which
+  remounts the routed page so it re-fetches.
+- **Command palette actions**: `CommandPalette` now lists the create dialogs
+  (marked with a "+" hint) plus "Mark attendance" alongside `NAV_ITEMS`;
+  choosing one opens the matching dialog. Dashboard quick actions "Add
+  student" / "Record payment" / "Add expense" open the real dialogs too
+  ("Mark attendance" still navigates).
+- **Week navigation**: `WeekGrid` gained prev/next week buttons, a "Today"
+  reset, and a week-range label (`DD-MM-YYYY`). The current-week highlight and
+  now line only render on the current week.
+- **Profile edit**: the student profile header gained an «تعديل الطالب» button
+  opening `StudentFormDialog` in edit mode; saving refreshes the profile.
+- `DataTable` lost its unused `stickyHeader` prop.

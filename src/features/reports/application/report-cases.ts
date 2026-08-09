@@ -1,4 +1,4 @@
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   attendance,
@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
 import { formatDateString } from "@/lib/utils/format";
+import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
 
 /**
  * Report data builders. Every report is a flat table over current DB state;
@@ -105,15 +106,21 @@ async function attendanceReport(t: ReportTranslations): Promise<ReportData> {
     else cur.excused++;
     perStudent.set(r.studentId, cur);
   }
-  const allStudents = (await db.select({ id: students.id, name: students.name }).from(students).orderBy(students.name)) as Array<{ id: string; name: string }>;
+  const allStudents = (await db
+    .select({ id: students.id, name: students.name, enrolledOn: students.enrolledOn })
+    .from(students)
+    .orderBy(students.name)) as Array<{ id: string; name: string; enrolledOn: string | null }>;
+  const today = dayjs().format("YYYY-MM-DD");
   return {
     key: "attendance",
     title: t.title,
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4], t.headers[5]],
-    rows: allStudents.map((s) => {
-      const c = perStudent.get(s.id) ?? { present: 0, absent: 0, late: 0, excused: 0 };
-      return [s.name, c.present, c.absent, c.late, c.excused, c.present + c.absent + c.late + c.excused];
-    }),
+    rows: allStudents
+      .filter((s) => enrolledBy(s, today))
+      .map((s) => {
+        const c = perStudent.get(s.id) ?? { present: 0, absent: 0, late: 0, excused: 0 };
+        return [s.name, c.present, c.absent, c.late, c.excused, c.present + c.absent + c.late + c.excused];
+      }),
   };
 }
 
@@ -122,7 +129,14 @@ async function examsReport(t: ReportTranslations): Promise<ReportData> {
     db.select().from(exams).orderBy(desc(exams.createdAt)),
     db.select().from(examResults),
     db.select().from(studyGroups),
-    db.select().from(studentGroups),
+    db
+      .select({
+        groupId: studentGroups.groupId,
+        studentId: studentGroups.studentId,
+        enrolledOn: students.enrolledOn,
+      })
+      .from(studentGroups)
+      .innerJoin(students, eq(studentGroups.studentId, students.id)),
     db.select().from(students),
   ]);
   const groupName = new Map((groupsRows as typeof studyGroups.$inferSelect[]).map((g) => [g.id, g.name]));
@@ -130,16 +144,24 @@ async function examsReport(t: ReportTranslations): Promise<ReportData> {
   for (const r of results) {
     resultsByExam.set(r.examId, [...(resultsByExam.get(r.examId) ?? []), r]);
   }
-  const memberCount = new Map<string, number>();
-  for (const m of memberships) memberCount.set(m.groupId, (memberCount.get(m.groupId) ?? 0) + 1);
+  const membersOf = new Map<string, Array<{ studentId: string; enrolledOn: string | null }>>();
+  for (const m of memberships) {
+    const arr = membersOf.get(m.groupId) ?? [];
+    arr.push({ studentId: m.studentId, enrolledOn: m.enrolledOn });
+    membersOf.set(m.groupId, arr);
+  }
   const names = new Map((allStudents as Student[]).map((s) => [s.id, s.name]));
 
   const rows: (string | number)[][] = [];
   for (const e of examsRows as Exam[]) {
-    const rs = resultsByExam.get(e.id) ?? [];
+    const refDate = effectiveDate(e.date, e.createdAt);
+    const eligibleIds = new Set(
+      (membersOf.get(e.groupId) ?? []).filter((m) => enrolledBy(m, refDate)).map((m) => m.studentId),
+    );
+    const rs = (resultsByExam.get(e.id) ?? []).filter((r) => eligibleIds.has(r.studentId));
     const scores = rs.map((r) => r.score);
     const avg = scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : null;
-    const total = memberCount.get(e.groupId) ?? 0;
+    const total = eligibleIds.size;
     const passMark = Math.ceil(e.maxScore / 2);
     const pass = scores.length ? Math.round((scores.filter((s) => s >= passMark).length / scores.length) * 100) : null;
     rows.push([
@@ -168,7 +190,12 @@ async function paymentsReport(t: ReportTranslations): Promise<ReportData> {
     db.select().from(payments),
     planRepository.list(),
     db
-      .select({ id: students.id, name: students.name, planId: students.planId })
+      .select({
+        id: students.id,
+        name: students.name,
+        planId: students.planId,
+        enrolledOn: students.enrolledOn,
+      })
       .from(students)
       .orderBy(students.name),
   ]);
@@ -179,15 +206,18 @@ async function paymentsReport(t: ReportTranslations): Promise<ReportData> {
   for (const p of allPayments as Payment[]) {
     paidByStudent.set(p.studentId, (paidByStudent.get(p.studentId) ?? 0) + p.amount);
   }
+  const today = dayjs().format("YYYY-MM-DD");
   return {
     key: "payments",
     title: t.title,
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3]],
-    rows: allStudents.map((s) => {
-      const due = s.planId ? (planAmount.get(s.planId) ?? 0) : 0;
-      const paid = paidByStudent.get(s.id) ?? 0;
-      return [s.name, due, paid, Math.max(due - paid, 0)];
-    }),
+    rows: allStudents
+      .filter((s) => enrolledBy(s, today))
+      .map((s) => {
+        const due = s.planId ? (planAmount.get(s.planId) ?? 0) : 0;
+        const paid = paidByStudent.get(s.id) ?? 0;
+        return [s.name, due, paid, Math.max(due - paid, 0)];
+      }),
   };
 }
 
@@ -261,14 +291,20 @@ async function skillsReport(t: ReportTranslations): Promise<ReportData> {
     }
     perStudent.set(sl.studentId, cur);
   }
-  const allStudents = (await db.select({ id: students.id, name: students.name }).from(students).orderBy(students.name)) as Array<{ id: string; name: string }>;
+  const allStudents = (await db
+    .select({ id: students.id, name: students.name, enrolledOn: students.enrolledOn })
+    .from(students)
+    .orderBy(students.name)) as Array<{ id: string; name: string; enrolledOn: string | null }>;
+  const today = dayjs().format("YYYY-MM-DD");
   return {
     key: "skills",
     title: t.title,
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3]],
-    rows: allStudents.map((s) => {
-      const c = perStudent.get(s.id) ?? { tracked: 0, weak: 0, weakList: [] };
-      return [s.name, c.tracked, c.weak, c.weakList.join("، ") || "—"];
-    }),
+    rows: allStudents
+      .filter((s) => enrolledBy(s, today))
+      .map((s) => {
+        const c = perStudent.get(s.id) ?? { tracked: 0, weak: 0, weakList: [] };
+        return [s.name, c.tracked, c.weak, c.weakList.join("، ") || "—"];
+      }),
   };
 }

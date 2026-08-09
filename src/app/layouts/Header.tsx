@@ -1,24 +1,58 @@
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
-import { CalendarDays } from "lucide-react";
-import { NAV_ITEMS } from "@/app/navigation";
+import { CalendarDays, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { NAV_ITEMS, NAV_SECTIONS } from "@/app/navigation";
+import { useCommandStore } from "@/lib/command-store";
 import { formatDate } from "@/lib/utils/format";
 
 export function Header() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const setPaletteOpen = useCommandStore((s) => s.setOpen);
   const current =
     NAV_ITEMS.find((item) => item.to !== "/" && pathname.startsWith(item.to)) ??
     NAV_ITEMS.find((item) => item.to === pathname) ??
     NAV_ITEMS[0];
+  const Icon = current.icon;
+  const section = NAV_SECTIONS.find((s) => s.id === current.section);
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4">
-      <h1 className="truncate text-sm font-semibold">{t(current.labelKey)}</h1>
-      <span className="flex shrink-0 items-center gap-1.5 text-sm tabular-nums text-muted-foreground">
-        <CalendarDays className="size-4" />
-        <span dir="ltr">{formatDate(Date.now(), "DD-MM-YYYY")}</span>
-      </span>
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-background/85 px-4 backdrop-blur-md">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="size-4" />
+        </div>
+        <div className="min-w-0">
+          <h1 className="truncate text-sm font-semibold leading-tight">
+            {t(current.labelKey)}
+          </h1>
+          <p className="truncate text-[11px] leading-tight text-muted-foreground">
+            {section ? t(section.labelKey) : ""}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label={t("common.commandPalette")}
+          onClick={() => setPaletteOpen(true)}
+          className="h-7 rounded-lg ps-2 pe-1.5 text-xs text-muted-foreground"
+        >
+          <Search className="size-3.5" />
+          <span className="hidden sm:inline">{t("common.search")}</span>
+          <kbd className="ms-1 rounded border bg-muted px-1 font-sans text-[10px] leading-4 text-muted-foreground/80">
+            Ctrl K
+          </kbd>
+        </Button>
+        <span className="flex shrink-0 items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
+          <CalendarDays className="size-3.5" />
+          <span className="hidden lg:inline">{formatDate(Date.now(), "dddd")}</span>
+          <span dir="ltr">{formatDate(Date.now(), "DD-MM-YYYY")}</span>
+        </span>
+      </div>
     </header>
   );
 }

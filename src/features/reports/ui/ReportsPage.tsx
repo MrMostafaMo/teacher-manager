@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import { buildReportData, type ReportTranslations } from "@/features/reports/application/report-cases";
 import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
@@ -125,32 +126,20 @@ export default function ReportsPage() {
           ) : !data || data.rows.length === 0 ? (
             <EmptyState icon={BarChart3} title={t("reports.empty")} />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    {data.headers.map((h, i) => (
-                      <th key={i} className="px-4 py-2.5 text-start font-medium whitespace-nowrap">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.rows.map((row, i) => (
-                    <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
-                      {row.map((cell, j) => (
-                        <td key={j} className="px-4 py-2.5 whitespace-nowrap">
-                          {typeof cell === "number" && MONEY_COLUMNS[key]?.includes(j)
-                            ? formatMoney(cell)
-                            : String(cell)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={data.headers.map(
+                (h, j): DataTableColumn<(string | number)[]> => ({
+                  header: h,
+                  className: "whitespace-nowrap",
+                  render: (row) =>
+                    typeof row[j] === "number" && MONEY_COLUMNS[key]?.includes(j)
+                      ? formatMoney(row[j] as number)
+                      : String(row[j]),
+                }),
+              )}
+              rows={data.rows}
+              getRowKey={(_, i) => String(i)}
+            />
           )}
         </CardContent>
       </Card>

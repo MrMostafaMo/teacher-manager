@@ -4,6 +4,7 @@ import { planRepository } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { logActivity } from "@/lib/activity-log";
+import { enrolledBy, monthEnd } from "@/lib/utils/enrollment";
 import type { Payment, Plan, Student } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
 
@@ -60,6 +61,8 @@ export async function monthlyDues(period: string): Promise<DuesRow[]> {
     paymentRepository.byPeriod(period),
     groupRepository.memberships(),
   ]);
+  // A student is billed from their enrollment month onward — never before it.
+  const students = activeStudents.filter((s) => enrolledBy(s, monthEnd(period)));
   const planById = new Map(plans.map((p) => [p.id, p]));
   const groupsByStudent = new Map<string, Array<{ id: string; name: string }>>();
   for (const m of memberships) {
@@ -71,7 +74,7 @@ export async function monthlyDues(period: string): Promise<DuesRow[]> {
   for (const p of payments) {
     paidByStudent.set(p.studentId, (paidByStudent.get(p.studentId) ?? 0) + p.amount);
   }
-  return activeStudents.map((student) => {
+  return students.map((student) => {
     const plan = student.planId ? (planById.get(student.planId) ?? null) : null;
     const due = plan?.amount ?? 0;
     const paid = paidByStudent.get(student.id) ?? 0;

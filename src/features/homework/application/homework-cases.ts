@@ -8,6 +8,7 @@ import {
 import { logActivity } from "@/lib/activity-log";
 import { uuid } from "@/lib/utils/uuid";
 import { formatDate } from "@/lib/utils/format";
+import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
 import type { Student } from "@/lib/db/schema";
 
 /**
@@ -54,8 +55,11 @@ export async function getHomeworkDetail(id: string): Promise<HomeworkDetail> {
   ]);
   if (!homework) throw new Error(`homework ${id} not found`);
   const members = await homeworkRepository.members(homework.groupId);
+  const eligible = members.filter((m) =>
+    enrolledBy(m, effectiveDate(homework.dueDate, homework.createdAt)),
+  );
 
-  const students = members.map((m) => {
+  const students = eligible.map((m) => {
     const submission = submissions.get(m.id);
     return {
       student: { id: m.id, name: m.name },
@@ -161,7 +165,12 @@ export async function setSubmissionStatus(
   const homework = await homeworkRepository.findById(homeworkId);
   if (!homework) throw new Error(`homework ${homeworkId} not found`);
   const members = await homeworkRepository.members(homework.groupId);
-  if (!members.some((m) => m.id === studentId)) {
+  if (
+    !members.some(
+      (m) =>
+        m.id === studentId && enrolledBy(m, effectiveDate(homework.dueDate, homework.createdAt)),
+    )
+  ) {
     throw new Error(`student ${studentId} is not a member of the homework's group`);
   }
   await homeworkRepository.upsertSubmission(homeworkId, studentId, status);
@@ -181,13 +190,16 @@ export async function setAllSubmissionStatus(
   const homework = await homeworkRepository.findById(homeworkId);
   if (!homework) throw new Error(`homework ${homeworkId} not found`);
   const members = await homeworkRepository.members(homework.groupId);
-  for (const m of members) {
+  const eligible = members.filter((m) =>
+    enrolledBy(m, effectiveDate(homework.dueDate, homework.createdAt)),
+  );
+  for (const m of eligible) {
     await homeworkRepository.upsertSubmission(homeworkId, m.id, status);
   }
   await logActivity({
     action: "homework.submitAll",
     entityType: "homework",
     entityId: homeworkId,
-    details: { status, count: members.length },
+    details: { status, count: eligible.length },
   });
 }

@@ -20,6 +20,7 @@ import { CardSkeleton } from "@/shared/Skeletons";
 import { DatePicker } from "@/shared/DatePicker";
 import { EmptyState } from "@/shared/EmptyState";
 import { useSaveFeedback } from "@/shared/useSaveFeedback";
+import { toast } from "@/lib/toast-store";
 
 const inputClass =
   "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
@@ -95,6 +96,7 @@ export function SessionAttendanceDialog({
         await saveSessionAttendance({ sessionId: session.id, date, entries });
         onSaved();
         await load(session.id, session.groupId, date);
+        toast(t("schedule.attendanceSaved"));
       });
     } catch (e) {
       console.error("Failed to save session attendance", e);

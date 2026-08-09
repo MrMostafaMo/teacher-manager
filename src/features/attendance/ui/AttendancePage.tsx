@@ -25,8 +25,10 @@ import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { DatePicker, MonthPicker } from "@/shared/DatePicker";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import { Segmented } from "@/shared/Segmented";
 import { useSaveFeedback } from "@/shared/useSaveFeedback";
+import { toast } from "@/lib/toast-store";
 
 const inputClass =
   "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
@@ -146,6 +148,7 @@ function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: str
         await saveDaily({ date, entries });
         setSavedStatuses(Object.fromEntries(entries.map((e) => [e.studentId, e.status])));
         await load(date, groupId);
+        toast(t("attendance.saved"));
       });
     } catch (e) {
       console.error("Failed to save attendance", e);
@@ -542,88 +545,68 @@ function RosterTable({
   onChange: (studentId: string, status: AttendanceStatus) => void;
 }) {
   const { t } = useTranslation();
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b text-xs text-muted-foreground">
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.student")}
-            </th>
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.status")}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map((s) => (
-            <tr key={s.id} className="border-b last:border-0 hover:bg-muted/50">
-              <td className="px-4 py-2">
-                <p className="font-medium">{s.name}</p>
-                <p className="text-xs text-muted-foreground">{groupLabel}</p>
-              </td>
-              <td className="px-4 py-2">
-                <StatusPicker
-                  value={draft[s.id]}
-                  onChange={(status) => onChange(s.id, status)}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  const columns: DataTableColumn<Student>[] = [
+    {
+      header: t("attendance.columns.student"),
+      render: (s) => (
+        <>
+          <p className="font-medium">{s.name}</p>
+          <p className="text-xs text-muted-foreground">{groupLabel}</p>
+        </>
+      ),
+    },
+    {
+      header: t("attendance.columns.status"),
+      render: (s) => (
+        <StatusPicker value={draft[s.id]} onChange={(status) => onChange(s.id, status)} />
+      ),
+    },
+  ];
+  return <DataTable<Student> columns={columns} rows={list} getRowKey={(s) => s.id} />;
 }
 
 function MonthlySummaryTable({ list, groupLabel }: { list: StudentMonthlyRow[]; groupLabel: string }) {
   const { t } = useTranslation();
+  const columns: DataTableColumn<StudentMonthlyRow>[] = [
+    {
+      header: t("attendance.columns.student"),
+      render: (r) => (
+        <>
+          <p className="font-medium">{r.name}</p>
+          <p className="text-xs text-muted-foreground">{groupLabel}</p>
+        </>
+      ),
+    },
+    {
+      header: t("attendance.columns.present"),
+      className: "tabular-nums text-success",
+      render: (r) => r.present,
+    },
+    {
+      header: t("attendance.columns.absent"),
+      className: "tabular-nums text-destructive",
+      render: (r) => r.absent,
+    },
+    {
+      header: t("attendance.columns.late"),
+      className: "tabular-nums text-warning",
+      render: (r) => r.late,
+    },
+    {
+      header: t("attendance.columns.excused"),
+      className: "tabular-nums text-(--chart-5)",
+      render: (r) => r.excused,
+    },
+    {
+      header: t("attendance.columns.percentage"),
+      className: "text-muted-foreground",
+      render: (r) => {
+        const total = r.present + r.absent + r.late + r.excused;
+        return total > 0 ? formatPercent((r.present + r.late + r.excused) / total) : "—";
+      },
+    },
+  ];
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b text-xs text-muted-foreground">
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.student")}
-            </th>
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.present")}
-            </th>
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.absent")}
-            </th>
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.late")}
-            </th>
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.excused")}
-            </th>
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.percentage")}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map((r) => {
-            const total = r.present + r.absent + r.late + r.excused;
-            return (
-              <tr key={r.studentId} className="border-b last:border-0 hover:bg-muted/50">
-                <td className="px-4 py-2.5">
-                  <p className="font-medium">{r.name}</p>
-                  <p className="text-xs text-muted-foreground">{groupLabel}</p>
-                </td>
-                <td className="px-4 py-2.5 text-success">{r.present}</td>
-                <td className="px-4 py-2.5 text-destructive">{r.absent}</td>
-                <td className="px-4 py-2.5 text-warning">{r.late}</td>
-                <td className="px-4 py-2.5 text-(--chart-5)">{r.excused}</td>
-                <td className="px-4 py-2.5 text-muted-foreground">
-                  {total > 0 ? formatPercent((r.present + r.late + r.excused) / total) : "—"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <DataTable<StudentMonthlyRow> columns={columns} rows={list} getRowKey={(r) => r.studentId} />
   );
 }

@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.1.5
+
+- **Nile visual identity**: refreshed palette (indigo gradient primary button,
+  `--chart-1..5`), Cairo display font for headings, Inter + IBM Plex Sans
+  Arabic for body. `Sidebar` and `Header` rebuilt on the new identity with
+  grouped nav, active states, a logo badge and a Ctrl K search button.
+- **Shared components adopted app-wide**: `DataTable` (generic typed tables
+  across every page), `CommandPalette` (Ctrl+K page menu), `Avatar`
+  (deterministic-initials), `PageHeader`, `EmptyState`, toasts
+  (`src/lib/toast-store.ts`), and `Field` with unified Zod error mapping.
+- **Dashboard**: quick-action hero row, prev-month deltas on the
+  attendance/collected/expenses/net KPIs, a "new this month" student figure,
+  and two 6-month finance trend area charts.
+- **Global create actions**: `CommandPalette` and the dashboard quick actions
+  open the real create dialogs via a global dialog store
+  (`src/lib/dialog-store.ts` + `src/shared/GlobalDialogs.tsx`); saving any of
+  them remounts the current page so it re-fetches (`tm:data-changed`).
+- **Week navigation**: the timetable `WeekGrid` gained prev/next week buttons,
+  a "Today" reset, and a `DD-MM-YYYY` week-range label.
+- **Profile edit**: the student profile header gained an «تعديل الطالب» button
+  that opens the student form in edit mode.
+- Cleanup: `DataTable` lost its unused `stickyHeader` prop.
+
 ## v0.1.4
 
 - **Activity log page**: new `/activity` page showing the last 300 recorded

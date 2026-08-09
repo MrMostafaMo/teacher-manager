@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import {
   deleteGroup,
   listGroups,
@@ -95,6 +96,68 @@ export default function GroupsPage() {
     }
   }
 
+  const columns: DataTableColumn<GroupWithCount>[] = [
+    {
+      header: t("groups.columns.name"),
+      className: "font-medium",
+      render: (g) => g.name,
+    },
+    {
+      header: t("groups.columns.subject"),
+      className: "text-muted-foreground",
+      render: (g) => g.subject ?? "—",
+    },
+    {
+      header: t("groups.columns.schedule"),
+      className: "text-muted-foreground",
+      render: (g) => renderSchedule(g),
+    },
+    {
+      header: t("groups.columns.members"),
+      className: "text-muted-foreground tabular-nums",
+      render: (g) => g.memberCount,
+    },
+    {
+      header: t("groups.columns.status"),
+      render: (g) => <StatusBadge status={g.status} />,
+    },
+    {
+      header: "",
+      className: "text-end",
+      headerClassName: "text-end",
+      render: (g) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("groups.view")}
+            onClick={() => setDetailId(g.id)}
+          >
+            <Eye />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("groups.edit")}
+            onClick={() => openEdit(g)}
+          >
+            <Pencil />
+          </Button>
+          <Button
+            variant={deletingId === g.id ? "destructive" : "ghost"}
+            size="icon-sm"
+            aria-label={
+              deletingId === g.id ? t("groups.confirmDelete") : t("groups.delete")
+            }
+            onClick={() => void handleRowDelete(g)}
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -122,63 +185,11 @@ export default function GroupsPage() {
           ) : rows.length === 0 ? (
             <EmptyState icon={Users2} title={t("groups.empty")} description={t("groups.emptyHint")} />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="px-4 py-2.5 text-start font-medium">{t("groups.columns.name")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("groups.columns.subject")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("groups.columns.schedule")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("groups.columns.members")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("groups.columns.status")}</th>
-                    <th className="px-4 py-2.5" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((g) => (
-                    <tr key={g.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="px-4 py-2.5 font-medium">{g.name}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{g.subject ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{renderSchedule(g)}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{g.memberCount}</td>
-                      <td className="px-4 py-2.5">
-                        <StatusBadge status={g.status} />
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={t("groups.view")}
-                            onClick={() => setDetailId(g.id)}
-                          >
-                            <Eye />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={t("groups.edit")}
-                            onClick={() => openEdit(g)}
-                          >
-                            <Pencil />
-                          </Button>
-                          <Button
-                            variant={deletingId === g.id ? "destructive" : "ghost"}
-                            size="icon-sm"
-                            aria-label={
-                              deletingId === g.id ? t("groups.confirmDelete") : t("groups.delete")
-                            }
-                            onClick={() => void handleRowDelete(g)}
-                          >
-                            <Trash2 />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable<GroupWithCount>
+              columns={columns}
+              rows={rows}
+              getRowKey={(g) => g.id}
+            />
           )}
         </CardContent>
       </Card>

@@ -28,6 +28,15 @@ export const ar: Messages = {
     selectTime: "اختر الوقت",
     hour: "الساعة",
     minute: "الدقيقة",
+    dismiss: "إغلاق",
+    search: "بحث",
+    commandPalette: {
+      title: "قائمة الأوامر",
+      placeholder: "ابحث في الصفحات والإجراءات…",
+      noResults: "لا توجد نتائج",
+      enterToGo: "اضغط Enter للانتقال",
+      navigate: "↑↓ للتنقل",
+    },
   },
   db: {
     checking: "جارٍ الاتصال بقاعدة البيانات المحلية…",
@@ -57,10 +66,21 @@ export const ar: Messages = {
     settings: "الإعدادات",
   },
   dashboard: {
-    welcome: "أهلًا بك، أيها المعلم",
+    welcome: "أهلاً بك، أيها المعلم",
     subtitle: "لمحة عن مركزك — الطلاب والحضور والمدفوعات والواجبات.",
     loadError: "تعذّر تحميل لوحة التحكم",
     empty: "لا توجد بيانات بعد.",
+    quickActions: "إجراءات سريعة",
+    quick: {
+      students: "إضافة طالب",
+      attendance: "تسجيل حضور",
+      payments: "تسجيل دفعة",
+      expenses: "إضافة مصروف",
+    },
+    newStudents: {
+      label: "جدد هذا الشهر",
+      suffix: "طالب",
+    },
     kpis: {
       totalStudents: "إجمالي الطلاب",
       activeStudents: "طلاب نشطون",
@@ -76,6 +96,11 @@ export const ar: Messages = {
       attendance: "الحضور خلال آخر ٦ أشهر",
       homework: "حالة الواجبات",
       weakSkills: "أضعف المهارات",
+      finance: "المالية خلال آخر ٦ أشهر",
+      financeNet: "الصافي خلال آخر ٦ أشهر",
+      collected: "المحصَّل",
+      expenses: "المصروفات",
+      net: "الصافي",
     },
     today: {
       title: "جلسات اليوم",

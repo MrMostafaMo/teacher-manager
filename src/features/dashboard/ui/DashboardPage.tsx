@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import { useDialogStore } from "@/lib/dialog-store";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -21,16 +24,21 @@ import {
   NotebookPen,
   Receipt,
   UserCheck,
+  UserPlus,
   Users,
   Wallet,
   Scale,
   TrendingDown,
+  TrendingUp,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KpiGridSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
+import { Avatar } from "@/shared/Avatar";
 import { getDashboardData, type DashboardData } from "@/features/dashboard/application/dashboard-cases";
 import { cn } from "@/lib/utils";
 import { formatDateString, formatMoney, formatNumber, formatTime } from "@/lib/utils/format";
@@ -67,6 +75,24 @@ const KPI_COLOR: Record<string, string> = {
   homeworkCompletion: "var(--chart-5)",
   examAverage: "var(--chart-5)",
 };
+
+function KpiDelta({ delta, invert }: { delta: number | null; invert?: boolean }) {
+  if (delta === null) return null;
+  const good = invert ? delta < 0 : delta >= 0;
+  return (
+    <span
+      dir="ltr"
+      className={cn(
+        "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+        good ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
+      )}
+    >
+      {delta >= 0 ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+      {delta >= 0 ? "+" : ""}
+      {delta}%
+    </span>
+  );
+}
 
 /** Theme-aware tooltip shared by the dashboard charts. */
 function ChartTooltip({ active, payload, label }: any) {
@@ -210,6 +236,7 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const { t } = useTranslation();
   const hour24 = useTimeStore((s) => s.hour24);
+  const openDialog = useDialogStore((s) => s.openDialog);
   const [status, setStatus] = useState<ChartStatus>("loading");
   const [data, setData] = useState<DashboardData | null>(null);
 
@@ -254,6 +281,13 @@ export default function DashboardPage() {
     excused: r.excused,
   }));
 
+  const financeChart = data.financeTrend.map((r) => ({
+    month: monthShort(r.month),
+    collected: r.collected,
+    expenses: r.expenses,
+    net: r.collected - r.expenses,
+  }));
+
   const homeworkPie = [
     { key: "submitted", value: data.homeworkSubmitted, fill: HOMEWORK_COLORS.submitted, label: t("homework.statusSubmitted") },
     { key: "pending", value: data.homeworkPending, fill: HOMEWORK_COLORS.pending, label: t("homework.statusPending") },
@@ -263,10 +297,10 @@ export default function DashboardPage() {
   const kpis = [
     { key: "totalStudents", value: data.totalStudents, icon: Users },
     { key: "activeStudents", value: data.activeStudents, icon: UserCheck },
-    { key: "attendanceRate", value: `${data.attendanceRate}%`, icon: CalendarCheck },
-    { key: "collected", value: formatMoney(data.collected), icon: Wallet },
-    { key: "expensesMonth", value: formatMoney(data.expensesMonth), icon: Receipt },
-    { key: "net", value: formatMoney(data.net), icon: Scale },
+    { key: "attendanceRate", value: `${data.attendanceRate}%`, icon: CalendarCheck, delta: data.deltas.attendanceRate },
+    { key: "collected", value: formatMoney(data.collected), icon: Wallet, delta: data.deltas.collected },
+    { key: "expensesMonth", value: formatMoney(data.expensesMonth), icon: Receipt, delta: data.deltas.expenses, invert: true },
+    { key: "net", value: formatMoney(data.net), icon: Scale, delta: data.deltas.net },
     { key: "outstanding", value: formatMoney(data.outstanding), icon: TrendingDown },
     { key: "homeworkCompletion", value: `${data.homeworkCompletion}%`, icon: ClipboardList },
     { key: "examAverage", value: data.examAverage === null ? "—" : String(data.examAverage), icon: GraduationCap },
@@ -274,10 +308,52 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("dashboard.welcome")} description={t("dashboard.subtitle")} />
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <PageHeader title={t("dashboard.welcome")} description={t("dashboard.subtitle")} />
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1.5 rounded-lg border bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
+            <UserPlus className="size-3.5 text-primary" />
+            {t("dashboard.newStudents.label")}:{" "}
+            <span className="font-semibold tabular-nums text-foreground" dir="ltr">
+              {formatNumber(data.deltas.newStudents)}
+            </span>
+            <span>{t("dashboard.newStudents.suffix")}</span>
+          </span>
+          {(
+            [
+              { key: "students", icon: UserPlus, dialog: "student" as const },
+              { key: "attendance", icon: CalendarCheck, to: "/attendance" as const },
+              { key: "payments", icon: Wallet, dialog: "payment" as const },
+              { key: "expenses", icon: Receipt, dialog: "expense" as const },
+            ] as Array<
+              | { key: string; icon: LucideIcon; dialog: "student" | "payment" | "expense" }
+              | { key: string; icon: LucideIcon; to: string }
+            >
+          ).map(({ key, icon: Icon, ...rest }) =>
+            "to" in rest ? (
+              <Button key={key} variant="outline" size="sm" asChild>
+                <Link to={rest.to}>
+                  <Icon className="size-3.5" />
+                  {t(`dashboard.quick.${key}`)}
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                key={key}
+                variant="outline"
+                size="sm"
+                onClick={() => openDialog(rest.dialog)}
+              >
+                <Icon className="size-3.5" />
+                {t(`dashboard.quick.${key}`)}
+              </Button>
+            ),
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        {kpis.map(({ key, value, icon: Icon }) => {
+        {kpis.map(({ key, value, icon: Icon, delta, invert }) => {
           const accent = KPI_COLOR[key];
           return (
             <Card
@@ -290,6 +366,7 @@ export default function DashboardPage() {
                     {t(`dashboard.kpis.${key}`)}
                   </span>
                   <div className="text-2xl font-semibold tabular-nums">{value}</div>
+                  {delta !== undefined && <KpiDelta delta={delta} invert={invert} />}
                 </div>
                 <span
                   aria-hidden
@@ -391,7 +468,10 @@ export default function DashboardPage() {
             <div className="divide-y">
               {data.topDebtors.map((d) => (
                 <div key={d.id} className="flex items-center justify-between gap-3 py-2">
-                  <span className="truncate text-sm font-medium">{d.name}</span>
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <Avatar name={d.name} className="size-7 text-[10px]" />
+                    <span className="truncate text-sm font-medium">{d.name}</span>
+                  </span>
                   <span className="shrink-0 text-sm font-semibold tabular-nums text-destructive" dir="ltr">
                     {formatMoney(d.remaining)}
                   </span>
@@ -482,6 +562,93 @@ export default function DashboardPage() {
                 ))}
               </ul>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">{t("dashboard.charts.finance")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div dir="ltr" className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={financeChart} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
+                  <defs>
+                    <linearGradient id="gradCollected" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={ATTENDANCE_COLORS.present} stopOpacity={0.25} />
+                      <stop offset="95%" stopColor={ATTENDANCE_COLORS.present} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gradExpenses" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={ATTENDANCE_COLORS.absent} stopOpacity={0.25} />
+                      <stop offset="95%" stopColor={ATTENDANCE_COLORS.absent} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis tickLine={false} axisLine={false} fontSize={12} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="collected"
+                    stroke={ATTENDANCE_COLORS.present}
+                    strokeWidth={2}
+                    fill="url(#gradCollected)"
+                    name={t("dashboard.charts.collected")}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke={ATTENDANCE_COLORS.absent}
+                    strokeWidth={2}
+                    fill="url(#gradExpenses)"
+                    name={t("dashboard.charts.expenses")}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full" style={{ backgroundColor: ATTENDANCE_COLORS.present }} />
+                {t("dashboard.charts.collected")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full" style={{ backgroundColor: ATTENDANCE_COLORS.absent }} />
+                {t("dashboard.charts.expenses")}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">{t("dashboard.charts.financeNet")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div dir="ltr" className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={financeChart} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
+                  <defs>
+                    <linearGradient id="gradNet" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={ATTENDANCE_COLORS.excused} stopOpacity={0.25} />
+                      <stop offset="95%" stopColor={ATTENDANCE_COLORS.excused} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis tickLine={false} axisLine={false} fontSize={12} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="net"
+                    stroke={ATTENDANCE_COLORS.excused}
+                    strokeWidth={2}
+                    fill="url(#gradNet)"
+                    name={t("dashboard.charts.net")}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>

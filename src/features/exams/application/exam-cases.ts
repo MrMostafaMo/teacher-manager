@@ -8,6 +8,7 @@ import {
 } from "@/features/exams/domain";
 import { logActivity } from "@/lib/activity-log";
 import { uuid } from "@/lib/utils/uuid";
+import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
 
 /**
  * Exam use cases. Completion % and per-exam stats are computed here in JS
@@ -49,8 +50,11 @@ export async function getExamDetail(id: string): Promise<ExamDetail> {
   ]);
   if (!exam) throw new Error(`exam ${id} not found`);
   const members = await examRepository.members(exam.groupId);
+  const eligible = members.filter((m) =>
+    enrolledBy(m, effectiveDate(exam.date, exam.createdAt)),
+  );
 
-  const students = members.map((m) => {
+  const students = eligible.map((m) => {
     const row = results.get(m.id);
     return {
       student: { id: m.id, name: m.name },
@@ -66,10 +70,10 @@ export async function getExamDetail(id: string): Promise<ExamDetail> {
   return {
     ...exam,
     groupName: (await examRepository.groupName(exam.groupId)) ?? null,
-    memberCount: members.length,
+    memberCount: eligible.length,
     resultCount: total,
     average: total > 0 ? averageOf(scores) : null,
-    completion: members.length > 0 ? Math.round((total / members.length) * 100) : 0,
+    completion: eligible.length > 0 ? Math.round((total / eligible.length) * 100) : 0,
     highest: total > 0 ? Math.max(...scores) : null,
     lowest: total > 0 ? Math.min(...scores) : null,
     passRate: total > 0 ? Math.round((scores.filter((s) => s >= passMark).length / total) * 100) : null,
@@ -146,7 +150,11 @@ export async function saveExamResults(examId: string, inputs: ExamResultInput[])
   if (!exam) throw new Error(`exam ${examId} not found`);
   const maxScore = exam.maxScore;
   const members = await examRepository.members(exam.groupId);
-  const memberIds = new Set(members.map((m) => m.id));
+  const eligibleIds = new Set(
+    members
+      .filter((m) => enrolledBy(m, effectiveDate(exam.date, exam.createdAt)))
+      .map((m) => m.id),
+  );
 
   for (const raw of inputs) {
     const input = examResultSchema.parse(raw);
@@ -157,7 +165,7 @@ export async function saveExamResults(examId: string, inputs: ExamResultInput[])
     if (input.score < 0 || input.score > maxScore) {
       throw new Error(`score out of range (0..${maxScore})`);
     }
-    if (!memberIds.has(input.studentId)) {
+    if (!eligibleIds.has(input.studentId)) {
       throw new Error(`student ${input.studentId} is not a member of the exam's group`);
     }
     await examRepository.upsertResult(examId, input.studentId, input.score, input.note ?? null);

@@ -1,11 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, CalendarCheck, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarCheck,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
-import { formatTime } from "@/lib/utils/format";
+import { formatDate, formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { orderedDayIndices, useWeekStore } from "@/lib/week-store";
 
@@ -90,11 +97,11 @@ function rangeFor(byDay: SessionWithGroup[][]): [number, number] {
   return [s, Math.max(e, s + 60)];
 }
 
-/** Dates of the current week, anchored on the configured first day. */
-function weekDates(now: Date, weekStartsOn: number): Date[] {
+/** Dates of the week containing `now` (plus `offset` weeks), anchored on the configured first day. */
+function weekDates(now: Date, weekStartsOn: number, offset = 0): Date[] {
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
-  start.setDate(now.getDate() - ((now.getDay() - weekStartsOn + 7) % 7));
+  start.setDate(now.getDate() - ((now.getDay() - weekStartsOn + 7) % 7) + offset * 7);
   return DAYS.map((_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
@@ -168,21 +175,60 @@ export default function WeekGrid({
   const weekStartsOn = useWeekStore((s) => s.weekStartsOn);
   const daysOrder = orderedDayIndices(weekStartsOn);
 
+  const [weekOffset, setWeekOffset] = useState(0);
+  const isCurrentWeek = weekOffset === 0;
+
   const [rangeStart, rangeEnd] = useMemo(() => rangeFor(byDay), [byDay]);
   const totalH = ((rangeEnd - rangeStart) / 60) * HOUR_PX;
 
   const now = new Date();
   const today = now.getDay();
-  const dates = weekDates(now, weekStartsOn);
+  const dates = weekDates(now, weekStartsOn, weekOffset);
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  const nowVisible = nowMin >= rangeStart && nowMin <= rangeEnd;
+  const nowVisible = isCurrentWeek && nowMin >= rangeStart && nowMin <= rangeEnd;
 
   const hours: number[] = [];
   for (let h = rangeStart; h < rangeEnd; h += 60) hours.push(h);
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[880px] overflow-hidden rounded-xl border bg-card">
+    <div className="space-y-3">
+      {/* Week navigation */}
+      <div className="flex items-center justify-between gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1"
+          onClick={() => setWeekOffset((o) => o - 1)}
+        >
+          <ChevronLeft className="size-4 rtl:rotate-180" />
+          <span className="sr-only sm:not-sr-only">{t("common.previous")}</span>
+        </Button>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium tabular-nums">
+            {formatDate(dates[0], "DD-MM-YYYY")} – {formatDate(dates[dates.length - 1], "DD-MM-YYYY")}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isCurrentWeek}
+            onClick={() => setWeekOffset(0)}
+          >
+            {t("schedule.today")}
+          </Button>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1"
+          onClick={() => setWeekOffset((o) => o + 1)}
+        >
+          <span className="sr-only sm:not-sr-only">{t("common.next")}</span>
+          <ChevronRight className="size-4 rtl:rotate-180" />
+        </Button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="min-w-[880px] overflow-hidden rounded-xl border bg-card">
         {/* Day headers */}
         <div className="grid" style={gridTemplate}>
           <div className="border-b border-border/60" />
@@ -191,10 +237,10 @@ export default function WeekGrid({
               key={day}
               className={cn(
                 "border-b border-inline-start border-border/60 px-2 py-2 text-center",
-                day === today && "bg-muted/60",
+                isCurrentWeek && day === today && "bg-muted/60",
               )}
             >
-              <p className={cn("text-xs font-semibold", day === today && "text-foreground")}>
+              <p className={cn("text-xs font-semibold", isCurrentWeek && day === today && "text-foreground")}>
                 {t(`schedule.days.${DAYS[day]}`)}
               </p>
               <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
@@ -223,7 +269,7 @@ export default function WeekGrid({
               key={day}
               className={cn(
                 "relative border-inline-start border-border/60",
-                day === today && "bg-muted/30",
+                isCurrentWeek && day === today && "bg-muted/30",
               )}
               style={{ height: totalH }}
             >
@@ -237,7 +283,7 @@ export default function WeekGrid({
                 ) : null,
               )}
 
-              {day === today && nowVisible && (
+              {isCurrentWeek && day === today && nowVisible && (
                 <div
                   className="absolute inset-x-0 z-10 border-t-2 border-destructive/70"
                   style={{ top: ((nowMin - rangeStart) / 60) * HOUR_PX }}
@@ -258,6 +304,7 @@ export default function WeekGrid({
               ))}
             </div>
           ))}
+        </div>
         </div>
       </div>
     </div>

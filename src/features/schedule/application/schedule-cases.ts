@@ -6,6 +6,7 @@ import {
 import { attendanceStatusSchema, type AttendanceStatus } from "@/features/attendance/domain";
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { logActivity } from "@/lib/activity-log";
+import { enrolledBy } from "@/lib/utils/enrollment";
 import type { GroupSession, SessionAttendance, Student } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
 import dayjs from "dayjs";
@@ -67,9 +68,7 @@ export async function getSessionAttendance(
     scheduleRepository.sessionAttendanceBy(session.id, date),
   ]);
   return {
-    students: students.filter(
-      (s) => s.status === "active" && (s.enrolledOn == null || s.enrolledOn <= date),
-    ),
+    students: students.filter((s) => s.status === "active" && enrolledBy(s, date)),
     rows,
   };
 }

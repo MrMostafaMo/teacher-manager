@@ -26,6 +26,15 @@ export const en = {
     selectTime: "Select time",
     hour: "Hour",
     minute: "Minute",
+    dismiss: "Dismiss",
+    search: "Search",
+    commandPalette: {
+      title: "Command palette",
+      placeholder: "Search pages and actions…",
+      noResults: "No results found",
+      enterToGo: "Enter to open",
+      navigate: "↑↓ to navigate",
+    },
   },
   db: {
     checking: "Connecting to local database…",
@@ -59,6 +68,17 @@ export const en = {
     subtitle: "An overview of your center — students, attendance, payments and homework.",
     loadError: "Failed to load dashboard",
     empty: "No data yet.",
+    quickActions: "Quick actions",
+    quick: {
+      students: "Add student",
+      attendance: "Mark attendance",
+      payments: "Record payment",
+      expenses: "Add expense",
+    },
+    newStudents: {
+      label: "New this month",
+      suffix: "students",
+    },
     kpis: {
       totalStudents: "Total students",
       activeStudents: "Active students",
@@ -74,6 +94,11 @@ export const en = {
       attendance: "Attendance — last 6 months",
       homework: "Homework status",
       weakSkills: "Weakest skills",
+      finance: "Finance — last 6 months",
+      financeNet: "Net — last 6 months",
+      collected: "Collected",
+      expenses: "Expenses",
+      net: "Net",
     },
     today: {
       title: "Today's sessions",

@@ -33,6 +33,8 @@ next begins, and ends with a review checkpoint.
 | 25   | Activity log page + dashboard debtors card | ✅ Done |
 | 26   | UI-polish round: shared components, week-start setting, modal/table polish | ✅ Done |
 | 27   | Final polish: profile page header, bidi/Excel RTL in reports, a11y sweep | ✅ Done |
+| 28   | Visual identity + shared components: Nile theme, DataTable, CommandPalette, Avatar, toasts, dashboard hero/deltas/finance charts | ✅ Done |
+| 29   | Global create actions (command palette + dashboard quick actions open real dialogs) + week navigation + profile edit | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -153,6 +155,55 @@ next begins, and ends with a review checkpoint.
   spreadsheets open right-to-left.
 - Accessibility sweep: every icon-only button carries `aria-label`/`sr-only`,
   and all `<dialog>` modals close on Escape with focus returned to the opener.
+
+## Phase 28 — completed
+
+- **Nile visual identity**: `globals.css` palette refresh — indigo gradient
+  primary button (`--primary` → `--primary-strong`), `--chart-1..5`, Cairo
+  display font for headings (`@fontsource/cairo`, trimmed subset), Inter +
+  IBM Plex Sans Arabic body.
+- **App shell** rebuilt: grouped `Sidebar` with active states + logo badge,
+  `Header` with current-page title/section, date, and a Ctrl K search button.
+- **`DataTable`** (`src/shared/DataTable.tsx`): generic typed table with
+  `DataTableColumn<T>`, `getRowKey(row, index)` —
+  adopted across students, dues/history, expenses, activity, groups, skills,
+  attendance rosters/monthly, exams, homework, plans, reports and the student
+  profile.
+- **`CommandPalette`** (`src/shared/CommandPalette.tsx`): Ctrl+K / Cmd+K
+  searchable page menu from `NAV_ITEMS`, keyboard navigation, wired in
+  `AppLayout` via `src/lib/command-store.ts`.
+- **`Avatar`** (`src/shared/Avatar.tsx`): deterministic-initials avatars with
+  a 5-tone chart palette; used in student names, the profile header and
+  dashboard debtors.
+- **Toasts**: `src/lib/toast-store.ts` (zustand) + `src/shared/ToastViewport.tsx`
+  wired into the `useSaveFeedback` save flows (skills, exam results, session
+  attendance, daily attendance).
+- **Dashboard**: quick-action hero (students/attendance/payments/expenses),
+  prev-month delta chips (`data.deltas`, expenses inverted) on 4 KPIs, a
+  "new this month" student figure, and two 6-month finance area charts
+  (collected/expenses + net) computed in `dashboard-cases.ts` via
+  `paymentRepository.byPeriod` + `expenseRepository.byMonth`.
+
+## Phase 29 — completed
+
+- **Global dialog store** (`src/lib/dialog-store.ts`): zustand store holding
+  the active create dialog (`GlobalDialogId` = student/payment/expense/group/
+  schedule/homework/exam/skill). `GlobalDialogs` (`src/shared/GlobalDialogs.tsx`,
+  mounted once in `AppLayout`) renders the matching dialog; on save it closes
+  and dispatches `tm:data-changed`, which remounts the routed page so it
+  re-fetches.
+- **Command palette actions**: `CommandPalette` now lists the create dialogs
+  (with a "+" hint) plus "Mark attendance" alongside `NAV_ITEMS`; choosing one
+  opens the matching dialog via the store. Dashboard quick actions "Add
+  student" / "Record payment" / "Add expense" open the real dialogs too
+  ("Mark attendance" still navigates).
+- **Week navigation**: `WeekGrid` gained prev/next week buttons, a "Today"
+  reset, and a `DD-MM-YYYY` week-range label. The current-week highlight and
+  now-line only render on the current week (`isCurrentWeek`).
+- **Profile edit**: the student profile header gained an «تعديل الطالب» button
+  opening `StudentFormDialog` in edit mode; saving refreshes the profile.
+- Cleanup: `DataTable` lost its unused `stickyHeader` prop.
+- `tsc --noEmit` clean, production build passes.
 
 ## Phase 19 — completed
 

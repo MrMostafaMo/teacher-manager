@@ -14,6 +14,7 @@ import type { ExamResultInput } from "@/features/exams/domain";
 import { Modal } from "@/shared/Modal";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { useSaveFeedback } from "@/shared/useSaveFeedback";
+import { toast } from "@/lib/toast-store";
 
 interface ExamDetailDialogProps {
   open: boolean;
@@ -83,6 +84,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
         await saveExamResults(detail.id, inputs);
         onChanged();
         load();
+        toast(t("exams.saved"));
       });
     } catch (e) {
       console.error("Failed to save exam results", e);

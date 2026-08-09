@@ -5,6 +5,7 @@ import { studentRepository } from "@/features/students/infrastructure/student-re
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import { logActivity } from "@/lib/activity-log";
+import { enrolledBy, monthEnd } from "@/lib/utils/enrollment";
 import type { Attendance, Student } from "@/lib/db/schema";
 
 /**
@@ -31,7 +32,7 @@ export async function getDaily(date: string, groupId?: string): Promise<DailyAtt
   const roster = groupId
     ? {
         students: (await groupRepository.members(groupId)).filter(
-          (s) => s.status === "active" && attendsOn(s, date),
+          (s) => s.status === "active" && enrolledBy(s, date),
         ),
         hasSessionsToday: true,
       }
@@ -41,11 +42,6 @@ export async function getDaily(date: string, groupId?: string): Promise<DailyAtt
     defaultStatuses(date, roster.students, groupId),
   ]);
   return { students: roster.students, rows, hasSessionsToday: roster.hasSessionsToday, defaults };
-}
-
-/** True when the student attends on `date` (NULL enrollment = legacy, no bound). */
-function attendsOn(student: { enrolledOn: string | null }, date: string): boolean {
-  return student.enrolledOn == null || student.enrolledOn <= date;
 }
 
 /** Members of the groups with a session on `date`'s weekday + whether any exist. */
@@ -72,7 +68,7 @@ async function rosterForDate(date: string): Promise<{ students: Student[]; hasSe
   }
   return {
     students: [...byId.values()]
-      .filter((s) => attendsOn(s, date))
+      .filter((s) => enrolledBy(s, date))
       .sort((a, b) => a.name.localeCompare(b.name)),
     hasSessionsToday: true,
   };
@@ -150,13 +146,13 @@ export interface StudentMonthlyRow {
 }
 
 export async function getMonthly(month: string): Promise<StudentMonthlyRow[]> {
-  const monthEnd = dayjs(`${month}-01`).endOf("month").format("YYYY-MM-DD");
+  const monthEndDate = monthEnd(month);
   const [students, stats] = await Promise.all([
     studentRepository.search({ status: "active" }),
     attendanceRepository.monthlyStats(month),
   ]);
   const byId = new Map(stats.map((s) => [s.studentId, s]));
-  return students.filter((s) => attendsOn(s, monthEnd)).map((s) => {
+  return students.filter((s) => enrolledBy(s, monthEndDate)).map((s) => {
     const stat = byId.get(s.id);
     return {
       studentId: s.id,

@@ -7,6 +7,7 @@ import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import { deleteExam, listExams, type ExamListItem } from "@/features/exams/application/exam-cases";
 import { listGroups } from "@/features/groups/application/group-cases";
 import type { Exam, StudyGroup } from "@/lib/db/schema";
@@ -79,6 +80,70 @@ export default function ExamsPage() {
     setFormOpen(true);
   }
 
+  const columns: DataTableColumn<ExamListItem>[] = [
+    {
+      header: t("exams.columns.title"),
+      className: "font-medium",
+      render: (e) => e.title,
+    },
+    {
+      header: t("exams.columns.date"),
+      className: "text-muted-foreground tabular-nums",
+      render: (e) => <span dir="ltr">{formatDateString(e.date)}</span>,
+    },
+    {
+      header: t("exams.columns.maxScore"),
+      className: "text-muted-foreground tabular-nums",
+      render: (e) => <span dir="ltr">{e.maxScore}</span>,
+    },
+    {
+      header: t("exams.columns.completion"),
+      render: (e) => (
+        <div className="flex items-center gap-2">
+          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-success"
+              style={{ width: `${e.completion}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground tabular-nums" dir="ltr">
+            {e.completion}%
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: t("exams.columns.average"),
+      className: "text-muted-foreground tabular-nums",
+      render: (e) => <span dir="ltr">{e.average ?? "—"}</span>,
+    },
+    {
+      header: "",
+      className: "text-end",
+      headerClassName: "text-end",
+      render: (e) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="icon-sm" onClick={() => setDetailId(e.id)}>
+            <Users />
+            <span className="sr-only">{t("exams.detail")}</span>
+          </Button>
+          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(e)}>
+            <PencilLine />
+            <span className="sr-only">{t("exams.edit")}</span>
+          </Button>
+          <Button
+            variant={deletingId === e.id ? "destructive" : "ghost"}
+            size="icon-sm"
+            aria-label={deletingId === e.id ? t("exams.confirmDelete") : t("exams.delete")}
+            onClick={() => void handleDelete(e.id)}
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -126,73 +191,11 @@ export default function ExamsPage() {
                     {t("exams.sectionEmpty")}
                   </p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-xs text-muted-foreground">
-                          <th className="px-4 py-2.5 text-start font-medium">{t("exams.columns.title")}</th>
-                          <th className="px-4 py-2.5 text-start font-medium">{t("exams.columns.date")}</th>
-                          <th className="px-4 py-2.5 text-start font-medium">{t("exams.columns.maxScore")}</th>
-                          <th className="px-4 py-2.5 text-start font-medium">{t("exams.columns.completion")}</th>
-                          <th className="px-4 py-2.5 text-start font-medium">{t("exams.columns.average")}</th>
-                          <th className="px-4 py-2.5 text-start font-medium" />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((e) => (
-                          <tr key={e.id} className="border-b last:border-0 hover:bg-muted/50">
-                            <td className="px-4 py-2.5 font-medium">{e.title}</td>
-                            <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                              {formatDateString(e.date)}
-                            </td>
-                            <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                              {e.maxScore}
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-                                  <div
-                                    className="h-full rounded-full bg-success"
-                                    style={{ width: `${e.completion}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs text-muted-foreground" dir="ltr">
-                                  {e.completion}%
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
-                              {e.average ?? "—"}
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <div className="flex justify-end gap-1">
-                                <Button variant="ghost" size="icon-sm" onClick={() => setDetailId(e.id)}>
-                                  <Users />
-                                  <span className="sr-only">{t("exams.detail")}</span>
-                                </Button>
-                                <Button variant="ghost" size="icon-sm" onClick={() => openEdit(e)}>
-                                  <PencilLine />
-                                  <span className="sr-only">{t("exams.edit")}</span>
-                                </Button>
-                                <Button
-                                  variant={deletingId === e.id ? "destructive" : "ghost"}
-                                  size="icon-sm"
-                                  aria-label={
-                                    deletingId === e.id
-                                      ? t("exams.confirmDelete")
-                                      : t("exams.delete")
-                                  }
-                                  onClick={() => void handleDelete(e.id)}
-                                >
-                                  <Trash2 />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <DataTable<ExamListItem>
+                    columns={columns}
+                    rows={items}
+                    getRowKey={(e) => e.id}
+                  />
                 )}
               </CollapsibleSection>
             );

@@ -37,6 +37,7 @@ export async function buildReportPdf(
   // Column widths: proportional to the longest cell, capped at 40% of the page.
   // After capping the widths no longer sum to the table width, so they are
   // re-normalized to fill it exactly (avoids a gap at the far edge in RTL).
+  const rtl = opts.rtl;
   const tableWidth = PAGE_WIDTH - MARGIN * 2;
   const widths = data.headers.map((h, i) => {
     let max = textWidth(font, h);
@@ -82,8 +83,9 @@ export async function buildReportPdf(
   function drawText(text: string, px: number, size: number, color: Color) {
     const scale = size / font.unitsPerEm;
     let pen = px;
-    for (const g of shapeGlyphs(font, text)) {
-      page.drawSvgPath(g.d, { x: pen, y, scale, color });
+    for (const g of shapeGlyphs(font, text, rtl)) {
+      // Shift by the mark offsets (already y-down paths, so +yOffset is up).
+      page.drawSvgPath(g.d, { x: pen + g.xOffset * scale, y: y + g.yOffset * scale, scale, color });
       pen += g.advance * scale;
     }
   }

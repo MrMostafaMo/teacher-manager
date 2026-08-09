@@ -20,6 +20,7 @@ import { Select } from "@/components/ui/select";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import { SearchInput } from "@/shared/SearchInput";
 import { listStudents } from "@/features/students/application/student-cases";
 import { listRecentActivity, type ActivityLogRow } from "@/lib/activity-log";
@@ -158,6 +159,37 @@ export default function ActivityPage() {
 
   const entities = Object.keys(ENTITY_ICONS);
 
+  const columns: DataTableColumn<ActivityLogRow>[] = [
+    {
+      header: t("activity.columns.time"),
+      className: "whitespace-nowrap tabular-nums text-muted-foreground",
+      render: (row) => <span dir="ltr">{formatDateTime(row.createdAt, hour24)}</span>,
+    },
+    {
+      header: t("activity.columns.action"),
+      render: (row) => {
+        const Icon = ENTITY_ICONS[row.entityType] ?? AppWindow;
+        const labelKey = ACTION_KEYS[row.action];
+        return (
+          <span className="flex items-center gap-2">
+            <Icon className="size-4 shrink-0 text-muted-foreground" />
+            <span className="font-medium">
+              {t(labelKey ? `activity.actions.${labelKey}` : "activity.actions.unknown")}
+            </span>
+          </span>
+        );
+      },
+    },
+    {
+      header: t("activity.columns.details"),
+      className: "text-muted-foreground",
+      render: (row) => {
+        const parts = detailsParts(row, names);
+        return parts.length > 0 ? parts.join(" · ") : "—";
+      },
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader title={t("nav.activity")} description={t("activity.subtitle")} />
@@ -206,55 +238,11 @@ export default function ActivityPage() {
           </p>
           <Card>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-xs text-muted-foreground">
-                      <th className="px-4 py-2.5 text-start font-medium">
-                        {t("activity.columns.time")}
-                      </th>
-                      <th className="px-4 py-2.5 text-start font-medium">
-                        {t("activity.columns.action")}
-                      </th>
-                      <th className="px-4 py-2.5 text-start font-medium">
-                        {t("activity.columns.details")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((row) => {
-                      const Icon = ENTITY_ICONS[row.entityType] ?? AppWindow;
-                      const labelKey = ACTION_KEYS[row.action];
-                      const parts = detailsParts(row, names);
-                      return (
-                        <tr key={row.id} className="border-b last:border-0 hover:bg-muted/50">
-                          <td
-                            className="whitespace-nowrap px-4 py-2.5 tabular-nums text-muted-foreground"
-                            dir="ltr"
-                          >
-                            {formatDateTime(row.createdAt, hour24)}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <span className="flex items-center gap-2">
-                              <Icon className="size-4 shrink-0 text-muted-foreground" />
-                              <span className="font-medium">
-                                {t(
-                                  labelKey
-                                    ? `activity.actions.${labelKey}`
-                                    : "activity.actions.unknown",
-                                )}
-                              </span>
-                            </span>
-                          </td>
-                          <td className="px-4 py-2.5 text-muted-foreground">
-                            {parts.length > 0 ? parts.join(" · ") : "—"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable<ActivityLogRow>
+                columns={columns}
+                rows={filtered}
+                getRowKey={(row) => row.id}
+              />
             </CardContent>
           </Card>
         </>

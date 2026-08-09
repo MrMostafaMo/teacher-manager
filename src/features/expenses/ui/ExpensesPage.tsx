@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
+import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import {
   deleteExpense,
   listExpenses,
@@ -64,6 +65,71 @@ export default function ExpensesPage() {
 
   const total = rows.reduce((acc, r) => acc + r.amount, 0);
 
+  const columns: DataTableColumn<Expense>[] = [
+    {
+      header: t("expenses.date"),
+      className: "tabular-nums text-muted-foreground",
+      render: (r) => <span dir="ltr">{formatDate(r.spentAt, "DD-MM-YYYY")}</span>,
+    },
+    {
+      header: t("expenses.title"),
+      className: "font-medium",
+      render: (r) => r.title,
+    },
+    {
+      header: t("expenses.category"),
+      render: (r) => (
+        <Badge variant="secondary">{t(`expenses.categories.${r.category}`)}</Badge>
+      ),
+    },
+    {
+      header: t("expenses.amount"),
+      className: "tabular-nums",
+      render: (r) => <span dir="ltr">{formatMoney(r.amount)}</span>,
+    },
+    {
+      header: t("expenses.note"),
+      className: "max-w-48 truncate text-muted-foreground",
+      render: (r) => r.note ?? "—",
+    },
+    {
+      header: "",
+      className: "text-end",
+      headerClassName: "text-end",
+      render: (r) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-muted-foreground"
+            aria-label={t("expenses.edit")}
+            onClick={() => {
+              setEditing(r);
+              setRecordOpen(true);
+            }}
+          >
+            <Pencil className="size-4" />
+          </Button>
+          {deletingId === r.id ? (
+            <Button variant="destructive" size="sm" onClick={() => void handleDelete(r.id)}>
+              {t("expenses.confirmDelete")}
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-destructive"
+              aria-label={t("expenses.delete")}
+              onClick={() => void handleDelete(r.id)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -109,74 +175,11 @@ export default function ExpensesPage() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="px-4 py-2.5 text-start font-medium">{t("expenses.date")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("expenses.title")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("expenses.category")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("expenses.amount")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium">{t("expenses.note")}</th>
-                    <th className="px-4 py-2.5 text-start font-medium" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="px-4 py-2.5 tabular-nums text-muted-foreground" dir="ltr">
-                        {formatDate(r.spentAt, "DD-MM-YYYY")}
-                      </td>
-                      <td className="px-4 py-2.5 font-medium">{r.title}</td>
-                      <td className="px-4 py-2.5">
-                        <Badge variant="secondary">{t(`expenses.categories.${r.category}`)}</Badge>
-                      </td>
-                      <td className="px-4 py-2.5 tabular-nums" dir="ltr">
-                        {formatMoney(r.amount)}
-                      </td>
-                      <td className="max-w-48 truncate px-4 py-2.5 text-muted-foreground">
-                        {r.note ?? "—"}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-muted-foreground"
-                            aria-label={t("expenses.edit")}
-                            onClick={() => {
-                              setEditing(r);
-                              setRecordOpen(true);
-                            }}
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                          {deletingId === r.id ? (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => void handleDelete(r.id)}
-                            >
-                              {t("expenses.confirmDelete")}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 text-muted-foreground hover:text-destructive"
-                              aria-label={t("expenses.delete")}
-                              onClick={() => void handleDelete(r.id)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable<Expense>
+              columns={columns}
+              rows={rows}
+              getRowKey={(r) => r.id}
+            />
           </CardContent>
         </Card>
       )}

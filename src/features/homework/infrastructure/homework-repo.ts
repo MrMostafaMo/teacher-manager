@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, notInArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, lte, notInArray, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   homeworkSubmissions,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
+import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
 import type { SubmissionStatus } from "@/features/homework/domain";
 
 /**
@@ -51,32 +52,36 @@ export const homeworkRepository = {
         .select({
           groupId: studentGroups.groupId,
           studentId: studentGroups.studentId,
+          enrolledOn: students.enrolledOn,
         })
-        .from(studentGroups),
+        .from(studentGroups)
+        .innerJoin(students, eq(studentGroups.studentId, students.id)),
     ]);
     const groupName = new Map((groups as StudyGroup[]).map((g) => [g.id, g.name]));
-    // Stats reflect *current* members only — a former member's stale
-    // submission must not inflate submitted/late or drag completion negative.
-    const membersOf = new Map<string, Set<string>>();
-    const memberCount = new Map<string, number>();
+    // Stats reflect *current* members who were already enrolled by the
+    // homework's effective date only — a later-joined student (or a stale
+    // submission from one) must not inflate submitted/late or drag completion.
+    const membersOf = new Map<string, Array<{ studentId: string; enrolledOn: string | null }>>();
     for (const m of memberships) {
-      const set = membersOf.get(m.groupId) ?? new Set<string>();
-      set.add(m.studentId);
-      membersOf.set(m.groupId, set);
-      memberCount.set(m.groupId, (memberCount.get(m.groupId) ?? 0) + 1);
+      const arr = membersOf.get(m.groupId) ?? [];
+      arr.push({ studentId: m.studentId, enrolledOn: m.enrolledOn });
+      membersOf.set(m.groupId, arr);
     }
     return (rows as Homework[]).map((h) => {
-      const memberIds = membersOf.get(h.groupId);
+      const refDate = effectiveDate(h.dueDate, h.createdAt);
+      const eligibleIds = new Set(
+        (membersOf.get(h.groupId) ?? []).filter((m) => enrolledBy(m, refDate)).map((m) => m.studentId),
+      );
       let submitted = 0;
       let late = 0;
       for (const c of subRows) {
         if (c.homeworkId !== h.id) continue;
-        if (memberIds && !memberIds.has(c.studentId)) continue;
+        if (!eligibleIds.has(c.studentId)) continue;
         if (c.status === "submitted") submitted += c.n;
         else if (c.status === "late") late += c.n;
       }
-      // Submission rows are lazy — a member without a row counts as pending.
-      const pending = Math.max(0, (memberCount.get(h.groupId) ?? 0) - submitted - late);
+      // Submission rows are lazy — an eligible member without a row counts as pending.
+      const pending = Math.max(0, eligibleIds.size - submitted - late);
       return {
         ...h,
         groupName: groupName.get(h.groupId) ?? null,
@@ -209,18 +214,31 @@ export const homeworkRepository = {
       .where(eq(homeworkSubmissions.homeworkId, homeworkId));
   },
 
-  /** Drop submissions from students no longer in the group (used when the group changes). */
+  /** Drop submissions from students no longer in the group or not yet enrolled (used when the group changes). */
   async pruneSubmissionsToMembers(homeworkId: string, groupId: string): Promise<void> {
-    const memberIds = db
+    const homework = (await db
+      .select({ dueDate: homeworks.dueDate, createdAt: homeworks.createdAt })
+      .from(homeworks)
+      .where(eq(homeworks.id, homeworkId))
+      .get()) as { dueDate: string | null; createdAt: number } | undefined;
+    if (!homework) return;
+    const refDate = effectiveDate(homework.dueDate, homework.createdAt);
+    const eligibleIds = db
       .select({ studentId: studentGroups.studentId })
       .from(studentGroups)
-      .where(eq(studentGroups.groupId, groupId));
+      .innerJoin(students, eq(studentGroups.studentId, students.id))
+      .where(
+        and(
+          eq(studentGroups.groupId, groupId),
+          or(isNull(students.enrolledOn), lte(students.enrolledOn, refDate)),
+        ),
+      );
     await db
       .delete(homeworkSubmissions)
       .where(
         and(
           eq(homeworkSubmissions.homeworkId, homeworkId),
-          notInArray(homeworkSubmissions.studentId, memberIds),
+          notInArray(homeworkSubmissions.studentId, eligibleIds),
         ),
       );
   },
@@ -250,6 +268,7 @@ export const homeworkRepository = {
         guardianPhone: students.guardianPhone,
         status: students.status,
         notes: students.notes,
+        enrolledOn: students.enrolledOn,
         createdAt: students.createdAt,
         updatedAt: students.updatedAt,
       })

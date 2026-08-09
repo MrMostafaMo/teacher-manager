@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router";
+import { ShieldCheck } from "lucide-react";
 import { APP_VERSION, NAV_ITEMS, NAV_SECTIONS } from "@/app/navigation";
 import { cn } from "@/lib/utils";
 
@@ -7,20 +8,29 @@ export function Sidebar() {
   const { t } = useTranslation();
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-e bg-background">
-      <div className="flex h-14 shrink-0 items-center gap-2.5 border-b px-4">
-        <img
-          src="/logo.png"
-          alt={t("app.name")}
-          className="size-7 shrink-0 rounded-md object-contain"
-        />
-        <span className="truncate text-sm font-semibold">{t("app.name")}</span>
+    <aside className="flex w-64 shrink-0 flex-col border-e bg-sidebar">
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b px-3.5">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--primary),var(--primary-strong))] shadow-(--card-shadow) ring-1 ring-white/20">
+          <img
+            src="/logo.png"
+            alt={t("app.name")}
+            className="size-5 shrink-0 object-contain invert brightness-[1.05]"
+          />
+        </div>
+        <div className="min-w-0">
+          <span className="block truncate text-sm font-bold text-foreground">
+            {t("app.name")}
+          </span>
+          <span className="block truncate text-[11px] text-muted-foreground">
+            {t("app.tagline")}
+          </span>
+        </div>
       </div>
 
-      <nav className="flex-1 space-y-5 overflow-y-auto overscroll-none p-2">
+      <nav className="flex-1 space-y-4 overflow-y-auto overscroll-none p-2.5">
         {NAV_SECTIONS.map((section) => (
           <div key={section.id}>
-            <p className="px-2.5 pb-1.5 text-xs font-semibold tracking-wide text-muted-foreground/70">
+            <p className="px-2.5 pb-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground/60">
               {t(section.labelKey)}
             </p>
             <div className="space-y-0.5">
@@ -31,10 +41,10 @@ export function Sidebar() {
                   end={item.to === "/"}
                   className={({ isActive }) =>
                     cn(
-                      "relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+                      "relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-all",
                       isActive
-                        ? "bg-accent font-medium text-accent-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        ? "bg-[linear-gradient(90deg,var(--primary),var(--primary-strong))] font-semibold text-primary-foreground shadow-(--card-shadow)"
+                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                     )
                   }
                 >
@@ -43,7 +53,7 @@ export function Sidebar() {
                       {isActive && (
                         <span
                           aria-hidden
-                          className="absolute inset-y-1.5 inset-inline-start-0 w-0.5 rounded-full bg-primary"
+                          className="absolute inset-y-1.5 inset-inline-start-0 w-0.5 rounded-full bg-white/70"
                         />
                       )}
                       <item.icon className="size-4 shrink-0" />
@@ -57,8 +67,18 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="shrink-0 border-t px-4 py-3 text-xs text-muted-foreground">
-        {t("app.name")} · v{APP_VERSION}
+      <div className="shrink-0 border-t p-3">
+        <div className="flex items-center gap-2.5 rounded-lg bg-muted/60 px-2.5 py-2">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-success/15 text-success">
+            <ShieldCheck className="size-4" />
+          </div>
+          <div className="min-w-0 text-[11px] leading-tight">
+            <p className="truncate font-medium text-foreground">{t("app.name")}</p>
+            <p className="truncate text-muted-foreground">
+              {t("app.localData")} · v{APP_VERSION}
+            </p>
+          </div>
+        </div>
       </div>
     </aside>
   );
