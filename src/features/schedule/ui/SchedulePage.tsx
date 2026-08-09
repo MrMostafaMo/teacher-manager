@@ -4,6 +4,7 @@ import { CalendarCheck, CalendarDays, Pencil, Plus, Trash2, Users } from "lucide
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { listGroups } from "@/features/groups/application/group-cases";
 import { deleteSession, listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
@@ -11,6 +12,9 @@ import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
+import { PageHeader } from "@/shared/PageHeader";
+import { EmptyState } from "@/shared/EmptyState";
+import { Segmented } from "@/shared/Segmented";
 import WeekGrid from "./WeekGrid";
 import { ScheduleFormDialog } from "./ScheduleFormDialog";
 import { SessionAttendanceDialog } from "./SessionAttendanceDialog";
@@ -119,47 +123,45 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.schedule")}</h2>
-          <p className="text-sm text-muted-foreground">{t("schedule.subtitle")}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">
-            <CalendarDays className="size-3.5" />
-            {sessions.length}
-          </Badge>
-          <div className="flex gap-1">
-            {(["day", "group"] as const).map((v) => (
-              <Button
-                key={v}
-                variant={view === v ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setView(v)}
-              >
-                {t(`schedule.view.${v}`)}
-              </Button>
-            ))}
-          </div>
-          <Button onClick={openCreate} disabled={groups.length === 0}>
-            <Plus />
-            {t("schedule.add")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("nav.schedule")}
+        description={t("schedule.subtitle")}
+        actions={
+          <>
+            <Badge variant="secondary">
+              <CalendarDays className="size-3.5" />
+              {sessions.length}
+            </Badge>
+            <Segmented
+              value={view}
+              onChange={setView}
+              options={(["day", "group"] as const).map((v) => ({
+                value: v,
+                label: t(`schedule.view.${v}`),
+              }))}
+              ariaLabel={t("schedule.view.label")}
+            />
+            <Button onClick={openCreate} disabled={groups.length === 0}>
+              <Plus />
+              {t("schedule.add")}
+            </Button>
+          </>
+        }
+      />
 
       {loading ? (
-        <div className="p-10 text-center text-sm text-muted-foreground">{t("schedule.loading")}</div>
+        <div className="space-y-3">
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-72 w-full rounded-xl" />
+        </div>
       ) : sessions.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-              <CalendarDays className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium">
-              {groups.length === 0 ? t("schedule.noGroups") : t("schedule.empty")}
-            </p>
-            <p className="text-sm text-muted-foreground">{t("schedule.emptyHint")}</p>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={CalendarDays}
+              title={groups.length === 0 ? t("schedule.noGroups") : t("schedule.empty")}
+              description={t("schedule.emptyHint")}
+            />
           </CardContent>
         </Card>
       ) : view === "day" ? (
@@ -281,14 +283,28 @@ function SessionCard({
           >
             <Pencil />
           </Button>
-          <Button
-            variant={deleting ? "destructive" : "ghost"}
-            size="icon-sm"
-            aria-label={deleting ? t("schedule.confirmDelete") : t("schedule.delete")}
-            onClick={onDelete}
-          >
-            <Trash2 />
-          </Button>
+          {deleting ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-7 gap-1 px-2 text-[11px]"
+              aria-label={t("schedule.confirmDelete")}
+              title={t("schedule.confirmDelete")}
+              onClick={onDelete}
+            >
+              <Trash2 className="size-3" />
+              {t("schedule.confirmDelete")}
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("schedule.delete")}
+              onClick={onDelete}
+            >
+              <Trash2 />
+            </Button>
+          )}
         </div>
       </div>
     </div>

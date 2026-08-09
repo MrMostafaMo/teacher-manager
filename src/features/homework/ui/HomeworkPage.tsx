@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
+import { PageHeader } from "@/shared/PageHeader";
+import { TableRowsSkeleton } from "@/shared/Skeletons";
+import { EmptyState } from "@/shared/EmptyState";
 import {
   deleteHomework,
   listHomeworks,
@@ -83,33 +86,25 @@ export default function HomeworkPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.homework")}</h2>
-          <p className="text-sm text-muted-foreground">{t("homework.subtitle")}</p>
-        </div>
-        <Button onClick={() => openCreate()}>
-          <Plus />
-          {t("homework.add")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("nav.homework")}
+        description={t("homework.subtitle")}
+        actions={
+          <Button onClick={() => openCreate()}>
+            <Plus />
+            {t("homework.add")}
+          </Button>
+        }
+      />
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {loading || groupsLoading ? (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-muted-foreground">
-            {t("students.loading")}
-          </CardContent>
-        </Card>
+        <TableRowsSkeleton rows={5} cols={4} />
       ) : groups.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-              <BookOpen className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium">{t("homework.empty")}</p>
-            <p className="text-xs text-muted-foreground">{t("homework.emptyHint")}</p>
+          <CardContent className="p-0">
+            <EmptyState icon={BookOpen} title={t("homework.empty")} description={t("homework.emptyHint")} />
           </CardContent>
         </Card>
       ) : (
@@ -164,7 +159,7 @@ export default function HomeworkPage() {
                               <div className="flex items-center gap-2">
                                 <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
                                   <div
-                                    className="h-full rounded-full bg-emerald-600"
+                                    className="h-full rounded-full bg-success"
                                     style={{ width: `${h.completion}%` }}
                                   />
                                 </div>

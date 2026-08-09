@@ -4,10 +4,12 @@ import { CreditCard, Pencil, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CardSkeleton } from "@/shared/Skeletons";
+import { EmptyState } from "@/shared/EmptyState";
 import { deletePlan, listPlans } from "@/features/payments/application/plan-cases";
 import type { PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import type { Plan } from "@/lib/db/schema";
-import { Modal } from "@/features/students/ui/Modal";
+import { Modal } from "@/shared/Modal";
 import { formatMoney } from "@/lib/utils/format";
 import { PlanFormDialog } from "./PlanFormDialog";
 
@@ -91,17 +93,11 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
         <Card>
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-10 text-center text-sm text-muted-foreground">
-                {t("plans.loading")}
+              <div className="space-y-3 p-4">
+                <CardSkeleton lines={3} />
               </div>
             ) : rows.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
-                <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-                  <CreditCard className="size-6 text-muted-foreground" />
-                </div>
-                <p className="text-sm font-medium">{t("plans.empty")}</p>
-                <p className="text-sm text-muted-foreground">{t("plans.emptyHint")}</p>
-              </div>
+              <EmptyState icon={CreditCard} title={t("plans.empty")} description={t("plans.emptyHint")} className="py-14" />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

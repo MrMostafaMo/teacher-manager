@@ -4,12 +4,15 @@ import dayjs from "dayjs";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Modal } from "@/features/students/ui/Modal";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Modal } from "@/shared/Modal";
 import { expenseCategorySchema, expenseInputSchema } from "@/features/expenses/domain";
 import { recordExpense, updateExpense } from "@/features/expenses/application/expense-cases";
 import type { Expense } from "@/lib/db/schema";
+import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { DatePicker } from "@/shared/DatePicker";
+import { Field } from "@/shared/Field";
 
 interface RecordExpenseDialogProps {
   open: boolean;
@@ -44,17 +47,14 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function mapErrors(error: ZodError): Record<string, string> {
-    const mapped: Record<string, string> = {};
-    for (const issue of error.issues) {
-      const field = String(issue.path[0] ?? "");
-      if (mapped[field]) continue;
-      if (field === "title") mapped[field] = t("expenses.errors.titleRequired");
-      else if (field === "amount") mapped[field] = t("expenses.errors.amountInvalid");
-      else mapped[field] = t("expenses.errors.invalid");
-    }
-    return mapped;
-  }
+  const mapErrors = (error: ZodError) =>
+    mapZodErrors(error, (field) =>
+      field === "title"
+        ? t("expenses.errors.titleRequired")
+        : field === "amount"
+          ? t("expenses.errors.amountInvalid")
+          : t("expenses.errors.invalid"),
+    );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -86,41 +86,30 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
   return (
     <Modal open={open} onClose={onClose} title={expense ? t("expenses.edit") : t("expenses.record")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="expense-title">
-            {t("expenses.title")} <span className="text-destructive">*</span>
-          </Label>
+        <Field id="expense-title" label={t("expenses.title")} required error={errors.title}>
           <Input
             id="expense-title"
             value={form.title}
             onChange={(e) => setField("title", e.target.value)}
             aria-invalid={!!errors.title}
           />
-          {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
-        </div>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="expense-category">
-              {t("expenses.category")} <span className="text-destructive">*</span>
-            </Label>
-            <select
+          <Field id="expense-category" label={t("expenses.category")} required>
+            <Select
               id="expense-category"
               value={form.category}
               onChange={(e) => setField("category", e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               {expenseCategorySchema.options.map((c) => (
                 <option key={c} value={c}>
                   {t(`expenses.categories.${c}`)}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="expense-amount">
-              {t("expenses.amount")} <span className="text-destructive">*</span>
-            </Label>
+            </Select>
+          </Field>
+          <Field id="expense-amount" label={t("expenses.amount")} required error={errors.amount}>
             <Input
               id="expense-amount"
               dir="ltr"
@@ -130,29 +119,25 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
               onChange={(e) => setField("amount", e.target.value)}
               aria-invalid={!!errors.amount}
             />
-            {errors.amount && <p className="text-xs text-destructive">{errors.amount}</p>}
-          </div>
+          </Field>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="expense-date">{t("expenses.date")}</Label>
+        <Field id="expense-date" label={t("expenses.date")}>
           <DatePicker
             value={form.date}
             onChange={(v) => v && setField("date", v)}
             ariaLabel={t("expenses.date")}
             className="w-full"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="expense-note">{t("expenses.note")}</Label>
-          <textarea
+        <Field id="expense-note" label={t("expenses.note")}>
+          <Textarea
             id="expense-note"
             value={form.note}
             onChange={(e) => setField("note", e.target.value)}
-            className="min-h-20 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted/50"
           />
-        </div>
+        </Field>
 
         {fatal && <p className="text-sm text-destructive">{fatal}</p>}
 

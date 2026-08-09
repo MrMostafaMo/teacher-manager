@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,25 +22,31 @@ export function CollapsibleSection({
   children: ReactNode;
 }) {
   const { t } = useTranslation();
+  const contentId = useId();
+
   return (
     <Card>
       <CardContent className="p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={collapsed ? t("common.expand") : t("common.collapse")}
-              onClick={onToggle}
-            >
-              <ChevronDown className={cn("size-4 transition-transform", !collapsed && "rotate-180")} />
-            </Button>
-            <p className="truncate font-semibold">{title}</p>
-            {meta && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{meta}</span>}
-          </div>
+          <Button
+            variant="ghost"
+            className="-ms-2 min-w-0 flex-1 justify-start gap-2 px-2"
+            aria-expanded={!collapsed}
+            aria-controls={contentId}
+            title={collapsed ? t("common.expand") : t("common.collapse")}
+            onClick={onToggle}
+          >
+            <ChevronDown
+              className={cn("size-4 shrink-0 transition-transform", !collapsed && "rotate-180")}
+            />
+            <span className="truncate font-semibold">{title}</span>
+            {meta && (
+              <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{meta}</span>
+            )}
+          </Button>
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
-        {!collapsed && children}
+        {!collapsed && <div id={contentId}>{children}</div>}
       </CardContent>
     </Card>
   );

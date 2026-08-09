@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { PencilLine, Plus, Target, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { TableRowsSkeleton } from "@/shared/Skeletons";
+import { PageHeader } from "@/shared/PageHeader";
+import { EmptyState } from "@/shared/EmptyState";
 import { deleteSkill, listSkills } from "@/features/skills/application/skill-cases";
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
 import { Badge } from "@/components/ui/badge";
@@ -64,33 +67,25 @@ export default function SkillsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.skills")}</h2>
-          <p className="text-sm text-muted-foreground">{t("skills.subtitle")}</p>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus />
-          {t("skills.add")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("nav.skills")}
+        description={t("skills.subtitle")}
+        actions={
+          <Button onClick={openCreate}>
+            <Plus />
+            {t("skills.add")}
+          </Button>
+        }
+      />
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">
-              {t("students.loading")}
-            </div>
+            <TableRowsSkeleton rows={5} cols={4} />
           ) : rows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-                <Target className="size-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium">{t("skills.empty")}</p>
-              <p className="text-xs text-muted-foreground">{t("skills.emptyHint")}</p>
-            </div>
+            <EmptyState icon={Target} title={t("skills.empty")} description={t("skills.emptyHint")} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -113,7 +108,7 @@ export default function SkillsPage() {
                         {s.weakCount > 0 ? (
                           <Badge
                             className={cn(
-                              "border-amber-600 bg-amber-600/15 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
+                              "border-warning bg-warning/15 text-warning",
                             )}
                           >
                             {t("skills.weakCount", { count: s.weakCount })}

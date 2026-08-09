@@ -10,12 +10,16 @@ import {
 } from "@/features/schedule/application/schedule-cases";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { AttendanceStatus } from "@/features/attendance/domain";
+import { ATTENDANCE_STATUSES } from "@/features/attendance/domain";
 import type { Student } from "@/lib/db/schema";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
-import { Modal } from "@/features/students/ui/Modal";
+import { Modal } from "@/shared/Modal";
 import { StatusPicker } from "@/shared/StatusPicker";
+import { CardSkeleton } from "@/shared/Skeletons";
 import { DatePicker } from "@/shared/DatePicker";
+import { EmptyState } from "@/shared/EmptyState";
+import { useSaveFeedback } from "@/shared/useSaveFeedback";
 
 const inputClass =
   "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
@@ -40,8 +44,7 @@ export function SessionAttendanceDialog({
   const [draft, setDraft] = useState<Record<string, AttendanceStatus>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saving, saved, run, clear } = useSaveFeedback();
 
   async function load(sessionId: string, groupId: string, date: string) {
     setLoading(true);
@@ -69,7 +72,7 @@ export function SessionAttendanceDialog({
   useEffect(() => {
     if (open && session) {
       setDate(dayjs().format("YYYY-MM-DD"));
-      setSaved(false);
+      clear();
       void load(session.id, session.groupId, dayjs().format("YYYY-MM-DD"));
     }
   }, [open, session]);
@@ -87,19 +90,15 @@ export function SessionAttendanceDialog({
       return status ? [{ studentId: s.id, status }] : [];
     });
     if (entries.length === 0) return;
-    setSaving(true);
-    setError("");
     try {
-      await saveSessionAttendance({ sessionId: session.id, date, entries });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-      onSaved();
-      await load(session.id, session.groupId, date);
+      await run(async () => {
+        await saveSessionAttendance({ sessionId: session.id, date, entries });
+        onSaved();
+        await load(session.id, session.groupId, date);
+      });
     } catch (e) {
       console.error("Failed to save session attendance", e);
       setError(t("schedule.errors.saveAttendance"));
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -124,7 +123,7 @@ export function SessionAttendanceDialog({
             {saving ? t("schedule.saving") : t("schedule.saveAttendance")}
           </Button>
           {saved && (
-            <Badge className="gap-1 bg-emerald-600/10 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+            <Badge className="gap-1 bg-success/10 text-success">
               <Check className="size-3.5" />
               {t("schedule.attendanceSaved")}
             </Badge>
@@ -133,17 +132,37 @@ export function SessionAttendanceDialog({
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
+        {students.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="text-sm font-medium text-foreground">
+              {t("attendance.summary.total")}: {students.length}
+            </span>
+            {ATTENDANCE_STATUSES.map((status) => (
+              <span
+                key={status}
+                className={
+                  status === "present"
+                    ? "text-success"
+                    : status === "absent"
+                      ? "text-destructive"
+                      : status === "late"
+                        ? "text-warning"
+                        : "text-(--chart-5)"
+                }
+              >
+                {t(`attendance.summary.${status}`)}:{" "}
+                {students.filter((s) => draft[s.id] === status).length}
+              </span>
+            ))}
+          </div>
+        )}
+
         {loading ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">
-            {t("schedule.loading")}
+          <div className="space-y-3 p-4">
+            <CardSkeleton lines={3} />
           </div>
         ) : students.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-              <Users className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium">{t("schedule.noMembers")}</p>
-          </div>
+          <EmptyState icon={Users} title={t("schedule.noMembers")} className="py-12" />
         ) : (
           <div className="max-h-96 overflow-y-auto">
             <table className="w-full text-sm">

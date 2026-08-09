@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { skillInputSchema } from "@/features/skills/domain";
 import { createSkill, updateSkill } from "@/features/skills/application/skill-cases";
 import type { Skill } from "@/lib/db/schema";
-import { Modal } from "@/features/students/ui/Modal";
+import { Modal } from "@/shared/Modal";
 
 interface SkillFormDialogProps {
   open: boolean;

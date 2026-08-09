@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { BarChart3, FileSpreadsheet, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { TableRowsSkeleton } from "@/shared/Skeletons";
+import { PageHeader } from "@/shared/PageHeader";
+import { EmptyState } from "@/shared/EmptyState";
 import { buildReportData, type ReportTranslations } from "@/features/reports/application/report-cases";
 import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
@@ -82,22 +85,22 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.reports")}</h2>
-          <p className="text-sm text-muted-foreground">{t("reports.subtitle")}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => void handleExport("excel")} disabled={!data || exporting !== null}>
-            <FileSpreadsheet />
-            {exporting === "excel" ? t("reports.exporting") : t("reports.exportExcel")}
-          </Button>
-          <Button onClick={() => void handleExport("pdf")} disabled={!data || exporting !== null}>
-            <FileText />
-            {exporting === "pdf" ? t("reports.exporting") : t("reports.exportPdf")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("nav.reports")}
+        description={t("reports.subtitle")}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => void handleExport("excel")} disabled={!data || exporting !== null}>
+              <FileSpreadsheet />
+              {exporting === "excel" ? t("reports.exporting") : t("reports.exportExcel")}
+            </Button>
+            <Button onClick={() => void handleExport("pdf")} disabled={!data || exporting !== null}>
+              <FileText />
+              {exporting === "pdf" ? t("reports.exporting") : t("reports.exportPdf")}
+            </Button>
+          </>
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
         {REPORT_KEYS.map((k) => (
@@ -113,19 +116,14 @@ export default function ReportsPage() {
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {saved && <p className="text-sm text-emerald-600">{t("reports.saved")}</p>}
+      {saved && <p className="text-sm text-success">{t("reports.saved")}</p>}
 
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">{t("students.loading")}</div>
+            <TableRowsSkeleton rows={6} cols={5} />
           ) : !data || data.rows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-                <BarChart3 className="size-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium">{t("reports.empty")}</p>
-            </div>
+            <EmptyState icon={BarChart3} title={t("reports.empty")} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

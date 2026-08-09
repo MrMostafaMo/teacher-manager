@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Clock, DatabaseBackup, Download, HardDrive, Info, Languages, RotateCcw, Settings2, Upload } from "lucide-react";
+import { CalendarDays, Clock, DatabaseBackup, Download, HardDrive, Info, Languages, MonitorCog, Moon, RotateCcw, Settings2, Sun, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LanguageSelector, ThemeSelector } from "@/shared/AppearanceControls";
+import { PageHeader } from "@/shared/PageHeader";
+import { Segmented } from "@/shared/Segmented";
 import { useTimeStore } from "@/lib/time-store";
+import { useThemeStore } from "@/lib/theme/theme-store";
+import { useWeekStore } from "@/lib/week-store";
 import { APP_VERSION } from "@/app/navigation";
 import {
   createBackup,
@@ -23,6 +27,10 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const hour24 = useTimeStore((s) => s.hour24);
   const setHour24 = useTimeStore((s) => s.setHour24);
+  const weekStartsOn = useWeekStore((s) => s.weekStartsOn);
+  const setWeekStartsOn = useWeekStore((s) => s.setWeekStartsOn);
+  const theme = useThemeStore((s) => s.theme);
+  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : MonitorCog;
   const [dbPath, setDbPath] = useState("");
   const [dbSize, setDbSize] = useState<number | null>(null);
   const [busy, setBusy] = useState<"backup" | "restore" | null>(null);
@@ -78,13 +86,10 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold">{t("nav.settings")}</h2>
-        <p className="text-sm text-muted-foreground">{t("settings.subtitle")}</p>
-      </div>
+      <PageHeader title={t("nav.settings")} description={t("settings.subtitle")} />
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {saved && <p className="text-sm text-emerald-600">{saved}</p>}
+      {saved && <p className="text-sm text-success">{saved}</p>}
 
       <Card>
         <CardContent className="p-4">
@@ -92,15 +97,22 @@ export default function SettingsPage() {
             <Info className="size-4" />
             {t("settings.about")}
           </div>
-          <div className="space-y-1 text-sm">
-            <p className="text-lg font-semibold">{t("app.name")}</p>
-            <p className="flex items-center gap-1.5 text-muted-foreground">
-              <span>{t("settings.aboutVersion")}</span>
-              <span className="font-mono text-foreground" dir="ltr">
-                {APP_VERSION}
-              </span>
-            </p>
-            <p className="pt-1 text-xs text-muted-foreground">{t("settings.aboutTagline")}</p>
+          <div className="flex items-start gap-4">
+            <img
+              src="/logo.png"
+              alt={t("app.name")}
+              className="size-16 shrink-0 rounded-xl object-contain ring-1 ring-border"
+            />
+            <div className="space-y-1 text-sm">
+              <p className="text-lg font-semibold">{t("app.name")}</p>
+              <p className="flex items-center gap-1.5 text-muted-foreground">
+                <span>{t("settings.aboutVersion")}</span>
+                <span className="font-mono text-foreground" dir="ltr">
+                  {APP_VERSION}
+                </span>
+              </p>
+              <p className="pt-1 text-xs text-muted-foreground">{t("settings.aboutTagline")}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -121,7 +133,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-sm">
-                <Settings2 className="size-4 text-muted-foreground" />
+                <ThemeIcon className="size-4 text-muted-foreground" />
                 {t("common.theme")}
               </div>
               <ThemeSelector />
@@ -129,15 +141,32 @@ export default function SettingsPage() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="size-4 text-muted-foreground" />
-                {t("settings.clock24")}
+                {t("settings.timeFormat")}
               </div>
-              <Button
-                variant="outline"
-                onClick={() => setHour24(!hour24)}
-              >
-                <Clock className="size-4" />
-                {t(hour24 ? "settings.clock24" : "settings.clock12")}
-              </Button>
+              <Segmented
+                value={hour24 ? "24" : "12"}
+                onChange={(v) => setHour24(v === "24")}
+                options={[
+                  { value: "12", label: t("settings.clock12") },
+                  { value: "24", label: t("settings.clock24") },
+                ]}
+                ariaLabel={t("settings.timeFormat")}
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm">
+                <CalendarDays className="size-4 text-muted-foreground" />
+                {t("settings.weekStartsOn")}
+              </div>
+              <Segmented
+                value={String(weekStartsOn)}
+                onChange={(v) => setWeekStartsOn(v === "6" ? 6 : 0)}
+                options={[
+                  { value: "0", label: t("settings.weekSunday") },
+                  { value: "6", label: t("settings.weekSaturday") },
+                ]}
+                ariaLabel={t("settings.weekStartsOn")}
+              />
             </div>
           </div>
         </CardContent>

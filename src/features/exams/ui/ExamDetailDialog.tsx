@@ -11,7 +11,9 @@ import {
   type ExamDetail,
 } from "@/features/exams/application/exam-cases";
 import type { ExamResultInput } from "@/features/exams/domain";
-import { Modal } from "@/features/students/ui/Modal";
+import { Modal } from "@/shared/Modal";
+import { CardSkeleton } from "@/shared/Skeletons";
+import { useSaveFeedback } from "@/shared/useSaveFeedback";
 
 interface ExamDetailDialogProps {
   open: boolean;
@@ -25,7 +27,7 @@ type Edits = Record<string, { score: string; note: string }>;
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border bg-muted/40 p-2.5 text-center">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-sm font-semibold" dir="ltr">
         {value}
       </p>
@@ -38,15 +40,14 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
   const [detail, setDetail] = useState<ExamDetail | null>(null);
   const [edits, setEdits] = useState<Edits>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saving, saved, run, clear } = useSaveFeedback();
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
     if (!examId) return;
     setLoading(true);
     setError("");
-    setSaved(false);
+    clear();
     getExamDetail(examId)
       .then((d) => {
         setDetail(d);
@@ -61,7 +62,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
         setError(t("exams.loadError"));
       })
       .finally(() => setLoading(false));
-  }, [examId, t]);
+  }, [examId, t, clear]);
 
   useEffect(() => {
     if (open) load();
@@ -72,25 +73,20 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
   }
 
   async function handleSave() {
-    if (!detail || saving) return;
-    setSaving(true);
-    setError("");
-    setSaved(false);
+    if (!detail) return;
     try {
-      const inputs: ExamResultInput[] = detail.students.map(({ student }) => {
-        const edit = edits[student.id];
-        return { studentId: student.id, score: edit.score, note: edit.note };
+      await run(async () => {
+        const inputs: ExamResultInput[] = detail.students.map(({ student }) => {
+          const edit = edits[student.id];
+          return { studentId: student.id, score: edit.score, note: edit.note };
+        });
+        await saveExamResults(detail.id, inputs);
+        onChanged();
+        load();
       });
-      await saveExamResults(detail.id, inputs);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-      onChanged();
-      load();
     } catch (e) {
       console.error("Failed to save exam results", e);
       setError(t("exams.saveError"));
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -99,7 +95,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
   return (
     <Modal open={open} onClose={onClose} title={detail ? detail.title : t("exams.detail")} className="max-w-lg">
       {loading ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">{t("students.loading")}</p>
+        <CardSkeleton lines={4} />
       ) : error ? (
         <p className="text-sm text-destructive">{error}</p>
       ) : detail ? (
@@ -118,7 +114,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
             )}
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Stat label={t("exams.stats.average")} value={detail.average === null ? "—" : String(detail.average)} />
             <Stat label={t("exams.stats.highest")} value={detail.highest === null ? "—" : String(detail.highest)} />
             <Stat label={t("exams.stats.lowest")} value={detail.lowest === null ? "—" : String(detail.lowest)} />
@@ -148,7 +144,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
                             dir="ltr"
                             placeholder="—"
                             aria-label={t("exams.scoreFor", { name: student.name })}
-                            className={cn("h-8 text-center", dirty && "border-emerald-600")}
+                            className={cn("h-8 text-center", dirty && "border-success")}
                             value={edit.score}
                             onChange={(e) => setEdit(student.id, "score", e.target.value)}
                           />
@@ -172,7 +168,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
           )}
 
           <div className="flex items-center justify-end gap-2">
-            {saved && <span className="text-sm text-emerald-600">{t("exams.saved")}</span>}
+            {saved && <span className="text-sm text-success">{t("exams.saved")}</span>}
             <Button variant="ghost" onClick={onClose} disabled={saving}>
               {t("exams.cancel")}
             </Button>

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Pencil, Trash2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Select } from "@/components/ui/select";
 import {
   addStudentToGroup,
   getGroupDetail,
@@ -11,8 +12,9 @@ import {
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { GroupDetail } from "@/features/groups/application/group-cases";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
-import { Modal } from "@/features/students/ui/Modal";
+import { Modal } from "@/shared/Modal";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
+import { CardSkeleton } from "@/shared/Skeletons";
 import { formatTime, formatDateString } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 
@@ -97,24 +99,27 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
   const available = detail?.available ?? [];
 
   return (
-    <Modal open onClose={onClose} title={t("groups.detail")}>
+    <Modal
+      open
+      onClose={onClose}
+      title={group.name}
+      description={
+        <>
+          {group.subject ? `${group.subject} · ` : ""}
+          {group.startsOn ? `${t("groups.fields.startsOn")}: ${formatDateString(group.startsOn)} · ` : ""}
+          {sessions.length > 0
+            ? sessions
+                .map(
+                  (s) =>
+                    `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${formatTime(s.startTime, hour24)}–${formatTime(s.endTime, hour24)}`,
+                )
+                .join(" · ")
+            : (group.schedule ?? t("groups.noSchedule"))}
+        </>
+      }
+    >
       <div className="space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-lg font-semibold">{group.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {group.subject ? `${group.subject} · ` : ""}
-              {group.startsOn ? `${t("groups.fields.startsOn")}: ${formatDateString(group.startsOn)} · ` : ""}
-              {sessions.length > 0
-                ? sessions
-                    .map(
-                      (s) =>
-                        `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${formatTime(s.startTime, hour24)}–${formatTime(s.endTime, hour24)}`,
-                    )
-                    .join(" · ")
-                : (group.schedule ?? t("groups.noSchedule"))}
-            </p>
-          </div>
+        <div className="flex justify-end">
           <StatusBadge status={group.status} />
         </div>
 
@@ -132,7 +137,7 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
             {t("groups.members")} ({members.length})
           </p>
           {loading ? (
-            <p className="text-sm text-muted-foreground">{t("groups.loading")}</p>
+            <CardSkeleton lines={2} />
           ) : members.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("groups.noMembers")}</p>
           ) : (
@@ -158,11 +163,11 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
 
         {available.length > 0 && (
           <div className="flex items-center gap-2">
-            <select
+            <Select
               value={addingId}
               onChange={(e) => setAddingId(e.target.value)}
               aria-label={t("groups.addMember")}
-              className="h-8 flex-1 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
+              className="flex-1"
             >
               <option value="">{t("groups.addMemberHint")}</option>
               {available.map((s) => (
@@ -170,7 +175,7 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
                   {s.name}
                 </option>
               ))}
-            </select>
+            </Select>
             <Button size="sm" onClick={() => void handleAdd()} disabled={!addingId || busy}>
               <UserPlus />
               {t("groups.addMember")}

@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.1.4
+
+- **Activity log page**: new `/activity` page showing the last 300 recorded
+  actions (time, localized action, entity, details) with search and an
+  entity-type filter.
+- **Debtors on the dashboard**: a 9th KPI «مستحقة الشهر» plus a «أعلى
+  المديونين» card listing the top 5 debtors with a link to the payments page.
+- **Week-start setting**: Settings now chooses Sunday or Saturday as the first
+  day of the week; the timetable grid and date-picker week headers rotate and
+  re-anchor dates accordingly.
+- **Shared components + polish**: `Modal` (animated, reduced-motion aware),
+  `Select`/`Textarea`/`Field` with unified Zod error mapping, `PageHeader`,
+  `EmptyState`, `SearchInput`, `Segmented`, and a `useSaveFeedback` hook —
+  adopted across all pages and dialogs. The weekly timetable blocks grow with
+  content, session deletions show a centered confirm chip, and `CollapsibleSection`
+  headers are full-width accessible toggle buttons.
+- **Settings**: time format is a segmented 12h/24h control; the theme row shows
+  a live Moon/Sun/MonitorCog icon.
+- **Reports**: PDF cells with mixed Arabic + numbers now shape in the correct
+  direction, and Arabic Excel exports open right-to-left.
+
 ## v0.1.3
 
 - **Excused attendance** (معذور): a fourth status in the daily/monthly sheets,

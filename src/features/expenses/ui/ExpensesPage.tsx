@@ -5,6 +5,9 @@ import { Pencil, Plus, Receipt, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { TableRowsSkeleton } from "@/shared/Skeletons";
+import { PageHeader } from "@/shared/PageHeader";
+import { EmptyState } from "@/shared/EmptyState";
 import {
   deleteExpense,
   listExpenses,
@@ -63,19 +66,19 @@ export default function ExpensesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.expenses")}</h2>
-          <p className="text-sm text-muted-foreground">{t("expenses.subtitle")}</p>
-        </div>
-        <Button onClick={() => {
-          setEditing(null);
-          setRecordOpen(true);
-        }}>
-          <Plus />
-          {t("expenses.record")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("nav.expenses")}
+        description={t("expenses.subtitle")}
+        actions={
+          <Button onClick={() => {
+            setEditing(null);
+            setRecordOpen(true);
+          }}>
+            <Plus />
+            {t("expenses.record")}
+          </Button>
+        }
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -96,18 +99,11 @@ export default function ExpensesPage() {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {loading ? (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-muted-foreground">
-            {t("students.loading")}
-          </CardContent>
-        </Card>
+        <TableRowsSkeleton rows={5} cols={4} />
       ) : rows.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-              <Receipt className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium">{t("expenses.empty")}</p>
+          <CardContent className="p-0">
+            <EmptyState icon={Receipt} title={t("expenses.empty")} />
           </CardContent>
         </Card>
       ) : (

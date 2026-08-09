@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Save, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { SKILL_LEVELS, type StudentSkillInput } from "@/features/skills/domain";
 import {
@@ -10,7 +11,9 @@ import {
   saveStudentSkills,
   type StudentSkillRow,
 } from "@/features/skills/application/skill-cases";
-import { Modal } from "@/features/students/ui/Modal";
+import { Modal } from "@/shared/Modal";
+import { CardSkeleton } from "@/shared/Skeletons";
+import { useSaveFeedback } from "@/shared/useSaveFeedback";
 
 interface StudentSkillsDialogProps {
   open: boolean;
@@ -33,15 +36,14 @@ export function StudentSkillsDialog({
   const [rows, setRows] = useState<StudentSkillRow[]>([]);
   const [edits, setEdits] = useState<Edits>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saving, saved, run, clear } = useSaveFeedback();
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
     if (!studentId) return;
     setLoading(true);
     setError("");
-    setSaved(false);
+    clear();
     getStudentSkills(studentId)
       .then((rows) => {
         setRows(rows);
@@ -56,7 +58,7 @@ export function StudentSkillsDialog({
         setError(t("skills.loadError"));
       })
       .finally(() => setLoading(false));
-  }, [studentId, t]);
+  }, [studentId, t, clear]);
 
   useEffect(() => {
     if (open) load();
@@ -67,25 +69,20 @@ export function StudentSkillsDialog({
   }
 
   async function handleSave() {
-    if (!studentId || saving) return;
-    setSaving(true);
-    setError("");
-    setSaved(false);
+    if (!studentId) return;
     try {
-      const inputs: StudentSkillInput[] = rows.map((r) => {
-        const edit = edits[r.skillId];
-        return { skillId: r.skillId, level: edit.level, note: edit.note };
+      await run(async () => {
+        const inputs: StudentSkillInput[] = rows.map((r) => {
+          const edit = edits[r.skillId];
+          return { skillId: r.skillId, level: edit.level, note: edit.note };
+        });
+        await saveStudentSkills(studentId, inputs);
+        onChanged();
+        load();
       });
-      await saveStudentSkills(studentId, inputs);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-      onChanged();
-      load();
     } catch (e) {
       console.error("Failed to save student skills", e);
       setError(t("skills.saveError"));
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -99,7 +96,7 @@ export function StudentSkillsDialog({
       className="max-w-lg"
     >
       {loading ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">{t("students.loading")}</p>
+        <CardSkeleton lines={4} />
       ) : error ? (
         <p className="text-sm text-destructive">{error}</p>
       ) : rows.length === 0 ? (
@@ -137,13 +134,13 @@ export function StudentSkillsDialog({
                         {r.name}
                       </td>
                       <td className="w-28 px-2 py-2">
-                        <select
+                        <Select
                           value={edit.level}
                           onChange={(e) => setEdit(r.skillId, "level", e.target.value)}
                           aria-label={t("skills.levelFor", { name: r.name })}
                           className={cn(
-                            "h-8 w-full rounded-lg border border-input bg-transparent px-1.5 text-center text-sm outline-none focus-visible:border-ring",
-                            dirty && "border-emerald-600",
+                            "text-center",
+                            dirty && "border-success",
                           )}
                         >
                           <option value="">—</option>
@@ -152,7 +149,7 @@ export function StudentSkillsDialog({
                               {l}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </td>
                       <td className="w-32 px-2 py-2">
                         <Input
@@ -172,7 +169,7 @@ export function StudentSkillsDialog({
           </div>
 
           <div className="flex items-center justify-end gap-2">
-            {saved && <span className="text-sm text-emerald-600">{t("skills.saved")}</span>}
+            {saved && <span className="text-sm text-success">{t("skills.saved")}</span>}
             <Button variant="ghost" onClick={onClose} disabled={saving}>
               {t("skills.cancel")}
             </Button>

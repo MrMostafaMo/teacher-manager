@@ -4,6 +4,9 @@ import { Eye, Pencil, Plus, Trash2, Users2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { TableRowsSkeleton } from "@/shared/Skeletons";
+import { PageHeader } from "@/shared/PageHeader";
+import { EmptyState } from "@/shared/EmptyState";
 import {
   deleteGroup,
   listGroups,
@@ -94,16 +97,16 @@ export default function GroupsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.groups")}</h2>
-          <p className="text-sm text-muted-foreground">{t("groups.subtitle")}</p>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus />
-          {t("groups.add")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("nav.groups")}
+        description={t("groups.subtitle")}
+        actions={
+          <Button onClick={openCreate}>
+            <Plus />
+            {t("groups.add")}
+          </Button>
+        }
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="secondary">
@@ -115,17 +118,9 @@ export default function GroupsPage() {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">
-              {t("groups.loading")}
-            </div>
+            <TableRowsSkeleton rows={4} cols={3} />
           ) : rows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-                <Users2 className="size-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium">{t("groups.empty")}</p>
-              <p className="text-sm text-muted-foreground">{t("groups.emptyHint")}</p>
-            </div>
+            <EmptyState icon={Users2} title={t("groups.empty")} description={t("groups.emptyHint")} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

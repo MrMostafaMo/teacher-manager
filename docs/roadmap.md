@@ -30,6 +30,9 @@ next begins, and ends with a review checkpoint.
 | 22   | Roster tightening: group start date, excused status, enrollment date | ✅ Done |
 | 23   | Remove weekly session-attendance stats from the monthly view | ✅ Done |
 | 24   | Review round: formatMoney display + defensive guards + data cleanup | ✅ Done |
+| 25   | Activity log page + dashboard debtors card | ✅ Done |
+| 26   | UI-polish round: shared components, week-start setting, modal/table polish | ✅ Done |
+| 27   | Final polish: profile page header, bidi/Excel RTL in reports, a11y sweep | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -98,6 +101,58 @@ next begins, and ends with a review checkpoint.
     `session_attendance` rows; changing a student's group prunes their
     submissions/results for the previous group.
 - `ReportsPage` export subtitle uses `DD-MM-YYYY` per the display convention.
+
+## Phase 25 — completed
+
+- New `/activity` route (`src/features/activity/ui/ActivityPage.tsx`) reads the
+  existing `activity_logs` table via `listRecentActivity(300)` (newest first)
+  and renders a table of time (DD-MM-YYYY HH:mm via `formatDateTime`), action
+  label, and details. Action strings map to `activity.actions.*` keys via
+  `ACTION_KEYS`; entity icons map via `ENTITY_ICONS`. `details` JSON is decoded
+  into a joined string (name/title/groupName, resolved `studentId` names from
+  `listStudents({ status: "all" })`, `formatMoney` amount, score, `YYYY-MM`
+  period). Search filters by localized action label + entity label + details;
+  an entity `<select>` filters by `entity_type`.
+- Dashboard gains a 9th KPI `outstanding` (مستحقة الشهر, `formatMoney`) and a
+  «أعلى المديونين» card listing the top 5 debtors from `dues` (id/name/
+  remaining), with a "view all" link to `/payments`.
+
+## Phase 26 — completed
+
+- Dashboard fixes: KPI numbers use `formatNumber` (Latin digits), the
+  week-header stale-after-midnight bug in WeekGrid, a `dashboard.debtors.viewAll`
+  i18n key, and exact sub-route highlighting in the app header.
+- Shared components promoted into `src/shared/` and adopted app-wide:
+  `Modal` (scale/fade entry animation honoring `prefers-reduced-motion`),
+  `Select` + `Textarea` wrappers, `Field` (label + error wiring) with
+  `mapZodErrors` used by all 8 form dialogs, `PageHeader` on all pages, and
+  `EmptyState`. The dead `FeaturePlaceholder.tsx` was deleted.
+- Week-start setting (`tm-week`, `src/lib/week-store.ts`): a Settings segmented
+  control (Sunday/Saturday) drives the weekly timetable grid and the shared
+  `DatePicker` week headers; verified end-to-end in the real app (default
+  Sunday-first, rotation + date anchoring correct on Saturday).
+- WeekGrid polish: block heights grow with content and a delete session shows
+  a centered confirm chip; session times display via localized meridiem labels
+  (`common.am` ص / `common.pm` م).
+- `CollapsibleSection` rewritten: the whole header is a toggle Button with
+  `aria-expanded`/`aria-controls`/tooltip; `actions` sit outside the toggle.
+- Settings: time format is a segmented clock12/clock24 control and the theme
+  row shows a dynamic Moon/Sun/MonitorCog icon.
+- `useSaveFeedback` hook (`src/shared/useSaveFeedback.ts`) centralizes the
+  saving/saved/2.5s-auto-clear pattern; adopted by the exam, skills,
+  session-attendance dialogs and the daily-attendance view.
+
+## Phase 27 — completed
+
+- `StudentProfilePage` adopted the shared `PageHeader` (title + back link) so
+  every page in the app uses the same header pattern.
+- PDF `shape-text.ts` gained cell-level bidi segmentation: mixed-script runs
+  (Arabic RTL + latin/digit LTR) are split and shaped per direction so numbers
+  and parentheses render in the correct order inside Arabic cells.
+- Excel export writes the worksheet RTL flag (`!dir = "rtl"`) for Arabic so
+  spreadsheets open right-to-left.
+- Accessibility sweep: every icon-only button carries `aria-label`/`sr-only`,
+  and all `<dialog>` modals close on Escape with focus returned to the opener.
 
 ## Phase 19 — completed
 

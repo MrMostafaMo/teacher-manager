@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { PopoverShell } from "@/shared/DatePicker";
+import { Select } from "@/components/ui/select";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
@@ -56,34 +57,32 @@ export function TimePicker({ value, onChange, ariaLabel, className }: TimePicker
       <div className="flex items-center justify-center gap-2 py-1">
         <label className="flex flex-col items-center gap-1">
           <span className="text-xs text-muted-foreground">{t("common.hour")}</span>
-          <select
+          <Select
             value={hour ?? ""}
             onChange={(e) => pickTime(Number(e.target.value), minute ?? 0)}
             aria-label={t("common.hour")}
-            className="h-8 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted"
           >
             {HOURS.map((h) => (
               <option key={h} value={h}>
                 {String(h).padStart(2, "0")}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <span className="pb-5 text-muted-foreground">:</span>
         <label className="flex flex-col items-center gap-1">
           <span className="text-xs text-muted-foreground">{t("common.minute")}</span>
-          <select
+          <Select
             value={minute ?? 0}
             onChange={(e) => pickTime(hour ?? 0, Number(e.target.value))}
             aria-label={t("common.minute")}
-            className="h-8 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted"
           >
             {MINUTES.map((m) => (
               <option key={m} value={m}>
                 {String(m).padStart(2, "0")}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
       {value && (

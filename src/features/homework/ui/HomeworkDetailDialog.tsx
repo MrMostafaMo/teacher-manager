@@ -13,7 +13,8 @@ import {
   setSubmissionStatus,
 } from "@/features/homework/application/homework-cases";
 import type { HomeworkDetail } from "@/features/homework/application/homework-cases";
-import { Modal } from "@/features/students/ui/Modal";
+import { Modal } from "@/shared/Modal";
+import { CardSkeleton } from "@/shared/Skeletons";
 
 const STATUS_LABEL_KEY: Record<SubmissionStatus, string> = {
   submitted: "homework.statusSubmitted",
@@ -22,9 +23,9 @@ const STATUS_LABEL_KEY: Record<SubmissionStatus, string> = {
 };
 
 const STATUS_BADGE: Record<SubmissionStatus, string> = {
-  submitted: "border-emerald-600 bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+  submitted: "border-success bg-success/15 text-success",
   pending: "border-input text-muted-foreground",
-  late: "border-amber-600 bg-amber-600/15 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
+  late: "border-warning bg-warning/15 text-warning",
 };
 
 interface HomeworkDetailDialogProps {
@@ -94,7 +95,7 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
   return (
     <Modal open={open} onClose={onClose} title={detail ? detail.title : t("homework.detail")} className="max-w-lg">
       {loading ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">{t("students.loading")}</p>
+        <CardSkeleton lines={4} />
       ) : error ? (
         <p className="text-sm text-destructive">{error}</p>
       ) : detail ? (
@@ -117,13 +118,13 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-emerald-600 transition-all"
+                className="h-full rounded-full bg-success transition-all"
                 style={{ width: `${detail.completion}%` }}
               />
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              <CheckCircle2 className="inline size-3.5 text-emerald-600" /> {detail.submitted}{" "}
-              <Clock3 className="inline size-3.5 text-amber-600" /> {detail.late}{" "}
+              <CheckCircle2 className="inline size-3.5 text-success" /> {detail.submitted}{" "}
+              <Clock3 className="inline size-3.5 text-warning" /> {detail.late}{" "}
               <PencilLine className="inline size-3.5" /> {detail.pending}
             </p>
           </div>

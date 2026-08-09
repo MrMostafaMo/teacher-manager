@@ -84,6 +84,48 @@ export const examRepository = {
     return new Map(rows.map((r) => [r.studentId, r]));
   },
 
+  /** The student's group exams with their own result row (null = ungraded). */
+  async resultsForStudent(
+    studentId: string,
+  ): Promise<
+    Array<Exam & { groupName: string | null; score: number | null; note: string | null }>
+  > {
+    const memberships = await db
+      .select({ groupId: studentGroups.groupId })
+      .from(studentGroups)
+      .where(eq(studentGroups.studentId, studentId));
+    if (memberships.length === 0) return [];
+    const groupIds = memberships.map((m) => m.groupId);
+    const [rows, groupRows] = await Promise.all([
+      (db
+        .select()
+        .from(exams)
+        .where(inArray(exams.groupId, groupIds))
+        .orderBy(desc(exams.createdAt))) as Promise<Exam[]>,
+      db.select({ id: studyGroups.id, name: studyGroups.name }).from(studyGroups),
+    ]);
+    const examIds = rows.map((e) => e.id);
+    const results = examIds.length
+      ? ((await db
+          .select()
+          .from(examResults)
+          .where(
+            and(
+              inArray(examResults.examId, examIds),
+              eq(examResults.studentId, studentId),
+            ),
+          )) as ExamResult[])
+      : [];
+    const byId = new Map(results.map((r) => [r.examId, r]));
+    const groupName = new Map((groupRows as StudyGroup[]).map((g) => [g.id, g.name]));
+    return rows.map((e) => ({
+      ...e,
+      groupName: groupName.get(e.groupId) ?? null,
+      score: byId.get(e.id)?.score ?? null,
+      note: byId.get(e.id)?.note ?? null,
+    }));
+  },
+
   async upsertResult(
     examId: string,
     studentId: string,

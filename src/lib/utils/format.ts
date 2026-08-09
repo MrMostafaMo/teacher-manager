@@ -21,9 +21,15 @@ export function formatPercent(value: number, digits = 0): string {
   return formatNumber(value, { style: "percent", maximumFractionDigits: digits });
 }
 
-/** Money amounts: Latin digits with thousands separators, no currency symbol. */
+/**
+ * Money amounts: Latin digits with thousands separators plus a localized
+ * currency suffix (ج.م / EGP). The number is wrapped in LRI/PDI so the digits
+ * stay a single bidi-isolated unit inside Arabic (RTL) paragraphs — otherwise
+ * WebKit reorders digits around the Arabic suffix.
+ */
 export function formatMoney(value: number): string {
-  return formatNumber(value, { maximumFractionDigits: 0 });
+  const number = formatNumber(value, { maximumFractionDigits: 0 });
+  return `\u2066${number}\u2069 ${i18n.t("common.currency")}`;
 }
 
 export function formatDate(date: number | Date, pattern = "YYYY-MM-DD"): string {
@@ -45,7 +51,7 @@ export function formatTime(time: string, hour24: boolean): string {
     : (() => {
         const [h, m] = time.split(":").map(Number);
         const hr = ((h % 12) || 12).toString().padStart(2, "0");
-        const suffix = h < 12 ? "AM" : "PM";
+        const suffix = h < 12 ? i18n.t("common.am") : i18n.t("common.pm");
         return `${hr}:${String(m).padStart(2, "0")} ${suffix}`;
       })();
   return `\u2066${out}\u2069`;

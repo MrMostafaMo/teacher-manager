@@ -233,3 +233,52 @@ Phase 24 was a review round (no schema change):
   group branch, membership guard in `setSubmissionStatus`, `session_attendance`
   cleanup on `removeStudentFromGroup`, and submissions/results pruning when a
   student's group changes.
+
+Phase 25 added a full activity-log page and a debtors card on the dashboard:
+
+- New `/activity` route (`src/features/activity/ui/ActivityPage.tsx`) reads the
+  existing `activity_logs` table via `listRecentActivity(300)` (newest first)
+  and renders a table of time (DD-MM-YYYY HH:mm via `formatDateTime`), action
+  label, and details. Action strings map to `activity.actions.*` keys via
+  `ACTION_KEYS`; entity icons map via `ENTITY_ICONS`. `details` JSON is decoded
+  into a joined string (name/title/groupName, resolved `studentId` names from
+  `listStudents({ status: "all" })`, `formatMoney` amount, score, `YYYY-MM`
+  period). Search filters by localized action label + entity label + details;
+  an entity `<select>` filters by `entity_type`. `ActivityLogRow` was fixed to
+  `NonNullable<...>` (it was `Row | undefined`).
+- Dashboard gains a 9th KPI `outstanding` (مستحقة الشهر, `formatMoney`) and a
+  «أعلى المديونين» card listing the top 5 debtors from `dues` (id/name/
+  remaining), with a "view all" link to `/payments`; the KPI grid is now
+  `md:grid-cols-5`.
+
+Phase 26 was a UI-polish / shared-component round (no schema change):
+
+- Dashboard fixes: KPI numbers use `formatNumber` (Latin digits), the
+  week-header stale after midnight bug in WeekGrid, a `dashboard.debtors.viewAll`
+  i18n key for the debtors "view all" link, and exact sub-route highlighting in
+  the app header.
+- Shared components promoted into `src/shared/` and adopted app-wide:
+  `Modal` (with a scale/fade entry animation honoring `prefers-reduced-motion`),
+  `Select` + `Textarea` (native-element wrappers), `Field` (label + error wiring)
+  with `mapZodErrors` (`src/lib/utils/zod-errors.ts`) used by all 8 form dialogs,
+  `PageHeader` (title/description/actions) on all 13 pages, and `EmptyState`
+  (icon + title + optional description). The dead `FeaturePlaceholder.tsx` was
+  deleted.
+- WeekGrid polish: block heights grow with content (`minBlockHeight(lines)`:
+  MIN_BLOCK_H 24 / LINE_H 13 / BLOCK_PAD 14 / MAX_BLOCK_H 52) and a delete
+  session now shows a centered confirm chip (also on the Schedule page's
+  `SessionCard`). Session times display via localized meridiem labels
+  (`common.am` ص / `common.pm` م) instead of hardcoded AM/PM.
+- `CollapsibleSection` rewritten: the whole header is a toggle Button with
+  `aria-expanded`/`aria-controls`/tooltip; `actions` sit outside the toggle.
+- Settings: time format is now a segmented clock12/clock24 control
+  (`settings.timeFormat`) and the theme row shows a dynamic Moon/Sun/MonitorCog
+  icon from `useThemeStore`.
+- `DashboardSkeleton` in `DashboardPage.tsx` mirrors the real layout (9 KPI
+  tiles, today's sessions, overdue+debtors, charts, weak skills).
+- New `src/shared/useSaveFeedback.ts` hook: returns `{ saving, saved, run, clear }`
+  and centralizes the old `saved` boolean + 2.5s auto-clear timer pattern; adopted
+  by ExamDetailDialog, StudentSkillsDialog, SessionAttendanceDialog, and the
+  daily-attendance view. `run(fn)` guards re-entry and rethrows so callers keep
+  their localized error handling. SettingsPage and ReportsPage keep their own
+  `"which operation"` string-union state on purpose.

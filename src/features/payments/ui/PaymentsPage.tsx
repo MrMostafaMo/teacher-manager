@@ -5,6 +5,7 @@ import { CreditCard, History, Pencil, PiggyBank, Plus, Trash2, Wallet } from "lu
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
 import {
   deletePayment,
   listPaymentHistory,
@@ -18,7 +19,11 @@ import type { Payment, Student } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/utils/format";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
+import { Segmented } from "@/shared/Segmented";
 import { MonthPicker } from "@/shared/DatePicker";
+import { TableRowsSkeleton } from "@/shared/Skeletons";
+import { EmptyState } from "@/shared/EmptyState";
+import { PageHeader } from "@/shared/PageHeader";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { PlansDialog } from "./PlansDialog";
 
@@ -38,37 +43,34 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.payments")}</h2>
-          <p className="text-sm text-muted-foreground">{t("payments.subtitle")}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-1">
-            {(["dues", "history"] as const).map((v) => (
-              <Button
-                key={v}
-                variant={view === v ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setView(v)}
-              >
-                {t(`payments.tab${v === "dues" ? "Dues" : "History"}`)}
-              </Button>
-            ))}
-          </div>
-          <Button onClick={() => {
-            setEditing(null);
-            setRecordOpen(true);
-          }}>
-            <Plus />
-            {t("payments.record")}
-          </Button>
-          <Button variant="outline" onClick={() => setPlansOpen(true)}>
-            <CreditCard />
-            {t("payments.managePlans")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("nav.payments")}
+        description={t("payments.subtitle")}
+        actions={
+          <>
+            <Segmented
+              value={view}
+              onChange={setView}
+              options={(["dues", "history"] as const).map((v) => ({
+                value: v,
+                label: t(`payments.tab${v === "dues" ? "Dues" : "History"}`),
+              }))}
+              ariaLabel={t("payments.viewLabel")}
+            />
+            <Button onClick={() => {
+              setEditing(null);
+              setRecordOpen(true);
+            }}>
+              <Plus />
+              {t("payments.record")}
+            </Button>
+            <Button variant="outline" onClick={() => setPlansOpen(true)}>
+              <CreditCard />
+              {t("payments.managePlans")}
+            </Button>
+          </>
+        }
+      />
 
       {view === "dues" ? (
         <DuesView month={month} onMonthChange={setMonth} reloadKey={reloadKey} />
@@ -183,7 +185,7 @@ function DuesView({
                   <td className="px-4 py-2.5" dir="ltr">
                     {r.due > 0 ? formatMoney(r.due) : "—"}
                   </td>
-                  <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400" dir="ltr">
+                  <td className="px-4 py-2.5 text-success" dir="ltr">
                     {r.paid > 0 ? formatMoney(r.paid) : "—"}
                   </td>
                   <td
@@ -230,18 +232,11 @@ function DuesView({
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {loading ? (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-muted-foreground">
-            {t("students.loading")}
-          </CardContent>
-        </Card>
+        <TableRowsSkeleton rows={5} cols={5} />
       ) : rows.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-              <PiggyBank className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium">{t("payments.emptyDues")}</p>
+          <CardContent className="p-0">
+            <EmptyState icon={PiggyBank} title={t("payments.emptyDues")} />
           </CardContent>
         </Card>
       ) : (
@@ -288,7 +283,7 @@ function DuesBadge({ status }: { status: "noPlan" | "paid" | "outstanding" }) {
   }
   if (status === "paid") {
     return (
-      <Badge className="border-emerald-600 bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
+      <Badge className="border-success bg-success/15 text-success">
         {t("payments.fullyPaid")}
       </Badge>
     );
@@ -465,11 +460,11 @@ function HistoryView({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <select
+        <Select
           value={studentId}
           onChange={(e) => setStudentId(e.target.value)}
           aria-label={t("payments.student")}
-          className={inputClass}
+          className="w-auto shrink-0"
         >
           <option value="">{t("payments.allStudents")}</option>
           {students.map((s) => (
@@ -477,24 +472,17 @@ function HistoryView({
               {s.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {loading ? (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-muted-foreground">
-            {t("students.loading")}
-          </CardContent>
-        </Card>
+        <TableRowsSkeleton rows={5} cols={5} />
       ) : rows.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-              <History className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium">{t("payments.emptyHistory")}</p>
+          <CardContent className="p-0">
+            <EmptyState icon={History} title={t("payments.emptyHistory")} />
           </CardContent>
         </Card>
       ) : (

@@ -3,12 +3,14 @@ import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { examInputSchema } from "@/features/exams/domain";
 import { createExam, updateExam } from "@/features/exams/application/exam-cases";
 import type { Exam, StudyGroup } from "@/lib/db/schema";
-import { Modal } from "@/features/students/ui/Modal";
+import { mapZodErrors } from "@/lib/utils/zod-errors";
+import { Modal } from "@/shared/Modal";
 import { DatePicker } from "@/shared/DatePicker";
+import { Field } from "@/shared/Field";
 
 interface ExamFormDialogProps {
   open: boolean;
@@ -56,24 +58,18 @@ export function ExamFormDialog({ open, exam, groups, defaultGroupId, onClose, on
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function mapErrors(error: ZodError): Record<string, string> {
-    const mapped: Record<string, string> = {};
-    for (const issue of error.issues) {
-      const field = String(issue.path[0] ?? "");
-      if (mapped[field]) continue;
-      mapped[field] =
-        field === "title"
-          ? issue.code === "too_small"
-            ? t("exams.errors.titleRequired")
-            : t("exams.errors.titleTooLong")
-          : field === "groupId"
-            ? t("exams.errors.groupRequired")
-            : field === "maxScore"
-              ? t("exams.errors.maxScoreInvalid")
-              : t("exams.errors.tooLong");
-    }
-    return mapped;
-  }
+  const mapErrors = (error: ZodError) =>
+    mapZodErrors(error, (field, issue) =>
+      field === "title"
+        ? issue.code === "too_small"
+          ? t("exams.errors.titleRequired")
+          : t("exams.errors.titleTooLong")
+        : field === "groupId"
+          ? t("exams.errors.groupRequired")
+          : field === "maxScore"
+            ? t("exams.errors.maxScoreInvalid")
+            : t("exams.errors.tooLong"),
+    );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -98,51 +94,40 @@ export function ExamFormDialog({ open, exam, groups, defaultGroupId, onClose, on
   return (
     <Modal open={open} onClose={onClose} title={exam ? t("exams.edit") : t("exams.add")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="exam-group">
-            {t("exams.fields.group")} <span className="text-destructive">*</span>
-          </Label>
-          <select
+        <Field id="exam-group" label={t("exams.fields.group")} required error={errors.groupId}>
+          <Select
             id="exam-group"
             value={form.groupId}
             onChange={(e) => setField("groupId", e.target.value)}
             aria-invalid={!!errors.groupId}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
           >
             {groups.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
               </option>
             ))}
-          </select>
-          {errors.groupId && <p className="text-xs text-destructive">{errors.groupId}</p>}
-        </div>
+          </Select>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="exam-title">
-            {t("exams.fields.title")} <span className="text-destructive">*</span>
-          </Label>
+        <Field id="exam-title" label={t("exams.fields.title")} required error={errors.title}>
           <Input
             id="exam-title"
             value={form.title}
             onChange={(e) => setField("title", e.target.value)}
             aria-invalid={!!errors.title}
           />
-          {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
-        </div>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="exam-date">{t("exams.fields.date")}</Label>
+          <Field id="exam-date" label={t("exams.fields.date")}>
             <DatePicker
               value={form.date}
               onChange={(v) => setField("date", v)}
               ariaLabel={t("exams.fields.date")}
               className="w-full"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="exam-max">{t("exams.fields.maxScore")}</Label>
+          </Field>
+          <Field id="exam-max" label={t("exams.fields.maxScore")} error={errors.maxScore}>
             <Input
               id="exam-max"
               type="number"
@@ -151,8 +136,7 @@ export function ExamFormDialog({ open, exam, groups, defaultGroupId, onClose, on
               onChange={(e) => setField("maxScore", e.target.value)}
               aria-invalid={!!errors.maxScore}
             />
-            {errors.maxScore && <p className="text-xs text-destructive">{errors.maxScore}</p>}
-          </div>
+          </Field>
         </div>
 
         {fatal && <p className="text-sm text-destructive">{fatal}</p>}

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Pencil, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Select } from "@/components/ui/select";
 import { deleteStudent } from "@/features/students/application/student-cases";
 import { listPlans } from "@/features/payments/application/plan-cases";
 import { listGroups, listMemberships, setStudentGroup } from "@/features/groups/application/group-cases";
@@ -11,7 +12,7 @@ import { getStudentSkills } from "@/features/skills/application/skill-cases";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
 import type { Student } from "@/lib/db/schema";
 import { formatDateString } from "@/lib/utils/format";
-import { Modal } from "./Modal";
+import { Modal } from "@/shared/Modal";
 import { StatusBadge } from "./StatusBadge";
 
 interface StudentDetailDialogProps {
@@ -124,15 +125,14 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
   ].filter((r) => r.value);
 
   return (
-    <Modal open onClose={onClose} title={t("students.profile")}>
+    <Modal
+      open
+      onClose={onClose}
+      title={student.name}
+      description={`${t("students.registered")} ${formatDateString(student.enrolledOn)}`}
+    >
       <div className="space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-lg font-semibold">{student.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("students.registered")} {formatDateString(student.enrolledOn)}
-            </p>
-          </div>
+        <div className="flex justify-end">
           <StatusBadge status={student.status} />
         </div>
 
@@ -162,11 +162,10 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
         <Separator />
         <div className="space-y-1.5">
           <p className="text-xs font-medium text-muted-foreground">{t("students.fields.class")}</p>
-          <select
+          <Select
             value={groupId}
             onChange={(e) => void handleClassChange(e.target.value)}
             aria-label={t("students.fields.class")}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
           >
             <option value="">{t("students.noClass")}</option>
             {groups.map((g) => (
@@ -174,7 +173,7 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
                 {g.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <Separator />

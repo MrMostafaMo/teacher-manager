@@ -10,10 +10,10 @@ const STATUS_LABEL_KEY: Record<AttendanceStatus, string> = {
 };
 
 const STATUS_BADGE: Record<AttendanceStatus, string> = {
-  present: "border-emerald-600 bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+  present: "border-success bg-success/15 text-success",
   absent: "border-destructive bg-destructive/10 text-destructive",
-  late: "border-amber-600 bg-amber-600/15 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
-  excused: "border-violet-600 bg-violet-600/15 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400",
+  late: "border-warning bg-warning/15 text-warning",
+  excused: "border-(--chart-5) bg-(--chart-5)/15 text-(--chart-5)",
 };
 
 /** Present / absent / late / excused segmented control. Shared by daily & session sheets. */
@@ -35,7 +35,7 @@ export function StatusPicker({
           aria-pressed={value === status}
           onClick={() => onChange(status)}
           className={cn(
-            "rounded-md border px-2.5 py-1 text-xs transition-colors",
+            "rounded-md border px-2.5 py-1 text-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring",
             value === status
               ? STATUS_BADGE[status]
               : "border-input text-muted-foreground hover:bg-muted/50",

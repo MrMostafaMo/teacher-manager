@@ -22,6 +22,12 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: "students/:id",
+        lazy: async () => ({
+          Component: (await import("@/features/student-profile/ui/StudentProfilePage")).default,
+        }),
+      },
+      {
         path: "attendance",
         lazy: async () => ({
           Component: (await import("@/features/attendance/ui/AttendancePage")).default,
@@ -73,6 +79,12 @@ export const router = createBrowserRouter([
         path: "reports",
         lazy: async () => ({
           Component: (await import("@/features/reports/ui/ReportsPage")).default,
+        }),
+      },
+      {
+        path: "activity",
+        lazy: async () => ({
+          Component: (await import("@/features/activity/ui/ActivityPage")).default,
         }),
       },
       {

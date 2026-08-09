@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import dayjs, { type Dayjs } from "dayjs";
 import localeData from "dayjs/plugin/localeData";
 import { Calendar, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDateString } from "@/lib/utils/format";
+import { useWeekStore } from "@/lib/week-store";
 
 dayjs.extend(localeData);
 
@@ -17,6 +18,9 @@ type BaseProps = {
 
 const triggerClass =
   "inline-flex h-8 items-center gap-1.5 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
+
+const MARGIN = 8;
+const POPOVER_WIDTHS: Record<string, number> = { "w-56": 224, "w-64": 256, "w-72": 288 };
 
 export function PopoverShell({
   open,
@@ -32,6 +36,37 @@ export function PopoverShell({
   width?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; maxHeight: number } | null>(null);
+
+  const update = useCallback(() => {
+    const wrapper = ref.current;
+    if (!wrapper) return;
+    const r = wrapper.getBoundingClientRect();
+    const popW = POPOVER_WIDTHS[width] ?? 288;
+    const below = window.innerHeight - r.bottom - MARGIN;
+    const above = r.top - MARGIN;
+    const maxHeight = Math.max(below, above);
+    const isRtl = (document.documentElement.dir ?? "ltr") === "rtl";
+    const start = isRtl ? r.right - popW : r.left;
+    const left = Math.min(Math.max(start, MARGIN), window.innerWidth - popW - MARGIN);
+    if (below >= above) setPos({ top: r.bottom + MARGIN, left, maxHeight });
+    else setPos({ bottom: window.innerHeight - r.top + MARGIN, left, maxHeight });
+  }, [width]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPos(null);
+      return;
+    }
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, update]);
+
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
@@ -44,10 +79,16 @@ export function PopoverShell({
   return (
     <div ref={ref} className="relative inline-flex">
       {trigger}
-      {open && (
+      {open && pos && (
         <div
+          style={{
+            top: pos.top,
+            bottom: pos.bottom,
+            left: pos.left,
+            maxHeight: pos.maxHeight,
+          }}
           className={cn(
-            "absolute start-0 top-full z-50 mt-1 animate-in fade-in-0 zoom-in-95 rounded-lg border bg-popover p-2 text-popover-foreground shadow-md",
+            "fixed z-50 animate-in fade-in-0 zoom-in-95 overflow-y-auto rounded-lg border bg-popover p-2 text-popover-foreground shadow-md",
             width,
           )}
         >
@@ -63,16 +104,17 @@ const navBtn =
 
 export function DatePicker({ value, onChange, ariaLabel, className }: BaseProps) {
   const { t } = useTranslation();
+  const weekStartsOn = useWeekStore((s) => s.weekStartsOn);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState(() => dayjs().startOf("month"));
   const localeData = dayjs.localeData();
   const months = localeData.months();
-  const firstDay = localeData.firstDayOfWeek() ?? 0;
   const baseWeekdays = localeData.weekdaysShort();
-  const weekdays = [...baseWeekdays.slice(firstDay), ...baseWeekdays.slice(0, firstDay)];
+  const weekdays = [...baseWeekdays.slice(weekStartsOn), ...baseWeekdays.slice(0, weekStartsOn)];
   const today = dayjs().startOf("day");
 
-  const gridStart = view.startOf("month").startOf("week");
+  const firstOfMonth = view.startOf("month");
+  const gridStart = firstOfMonth.subtract((firstOfMonth.day() - weekStartsOn + 7) % 7, "day");
   const days: Dayjs[] = [];
   for (let i = 0; i < 42; i++) days.push(gridStart.add(i, "day"));
 

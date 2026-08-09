@@ -1,4 +1,4 @@
-import { and, count, eq, gte, like, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, like, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { attendance, type Attendance } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
@@ -76,6 +76,27 @@ export const attendanceRepository = {
       byId.set(row.studentId, stat);
     }
     return [...byId.values()];
+  },
+
+  /** Every attendance row of a student, newest first (used in the profile). */
+  byStudent(studentId: string): Promise<Attendance[]> {
+    return db
+      .select()
+      .from(attendance)
+      .where(eq(attendance.studentId, studentId))
+      .orderBy(desc(attendance.date)) as Promise<Attendance[]>;
+  },
+
+  /** Status counts for one student across all dates. */
+  async statsForStudent(studentId: string): Promise<StudentMonthlyStat> {
+    const rows = (await db
+      .select({ status: attendance.status, n: count() })
+      .from(attendance)
+      .where(eq(attendance.studentId, studentId))
+      .groupBy(attendance.status)) as Array<{ status: AttendanceStatus; n: number }>;
+    const stat: StudentMonthlyStat = { studentId, present: 0, absent: 0, late: 0, excused: 0 };
+    for (const row of rows) stat[row.status] = row.n;
+    return stat;
   },
 
   /**

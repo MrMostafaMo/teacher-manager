@@ -23,6 +23,7 @@ export interface DashboardData {
   expensesMonth: number;
   net: number;
   outstanding: number;
+  topDebtors: Array<{ id: string; name: string; remaining: number }>;
   homeworkCompletion: number;
   homeworkCount: number;
   homeworkSubmitted: number;
@@ -81,6 +82,11 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   const collected = dues.reduce((a, r) => a + r.paid, 0);
   const outstanding = dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
+  const topDebtors = dues
+    .filter((r) => r.remaining > 0)
+    .sort((a, b) => b.remaining - a.remaining)
+    .slice(0, 5)
+    .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remaining }));
 
   const homeworkCompletion =
     homeworks.length > 0
@@ -142,6 +148,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     expensesMonth,
     net: collected - expensesMonth,
     outstanding,
+    topDebtors,
     homeworkCompletion,
     homeworkCount: homeworks.length,
     homeworkSubmitted,

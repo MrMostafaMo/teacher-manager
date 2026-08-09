@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Eye, Pencil, Plus, Search, Trash2, Users } from "lucide-react";
+import { Eye, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { TableRowsSkeleton } from "@/shared/Skeletons";
+import { PageHeader } from "@/shared/PageHeader";
+import { EmptyState } from "@/shared/EmptyState";
+import { SearchInput } from "@/shared/SearchInput";
+import { Select } from "@/components/ui/select";
 import {
   deleteStudent,
   listStudents,
@@ -20,6 +25,7 @@ type StatusFilter = "all" | "active" | "inactive";
 
 export default function StudentsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -113,7 +119,16 @@ export default function StudentsPage() {
           <tbody>
             {list.map((s) => (
               <tr key={s.id} className="border-b last:border-0 hover:bg-muted/50">
-                <td className="px-4 py-2.5 font-medium">{s.name}</td>
+                <td className="px-4 py-2.5">
+                  <Button
+                    variant="ghost"
+                    className="h-auto px-0 py-0 font-medium"
+                    title={t("students.profile")}
+                    onClick={() => navigate(`/students/${s.id}`)}
+                  >
+                    {s.name}
+                  </Button>
+                </td>
                 <td className="px-4 py-2.5 text-muted-foreground">{s.guardianName ?? "—"}</td>
                 <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
                   {s.phone ?? "—"}
@@ -127,7 +142,8 @@ export default function StudentsPage() {
                       variant="ghost"
                       size="icon-sm"
                       aria-label={t("students.view")}
-                      onClick={() => setDetailId(s.id)}
+                      title={t("students.profile")}
+                      onClick={() => navigate(`/students/${s.id}`)}
                     >
                       <Eye />
                     </Button>
@@ -185,36 +201,33 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.students")}</h2>
-          <p className="text-sm text-muted-foreground">{t("students.subtitle")}</p>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus />
-          {t("students.add")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("nav.students")}
+        description={t("students.subtitle")}
+        actions={
+          <Button onClick={openCreate}>
+            <Plus />
+            {t("students.add")}
+          </Button>
+        }
+      />
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-52 flex-1">
-          <Search className="absolute inset-y-0 start-3 my-auto size-4 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("students.searchPlaceholder")}
-            className="ps-8"
-          />
-        </div>
-        <select
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          placeholder={t("students.searchPlaceholder")}
+          ariaLabel={t("students.searchPlaceholder")}
+        />
+        <Select
           value={status}
           onChange={(e) => setStatus(e.target.value as StatusFilter)}
-          className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
+          className="w-auto shrink-0"
         >
           <option value="all">{t("students.filterAll")}</option>
           <option value="active">{t("students.statusActive")}</option>
           <option value="inactive">{t("students.statusInactive")}</option>
-        </select>
+        </Select>
         <Badge variant="secondary">
           <Users className="size-3.5" />
           {rows.length}
@@ -222,15 +235,11 @@ export default function StudentsPage() {
       </div>
 
       {loading ? (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-muted-foreground">
-            {t("students.loading")}
-          </CardContent>
-        </Card>
+        <TableRowsSkeleton rows={5} cols={4} />
       ) : rows.length === 0 ? (
         <Card>
           <CardContent className="p-0">
-            <EmptyState hasFilters={query.trim() !== "" || status !== "all"} />
+            <StudentsEmpty hasFilters={query.trim() !== "" || status !== "all"} />
           </CardContent>
         </Card>
       ) : (
@@ -286,15 +295,13 @@ export default function StudentsPage() {
   );
 }
 
-function EmptyState({ hasFilters }: { hasFilters: boolean }) {
+function StudentsEmpty({ hasFilters }: { hasFilters: boolean }) {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-      <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-        <Users className="size-6 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium">{hasFilters ? t("students.noResults") : t("students.empty")}</p>
-      {!hasFilters && <p className="text-sm text-muted-foreground">{t("students.emptyHint")}</p>}
-    </div>
+    <EmptyState
+      icon={Users}
+      title={hasFilters ? t("students.noResults") : t("students.empty")}
+      description={hasFilters ? undefined : t("students.emptyHint")}
+    />
   );
 }

@@ -5,6 +5,8 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { studyGroupInputSchema } from "@/features/groups/domain";
 import { createGroup, updateGroup } from "@/features/groups/application/group-cases";
 import { groupSessionInputSchema } from "@/features/schedule/domain";
@@ -16,10 +18,12 @@ import {
 import type { StudyGroup } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
 import { formatTime } from "@/lib/utils/format";
+import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { useTimeStore } from "@/lib/time-store";
 import { TimePicker } from "@/shared/TimePicker";
 import { DatePicker } from "@/shared/DatePicker";
-import { Modal } from "@/features/students/ui/Modal";
+import { Modal } from "@/shared/Modal";
+import { Field } from "@/shared/Field";
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
@@ -150,20 +154,14 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     setSessions((s) => s.filter((x) => x.key !== key));
   }
 
-  function mapErrors(error: ZodError): Record<string, string> {
-    const mapped: Record<string, string> = {};
-    for (const issue of error.issues) {
-      const field = String(issue.path[0] ?? "");
-      if (mapped[field]) continue;
-      mapped[field] =
-        field === "name"
-          ? issue.code === "too_small"
-            ? t("groups.errors.nameRequired")
-            : t("groups.errors.nameTooLong")
-          : t("groups.errors.tooLong");
-    }
-    return mapped;
-  }
+  const mapErrors = (error: ZodError) =>
+    mapZodErrors(error, (field, issue) =>
+      field === "name"
+        ? issue.code === "too_small"
+          ? t("groups.errors.nameRequired")
+          : t("groups.errors.nameTooLong")
+        : t("groups.errors.tooLong"),
+    );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -214,46 +212,37 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
   return (
     <Modal open={open} onClose={onClose} title={group ? t("groups.edit") : t("groups.add")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="group-name">
-            {t("groups.fields.name")} <span className="text-destructive">*</span>
-          </Label>
+        <Field id="group-name" label={t("groups.fields.name")} required error={errors.name}>
           <Input
             id="group-name"
             value={form.name}
             onChange={(e) => setField("name", e.target.value)}
             aria-invalid={!!errors.name}
           />
-          {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-        </div>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="group-subject">{t("groups.fields.subject")}</Label>
+          <Field id="group-subject" label={t("groups.fields.subject")} error={errors.subject}>
             <Input
               id="group-subject"
               value={form.subject}
               onChange={(e) => setField("subject", e.target.value)}
               aria-invalid={!!errors.subject}
             />
-            {errors.subject && <p className="text-xs text-destructive">{errors.subject}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="group-status">{t("groups.fields.status")}</Label>
-            <select
+          </Field>
+          <Field id="group-status" label={t("groups.fields.status")}>
+            <Select
               id="group-status"
               value={form.status}
               onChange={(e) => setField("status", e.target.value as FormState["status"])}
-              className="h-8 w-full rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted"
             >
               <option value="active">{t("groups.statusActive")}</option>
               <option value="inactive">{t("groups.statusInactive")}</option>
-            </select>
-          </div>
+            </Select>
+          </Field>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="group-starts-on">{t("groups.fields.startsOn")}</Label>
+        <Field id="group-starts-on" label={t("groups.fields.startsOn")}>
           <DatePicker
             value={form.startsOn}
             onChange={(v) => setField("startsOn", v)}
@@ -261,7 +250,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
             className="w-full"
           />
           <p className="text-xs text-muted-foreground">{t("groups.startsOnHint")}</p>
-        </div>
+        </Field>
 
         <div className="space-y-1.5">
           <Label htmlFor="group-schedule">{t("groups.fields.schedule")}</Label>
@@ -303,18 +292,18 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
                 <Label htmlFor="session-day" className="text-xs text-muted-foreground">
                   {t("schedule.fields.day")}
                 </Label>
-                <select
+                <Select
                   id="session-day"
+                  className="w-28"
                   value={draft.dayOfWeek}
                   onChange={(e) => updateDraft({ dayOfWeek: Number(e.target.value) })}
-                  className="h-8 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted"
                 >
                   {DAYS.map((d) => (
                     <option key={d} value={d}>
                       {t(`schedule.days.${DAY_NAMES[d]}`)}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="session-start" className="text-xs text-muted-foreground">
@@ -358,17 +347,14 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="group-notes">{t("groups.fields.notes")}</Label>
-          <textarea
+        <Field id="group-notes" label={t("groups.fields.notes")} error={errors.notes}>
+          <Textarea
             id="group-notes"
             value={form.notes}
             onChange={(e) => setField("notes", e.target.value)}
             placeholder={t("groups.notesPlaceholder")}
-            className="min-h-24 w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted"
           />
-          {errors.notes && <p className="text-xs text-destructive">{errors.notes}</p>}
-        </div>
+        </Field>
 
         {fatal && <p className="text-sm text-destructive">{fatal}</p>}
 

@@ -20,7 +20,7 @@ export interface LogActivityInput {
   details?: Record<string, unknown>;
 }
 
-export type ActivityLogRow = Awaited<ReturnType<typeof repository.findById>>;
+export type ActivityLogRow = NonNullable<Awaited<ReturnType<typeof repository.findById>>>;
 
 /** Writes one activity log entry. Never throws on its own failure. */
 export async function logActivity(input: LogActivityInput): Promise<void> {

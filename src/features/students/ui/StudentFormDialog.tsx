@@ -4,15 +4,18 @@ import { ZodError } from "zod";
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { studentInputSchema } from "@/features/students/domain";
 import { createStudent, updateStudent } from "@/features/students/application/student-cases";
 import { listPlans } from "@/features/payments/application/plan-cases";
 import { listGroups, listMemberships, setStudentGroup } from "@/features/groups/application/group-cases";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { Plan, Student } from "@/lib/db/schema";
+import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { DatePicker } from "@/shared/DatePicker";
-import { Modal } from "./Modal";
+import { Modal } from "@/shared/Modal";
+import { Field } from "@/shared/Field";
 
 interface StudentFormDialogProps {
   open: boolean;
@@ -104,22 +107,14 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function mapErrors(error: ZodError): Record<string, string> {
-    const mapped: Record<string, string> = {};
-    for (const issue of error.issues) {
-      const field = String(issue.path[0] ?? "");
-      if (mapped[field]) continue;
-      if (field === "name") {
-        mapped[field] =
-          issue.code === "too_small"
-            ? t("students.errors.nameRequired")
-            : t("students.errors.nameTooLong");
-      } else {
-        mapped[field] = t("students.errors.tooLong");
-      }
-    }
-    return mapped;
-  }
+  const mapErrors = (error: ZodError) =>
+    mapZodErrors(error, (field, issue) =>
+      field === "name"
+        ? issue.code === "too_small"
+          ? t("students.errors.nameRequired")
+          : t("students.errors.nameTooLong")
+        : t("students.errors.tooLong"),
+    );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -160,33 +155,26 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
   return (
     <Modal open={open} onClose={onClose} title={student ? t("students.edit") : t("students.add")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="student-name">
-            {t("students.fields.name")} <span className="text-destructive">*</span>
-          </Label>
+        <Field id="student-name" label={t("students.fields.name")} required error={errors.name}>
           <Input
             id="student-name"
             value={form.name}
             onChange={(e) => setField("name", e.target.value)}
             aria-invalid={!!errors.name}
           />
-          {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="student-enrolled-on">{t("students.fields.enrolledOn")}</Label>
+        <Field id="student-enrolled-on" label={t("students.fields.enrolledOn")} error={errors.enrolledOn}>
           <DatePicker
             value={form.enrolledOn}
             onChange={(v) => setField("enrolledOn", v)}
             ariaLabel={t("students.fields.enrolledOn")}
             className="w-full"
           />
-          {errors.enrolledOn && <p className="text-xs text-destructive">{errors.enrolledOn}</p>}
-        </div>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="student-phone">{t("students.fields.phone")}</Label>
+          <Field id="student-phone" label={t("students.fields.phone")} error={errors.phone}>
             <Input
               id="student-phone"
               dir="ltr"
@@ -194,35 +182,29 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
               onChange={(e) => setField("phone", e.target.value)}
               aria-invalid={!!errors.phone}
             />
-            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="student-status">{t("students.fields.status")}</Label>
-            <select
+          </Field>
+          <Field id="student-status" label={t("students.fields.status")}>
+            <Select
               id="student-status"
               value={form.status}
               onChange={(e) => setField("status", e.target.value as FormState["status"])}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="active">{t("students.statusActive")}</option>
               <option value="inactive">{t("students.statusInactive")}</option>
-            </select>
-          </div>
+            </Select>
+          </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="student-guardian-name">{t("students.fields.guardianName")}</Label>
+          <Field id="student-guardian-name" label={t("students.fields.guardianName")} error={errors.guardianName}>
             <Input
               id="student-guardian-name"
               value={form.guardianName}
               onChange={(e) => setField("guardianName", e.target.value)}
               aria-invalid={!!errors.guardianName}
             />
-            {errors.guardianName && <p className="text-xs text-destructive">{errors.guardianName}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="student-guardian-phone">{t("students.fields.guardianPhone")}</Label>
+          </Field>
+          <Field id="student-guardian-phone" label={t("students.fields.guardianPhone")} error={errors.guardianPhone}>
             <Input
               id="student-guardian-phone"
               dir="ltr"
@@ -230,20 +212,15 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
               onChange={(e) => setField("guardianPhone", e.target.value)}
               aria-invalid={!!errors.guardianPhone}
             />
-            {errors.guardianPhone && (
-              <p className="text-xs text-destructive">{errors.guardianPhone}</p>
-            )}
-          </div>
+          </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="student-plan">{t("students.fields.plan")}</Label>
-            <select
+          <Field id="student-plan" label={t("students.fields.plan")}>
+            <Select
               id="student-plan"
               value={form.planId}
               onChange={(e) => setField("planId", e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="">{t("students.noPlan")}</option>
               {plans.map((p) => (
@@ -251,15 +228,13 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
                   {p.name} — {p.amount}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="student-class">{t("students.fields.class")}</Label>
-            <select
+            </Select>
+          </Field>
+          <Field id="student-class" label={t("students.fields.class")}>
+            <Select
               id="student-class"
               value={form.groupId}
               onChange={(e) => setField("groupId", e.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
             >
               <option value="">{t("students.noClass")}</option>
               {groups.map((g) => (
@@ -267,21 +242,18 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
                   {g.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="student-notes">{t("students.fields.notes")}</Label>
-          <textarea
+        <Field id="student-notes" label={t("students.fields.notes")} error={errors.notes}>
+          <Textarea
             id="student-notes"
             value={form.notes}
             onChange={(e) => setField("notes", e.target.value)}
             placeholder={t("students.notesPlaceholder")}
-            className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted/50"
           />
-          {errors.notes && <p className="text-xs text-destructive">{errors.notes}</p>}
-        </div>
+        </Field>
 
         {fatal && <p className="text-sm text-destructive">{fatal}</p>}
 

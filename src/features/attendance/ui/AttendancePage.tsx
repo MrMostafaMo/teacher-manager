@@ -6,6 +6,7 @@ import { Check, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
 import {
   getDaily,
   getMonthly,
@@ -20,7 +21,12 @@ import { cn } from "@/lib/utils";
 import { formatPercent } from "@/lib/utils/format";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { StatusPicker } from "@/shared/StatusPicker";
+import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { DatePicker, MonthPicker } from "@/shared/DatePicker";
+import { PageHeader } from "@/shared/PageHeader";
+import { EmptyState } from "@/shared/EmptyState";
+import { Segmented } from "@/shared/Segmented";
+import { useSaveFeedback } from "@/shared/useSaveFeedback";
 
 const inputClass =
   "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
@@ -33,24 +39,21 @@ export default function AttendancePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold">{t("nav.attendance")}</h2>
-          <p className="text-sm text-muted-foreground">{t("attendance.subtitle")}</p>
-        </div>
-        <div className="flex gap-1">
-          {(["daily", "monthly"] as const).map((v) => (
-            <Button
-              key={v}
-              variant={view === v ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setView(v)}
-            >
-              {t(`attendance.${v}`)}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title={t("nav.attendance")}
+        description={t("attendance.subtitle")}
+        actions={
+          <Segmented
+            value={view}
+            onChange={setView}
+            options={(["daily", "monthly"] as const).map((v) => ({
+              value: v,
+              label: t(`attendance.${v}`),
+            }))}
+            ariaLabel={t("attendance.viewLabel")}
+          />
+        }
+      />
 
       {view === "daily" ? (
         <DailyView date={date} onDateChange={setDate} />
@@ -70,8 +73,7 @@ function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: str
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saving, saved, run } = useSaveFeedback();
   const [groups, setGroups] = useState<GroupWithCount[]>([]);
   const [groupId, setGroupId] = useState("");
   const [hasSessionsToday, setHasSessionsToday] = useState(true);
@@ -139,19 +141,15 @@ function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: str
         (e): e is { studentId: string; status: AttendanceStatus } => e.status != null,
       );
     if (entries.length === 0) return;
-    setSaving(true);
-    setError("");
     try {
-      await saveDaily({ date, entries });
-      setSaved(true);
-      setSavedStatuses(Object.fromEntries(entries.map((e) => [e.studentId, e.status])));
-      setTimeout(() => setSaved(false), 2500);
-      await load(date, groupId);
+      await run(async () => {
+        await saveDaily({ date, entries });
+        setSavedStatuses(Object.fromEntries(entries.map((e) => [e.studentId, e.status])));
+        await load(date, groupId);
+      });
     } catch (e) {
       console.error("Failed to save attendance", e);
       setError(t("attendance.errors.save"));
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -167,11 +165,11 @@ function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: str
             className={inputClass}
           />
         </label>
-        <select
+        <Select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
           aria-label={t("attendance.groupFilter")}
-          className={inputClass}
+          className="w-auto shrink-0"
         >
           <option value="">{t("attendance.todayGroups")}</option>
           {groups.map((g) => (
@@ -179,7 +177,7 @@ function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: str
               {g.name}
             </option>
           ))}
-        </select>
+        </Select>
         <Button onClick={() => void handleSave()} disabled={saving || loading || isFuture}>
           {saving ? t("attendance.saving") : t("attendance.mark")}
         </Button>
@@ -187,7 +185,7 @@ function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: str
           <span className="text-sm text-muted-foreground">{t("attendance.futureLocked")}</span>
         )}
         {saved && (
-          <Badge className="gap-1 bg-emerald-600/10 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+          <Badge className="gap-1 bg-success/10 text-success">
             <Check className="size-3.5" />
             {t("attendance.saved")}
           </Badge>
@@ -195,7 +193,7 @@ function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: str
       </div>
 
       {dirty && !saving && students.length > 0 && (
-        <p className="text-xs text-amber-600 dark:text-amber-500">{t("attendance.draftHint")}</p>
+        <p className="text-xs text-warning">{t("attendance.draftHint")}</p>
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -211,9 +209,7 @@ function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: str
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">
-              {t("students.loading")}
-            </div>
+            <TableRowsSkeleton rows={5} cols={3} />
           ) : students.length === 0 ? (
             hasSessionsToday ? (
               <EmptyStudents />
@@ -295,7 +291,7 @@ function SummaryCards({
     {
       key: "attendance.summary.present",
       value: String(counts.present),
-      className: "text-emerald-600 dark:text-emerald-400",
+      className: "text-success",
     },
     {
       key: "attendance.summary.absent",
@@ -305,12 +301,12 @@ function SummaryCards({
     {
       key: "attendance.summary.late",
       value: String(counts.late),
-      className: "text-amber-600 dark:text-amber-400",
+      className: "text-warning",
     },
     {
       key: "attendance.summary.excused",
       value: String(counts.excused),
-      className: "text-violet-600 dark:text-violet-400",
+      className: "text-(--chart-5)",
     },
   ];
   if (unmarked !== undefined) {
@@ -415,9 +411,7 @@ function MonthlyView({ month, onMonthChange }: { month: string; onMonthChange: (
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">
-              {t("students.loading")}
-            </div>
+            <TableRowsSkeleton rows={5} cols={3} />
           ) : rows.length === 0 ? (
             <EmptyStudents />
           ) : (
@@ -465,15 +459,15 @@ function MonthlyView({ month, onMonthChange }: { month: string; onMonthChange: (
 function EmptyStudents() {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-      <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-        <Users className="size-6 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium">{t("attendance.empty")}</p>
-      <Link to="/students" className="text-sm text-primary hover:underline">
-        {t("attendance.emptyHint")}
-      </Link>
-    </div>
+    <EmptyState
+      icon={Users}
+      title={t("attendance.empty")}
+      description={
+        <Link to="/students" className="text-primary hover:underline">
+          {t("attendance.emptyHint")}
+        </Link>
+      }
+    />
   );
 }
 
@@ -618,10 +612,10 @@ function MonthlySummaryTable({ list, groupLabel }: { list: StudentMonthlyRow[]; 
                   <p className="font-medium">{r.name}</p>
                   <p className="text-xs text-muted-foreground">{groupLabel}</p>
                 </td>
-                <td className="px-4 py-2.5 text-emerald-600 dark:text-emerald-400">{r.present}</td>
+                <td className="px-4 py-2.5 text-success">{r.present}</td>
                 <td className="px-4 py-2.5 text-destructive">{r.absent}</td>
-                <td className="px-4 py-2.5 text-amber-600 dark:text-amber-400">{r.late}</td>
-                <td className="px-4 py-2.5 text-violet-600 dark:text-violet-400">{r.excused}</td>
+                <td className="px-4 py-2.5 text-warning">{r.late}</td>
+                <td className="px-4 py-2.5 text-(--chart-5)">{r.excused}</td>
                 <td className="px-4 py-2.5 text-muted-foreground">
                   {total > 0 ? formatPercent((r.present + r.late + r.excused) / total) : "—"}
                 </td>

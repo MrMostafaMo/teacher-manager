@@ -3,12 +3,15 @@ import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { homeworkInputSchema } from "@/features/homework/domain";
 import { createHomework, updateHomework } from "@/features/homework/application/homework-cases";
 import type { Homework, StudyGroup } from "@/lib/db/schema";
-import { Modal } from "@/features/students/ui/Modal";
+import { mapZodErrors } from "@/lib/utils/zod-errors";
+import { Modal } from "@/shared/Modal";
 import { DatePicker } from "@/shared/DatePicker";
+import { Field } from "@/shared/Field";
 
 interface HomeworkFormDialogProps {
   open: boolean;
@@ -63,22 +66,16 @@ export function HomeworkFormDialog({
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function mapErrors(error: ZodError): Record<string, string> {
-    const mapped: Record<string, string> = {};
-    for (const issue of error.issues) {
-      const field = String(issue.path[0] ?? "");
-      if (mapped[field]) continue;
-      mapped[field] =
-        field === "title"
-          ? issue.code === "too_small"
-            ? t("homework.errors.titleRequired")
-            : t("homework.errors.titleTooLong")
-          : field === "groupId"
-            ? t("homework.errors.groupRequired")
-            : t("homework.errors.tooLong");
-    }
-    return mapped;
-  }
+  const mapErrors = (error: ZodError) =>
+    mapZodErrors(error, (field, issue) =>
+      field === "title"
+        ? issue.code === "too_small"
+          ? t("homework.errors.titleRequired")
+          : t("homework.errors.titleTooLong")
+        : field === "groupId"
+          ? t("homework.errors.groupRequired")
+          : t("homework.errors.tooLong"),
+    );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -103,62 +100,49 @@ export function HomeworkFormDialog({
   return (
     <Modal open={open} onClose={onClose} title={homework ? t("homework.edit") : t("homework.add")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="homework-group">
-            {t("homework.fields.group")} <span className="text-destructive">*</span>
-          </Label>
-          <select
+        <Field id="homework-group" label={t("homework.fields.group")} required error={errors.groupId}>
+          <Select
             id="homework-group"
             value={form.groupId}
             onChange={(e) => setField("groupId", e.target.value)}
             aria-invalid={!!errors.groupId}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50"
           >
             {groups.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
               </option>
             ))}
-          </select>
-          {errors.groupId && <p className="text-xs text-destructive">{errors.groupId}</p>}
-        </div>
+          </Select>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="homework-title">
-            {t("homework.fields.title")} <span className="text-destructive">*</span>
-          </Label>
+        <Field id="homework-title" label={t("homework.fields.title")} required error={errors.title}>
           <Input
             id="homework-title"
             value={form.title}
             onChange={(e) => setField("title", e.target.value)}
             aria-invalid={!!errors.title}
           />
-          {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
-        </div>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="homework-due">{t("homework.fields.dueDate")}</Label>
+          <Field id="homework-due" label={t("homework.fields.dueDate")}>
             <DatePicker
               value={form.dueDate}
               onChange={(v) => setField("dueDate", v)}
               ariaLabel={t("homework.fields.dueDate")}
               className="w-full"
             />
-          </div>
+          </Field>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="homework-description">{t("homework.fields.description")}</Label>
-          <textarea
+        <Field id="homework-description" label={t("homework.fields.description")} error={errors.description}>
+          <Textarea
             id="homework-description"
             value={form.description}
             onChange={(e) => setField("description", e.target.value)}
             placeholder={t("homework.descriptionPlaceholder")}
-            className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring placeholder:text-muted-foreground dark:bg-muted/50"
           />
-          {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
-        </div>
+        </Field>
 
         {fatal && <p className="text-sm text-destructive">{fatal}</p>}
 

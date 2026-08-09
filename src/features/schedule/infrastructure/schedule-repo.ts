@@ -1,10 +1,11 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   groupSessions,
   sessionAttendance,
   studyGroups,
   type GroupSession,
+  type SessionAttendance,
 } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
@@ -62,6 +63,52 @@ export const scheduleRepository = {
         );
     }
     await db.delete(groupSessions).where(eq(groupSessions.groupId, groupId));
+  },
+
+  /** A student's session-attendance rows joined with their session + group. */
+  async sessionAttendanceByStudent(
+    studentId: string,
+  ): Promise<
+    Array<
+      SessionAttendance & {
+        dayOfWeek: number;
+        startTime: string;
+        endTime: string;
+        room: string | null;
+        groupName: string;
+      }
+    >
+  > {
+    const rows = await db
+      .select({
+        id: sessionAttendance.id,
+        sessionId: sessionAttendance.sessionId,
+        studentId: sessionAttendance.studentId,
+        groupId: groupSessions.groupId,
+        date: sessionAttendance.date,
+        status: sessionAttendance.status,
+        createdAt: sessionAttendance.createdAt,
+        updatedAt: sessionAttendance.updatedAt,
+        dayOfWeek: groupSessions.dayOfWeek,
+        startTime: groupSessions.startTime,
+        endTime: groupSessions.endTime,
+        room: groupSessions.room,
+        groupName: studyGroups.name,
+      })
+      .from(sessionAttendance)
+      .innerJoin(groupSessions, eq(sessionAttendance.sessionId, groupSessions.id))
+      .innerJoin(studyGroups, eq(groupSessions.groupId, studyGroups.id))
+      .where(eq(sessionAttendance.studentId, studentId))
+      .orderBy(desc(sessionAttendance.date));
+    return rows as unknown as Array<
+      SessionAttendance & {
+        dayOfWeek: number;
+        startTime: string;
+        endTime: string;
+        room: string | null;
+        groupName: string;
+      }
+    >;
   },
 
   /** Attendance rows for one session occurrence (SQLite FKs are off — no cascade). */

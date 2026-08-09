@@ -96,6 +96,45 @@ export const homeworkRepository = {
     return new Map(rows.map((r) => [r.studentId, r]));
   },
 
+  /** The student's group homeworks with their own submission status. */
+  async forStudent(
+    studentId: string,
+  ): Promise<Array<Homework & { groupName: string | null; status: SubmissionStatus }>> {
+    const memberships = await db
+      .select({ groupId: studentGroups.groupId })
+      .from(studentGroups)
+      .where(eq(studentGroups.studentId, studentId));
+    if (memberships.length === 0) return [];
+    const groupIds = memberships.map((m) => m.groupId);
+    const [rows, groupRows] = await Promise.all([
+      (db
+        .select()
+        .from(homeworks)
+        .where(inArray(homeworks.groupId, groupIds))
+        .orderBy(desc(homeworks.createdAt))) as Promise<Homework[]>,
+      db.select({ id: studyGroups.id, name: studyGroups.name }).from(studyGroups),
+    ]);
+    const homeworkIds = rows.map((h) => h.id);
+    const submissions = homeworkIds.length
+      ? ((await db
+          .select()
+          .from(homeworkSubmissions)
+          .where(
+            and(
+              inArray(homeworkSubmissions.homeworkId, homeworkIds),
+              eq(homeworkSubmissions.studentId, studentId),
+            ),
+          )) as HomeworkSubmission[])
+      : [];
+    const byId = new Map(submissions.map((s) => [s.homeworkId, s]));
+    const groupName = new Map((groupRows as StudyGroup[]).map((g) => [g.id, g.name]));
+    return rows.map((h) => ({
+      ...h,
+      groupName: groupName.get(h.groupId) ?? null,
+      status: byId.get(h.id)?.status ?? "pending",
+    }));
+  },
+
   async upsertSubmission(
     homeworkId: string,
     studentId: string,

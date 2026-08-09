@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 export function StatusBadge({ status }: { status: "active" | "inactive" }) {
   const { t } = useTranslation();
   return status === "active" ? (
-    <Badge className="bg-emerald-600/10 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+    <Badge className="bg-success/10 text-success">
       {t("students.statusActive")}
     </Badge>
   ) : (
