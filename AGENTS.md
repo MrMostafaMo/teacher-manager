@@ -14,13 +14,19 @@ Default language is **Arabic (RTL)**, switchable to English (LTR). Latin digits
 | -------------------------- | ------------------------------------------------------------- |
 | `pnpm dev`                 | Vite dev server (frontend only)                               |
 | `pnpm tauri dev`           | Desktop app in dev mode (full stack)                          |
-| `pnpm build`               | `tsc --noEmit` + `vite build` — run this before committing    |
+| `pnpm build`               | File-length check + `tsc --noEmit` + `vite build` — run before committing |
 | `pnpm tauri build`         | Build installers (.deb/.rpm/.AppImage on Linux)               |
+| `pnpm test`                | `vitest run` — all unit tests (jsdom)                         |
+| `pnpm test:coverage`       | `vitest run --coverage` (v8 provider)                         |
+| `pnpm lint:files`          | File-length guard only (200 hard / 150 soft)                  |
 | `pnpm db:generate`         | drizzle-kit emits SQL into `drizzle/` after schema changes    |
 | `pnpm db:sync`             | Copies + strips migrations into `src-tauri/migrations/`       |
 
-There is **no test framework**. Verification is done by hand in the real Tauri
-window (see Verification below).
+Testing is **Vitest + Testing Library** (jsdom). Unit tests live next to the
+source as `*.test.ts(x)` and import `describe/it/expect` explicitly from
+`vitest` (no globals). Verification = `pnpm test` + manual E2E in the real
+Tauri window (see Verification below). During large refactors the file-length
+guard can be skipped with `FILE_CHECK_SKIP=1 pnpm build`.
 
 ## Database Workflow (important)
 
@@ -61,6 +67,13 @@ only). It is used to group per-group lists in homework, exams, and payments.
 - **i18n**: every user-facing string is translated. Files under
   `src/lib/i18n/` (e.g. `settings.*`, `common.*`, feature namespaces), one
   file per language. Use `useTranslation()`; never hardcode UI text.
+- **File length**: no source file exceeds 200 lines (hard), aim for ≤150.
+  Enforced by `scripts/check-file-lengths.mjs` via `pnpm build`. Shared
+  zod input helpers live in `src/lib/validation/`.
+- **Tests**: every unit gets a `*.test.ts(x)` next to it. Pure layers
+  (domain schemas, `src/lib/utils`, application cases with mocked repo
+  interfaces, infrastructure with a fake sqlite-proxy executor) are plain
+  vitest; UI components render under i18n/theme providers in jsdom.
 - **RTL**: direction comes from the theme/`dir` attribute; do not hardcode
   `dir` in markup.
 - **Styling**: shadcn/ui + Tailwind CSS v4 + `tw-animate-css` (already
@@ -111,7 +124,8 @@ Dev app runs via `pnpm tauri dev`. To drive the real window from the CLI:
   a real browser against the vite dev server (e.g. playwright + chromium),
   or by seeding data.
 - GTK file dialog: Ctrl+L to type a path.
-- Static check before commit: `pnpm build` (tsc + vite).
+- Static check before commit: `pnpm build` (file-length + tsc + vite) and
+  `pnpm test`.
 
 ## Status
 
@@ -249,7 +263,7 @@ Phase 25 added a full activity-log page and a debtors card on the dashboard:
 - Dashboard gains a 9th KPI `outstanding` (مستحقة الشهر, `formatMoney`) and a
   «أعلى المديونين» card listing the top 5 debtors from `dues` (id/name/
   remaining), with a "view all" link to `/payments`; the KPI grid is now
-  `md:grid-cols-5`.
+  `md:grid-cols-3` (9 tiles, 3×3).
 
 Phase 26 was a UI-polish / shared-component round (no schema change):
 

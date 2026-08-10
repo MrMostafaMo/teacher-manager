@@ -1,25 +1,13 @@
 import { z } from "zod";
+import { amountSchema, nameSchema, optionalId, optionalText } from "@/lib/validation";
 
 /**
  * Plans + payments input schemas. `optionalText` normalizes blank inputs to
  * `undefined` so the DB stores NULL instead of "" (mirrors students/groups).
  * Amounts are integers (EGP), entered via number inputs.
  */
-const optionalText = (max: number) =>
-  z
-    .union([z.literal(""), z.string().trim().pipe(z.string().max(max))])
-    .optional()
-    .transform((v) => (v ? v : undefined));
-
-const optionalId = z
-  .union([z.literal(""), z.string().min(1)])
-  .optional()
-  .transform((v) => (v ? v : undefined));
-
-const amountSchema = z.number().int().positive().max(100_000_000);
-
 export const planInputSchema = z.object({
-  name: z.string().trim().pipe(z.string().min(1).max(100)),
+  name: nameSchema,
   amount: amountSchema,
   billingInterval: z.enum(["monthly", "term", "yearly"]),
 });

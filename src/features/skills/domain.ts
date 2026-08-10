@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { nameSchema, optionalText } from "@/lib/validation";
 
 /**
  * Skills catalog + per-student mastery. `level` is 1-5; 1-2 counts as a weak
@@ -6,7 +7,7 @@ import { z } from "zod";
  */
 
 export const skillInputSchema = z.object({
-  name: z.string().trim().pipe(z.string().min(1).max(100)),
+  name: nameSchema,
 });
 
 export type SkillInput = z.infer<typeof skillInputSchema>;
@@ -21,10 +22,7 @@ export const WEAK_LEVEL = 2;
 export const studentSkillInputSchema = z.object({
   skillId: z.string().min(1),
   level: z.union([z.literal(""), z.number(), z.string()]).transform((v) => (v === "" ? null : Number(v))),
-  note: z
-    .union([z.literal(""), z.string().trim().pipe(z.string().max(500))])
-    .optional()
-    .transform((v) => (v ? v : undefined)),
+  note: optionalText(500),
 });
 
 export type StudentSkillInput = z.input<typeof studentSkillInputSchema>;

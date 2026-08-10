@@ -1,31 +1,12 @@
 import { z } from "zod";
+import { nameSchema, optionalDate, optionalId, optionalText } from "@/lib/validation";
 
 /**
  * Student entity + input schema. Framework-free by design (no React/i18n):
  * the application layer validates every write through this schema.
- *
- * `optionalText` normalizes empty strings to `undefined` so the DB stores
- * NULL rather than "" for blank optional fields.
  */
-const optionalText = (max: number) =>
-  z
-    .union([z.literal(""), z.string().trim().pipe(z.string().max(max))])
-    .optional()
-    .transform((v) => (v ? v : undefined));
-
-const optionalId = z
-  .union([z.literal(""), z.string().min(1)])
-  .optional()
-  .transform((v) => (v ? v : undefined));
-
-/** "YYYY-MM-DD" date; blank normalizes to undefined (NULL in the DB). */
-const optionalDate = z
-  .union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)])
-  .optional()
-  .transform((v) => (v ? v : undefined));
-
 export const studentInputSchema = z.object({
-  name: z.string().trim().pipe(z.string().min(1).max(100)),
+  name: nameSchema,
   phone: optionalText(20),
   guardianName: optionalText(100),
   guardianPhone: optionalText(20),

@@ -1,17 +1,11 @@
 import { z } from "zod";
+import { nameSchema, optionalText } from "@/lib/validation";
 
 /**
  * Exam entity + input schema. Scores live in `exam_results` and are validated
  * against each exam's `maxScore` in the application layer (the schema here
  * can't know it). A student without a result row simply hasn't taken it yet.
  */
-
-const optionalText = (max: number) =>
-  z
-    .union([z.literal(""), z.string().trim().pipe(z.string().max(max))])
-    .optional()
-    .transform((v) => (v ? v : undefined));
-
 const maxScoreSchema = z
   .union([z.literal(""), z.number(), z.string()])
   .transform((v) => (v === "" ? 100 : Number(v)))
@@ -19,7 +13,7 @@ const maxScoreSchema = z
 
 export const examInputSchema = z.object({
   groupId: z.string().min(1),
-  title: z.string().trim().pipe(z.string().min(1).max(100)),
+  title: nameSchema,
   maxScore: maxScoreSchema,
   date: optionalText(10),
 });
