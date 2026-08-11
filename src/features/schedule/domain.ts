@@ -21,3 +21,6 @@ export const groupSessionInputSchema = z
   });
 
 export type GroupSessionInput = z.infer<typeof groupSessionInputSchema>;
+
+/** Weekday keys indexed by `Date#getDay()` (0=Sunday … 6=Saturday). */
+export const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
