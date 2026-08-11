@@ -9,86 +9,23 @@ import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { expenseRepository } from "@/features/expenses/infrastructure/expense-repo";
+import {
+  countNewStudents,
+  currentMonth,
+  lastMonths,
+  percentDelta,
+  previousMonth,
+  todaySessions,
+} from "./dashboard-helpers";
+import type { DashboardData } from "./dashboard-data";
+
+export type { DashboardData };
 
 /**
  * Dashboard use-case. Read-only aggregation over the existing per-feature
  * cases — no writes, no new schema. Each figure reuses the same definition
  * the feature pages show, so the dashboard can't disagree with them.
  */
-
-export interface DashboardData {
-  totalStudents: number;
-  activeStudents: number;
-  attendanceRate: number;
-  attendanceTrend: Array<{ month: string; present: number; absent: number; late: number; excused: number }>;
-  financeTrend: Array<{ month: string; collected: number; expenses: number }>;
-  collected: number;
-  expensesMonth: number;
-  net: number;
-  outstanding: number;
-  topDebtors: Array<{ id: string; name: string; remaining: number }>;
-  deltas: {
-    collected: number | null;
-    expenses: number | null;
-    net: number | null;
-    attendanceRate: number | null;
-    newStudents: number;
-  };
-  homeworkCompletion: number;
-  homeworkCount: number;
-  homeworkSubmitted: number;
-  homeworkPending: number;
-  homeworkLate: number;
-  overdueHomeworks: Array<{
-    id: string;
-    title: string;
-    groupName: string | null;
-    dueDate: string | null;
-    pending: number;
-  }>;
-  examAverage: number | null;
-  weakSkills: Array<{ name: string; count: number }>;
-  todaySessions: Array<{
-    id: string;
-    groupName: string;
-    startTime: string;
-    endTime: string;
-    room: string | null;
-    finished: boolean;
-  }>;
-}
-
-function timeToMinutes(t: string): number {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function currentMonth(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function previousMonth(): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-/** ISO month keys for the last `n` months, oldest first. */
-function lastMonths(n: number): string[] {
-  const months: string[] = [];
-  const d = new Date();
-  for (let i = n - 1; i >= 0; i--) {
-    const dd = new Date(d.getFullYear(), d.getMonth() - i, 1);
-    months.push(`${dd.getFullYear()}-${String(dd.getMonth() + 1).padStart(2, "0")}`);
-  }
-  return months;
-}
-
-function percentDelta(current: number, previous: number): number | null {
-  if (previous === 0) return null;
-  return Math.round(((current - previous) / previous) * 100);
-}
 
 export async function getDashboardData(): Promise<DashboardData> {
   const month = currentMonth();
@@ -128,15 +65,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   const prevCollected = prevDues.reduce((a, r) => a + r.paid, 0);
   const prevNet = prevCollected - prevExpenses;
 
-  const monthPrefix = month.slice(0, 7);
-  const monthStart = Date.parse(`${monthPrefix}-01T00:00:00`);
-  const d = new Date(monthStart);
-  d.setMonth(d.getMonth() + 1);
-  const nextMonthStart = d.getTime();
-  const newStudents = students.filter((s) => {
-    const enrolled = s.enrolledOn ? Date.parse(s.enrolledOn) : s.createdAt;
-    return Number.isFinite(enrolled) && enrolled >= monthStart && enrolled < nextMonthStart;
-  }).length;
+  const newStudents = countNewStudents(students, month);
   const topDebtors = dues
     .filter((r) => r.remaining > 0)
     .sort((a, b) => b.remaining - a.remaining)
@@ -175,24 +104,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     .slice(0, 5);
 
   const now = new Date();
-  const today = now.getDay();
-  const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const todaySessions = schedule
-    .filter(
-      (s) =>
-        s.groupStatus === "active" &&
-        s.dayOfWeek === today &&
-        (s.groupStartsOn == null || s.groupStartsOn <= todayIso),
-    )
-    .map((s) => ({
-      id: s.id,
-      groupName: s.groupName,
-      startTime: s.startTime,
-      endTime: s.endTime,
-      room: s.room,
-      finished: nowMinutes > timeToMinutes(s.endTime),
-    }));
+  const daySessions = todaySessions(schedule, now);
 
   const financeTrend = trendMonths.map((m, i) => ({
     month: m,
@@ -226,6 +138,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     overdueHomeworks,
     examAverage,
     weakSkills,
-    todaySessions,
+    todaySessions: daySessions,
   };
 }
