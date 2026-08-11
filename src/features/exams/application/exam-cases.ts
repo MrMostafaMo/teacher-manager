@@ -6,13 +6,18 @@ import {
   type ExamInput,
   type ExamResultInput,
 } from "@/features/exams/domain";
-import { logActivity } from "@/lib/activity-log";
 import { uuid } from "@/lib/utils/uuid";
-import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
+import { computeExamDetail, examEligibleIds } from "./exam-stats";
+import {
+  logExamCreate,
+  logExamDelete,
+  logExamResult,
+  logExamUpdate,
+} from "./exam-logs";
 
 /**
- * Exam use cases. Completion % and per-exam stats are computed here in JS
- * from member count + result rows.
+ * Exam use cases. Completion % and per-exam stats are computed in
+ * `exam-stats.ts` from member count + result rows.
  */
 
 export interface ExamListItem extends Exam {
@@ -50,39 +55,11 @@ export async function getExamDetail(id: string): Promise<ExamDetail> {
   ]);
   if (!exam) throw new Error(`exam ${id} not found`);
   const members = await examRepository.members(exam.groupId);
-  const eligible = members.filter((m) =>
-    enrolledBy(m, effectiveDate(exam.date, exam.createdAt)),
-  );
-
-  const students = eligible.map((m) => {
-    const row = results.get(m.id);
-    return {
-      student: { id: m.id, name: m.name },
-      score: row?.score ?? null,
-      note: row?.note ?? null,
-    };
-  });
-
-  const scores = students.flatMap((s) => (s.score === null ? [] : [s.score]));
-  const total = scores.length;
-  const passMark = Math.ceil(exam.maxScore / 2);
-
   return {
     ...exam,
     groupName: (await examRepository.groupName(exam.groupId)) ?? null,
-    memberCount: eligible.length,
-    resultCount: total,
-    average: total > 0 ? averageOf(scores) : null,
-    completion: eligible.length > 0 ? Math.round((total / eligible.length) * 100) : 0,
-    highest: total > 0 ? Math.max(...scores) : null,
-    lowest: total > 0 ? Math.min(...scores) : null,
-    passRate: total > 0 ? Math.round((scores.filter((s) => s >= passMark).length / total) * 100) : null,
-    students,
+    ...computeExamDetail(exam, members, results),
   };
-}
-
-function averageOf(scores: number[]): number {
-  return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
 }
 
 export async function createExam(input: ExamInput): Promise<Exam> {
@@ -94,12 +71,7 @@ export async function createExam(input: ExamInput): Promise<Exam> {
     date: data.date ?? null,
     maxScore: data.maxScore,
   });
-  await logActivity({
-    action: "exam.create",
-    entityType: "exam",
-    entityId: exam.id,
-    details: { title: exam.title, groupId: exam.groupId, maxScore: exam.maxScore },
-  });
+  await logExamCreate(exam);
   return exam;
 }
 
@@ -119,12 +91,7 @@ export async function updateExam(
     if (existing && existing.groupId !== data.groupId) {
       await examRepository.pruneResultsToMembers(id, data.groupId);
     }
-    await logActivity({
-      action: "exam.update",
-      entityType: "exam",
-      entityId: id,
-      details: { title: exam.title, groupId: exam.groupId, maxScore: exam.maxScore },
-    });
+    await logExamUpdate(exam);
   }
   return exam;
 }
@@ -133,14 +100,7 @@ export async function deleteExam(id: string): Promise<boolean> {
   const exam = await examRepository.findById(id);
   await examRepository.clearForExam(id);
   const ok = await examRepository.remove(id);
-  if (ok && exam) {
-    await logActivity({
-      action: "exam.delete",
-      entityType: "exam",
-      entityId: id,
-      details: { title: exam.title },
-    });
-  }
+  if (ok && exam) await logExamDelete(exam.title, id);
   return ok;
 }
 
@@ -150,11 +110,7 @@ export async function saveExamResults(examId: string, inputs: ExamResultInput[])
   if (!exam) throw new Error(`exam ${examId} not found`);
   const maxScore = exam.maxScore;
   const members = await examRepository.members(exam.groupId);
-  const eligibleIds = new Set(
-    members
-      .filter((m) => enrolledBy(m, effectiveDate(exam.date, exam.createdAt)))
-      .map((m) => m.id),
-  );
+  const eligibleIds = new Set(examEligibleIds(exam, members));
 
   for (const raw of inputs) {
     const input = examResultSchema.parse(raw);
@@ -169,11 +125,6 @@ export async function saveExamResults(examId: string, inputs: ExamResultInput[])
       throw new Error(`student ${input.studentId} is not a member of the exam's group`);
     }
     await examRepository.upsertResult(examId, input.studentId, input.score, input.note ?? null);
-    await logActivity({
-      action: "exam.result",
-      entityType: "exam",
-      entityId: examId,
-      details: { studentId: input.studentId, score: input.score },
-    });
+    await logExamResult(examId, input.studentId, input.score);
   }
 }

@@ -5,20 +5,25 @@ import {
   type HomeworkInput,
   type SubmissionStatus,
 } from "@/features/homework/domain";
-import { logActivity } from "@/lib/activity-log";
 import { uuid } from "@/lib/utils/uuid";
-import { formatDate } from "@/lib/utils/format";
 import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
-import type { Student } from "@/lib/db/schema";
+import { buildHomeworkStudents, completionOf, isOverdue } from "./homework-stats";
+import {
+  logHomeworkCreate,
+  logHomeworkDelete,
+  logHomeworkSubmit,
+  logHomeworkSubmitAll,
+  logHomeworkUpdate,
+} from "./homework-logs";
 
 /**
- * Homework use cases. Completion % is computed here in JS from member
- * count + submission rows — a student with no row counts as pending.
+ * Homework use cases. Completion % is computed in `homework-stats.ts` from
+ * member count + submission rows — a student with no row counts as pending.
  */
 
 export interface HomeworkDetail extends HomeworkListItem {
   students: Array<{
-    student: Pick<Student, "id" | "name">;
+    student: { id: string; name: string };
     status: SubmissionStatus;
     submittedAt: number | null;
   }>;
@@ -32,11 +37,6 @@ export interface HomeworkListItem extends Homework {
   completion: number;
   /** Past due date with at least one student still pending. */
   overdue: boolean;
-}
-
-/** A homework is overdue when its due date has passed and someone is pending. */
-export function isOverdue(h: { dueDate: string | null; pending: number }): boolean {
-  return h.dueDate !== null && h.dueDate < formatDate(new Date()) && h.pending > 0;
 }
 
 export async function listHomeworks(): Promise<HomeworkListItem[]> {
@@ -55,47 +55,12 @@ export async function getHomeworkDetail(id: string): Promise<HomeworkDetail> {
   ]);
   if (!homework) throw new Error(`homework ${id} not found`);
   const members = await homeworkRepository.members(homework.groupId);
-  const eligible = members.filter((m) =>
-    enrolledBy(m, effectiveDate(homework.dueDate, homework.createdAt)),
-  );
-
-  const students = eligible.map((m) => {
-    const submission = submissions.get(m.id);
-    return {
-      student: { id: m.id, name: m.name },
-      status: (submission?.status ?? "pending") as SubmissionStatus,
-      submittedAt: submission?.submittedAt ?? null,
-    };
-  });
-
-  let submittedCount = 0;
-  let pendingCount = 0;
-  let lateCount = 0;
-  for (const s of students) {
-    if (s.status === "submitted") submittedCount += 1;
-    else if (s.status === "late") lateCount += 1;
-    else pendingCount += 1;
-  }
-
+  const stats = buildHomeworkStudents(members, submissions, homework.dueDate, homework.createdAt);
   return {
     ...homework,
-    groupName: (await groupNameOf(homework.groupId)) ?? null,
-    submitted: submittedCount,
-    pending: pendingCount,
-    late: lateCount,
-    completion: completionOf(submittedCount, pendingCount, lateCount),
-    overdue: isOverdue({ dueDate: homework.dueDate, pending: pendingCount }),
-    students,
+    groupName: (await homeworkRepository.groupName(homework.groupId)) ?? null,
+    ...stats,
   };
-}
-
-function completionOf(submitted: number, pending: number, late: number): number {
-  const total = submitted + pending + late;
-  return total > 0 ? Math.round(((submitted + late) / total) * 100) : 0;
-}
-
-async function groupNameOf(groupId: string): Promise<string | undefined> {
-  return homeworkRepository.groupName(groupId);
 }
 
 export async function createHomework(input: HomeworkInput): Promise<Homework> {
@@ -107,12 +72,7 @@ export async function createHomework(input: HomeworkInput): Promise<Homework> {
     description: data.description ?? null,
     dueDate: data.dueDate ?? null,
   });
-  await logActivity({
-    action: "homework.create",
-    entityType: "homework",
-    entityId: homework.id,
-    details: { title: homework.title, groupId: homework.groupId, dueDate: homework.dueDate },
-  });
+  await logHomeworkCreate(homework);
   return homework;
 }
 
@@ -132,12 +92,7 @@ export async function updateHomework(
     if (existing && existing.groupId !== data.groupId) {
       await homeworkRepository.pruneSubmissionsToMembers(id, data.groupId);
     }
-    await logActivity({
-      action: "homework.update",
-    entityType: "homework",
-      entityId: id,
-      details: { title: homework.title, groupId: homework.groupId, dueDate: homework.dueDate },
-    });
+    await logHomeworkUpdate(homework);
   }
   return homework;
 }
@@ -146,14 +101,7 @@ export async function deleteHomework(id: string): Promise<boolean> {
   const homework = await homeworkRepository.findById(id);
   await homeworkRepository.clearForHomework(id);
   const ok = await homeworkRepository.remove(id);
-  if (ok && homework) {
-    await logActivity({
-      action: "homework.delete",
-    entityType: "homework",
-      entityId: id,
-      details: { title: homework.title },
-    });
-  }
+  if (ok && homework) await logHomeworkDelete(homework.title, id);
   return ok;
 }
 
@@ -174,12 +122,7 @@ export async function setSubmissionStatus(
     throw new Error(`student ${studentId} is not a member of the homework's group`);
   }
   await homeworkRepository.upsertSubmission(homeworkId, studentId, status);
-  await logActivity({
-    action: "homework.submit",
-    entityType: "homework",
-    entityId: homeworkId,
-    details: { studentId, status },
-  });
+  await logHomeworkSubmit(homeworkId, studentId, status);
 }
 
 /** Set one status for every current member of the homework's group. */
@@ -196,10 +139,5 @@ export async function setAllSubmissionStatus(
   for (const m of eligible) {
     await homeworkRepository.upsertSubmission(homeworkId, m.id, status);
   }
-  await logActivity({
-    action: "homework.submitAll",
-    entityType: "homework",
-    entityId: homeworkId,
-    details: { status, count: eligible.length },
-  });
+  await logHomeworkSubmitAll(homeworkId, status, eligible.length);
 }

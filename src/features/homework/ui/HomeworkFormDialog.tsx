@@ -12,6 +12,11 @@ import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";
 import { DatePicker } from "@/shared/DatePicker";
 import { Field } from "@/shared/Field";
+import {
+  emptyHomeworkForm,
+  initialHomeworkForm,
+  type HomeworkFormState,
+} from "./homework-form-utils";
 
 interface HomeworkFormDialogProps {
   open: boolean;
@@ -23,13 +28,6 @@ interface HomeworkFormDialogProps {
   onSaved: () => void;
 }
 
-interface FormState {
-  groupId: string;
-  title: string;
-  description: string;
-  dueDate: string;
-}
-
 export function HomeworkFormDialog({
   open,
   homework,
@@ -39,30 +37,20 @@ export function HomeworkFormDialog({
   onSaved,
 }: HomeworkFormDialogProps) {
   const { t } = useTranslation();
-  const [form, setForm] = useState<FormState>({
-    groupId: "",
-    title: "",
-    description: "",
-    dueDate: "",
-  });
+  const [form, setForm] = useState<HomeworkFormState>(emptyHomeworkForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setForm({
-        groupId: homework?.groupId ?? defaultGroupId ?? groups[0]?.id ?? "",
-        title: homework?.title ?? "",
-        description: homework?.description ?? "",
-        dueDate: homework?.dueDate ?? "",
-      });
+      setForm(initialHomeworkForm(homework, groups, defaultGroupId));
       setErrors({});
       setFatal("");
     }
   }, [open, homework, groups, defaultGroupId]);
 
-  function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
+  function setField<K extends keyof HomeworkFormState>(key: K, value: HomeworkFormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 

@@ -2,10 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Save, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { SKILL_LEVELS, type StudentSkillInput } from "@/features/skills/domain";
+import { type StudentSkillInput } from "@/features/skills/domain";
 import {
   getStudentSkills,
   saveStudentSkills,
@@ -15,6 +12,7 @@ import { Modal } from "@/shared/Modal";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { useSaveFeedback } from "@/shared/useSaveFeedback";
 import { toast } from "@/lib/toast-store";
+import { StudentSkillsTable, type SkillEdits } from "./StudentSkillsTable";
 
 interface StudentSkillsDialogProps {
   open: boolean;
@@ -23,8 +21,6 @@ interface StudentSkillsDialogProps {
   onClose: () => void;
   onChanged: () => void;
 }
-
-type Edits = Record<string, { level: string; note: string }>;
 
 export function StudentSkillsDialog({
   open,
@@ -35,7 +31,7 @@ export function StudentSkillsDialog({
 }: StudentSkillsDialogProps) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<StudentSkillRow[]>([]);
-  const [edits, setEdits] = useState<Edits>({});
+  const [edits, setEdits] = useState<SkillEdits>({});
   const [loading, setLoading] = useState(true);
   const { saving, saved, run, clear } = useSaveFeedback();
   const [error, setError] = useState("");
@@ -48,7 +44,7 @@ export function StudentSkillsDialog({
     getStudentSkills(studentId)
       .then((rows) => {
         setRows(rows);
-        const next: Edits = {};
+        const next: SkillEdits = {};
         for (const r of rows) {
           next[r.skillId] = { level: r.level === null ? "" : String(r.level), note: r.note ?? "" };
         }
@@ -119,56 +115,7 @@ export function StudentSkillsDialog({
             </p>
           )}
 
-          <div className="overflow-hidden rounded-lg border">
-            <table className="w-full text-sm">
-              <tbody>
-                {rows.map((r) => {
-                  const edit = edits[r.skillId];
-                  const dirty = edit.level !== (r.level === null ? "" : String(r.level));
-                  return (
-                    <tr key={r.skillId} className="border-b last:border-0">
-                      <td
-                        className={cn(
-                          "px-3 py-2 font-medium",
-                          r.weak && "text-amber-700 dark:text-amber-400",
-                        )}
-                      >
-                        {r.name}
-                      </td>
-                      <td className="w-28 px-2 py-2">
-                        <Select
-                          value={edit.level}
-                          onChange={(e) => setEdit(r.skillId, "level", e.target.value)}
-                          aria-label={t("skills.levelFor", { name: r.name })}
-                          className={cn(
-                            "text-center",
-                            dirty && "border-success",
-                          )}
-                        >
-                          <option value="">—</option>
-                          {SKILL_LEVELS.map((l) => (
-                            <option key={l} value={l}>
-                              {l}
-                            </option>
-                          ))}
-                        </Select>
-                      </td>
-                      <td className="w-32 px-2 py-2">
-                        <Input
-                          dir="ltr"
-                          placeholder={t("skills.notePlaceholder")}
-                          aria-label={t("skills.noteFor", { name: r.name })}
-                          className="h-8"
-                          value={edit.note}
-                          onChange={(e) => setEdit(r.skillId, "note", e.target.value)}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <StudentSkillsTable rows={rows} edits={edits} onChange={setEdit} />
 
           <div className="flex items-center justify-end gap-2">
             {saved && <span className="text-sm text-success">{t("skills.saved")}</span>}

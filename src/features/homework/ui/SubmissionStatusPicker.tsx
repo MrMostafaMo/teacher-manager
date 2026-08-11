@@ -1,0 +1,46 @@
+import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
+import { SUBMISSION_STATUSES, type SubmissionStatus } from "@/features/homework/domain";
+
+const STATUS_LABEL_KEY: Record<SubmissionStatus, string> = {
+  submitted: "homework.statusSubmitted",
+  pending: "homework.statusPending",
+  late: "homework.statusLate",
+};
+
+const STATUS_BADGE: Record<SubmissionStatus, string> = {
+  submitted: "border-success bg-success/15 text-success",
+  pending: "border-input text-muted-foreground",
+  late: "border-warning bg-warning/15 text-warning",
+};
+
+export function SubmissionStatusPicker({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: SubmissionStatus;
+  disabled: boolean;
+  onChange: (s: SubmissionStatus) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex gap-1">
+      {SUBMISSION_STATUSES.map((s) => (
+        <button
+          key={s}
+          type="button"
+          aria-pressed={value === s}
+          disabled={disabled}
+          onClick={() => onChange(s)}
+          className={cn(
+            "rounded-md border px-2.5 py-1 text-xs transition-colors",
+            value === s ? STATUS_BADGE[s] : "border-input text-muted-foreground hover:bg-muted/50",
+          )}
+        >
+          {t(STATUS_LABEL_KEY[s])}
+        </button>
+      ))}
+    </div>
+  );
+}

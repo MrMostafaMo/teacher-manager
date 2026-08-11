@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PencilLine, Plus, Target, Trash2 } from "lucide-react";
+import { Plus, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { DataTable } from "@/shared/DataTable";
 import { deleteSkill, listSkills } from "@/features/skills/application/skill-cases";
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import type { Skill } from "@/lib/db/schema";
+import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { SkillFormDialog } from "./SkillFormDialog";
+import { useSkillsColumns } from "./skills-columns";
 
 export default function SkillsPage() {
   const { t } = useTranslation();
@@ -22,7 +22,7 @@ export default function SkillsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Skill | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { armed: deletingId, request, clear } = useConfirmDelete();
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
 
@@ -39,75 +39,32 @@ export default function SkillsPage() {
       .finally(() => setLoading(false));
   }, [reloadKey, t]);
 
-  async function handleDelete(id: string) {
-    if (deletingId !== id) {
-      setDeletingId(id);
-      setTimeout(() => setDeletingId((cur) => (cur === id ? null : cur)), 2500);
-      return;
-    }
-    try {
-      await deleteSkill(id);
-      setRows((r) => r.filter((s) => s.id !== id));
-    } catch (e) {
-      console.error("Failed to delete skill", e);
-      setError(t("skills.deleteError"));
-    } finally {
-      setDeletingId(null);
-    }
-  }
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (!request(id)) return;
+      try {
+        await deleteSkill(id);
+        setRows((r) => r.filter((s) => s.id !== id));
+      } catch (e) {
+        console.error("Failed to delete skill", e);
+        setError(t("skills.deleteError"));
+      } finally {
+        clear();
+      }
+    },
+    [request, clear, t],
+  );
 
-  const columns: DataTableColumn<SkillWithWeakCount>[] = [
-    {
-      header: t("skills.columns.name"),
-      className: "font-medium",
-      render: (s) => s.name,
-    },
-    {
-      header: t("skills.columns.tracked"),
-      className: "text-muted-foreground tabular-nums",
-      render: (s) => <span dir="ltr">{s.trackedCount}</span>,
-    },
-    {
-      header: t("skills.columns.weak"),
-      render: (s) =>
-        s.weakCount > 0 ? (
-          <Badge className={cn("border-warning bg-warning/15 text-warning")}>
-            {t("skills.weakCount", { count: s.weakCount })}
-          </Badge>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        ),
-    },
-    {
-      header: "",
-      className: "text-end",
-      headerClassName: "text-end",
-      render: (s) => (
-        <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(s)}>
-            <PencilLine />
-            <span className="sr-only">{t("skills.edit")}</span>
-          </Button>
-          <Button
-            variant={deletingId === s.id ? "destructive" : "ghost"}
-            size="icon-sm"
-            aria-label={deletingId === s.id ? t("skills.confirmDelete") : t("skills.delete")}
-            onClick={() => void handleDelete(s.id)}
-          >
-            <Trash2 />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const openEdit = useCallback((s: Skill) => {
+    setEditing(s);
+    setFormOpen(true);
+  }, []);
+
+  const columns = useSkillsColumns(deletingId, openEdit, (id) => void handleDelete(id));
+  const getRowKey = useCallback((s: SkillWithWeakCount) => s.id, []);
 
   function openCreate() {
     setEditing(null);
-    setFormOpen(true);
-  }
-
-  function openEdit(s: Skill) {
-    setEditing(s);
     setFormOpen(true);
   }
 
@@ -136,7 +93,7 @@ export default function SkillsPage() {
             <DataTable<SkillWithWeakCount>
               columns={columns}
               rows={rows}
-              getRowKey={(s) => s.id}
+              getRowKey={getRowKey}
             />
           )}
         </CardContent>

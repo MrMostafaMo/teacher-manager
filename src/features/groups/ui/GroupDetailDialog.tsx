@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Select } from "@/components/ui/select";
 import {
   addStudentToGroup,
   getGroupDetail,
@@ -14,9 +13,10 @@ import type { GroupDetail } from "@/features/groups/application/group-cases";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { Modal } from "@/shared/Modal";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
-import { CardSkeleton } from "@/shared/Skeletons";
 import { formatTime, formatDateString } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
+import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { GroupMembersSection } from "./group-members-section";
 
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
@@ -33,8 +33,7 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
   const [detail, setDetail] = useState<GroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [addingId, setAddingId] = useState("");
-  const [removingId, setRemovingId] = useState<string | null>(null);
+  const { armed: removingId, request } = useConfirmDelete();
   const [busy, setBusy] = useState(false);
   const [sessions, setSessions] = useState<GroupSession[]>([]);
 
@@ -60,12 +59,11 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
     void reload();
   }, [reload]);
 
-  async function handleAdd() {
-    if (!addingId || busy) return;
+  async function handleAdd(studentId: string) {
+    if (busy) return;
     setBusy(true);
     try {
-      await addStudentToGroup(addingId, group.id);
-      setAddingId("");
+      await addStudentToGroup(studentId, group.id);
       await reload();
       onChanged();
     } catch {
@@ -76,13 +74,8 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
   }
 
   async function handleRemove(studentId: string) {
-    if (removingId !== studentId) {
-      setRemovingId(studentId);
-      setTimeout(() => setRemovingId((cur) => (cur === studentId ? null : cur)), 2500);
-      return;
-    }
+    if (!request(studentId)) return;
     if (busy) return;
-    setRemovingId(null);
     setBusy(true);
     try {
       await removeStudentFromGroup(studentId, group.id);
@@ -132,56 +125,15 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
 
         <Separator />
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">
-            {t("groups.members")} ({members.length})
-          </p>
-          {loading ? (
-            <CardSkeleton lines={2} />
-          ) : members.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("groups.noMembers")}</p>
-          ) : (
-            <ul className="space-y-1">
-              {members.map((m) => (
-                <li key={m.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm">
-                  <span className="truncate">{m.name}</span>
-                  <Button
-                    variant={removingId === m.id ? "destructive" : "ghost"}
-                    size="icon-sm"
-                    aria-label={
-                      removingId === m.id ? t("groups.confirmDelete") : t("groups.removeMember")
-                    }
-                    onClick={() => void handleRemove(m.id)}
-                  >
-                    <Trash2 />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {available.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Select
-              value={addingId}
-              onChange={(e) => setAddingId(e.target.value)}
-              aria-label={t("groups.addMember")}
-              className="flex-1"
-            >
-              <option value="">{t("groups.addMemberHint")}</option>
-              {available.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </Select>
-            <Button size="sm" onClick={() => void handleAdd()} disabled={!addingId || busy}>
-              <UserPlus />
-              {t("groups.addMember")}
-            </Button>
-          </div>
-        )}
+        <GroupMembersSection
+          members={members}
+          available={available}
+          loading={loading}
+          removingId={removingId}
+          busy={busy}
+          onAdd={(id) => void handleAdd(id)}
+          onRemove={(id) => void handleRemove(id)}
+        />
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 

@@ -2,8 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { formatDateString } from "@/lib/utils/format";
 import {
   getExamDetail,
@@ -15,6 +13,8 @@ import { Modal } from "@/shared/Modal";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { useSaveFeedback } from "@/shared/useSaveFeedback";
 import { toast } from "@/lib/toast-store";
+import { ExamResultsTable, type ExamEdits } from "./ExamResultsTable";
+import { ExamStat } from "./exam-detail-stats";
 
 interface ExamDetailDialogProps {
   open: boolean;
@@ -23,23 +23,10 @@ interface ExamDetailDialogProps {
   onChanged: () => void;
 }
 
-type Edits = Record<string, { score: string; note: string }>;
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border bg-muted/40 p-2.5 text-center">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold" dir="ltr">
-        {value}
-      </p>
-    </div>
-  );
-}
-
 export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetailDialogProps) {
   const { t } = useTranslation();
   const [detail, setDetail] = useState<ExamDetail | null>(null);
-  const [edits, setEdits] = useState<Edits>({});
+  const [edits, setEdits] = useState<ExamEdits>({});
   const [loading, setLoading] = useState(true);
   const { saving, saved, run, clear } = useSaveFeedback();
   const [error, setError] = useState("");
@@ -52,7 +39,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
     getExamDetail(examId)
       .then((d) => {
         setDetail(d);
-        const next: Edits = {};
+        const next: ExamEdits = {};
         for (const s of d.students) {
           next[s.student.id] = { score: s.score === null ? "" : String(s.score), note: s.note ?? "" };
         }
@@ -117,10 +104,10 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label={t("exams.stats.average")} value={detail.average === null ? "—" : String(detail.average)} />
-            <Stat label={t("exams.stats.highest")} value={detail.highest === null ? "—" : String(detail.highest)} />
-            <Stat label={t("exams.stats.lowest")} value={detail.lowest === null ? "—" : String(detail.lowest)} />
-            <Stat
+            <ExamStat label={t("exams.stats.average")} value={detail.average === null ? "—" : String(detail.average)} />
+            <ExamStat label={t("exams.stats.highest")} value={detail.highest === null ? "—" : String(detail.highest)} />
+            <ExamStat label={t("exams.stats.lowest")} value={detail.lowest === null ? "—" : String(detail.lowest)} />
+            <ExamStat
               label={t("exams.stats.passRate")}
               value={detail.passRate === null ? "—" : `${detail.passRate}%`}
             />
@@ -129,44 +116,12 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
           {empty ? (
             <p className="py-8 text-center text-sm text-muted-foreground">{t("exams.noStudents")}</p>
           ) : (
-            <div className="overflow-hidden rounded-lg border">
-              <table className="w-full text-sm">
-                <tbody>
-                  {detail.students.map(({ student, score }) => {
-                    const edit = edits[student.id];
-                    const dirty = edit.score !== (score === null ? "" : String(score));
-                    return (
-                      <tr key={student.id} className="border-b last:border-0">
-                        <td className="px-3 py-2 font-medium">{student.name}</td>
-                        <td className="w-20 px-2 py-2">
-                          <Input
-                            type="number"
-                            min={0}
-                            max={detail.maxScore}
-                            dir="ltr"
-                            placeholder="—"
-                            aria-label={t("exams.scoreFor", { name: student.name })}
-                            className={cn("h-8 text-center", dirty && "border-success")}
-                            value={edit.score}
-                            onChange={(e) => setEdit(student.id, "score", e.target.value)}
-                          />
-                        </td>
-                        <td className="w-32 px-2 py-2">
-                          <Input
-                            dir="ltr"
-                            placeholder={t("exams.notePlaceholder")}
-                            aria-label={t("exams.noteFor", { name: student.name })}
-                            className="h-8"
-                            value={edit.note}
-                            onChange={(e) => setEdit(student.id, "note", e.target.value)}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ExamResultsTable
+              students={detail.students}
+              edits={edits}
+              maxScore={detail.maxScore}
+              onChange={setEdit}
+            />
           )}
 
           <div className="flex items-center justify-end gap-2">

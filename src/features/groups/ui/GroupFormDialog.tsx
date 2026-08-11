@@ -1,41 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
-import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { studyGroupInputSchema } from "@/features/groups/domain";
 import { createGroup, updateGroup } from "@/features/groups/application/group-cases";
-import { groupSessionInputSchema } from "@/features/schedule/domain";
-import {
-  createSession,
-  deleteSession,
-  listSchedule,
-} from "@/features/schedule/application/schedule-cases";
+import { createSession, deleteSession } from "@/features/schedule/application/schedule-cases";
 import type { StudyGroup } from "@/lib/db/schema";
-import { uuid } from "@/lib/utils/uuid";
-import { formatTime } from "@/lib/utils/format";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
-import { useTimeStore } from "@/lib/time-store";
-import { TimePicker } from "@/shared/TimePicker";
-import { DatePicker } from "@/shared/DatePicker";
 import { Modal } from "@/shared/Modal";
-import { Field } from "@/shared/Field";
-
-const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
-const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
-
-interface SessionDraft {
-  key: string;
-  id?: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  room: string;
-}
+import { SessionEditor } from "./SessionEditor";
+import { useGroupSessions } from "./use-group-sessions";
+import { GroupFormFields, type GroupFormState } from "./group-form-fields";
 
 interface GroupFormDialogProps {
   open: boolean;
@@ -44,35 +19,22 @@ interface GroupFormDialogProps {
   onSaved: () => void;
 }
 
-interface FormState {
-  name: string;
-  subject: string;
-  startsOn: string;
-  status: "active" | "inactive";
-  notes: string;
-}
-
-const emptyForm: FormState = {
+const emptyForm: GroupFormState = {
   name: "",
   subject: "",
   startsOn: "",
   status: "active",
   notes: "",
 };
-const emptyDraft = { dayOfWeek: 0, startTime: "", endTime: "", room: "" };
 
 export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDialogProps) {
   const { t } = useTranslation();
-  const hour24 = useTimeStore((s) => s.hour24);
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const [form, setForm] = useState<GroupFormState>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
-  const [sessions, setSessions] = useState<SessionDraft[]>([]);
-  const [draft, setDraft] = useState(emptyDraft);
-  const [draftError, setDraftError] = useState("");
-  const [removingKey, setRemovingKey] = useState<string | null>(null);
-  const loadedIds = useRef<string[]>([]);
+  const { sessions, draft, draftError, removingKey, loadedIds, addSession, updateDraft, removeSession } =
+    useGroupSessions(open, group);
   // Set once the group row itself has been written — if a later step (session
   // sync) fails, we must not let a resubmit create a duplicate group.
   const groupPersisted = useRef(false);
@@ -89,70 +51,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     setErrors({});
     setFatal("");
     setSaving(false);
-    setSessions([]);
-    setDraft(emptyDraft);
-    setDraftError("");
-    setRemovingKey(null);
-    loadedIds.current = [];
-    groupPersisted.current = false;
-    void listSchedule()
-      .then((all) => {
-        const own = all.filter((s) => s.groupId === group?.id);
-        loadedIds.current = own.map((s) => s.id);
-        setSessions(
-          own.map((s) => ({
-            key: s.id,
-            id: s.id,
-            dayOfWeek: s.dayOfWeek,
-            startTime: s.startTime,
-            endTime: s.endTime,
-            room: s.room ?? "",
-          })),
-        );
-      })
-      .catch(() => setSessions([]));
   }, [open, group]);
-
-  function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  function addSession() {
-    if (!draft.startTime || !draft.endTime) {
-      setDraftError(t("groups.sessionTimesRequired"));
-      return;
-    }
-    const parsed = groupSessionInputSchema.safeParse({ groupId: "x", ...draft });
-    if (!parsed.success) {
-      const endAfterStart = parsed.error.issues.some(
-        (i) => i.path[0] === "endTime" && i.message === "end after start",
-      );
-      setDraftError(endAfterStart ? t("groups.sessionEndAfterStart") : t("groups.sessionInvalid"));
-      return;
-    }
-    if (sessions.some((s) => s.dayOfWeek === draft.dayOfWeek && s.startTime === draft.startTime)) {
-      setDraftError(t("groups.sessionDuplicate"));
-      return;
-    }
-    setDraftError("");
-    setSessions((s) => [...s, { key: uuid(), ...draft }]);
-    setDraft(emptyDraft);
-  }
-
-  function updateDraft(patch: Partial<SessionDraft>) {
-    setDraftError("");
-    setDraft((d) => ({ ...d, ...patch }));
-  }
-
-  function removeSession(key: string) {
-    if (removingKey !== key) {
-      setRemovingKey(key);
-      setTimeout(() => setRemovingKey((cur) => (cur === key ? null : cur)), 2500);
-      return;
-    }
-    setRemovingKey(null);
-    setSessions((s) => s.filter((x) => x.key !== key));
-  }
 
   const mapErrors = (error: ZodError) =>
     mapZodErrors(error, (field, issue) =>
@@ -212,149 +111,21 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
   return (
     <Modal open={open} onClose={onClose} title={group ? t("groups.edit") : t("groups.add")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field id="group-name" label={t("groups.fields.name")} required error={errors.name}>
-          <Input
-            id="group-name"
-            value={form.name}
-            onChange={(e) => setField("name", e.target.value)}
-            aria-invalid={!!errors.name}
-          />
-        </Field>
+        <GroupFormFields
+          form={form}
+          errors={errors}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+        />
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="group-subject" label={t("groups.fields.subject")} error={errors.subject}>
-            <Input
-              id="group-subject"
-              value={form.subject}
-              onChange={(e) => setField("subject", e.target.value)}
-              aria-invalid={!!errors.subject}
-            />
-          </Field>
-          <Field id="group-status" label={t("groups.fields.status")}>
-            <Select
-              id="group-status"
-              value={form.status}
-              onChange={(e) => setField("status", e.target.value as FormState["status"])}
-            >
-              <option value="active">{t("groups.statusActive")}</option>
-              <option value="inactive">{t("groups.statusInactive")}</option>
-            </Select>
-          </Field>
-        </div>
-
-        <Field id="group-starts-on" label={t("groups.fields.startsOn")}>
-          <DatePicker
-            value={form.startsOn}
-            onChange={(v) => setField("startsOn", v)}
-            ariaLabel={t("groups.fields.startsOn")}
-            className="w-full"
-          />
-          <p className="text-xs text-muted-foreground">{t("groups.startsOnHint")}</p>
-        </Field>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="group-schedule">{t("groups.fields.schedule")}</Label>
-          <div className="space-y-2">
-            {sessions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("groups.sessionsEmpty")}</p>
-            ) : (
-              <ul className="space-y-1">
-                {sessions.map((s) => (
-                  <li
-                    key={s.key}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-muted px-2.5 py-1.5 text-sm"
-                  >
-                    <span className="truncate" dir="ltr">
-                      {t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} · {formatTime(s.startTime, hour24)}
-                      –{formatTime(s.endTime, hour24)}
-                      {s.room ? ` · ${s.room}` : ""}
-                    </span>
-                    <Button
-                      type="button"
-                      variant={removingKey === s.key ? "destructive" : "ghost"}
-                      size="icon-sm"
-                      aria-label={
-                        removingKey === s.key
-                          ? t("groups.confirmDelete")
-                          : t("groups.sessionRemove")
-                      }
-                      onClick={() => removeSession(s.key)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="session-day" className="text-xs text-muted-foreground">
-                  {t("schedule.fields.day")}
-                </Label>
-                <Select
-                  id="session-day"
-                  className="w-28"
-                  value={draft.dayOfWeek}
-                  onChange={(e) => updateDraft({ dayOfWeek: Number(e.target.value) })}
-                >
-                  {DAYS.map((d) => (
-                    <option key={d} value={d}>
-                      {t(`schedule.days.${DAY_NAMES[d]}`)}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="session-start" className="text-xs text-muted-foreground">
-                  {t("schedule.fields.startTime")}
-                </Label>
-                <TimePicker
-                  ariaLabel={t("schedule.fields.startTime")}
-                  className="w-28"
-                  value={draft.startTime}
-                  onChange={(v) => updateDraft({ startTime: v })}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="session-end" className="text-xs text-muted-foreground">
-                  {t("schedule.fields.endTime")}
-                </Label>
-                <TimePicker
-                  ariaLabel={t("schedule.fields.endTime")}
-                  className="w-28"
-                  value={draft.endTime}
-                  onChange={(v) => updateDraft({ endTime: v })}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="session-room" className="text-xs text-muted-foreground">
-                  {t("schedule.fields.room")}
-                </Label>
-                <Input
-                  id="session-room"
-                  className="h-8 w-28"
-                  value={draft.room}
-                  onChange={(e) => updateDraft({ room: e.target.value })}
-                />
-              </div>
-              <Button type="button" variant="outline" size="sm" onClick={addSession}>
-                <Plus />
-                {t("groups.sessionAdd")}
-              </Button>
-            </div>
-            {draftError && <p className="text-xs text-destructive">{draftError}</p>}
-          </div>
-        </div>
-
-        <Field id="group-notes" label={t("groups.fields.notes")} error={errors.notes}>
-          <Textarea
-            id="group-notes"
-            value={form.notes}
-            onChange={(e) => setField("notes", e.target.value)}
-            placeholder={t("groups.notesPlaceholder")}
-          />
-        </Field>
+        <SessionEditor
+          sessions={sessions}
+          draft={draft}
+          draftError={draftError}
+          removingKey={removingKey}
+          onAdd={addSession}
+          onUpdateDraft={updateDraft}
+          onRemove={removeSession}
+        />
 
         {fatal && <p className="text-sm text-destructive">{fatal}</p>}
 
