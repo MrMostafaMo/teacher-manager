@@ -37,6 +37,7 @@ next begins, and ends with a review checkpoint.
 | 29   | Global create actions (command palette + dashboard quick actions open real dialogs) + week navigation + profile edit | ✅ Done |
 | 30   | Per-student statement of account (كشف الحساب): monthly summary + payment ledger + export | ✅ Done |
 | 31   | Per-student trend charts (التحليلات): attendance, exams, homework, payments | ✅ Done |
+| 32   | Code-health: file-splitting refactor (≤150 lines), shared primitives, unit-test coverage | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -754,3 +755,20 @@ next begins, and ends with a review checkpoint.
     `formatMoney`); each card shows a «لا توجد بيانات بعد» empty state.
   - i18n keys `profile.sections.trends` + `profile.trends.*` in both locales.
 - `tsc --noEmit` clean, `pnpm build` passes.
+
+## Phase 32 — completed
+
+Code-health round, no schema change: every source file split to ≤150 lines
+(verified with tsc, `pnpm test`, and a full `pnpm build`).
+
+- i18n moved from single `ar.ts`/`en.ts` files to per-language dirs
+  (`src/lib/i18n/ar/*.ts`, `src/lib/i18n/en/*.ts`), merged by `index.ts`.
+- Shared picker internals + `useConfirmDelete` (+ test) + `useInView`
+  promoted to `src/shared/`.
+- Feature splits: dashboard, attendance, schedule, students/profile,
+  payments, expenses, exams/homework/skills/activity/groups, reports,
+  settings.
+- Smell fixes: `DAYS` → `schedule/domain.ts`; `useActivityColumns` →
+  `useProfileActivityColumns`.
+- 9 new unit-test files (~80 cases) on the extracted helpers; suite is
+  10 files / 80 tests, all green.

@@ -64,9 +64,11 @@ only). It is used to group per-group lists in homework, exams, and payments.
 
 ## Conventions
 
-- **i18n**: every user-facing string is translated. Files under
-  `src/lib/i18n/` (e.g. `settings.*`, `common.*`, feature namespaces), one
-  file per language. Use `useTranslation()`; never hardcode UI text.
+- **i18n**: every user-facing string is translated. Files live under
+  `src/lib/i18n/<lang>/` (`ar/`, `en/`) — one file per feature namespace
+  (e.g. `common.ts`, `settings.ts`, `payments.ts`), merged and registered by
+  `src/lib/i18n/index.ts` via i18next. Use `useTranslation()`; never hardcode
+  UI text.
 - **File length**: no source file exceeds 200 lines (hard), aim for ≤150.
   Enforced by `scripts/check-file-lengths.mjs` via `pnpm build`. Shared
   zod input helpers live in `src/lib/validation/`.
@@ -389,3 +391,29 @@ Phase 31 added per-student trend charts (التحليلات — no schema change
   theme-aware tooltip; each card has a localized «لا توجد بيانات بعد» empty
   state. Money/pct in tooltips reuse `formatMoney` / `formatNumber`.
 - i18n: `profile.sections.trends` + `profile.trends.*` in both locales.
+
+Phase 32 was a code-health round (no schema change): every source file split
+to ≤150 lines and the campaign verified with tsc, `pnpm test`, and a full
+`pnpm build`:
+
+- i18n moved from single `ar.ts`/`en.ts` files to per-language dirs
+  (`src/lib/i18n/ar/*.ts`, `src/lib/i18n/en/*.ts`), merged by
+  `src/lib/i18n/index.ts`.
+- Shared picker internals promoted to `src/shared/` (`date-picker.tsx`,
+  `month-picker.tsx`, `picker-shared.ts`, `popover-shell.tsx`) plus
+  `useConfirmDelete` (+ test) and `useInView`.
+- Feature module splits: dashboard (data/chart/KPI/section cards), attendance
+  (roster/sections/summary/status-defaults), schedule (week-layout helpers,
+  day/group views, week nav), students/profile (columns/overview/records/
+  trends/statement), payments (dues/history grouping/statement), expenses,
+  exams/homework/skills/activity/groups, reports (builders/financials/
+  helpers, bidi shaping), settings (cards).
+- Two smell fixes: the string `DAYS` moved to `src/features/schedule/domain.ts`
+  (consumed by week-layout, use-schedule-view, WeekGrid); the profile's
+  `useActivityColumns` renamed `useProfileActivityColumns` (distinct from the
+  activity feature's hook).
+- 9 new unit-test files (~80 cases) cover the extracted helpers: week-layout,
+  use-schedule-view, `buildSectionsByGroup`, history grouping, dashboard
+  helpers, bidi levels, payment statement, attendance defaults,
+  `useConfirmDelete`. Suite: 10 files / 80 tests, all green; every file
+  within the 150-line guard.
