@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
-import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { studentInputSchema } from "@/features/students/domain";
 import { createStudent, updateStudent } from "@/features/students/application/student-cases";
 import { listPlans } from "@/features/payments/application/plan-cases";
 import { listGroups, listMemberships, setStudentGroup } from "@/features/groups/application/group-cases";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { Plan, Student } from "@/lib/db/schema";
-import { mapZodErrors } from "@/lib/utils/zod-errors";
-import { DatePicker } from "@/shared/DatePicker";
 import { Modal } from "@/shared/Modal";
-import { Field } from "@/shared/Field";
+import {
+  emptyStudentForm,
+  initialStudentForm,
+  studentFormErrors,
+  type StudentFormState,
+} from "./student-form";
+import { StudentFormFields } from "./StudentFormFields";
 
 interface StudentFormDialogProps {
   open: boolean;
@@ -24,33 +24,9 @@ interface StudentFormDialogProps {
   onSaved: () => void;
 }
 
-interface FormState {
-  name: string;
-  phone: string;
-  guardianName: string;
-  guardianPhone: string;
-  status: "active" | "inactive";
-  planId: string;
-  groupId: string;
-  notes: string;
-  enrolledOn: string;
-}
-
-const emptyForm: FormState = {
-  name: "",
-  phone: "",
-  guardianName: "",
-  guardianPhone: "",
-  status: "active",
-  planId: "",
-  groupId: "",
-  notes: "",
-  enrolledOn: "",
-};
-
 export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFormDialogProps) {
   const { t } = useTranslation();
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const [form, setForm] = useState<StudentFormState>(emptyStudentForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
@@ -66,17 +42,7 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
 
   useEffect(() => {
     if (open) {
-      setForm({
-        name: student?.name ?? "",
-        phone: student?.phone ?? "",
-        guardianName: student?.guardianName ?? "",
-        guardianPhone: student?.guardianPhone ?? "",
-        status: student?.status ?? "active",
-        planId: student?.planId ?? "",
-        groupId: "",
-        notes: student?.notes ?? "",
-        enrolledOn: student ? (student.enrolledOn ?? "") : dayjs().format("YYYY-MM-DD"),
-      });
+      setForm(initialStudentForm(student));
       setErrors({});
       setFatal("");
       setSaving(false);
@@ -103,18 +69,9 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
     }
   }, [open, student]);
 
-  function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
+  function setField<K extends keyof StudentFormState>(key: K, value: StudentFormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
-
-  const mapErrors = (error: ZodError) =>
-    mapZodErrors(error, (field, issue) =>
-      field === "name"
-        ? issue.code === "too_small"
-          ? t("students.errors.nameRequired")
-          : t("students.errors.nameTooLong")
-        : t("students.errors.tooLong"),
-    );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -138,7 +95,7 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
       onSaved();
       onClose();
     } catch (error) {
-      if (error instanceof ZodError) setErrors(mapErrors(error));
+      if (error instanceof ZodError) setErrors(studentFormErrors(t, error));
       else {
         setFatal(String(error));
         // The student already exists — closing prevents a retry duplicating them.
@@ -155,105 +112,13 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
   return (
     <Modal open={open} onClose={onClose} title={student ? t("students.edit") : t("students.add")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field id="student-name" label={t("students.fields.name")} required error={errors.name}>
-          <Input
-            id="student-name"
-            value={form.name}
-            onChange={(e) => setField("name", e.target.value)}
-            aria-invalid={!!errors.name}
-          />
-        </Field>
-
-        <Field id="student-enrolled-on" label={t("students.fields.enrolledOn")} error={errors.enrolledOn}>
-          <DatePicker
-            value={form.enrolledOn}
-            onChange={(v) => setField("enrolledOn", v)}
-            ariaLabel={t("students.fields.enrolledOn")}
-            className="w-full"
-          />
-        </Field>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="student-phone" label={t("students.fields.phone")} error={errors.phone}>
-            <Input
-              id="student-phone"
-              dir="ltr"
-              value={form.phone}
-              onChange={(e) => setField("phone", e.target.value)}
-              aria-invalid={!!errors.phone}
-            />
-          </Field>
-          <Field id="student-status" label={t("students.fields.status")}>
-            <Select
-              id="student-status"
-              value={form.status}
-              onChange={(e) => setField("status", e.target.value as FormState["status"])}
-            >
-              <option value="active">{t("students.statusActive")}</option>
-              <option value="inactive">{t("students.statusInactive")}</option>
-            </Select>
-          </Field>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="student-guardian-name" label={t("students.fields.guardianName")} error={errors.guardianName}>
-            <Input
-              id="student-guardian-name"
-              value={form.guardianName}
-              onChange={(e) => setField("guardianName", e.target.value)}
-              aria-invalid={!!errors.guardianName}
-            />
-          </Field>
-          <Field id="student-guardian-phone" label={t("students.fields.guardianPhone")} error={errors.guardianPhone}>
-            <Input
-              id="student-guardian-phone"
-              dir="ltr"
-              value={form.guardianPhone}
-              onChange={(e) => setField("guardianPhone", e.target.value)}
-              aria-invalid={!!errors.guardianPhone}
-            />
-          </Field>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="student-plan" label={t("students.fields.plan")}>
-            <Select
-              id="student-plan"
-              value={form.planId}
-              onChange={(e) => setField("planId", e.target.value)}
-            >
-              <option value="">{t("students.noPlan")}</option>
-              {plans.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} — {p.amount}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field id="student-class" label={t("students.fields.class")}>
-            <Select
-              id="student-class"
-              value={form.groupId}
-              onChange={(e) => setField("groupId", e.target.value)}
-            >
-              <option value="">{t("students.noClass")}</option>
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-
-        <Field id="student-notes" label={t("students.fields.notes")} error={errors.notes}>
-          <Textarea
-            id="student-notes"
-            value={form.notes}
-            onChange={(e) => setField("notes", e.target.value)}
-            placeholder={t("students.notesPlaceholder")}
-          />
-        </Field>
+        <StudentFormFields
+          form={form}
+          errors={errors}
+          plans={plans}
+          groups={groups}
+          onChange={setField}
+        />
 
         {fatal && <p className="text-sm text-destructive">{fatal}</p>}
 

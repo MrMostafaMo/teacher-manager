@@ -2,11 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/shared/DataTable";
 import { Modal } from "@/shared/Modal";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { toast } from "@/lib/toast-store";
-import { formatDate, formatMoney } from "@/lib/utils/format";
+import { formatDate } from "@/lib/utils/format";
 import {
   studentStatement,
   type StudentStatement,
@@ -16,16 +15,13 @@ import {
   type StatementTranslations,
 } from "@/features/reports/application/report-cases";
 import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
+import { StatementLedger, StatementMonthlyTable } from "./statement-tables";
 
 interface StudentStatementDialogProps {
   open: boolean;
   studentId: string | null;
   studentName: string;
   onClose: () => void;
-}
-
-function displayPeriod(period: string): string {
-  return period.split("-").reverse().join("-");
 }
 
 export function StudentStatementDialog({
@@ -115,98 +111,8 @@ export function StudentStatementDialog({
         <p className="text-sm text-destructive">{error}</p>
       ) : data ? (
         <div className="space-y-5">
-          <div>
-            <h3 className="mb-2 text-sm font-semibold">
-              {t("profile.statement.monthly")}
-            </h3>
-            <DataTable
-              columns={[
-                {
-                  header: t("profile.statement.month"),
-                  render: (m) => displayPeriod(m.period),
-                },
-                {
-                  header: t("payments.due"),
-                  render: (m) => formatMoney(m.due),
-                  className: "text-end",
-                },
-                {
-                  header: t("payments.paid"),
-                  render: (m) => formatMoney(m.paid),
-                  className: "text-end",
-                },
-                {
-                  header: t("profile.statement.balance"),
-                  render: (m) => formatMoney(m.balance),
-                  className: "text-end",
-                },
-                {
-                  header: t("profile.statement.running"),
-                  render: (m) => formatMoney(m.running),
-                  className: "text-end",
-                },
-              ]}
-              rows={data.months}
-              getRowKey={(m) => m.period}
-              className="max-h-64 overflow-y-auto rounded-lg border"
-            />
-            <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              <span>
-                {t("profile.statement.totalDue")}: {formatMoney(data.totalDue)}
-              </span>
-              <span>
-                {t("profile.statement.totalPaid")}: {formatMoney(data.totalPaid)}
-              </span>
-              <span>
-                {t("profile.statement.totalBalance")}: {formatMoney(data.totalBalance)}
-              </span>
-            </p>
-          </div>
-
-          <div>
-            <h3 className="mb-2 text-sm font-semibold">
-              {t("profile.statement.ledger")}
-            </h3>
-            {data.payments.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                {t("profile.statement.empty")}
-              </p>
-            ) : (
-              <DataTable
-                columns={[
-                  {
-                    header: t("profile.columns.date"),
-                    render: (p) => formatDate(p.payment.paidAt, "DD-MM-YYYY"),
-                  },
-                  {
-                    header: t("profile.columns.period"),
-                    render: (p) => (p.payment.period ? displayPeriod(p.payment.period) : "—"),
-                  },
-                  {
-                    header: t("profile.columns.method"),
-                    render: (p) => t(`payments.${p.payment.method}`),
-                  },
-                  {
-                    header: t("profile.columns.amount"),
-                    render: (p) => formatMoney(p.payment.amount),
-                    className: "text-end",
-                  },
-                  {
-                    header: t("profile.statement.running"),
-                    render: (p) => formatMoney(p.cumulativePaid),
-                    className: "text-end",
-                  },
-                  {
-                    header: t("payments.note"),
-                    render: (p) => p.payment.note ?? "—",
-                  },
-                ]}
-                rows={data.payments}
-                getRowKey={(p) => p.payment.id}
-                className="max-h-64 overflow-y-auto rounded-lg border"
-              />
-            )}
-          </div>
+          <StatementMonthlyTable data={data} />
+          <StatementLedger payments={data.payments} />
 
           <div className="flex items-center justify-end gap-2">
             {error && <span className="text-sm text-destructive">{error}</span>}

@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Sparkles, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Select } from "@/components/ui/select";
 import { deleteStudent } from "@/features/students/application/student-cases";
-import { listPlans } from "@/features/payments/application/plan-cases";
-import { listGroups, listMemberships, setStudentGroup } from "@/features/groups/application/group-cases";
-import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
-import { getStudentSkills } from "@/features/skills/application/skill-cases";
+import { setStudentGroup } from "@/features/groups/application/group-cases";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
 import type { Student } from "@/lib/db/schema";
 import { formatDateString } from "@/lib/utils/format";
 import { Modal } from "@/shared/Modal";
 import { StatusBadge } from "./StatusBadge";
+import { useStudentDetail } from "./use-student-detail";
+import { StudentDetailBody } from "./student-detail-body";
 
 interface StudentDetailDialogProps {
   student: Student;
@@ -26,41 +23,13 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
   const { t } = useTranslation();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
-  const [planName, setPlanName] = useState<string | null>(null);
   const [skillsOpen, setSkillsOpen] = useState(false);
-  const [skillSummary, setSkillSummary] = useState<{ tracked: number; weak: number } | null>(null);
-  const [groups, setGroups] = useState<GroupWithCount[]>([]);
-  const [groupId, setGroupId] = useState("");
+  const { planName, skillSummary, setSkillSummary, groups, groupId, setGroupId } =
+    useStudentDetail(student, skillsOpen);
 
   useEffect(() => {
     setConfirming(false);
     setError("");
-  }, [student.id]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void listGroups()
-      .then((all) => {
-        if (cancelled) return;
-        setGroups(all);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setGroups([]);
-      });
-    void listMemberships()
-      .then((m) => {
-        if (cancelled) return;
-        const member = m.find((x) => x.studentId === student.id);
-        setGroupId(member?.groupId ?? "");
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setGroupId("");
-      });
-    return () => {
-      cancelled = true;
-    };
   }, [student.id]);
 
   async function handleClassChange(next: string) {
@@ -72,37 +41,6 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
       setError(t("students.classError"));
     }
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    getStudentSkills(student.id)
-      .then((rows) => {
-        if (cancelled) return;
-        setSkillSummary({
-          tracked: rows.filter((r) => r.level !== null).length,
-          weak: rows.filter((r) => r.weak).length,
-        });
-      })
-      .catch(() => {
-        if (!cancelled) setSkillSummary(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [student.id, skillsOpen]);
-
-  useEffect(() => {
-    if (!student.planId) {
-      setPlanName(null);
-      return;
-    }
-    void listPlans()
-      .then((plans) => {
-        const plan = plans.find((p) => p.id === student.planId);
-        setPlanName(plan ? plan.name : null);
-      })
-      .catch(() => setPlanName(null));
-  }, [student.planId]);
 
   async function handleDelete() {
     if (!confirming) {
@@ -118,12 +56,6 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
     }
   }
 
-  const guardianRows = [
-    { label: t("students.fields.phone"), value: student.phone },
-    { label: t("students.fields.guardianName"), value: student.guardianName },
-    { label: t("students.fields.guardianPhone"), value: student.guardianPhone },
-  ].filter((r) => r.value);
-
   return (
     <Modal
       open
@@ -136,71 +68,15 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
           <StatusBadge status={student.status} />
         </div>
 
-        {guardianRows.length > 0 && (
-          <>
-            <Separator />
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">{t("students.guardian")}</p>
-              {guardianRows.map((r) => (
-                <p key={r.label} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="text-muted-foreground">{r.label}</span>
-                  <span dir="ltr" className="text-end">
-                    {r.value}
-                  </span>
-                </p>
-              ))}
-            </div>
-          </>
-        )}
-
-        <Separator />
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-muted-foreground">{t("students.fields.plan")}</p>
-          <p className="text-sm">{planName ?? t("students.noPlan")}</p>
-        </div>
-
-        <Separator />
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-muted-foreground">{t("students.fields.class")}</p>
-          <Select
-            value={groupId}
-            onChange={(e) => void handleClassChange(e.target.value)}
-            aria-label={t("students.fields.class")}
-          >
-            <option value="">{t("students.noClass")}</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-
-        <Separator />
-        <div className="flex items-center justify-between gap-3">
-          <div className="space-y-0.5">
-            <p className="text-xs font-medium text-muted-foreground">{t("students.skills")}</p>
-            <p className="text-sm">
-              {skillSummary === null
-                ? "—"
-                : t("skills.summary", { tracked: skillSummary.tracked, weak: skillSummary.weak })}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => setSkillsOpen(true)}>
-            <Sparkles />
-            {t("students.manageSkills")}
-          </Button>
-        </div>
-
-        {student.notes && (
-          <>
-            <Separator />
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">{t("students.fields.notes")}</p>
-              <p className="text-sm whitespace-pre-wrap">{student.notes}</p>
-            </div>
-          </>
-        )}
+        <StudentDetailBody
+          student={student}
+          planName={planName}
+          skillSummary={skillSummary}
+          groups={groups}
+          groupId={groupId}
+          onClassChange={(v) => void handleClassChange(v)}
+          onOpenSkills={() => setSkillsOpen(true)}
+        />
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
