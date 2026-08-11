@@ -1,21 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Clock, DatabaseBackup, Download, HardDrive, Info, Languages, MonitorCog, Moon, RotateCcw, Settings2, Sun, Upload } from "lucide-react";
+import { DatabaseBackup, Download, HardDrive, RotateCcw, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { LanguageSelector, ThemeSelector } from "@/shared/AppearanceControls";
 import { PageHeader } from "@/shared/PageHeader";
-import { Segmented } from "@/shared/Segmented";
-import { useTimeStore } from "@/lib/time-store";
-import { useThemeStore } from "@/lib/theme/theme-store";
-import { useWeekStore } from "@/lib/week-store";
-import { APP_VERSION } from "@/app/navigation";
 import {
   createBackup,
   restoreFromBackup,
   liveDbPath,
 } from "@/features/settings/application/settings-cases";
 import { liveDbSize } from "@/features/settings/infrastructure/backup-service";
+import { SettingsAboutCard } from "./SettingsAboutCard";
+import { SettingsAppearanceCard } from "./SettingsAppearanceCard";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -25,12 +21,6 @@ function formatSize(bytes: number): string {
 
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const hour24 = useTimeStore((s) => s.hour24);
-  const setHour24 = useTimeStore((s) => s.setHour24);
-  const weekStartsOn = useWeekStore((s) => s.weekStartsOn);
-  const setWeekStartsOn = useWeekStore((s) => s.setWeekStartsOn);
-  const theme = useThemeStore((s) => s.theme);
-  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : MonitorCog;
   const [dbPath, setDbPath] = useState("");
   const [dbSize, setDbSize] = useState<number | null>(null);
   const [busy, setBusy] = useState<"backup" | "restore" | null>(null);
@@ -91,86 +81,8 @@ export default function SettingsPage() {
       {error && <p className="text-sm text-destructive">{error}</p>}
       {saved && <p className="text-sm text-success">{saved}</p>}
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <Info className="size-4" />
-            {t("settings.about")}
-          </div>
-          <div className="flex items-start gap-4">
-            <img
-              src="/logo.png"
-              alt={t("app.name")}
-              className="size-16 shrink-0 rounded-xl object-contain ring-1 ring-border"
-            />
-            <div className="space-y-1 text-sm">
-              <p className="text-lg font-semibold">{t("app.name")}</p>
-              <p className="flex items-center gap-1.5 text-muted-foreground">
-                <span>{t("settings.aboutVersion")}</span>
-                <span className="font-mono text-foreground" dir="ltr">
-                  {APP_VERSION}
-                </span>
-              </p>
-              <p className="pt-1 text-xs text-muted-foreground">{t("settings.aboutTagline")}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <Settings2 className="size-4" />
-            {t("settings.appearance")}
-          </div>
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Languages className="size-4 text-muted-foreground" />
-                {t("common.language")}
-              </div>
-              <LanguageSelector />
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm">
-                <ThemeIcon className="size-4 text-muted-foreground" />
-                {t("common.theme")}
-              </div>
-              <ThemeSelector />
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="size-4 text-muted-foreground" />
-                {t("settings.timeFormat")}
-              </div>
-              <Segmented
-                value={hour24 ? "24" : "12"}
-                onChange={(v) => setHour24(v === "24")}
-                options={[
-                  { value: "12", label: t("settings.clock12") },
-                  { value: "24", label: t("settings.clock24") },
-                ]}
-                ariaLabel={t("settings.timeFormat")}
-              />
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm">
-                <CalendarDays className="size-4 text-muted-foreground" />
-                {t("settings.weekStartsOn")}
-              </div>
-              <Segmented
-                value={String(weekStartsOn)}
-                onChange={(v) => setWeekStartsOn(v === "6" ? 6 : 0)}
-                options={[
-                  { value: "0", label: t("settings.weekSunday") },
-                  { value: "6", label: t("settings.weekSaturday") },
-                ]}
-                ariaLabel={t("settings.weekStartsOn")}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SettingsAboutCard />
+      <SettingsAppearanceCard />
 
       <Card>
         <CardContent className="p-4">

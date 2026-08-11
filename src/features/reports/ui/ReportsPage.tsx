@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BarChart3, FileSpreadsheet, FileText } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { DataTable } from "@/shared/DataTable";
 import { buildReportData, type ReportTranslations } from "@/features/reports/application/report-cases";
 import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
-import { formatDate, formatMoney } from "@/lib/utils/format";
+import { formatDate } from "@/lib/utils/format";
+import { ReportExportActions, useReportColumns } from "./report-actions";
 
 const REPORT_KEYS: ReportKey[] = [
   "students",
@@ -21,13 +22,6 @@ const REPORT_KEYS: ReportKey[] = [
   "finances",
   "skills",
 ];
-
-/** Column indexes that hold EGP amounts per report key (0-based). */
-const MONEY_COLUMNS: Partial<Record<ReportKey, number[]>> = {
-  payments: [1, 2, 3],
-  expenses: [3],
-  finances: [1, 2, 3],
-};
 
 export default function ReportsPage() {
   const { t, i18n } = useTranslation();
@@ -84,22 +78,20 @@ export default function ReportsPage() {
     }
   }
 
+  const columns = useReportColumns(data, key);
+  const getRowKey = useCallback((_: (string | number)[], i: number) => String(i), []);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={t("nav.reports")}
         description={t("reports.subtitle")}
         actions={
-          <>
-            <Button variant="outline" onClick={() => void handleExport("excel")} disabled={!data || exporting !== null}>
-              <FileSpreadsheet />
-              {exporting === "excel" ? t("reports.exporting") : t("reports.exportExcel")}
-            </Button>
-            <Button onClick={() => void handleExport("pdf")} disabled={!data || exporting !== null}>
-              <FileText />
-              {exporting === "pdf" ? t("reports.exporting") : t("reports.exportPdf")}
-            </Button>
-          </>
+          <ReportExportActions
+            data={data}
+            exporting={exporting}
+            onExport={(kind) => void handleExport(kind)}
+          />
         }
       />
 
@@ -127,18 +119,9 @@ export default function ReportsPage() {
             <EmptyState icon={BarChart3} title={t("reports.empty")} />
           ) : (
             <DataTable
-              columns={data.headers.map(
-                (h, j): DataTableColumn<(string | number)[]> => ({
-                  header: h,
-                  className: "whitespace-nowrap",
-                  render: (row) =>
-                    typeof row[j] === "number" && MONEY_COLUMNS[key]?.includes(j)
-                      ? formatMoney(row[j] as number)
-                      : String(row[j]),
-                }),
-              )}
+              columns={columns}
               rows={data.rows}
-              getRowKey={(_, i) => String(i)}
+              getRowKey={getRowKey}
             />
           )}
         </CardContent>
