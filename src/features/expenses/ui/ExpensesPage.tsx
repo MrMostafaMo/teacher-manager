@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import { Pencil, Plus, Receipt, Trash2 } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import {
   deleteExpense,
   listExpenses,
 } from "@/features/expenses/application/expense-cases";
 import type { Expense } from "@/lib/db/schema";
-import { formatDate, formatMoney } from "@/lib/utils/format";
+import { formatMoney } from "@/lib/utils/format";
 import { RecordExpenseDialog } from "./RecordExpenseDialog";
 import { MonthPicker } from "@/shared/DatePicker";
+import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { ExpensesTable } from "./expenses-table";
 
 const inputClass =
   "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring";
@@ -29,7 +30,7 @@ export default function ExpensesPage() {
   const [error, setError] = useState("");
   const [recordOpen, setRecordOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { armed: deletingId, request, clear } = useConfirmDelete();
   const [reloadKey, setReloadKey] = useState(0);
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
@@ -47,88 +48,22 @@ export default function ExpensesPage() {
       .finally(() => setLoading(false));
   }, [month, reloadKey, t]);
 
-  async function handleDelete(id: string) {
-    if (deletingId !== id) {
-      setDeletingId(id);
-      setTimeout(() => setDeletingId((cur) => (cur === id ? null : cur)), 2500);
-      return;
-    }
-    try {
-      await deleteExpense(id);
-      setDeletingId(null);
-      bump();
-    } catch (e) {
-      console.error("Failed to delete expense", e);
-      setError(t("expenses.deleteError"));
-    }
-  }
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (!request(id)) return;
+      try {
+        await deleteExpense(id);
+        clear();
+        bump();
+      } catch (e) {
+        console.error("Failed to delete expense", e);
+        setError(t("expenses.deleteError"));
+      }
+    },
+    [request, clear, bump, t],
+  );
 
   const total = rows.reduce((acc, r) => acc + r.amount, 0);
-
-  const columns: DataTableColumn<Expense>[] = [
-    {
-      header: t("expenses.date"),
-      className: "tabular-nums text-muted-foreground",
-      render: (r) => <span dir="ltr">{formatDate(r.spentAt, "DD-MM-YYYY")}</span>,
-    },
-    {
-      header: t("expenses.title"),
-      className: "font-medium",
-      render: (r) => r.title,
-    },
-    {
-      header: t("expenses.category"),
-      render: (r) => (
-        <Badge variant="secondary">{t(`expenses.categories.${r.category}`)}</Badge>
-      ),
-    },
-    {
-      header: t("expenses.amount"),
-      className: "tabular-nums",
-      render: (r) => <span dir="ltr">{formatMoney(r.amount)}</span>,
-    },
-    {
-      header: t("expenses.note"),
-      className: "max-w-48 truncate text-muted-foreground",
-      render: (r) => r.note ?? "—",
-    },
-    {
-      header: "",
-      className: "text-end",
-      headerClassName: "text-end",
-      render: (r) => (
-        <div className="flex justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-muted-foreground"
-            aria-label={t("expenses.edit")}
-            onClick={() => {
-              setEditing(r);
-              setRecordOpen(true);
-            }}
-          >
-            <Pencil className="size-4" />
-          </Button>
-          {deletingId === r.id ? (
-            <Button variant="destructive" size="sm" onClick={() => void handleDelete(r.id)}>
-              {t("expenses.confirmDelete")}
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-muted-foreground hover:text-destructive"
-              aria-label={t("expenses.delete")}
-              onClick={() => void handleDelete(r.id)}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          )}
-        </div>
-      ),
-    },
-  ];
 
   return (
     <div className="space-y-6">
@@ -147,15 +82,15 @@ export default function ExpensesPage() {
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           {t("expenses.month")}
           <MonthPicker
             value={month}
-            onChange={(v) => v && setMonth(v)}
+            onChange={(v) => setMonth(v || dayjs().format("YYYY-MM"))}
             ariaLabel={t("expenses.month")}
             className={inputClass}
           />
-        </label>
+        </div>
         <Badge variant="secondary">
           <Receipt className="size-3.5" />
           {t("expenses.total")}: {formatMoney(total)}
@@ -175,10 +110,14 @@ export default function ExpensesPage() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <DataTable<Expense>
-              columns={columns}
+            <ExpensesTable
               rows={rows}
-              getRowKey={(r) => r.id}
+              deletingId={deletingId}
+              onEdit={(r) => {
+                setEditing(r);
+                setRecordOpen(true);
+              }}
+              onDelete={(id) => void handleDelete(id)}
             />
           </CardContent>
         </Card>

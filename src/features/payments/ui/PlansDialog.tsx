@@ -1,18 +1,18 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CreditCard, Pencil, Plus, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { CreditCard, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { EmptyState } from "@/shared/EmptyState";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { DataTable } from "@/shared/DataTable";
 import { deletePlan, listPlans } from "@/features/payments/application/plan-cases";
 import type { PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import type { Plan } from "@/lib/db/schema";
 import { Modal } from "@/shared/Modal";
-import { formatMoney } from "@/lib/utils/format";
+import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { PlanFormDialog } from "./PlanFormDialog";
+import { usePlansColumns } from "./plans-columns";
 
 interface PlansDialogProps {
   open: boolean;
@@ -26,14 +26,14 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Plan | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { armed: deletingId, request, clear } = useConfirmDelete();
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
     setError("");
-    setDeletingId(null);
+    clear();
     listPlans()
       .then(setRows)
       .catch((e) => {
@@ -49,81 +49,30 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
     setFormOpen(true);
   }
 
-  function openEdit(plan: Plan) {
+  const openEdit = useCallback((plan: Plan) => {
     setEditing(plan);
     setFormOpen(true);
-  }
+  }, []);
 
-  async function handleDelete(plan: Plan) {
-    if (deletingId !== plan.id) {
-      setDeletingId(plan.id);
-      setTimeout(() => setDeletingId((cur) => (cur === plan.id ? null : cur)), 2500);
-      return;
-    }
-    try {
-      await deletePlan(plan.id);
-      setRows((r) => r.filter((p) => p.id !== plan.id));
-      onChanged();
-    } catch (e) {
-      console.error("Failed to delete plan", e);
-      setError(t("plans.deleteError"));
-    } finally {
-      setDeletingId(null);
-    }
-  }
+  const handleDelete = useCallback(
+    async (plan: Plan) => {
+      if (!request(plan.id)) return;
+      try {
+        await deletePlan(plan.id);
+        setRows((r) => r.filter((p) => p.id !== plan.id));
+        onChanged();
+      } catch (e) {
+        console.error("Failed to delete plan", e);
+        setError(t("plans.deleteError"));
+      } finally {
+        clear();
+      }
+    },
+    [request, clear, onChanged, t],
+  );
 
-  const intervalKey: Record<Plan["billingInterval"], string> = {
-    monthly: "plans.monthly",
-    term: "plans.term",
-    yearly: "plans.yearly",
-  };
-
-  const columns: DataTableColumn<PlanWithCount>[] = [
-    {
-      header: t("plans.name"),
-      className: "font-medium",
-      render: (p) => p.name,
-    },
-    {
-      header: t("plans.amount"),
-      className: "tabular-nums",
-      render: (p) => <span dir="ltr">{formatMoney(p.amount)}</span>,
-    },
-    {
-      header: t("plans.interval"),
-      render: (p) => <Badge variant="secondary">{t(intervalKey[p.billingInterval])}</Badge>,
-    },
-    {
-      header: t("plans.subscribers"),
-      className: "text-muted-foreground tabular-nums",
-      render: (p) => p.memberCount,
-    },
-    {
-      header: "",
-      className: "text-end",
-      headerClassName: "text-end",
-      render: (p) => (
-        <div className="flex justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t("plans.edit")}
-            onClick={() => openEdit(p)}
-          >
-            <Pencil />
-          </Button>
-          <Button
-            variant={deletingId === p.id ? "destructive" : "ghost"}
-            size="icon-sm"
-            aria-label={deletingId === p.id ? t("plans.confirmDelete") : t("plans.delete")}
-            onClick={() => void handleDelete(p)}
-          >
-            <Trash2 />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = usePlansColumns(deletingId, openEdit, (plan) => void handleDelete(plan));
+  const getRowKey = useCallback((p: PlanWithCount) => p.id, []);
 
   return (
     <Modal open={open} onClose={onClose} title={t("plans.title")} className="max-w-2xl">
@@ -150,7 +99,7 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
               <DataTable<PlanWithCount>
                 columns={columns}
                 rows={rows}
-                getRowKey={(p) => p.id}
+                getRowKey={getRowKey}
               />
             )}
           </CardContent>

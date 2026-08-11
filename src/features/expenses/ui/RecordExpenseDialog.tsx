@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import dayjs from "dayjs";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,12 @@ import type { Expense } from "@/lib/db/schema";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { DatePicker } from "@/shared/DatePicker";
 import { Field } from "@/shared/Field";
+import {
+  emptyExpenseForm,
+  expenseFormFromExpense,
+  expenseInputFromForm,
+  type ExpenseFormState,
+} from "./expense-form-utils";
 
 interface RecordExpenseDialogProps {
   open: boolean;
@@ -21,29 +26,21 @@ interface RecordExpenseDialogProps {
   onSaved: () => void;
 }
 
-interface FormState {
-  title: string;
-  category: string;
-  amount: string;
-  date: string;
-  note: string;
-}
-
 export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordExpenseDialogProps) {
   const { t } = useTranslation();
-  const [form, setForm] = useState<FormState>(emptyForm());
+  const [form, setForm] = useState<ExpenseFormState>(emptyExpenseForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setForm(expense ? formFromExpense(expense) : emptyForm());
+    setForm(expense ? expenseFormFromExpense(expense) : emptyExpenseForm());
     setErrors({});
     setFatal("");
   }, [open, expense]);
 
-  function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
+  function setField<K extends keyof ExpenseFormState>(key: K, value: ExpenseFormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
@@ -63,13 +60,7 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
     setErrors({});
     setFatal("");
     try {
-      const input = {
-        title: form.title,
-        category: expenseCategorySchema.parse(form.category),
-        amount: Number(form.amount),
-        note: form.note,
-        spentAt: dayjs(form.date).startOf("day").valueOf(),
-      };
+      const input = expenseInputFromForm(form);
       expenseInputSchema.parse(input);
       if (expense) await updateExpense(expense.id, input);
       else await recordExpense(input);
@@ -125,7 +116,7 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
         <Field id="expense-date" label={t("expenses.date")}>
           <DatePicker
             value={form.date}
-            onChange={(v) => v && setField("date", v)}
+            onChange={(v) => setField("date", v)}
             ariaLabel={t("expenses.date")}
             className="w-full"
           />
@@ -152,24 +143,4 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
       </form>
     </Modal>
   );
-}
-
-function emptyForm(): FormState {
-  return {
-    title: "",
-    category: "other",
-    amount: "",
-    date: dayjs().format("YYYY-MM-DD"),
-    note: "",
-  };
-}
-
-function formFromExpense(expense: Expense): FormState {
-  return {
-    title: expense.title,
-    category: expense.category,
-    amount: String(expense.amount),
-    date: dayjs(expense.spentAt).format("YYYY-MM-DD"),
-    note: expense.note ?? "",
-  };
 }
