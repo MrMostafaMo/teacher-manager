@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { ATTENDANCE_STATUSES, type AttendanceStatus } from "@/features/attendance/domain";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,7 @@ const STATUS_BADGE: Record<AttendanceStatus, string> = {
 };
 
 /** Present / absent / late / excused segmented control. Shared by daily & session sheets. */
-export function StatusPicker({
+export const StatusPicker = memo(function StatusPicker({
   value,
   onChange,
 }: {
@@ -46,4 +47,4 @@ export function StatusPicker({
       ))}
     </div>
   );
-}
+});

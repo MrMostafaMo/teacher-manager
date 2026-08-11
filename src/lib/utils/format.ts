@@ -32,7 +32,7 @@ export function formatMoney(value: number): string {
   return `\u2066${number}\u2069 ${i18n.t("common.currency")}`;
 }
 
-export function formatDate(date: number | Date, pattern = "YYYY-MM-DD"): string {
+export function formatDate(date: number | Date, pattern = "DD-MM-YYYY"): string {
   return dayjs(date).format(pattern);
 }
 

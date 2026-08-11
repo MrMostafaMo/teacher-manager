@@ -22,6 +22,48 @@ export interface LogActivityInput {
 
 export type ActivityLogRow = NonNullable<Awaited<ReturnType<typeof repository.findById>>>;
 
+/** Maps stored action strings to i18n keys under `activity.actions.*`. */
+export const ACTION_KEYS: Record<string, string> = {
+  "app.launch": "appLaunch",
+  "student.create": "studentCreate",
+  "student.update": "studentUpdate",
+  "student.delete": "studentDelete",
+  "payment.create": "paymentCreate",
+  "payment.update": "paymentUpdate",
+  "payment.delete": "paymentDelete",
+  "plan.create": "planCreate",
+  "plan.update": "planUpdate",
+  "plan.delete": "planDelete",
+  "expense.create": "expenseCreate",
+  "expense.update": "expenseUpdate",
+  "expense.delete": "expenseDelete",
+  "skill.create": "skillCreate",
+  "skill.update": "skillUpdate",
+  "skill.delete": "skillDelete",
+  "skill.level": "skillLevel",
+  "homework.create": "homeworkCreate",
+  "homework.update": "homeworkUpdate",
+  "homework.delete": "homeworkDelete",
+  "homework.submit": "homeworkSubmit",
+  "homework.submitAll": "homeworkSubmitAll",
+  "debug.check": "debugCheck",
+  "sessions.date": "sessionsDate",
+  "schedule.create": "scheduleCreate",
+  "schedule.update": "scheduleUpdate",
+  "schedule.delete": "scheduleDelete",
+  "schedule.attendance.save": "scheduleAttendanceSave",
+  "group.create": "groupCreate",
+  "group.update": "groupUpdate",
+  "group.delete": "groupDelete",
+  "group.member.add": "groupMemberAdd",
+  "group.member.remove": "groupMemberRemove",
+  "exam.create": "examCreate",
+  "exam.update": "examUpdate",
+  "exam.delete": "examDelete",
+  "exam.result": "examResult",
+  "attendance.save": "attendanceSave",
+};
+
 /** Writes one activity log entry. Never throws on its own failure. */
 export async function logActivity(input: LogActivityInput): Promise<void> {
   try {

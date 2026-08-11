@@ -4,7 +4,7 @@ import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
-import { PopoverShell } from "@/shared/DatePicker";
+import { PopoverShell } from "@/shared/popover-shell";
 import { Select } from "@/components/ui/select";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);

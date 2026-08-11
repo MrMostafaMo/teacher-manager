@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export interface DataTableColumn<T> {
@@ -20,7 +20,7 @@ interface DataTableProps<T> {
   className?: string;
 }
 
-export function DataTable<T>({
+function DataTableInner<T>({
   columns,
   rows,
   getRowKey,
@@ -56,3 +56,9 @@ export function DataTable<T>({
     </div>
   );
 }
+
+/**
+ * Memoized so tables only re-render when rows/columns actually change — callers
+ * should keep `columns` and `getRowKey` stable (useMemo/useCallback) to benefit.
+ */
+export const DataTable = memo(DataTableInner) as typeof DataTableInner;

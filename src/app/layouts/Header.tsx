@@ -18,7 +18,7 @@ export function Header() {
   const section = NAV_SECTIONS.find((s) => s.id === current.section);
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-background/85 px-4 backdrop-blur-md">
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b bg-background px-4">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Icon className="size-4" />
@@ -37,7 +37,7 @@ export function Header() {
         <Button
           variant="outline"
           size="sm"
-          aria-label={t("common.commandPalette")}
+          aria-label={t("common.commandPalette.title")}
           onClick={() => setPaletteOpen(true)}
           className="h-7 rounded-lg ps-2 pe-1.5 text-xs text-muted-foreground"
         >

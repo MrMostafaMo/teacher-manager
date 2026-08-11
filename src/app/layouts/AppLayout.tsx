@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Header } from "@/app/layouts/Header";
 import { Sidebar } from "@/app/layouts/Sidebar";
@@ -12,6 +12,14 @@ export function AppLayout() {
   const { pathname } = useLocation();
   const setCommandOpen = useCommandStore((s) => s.setOpen);
   const [dataVersion, setDataVersion] = useState(0);
+  const [prevPath, setPrevPath] = useState<string | null>(null);
+
+  // Only animate the page entrance on route changes; global-dialog saves
+  // remount via dataVersion without replaying the slide-in.
+  useEffect(() => {
+    setPrevPath(pathname);
+  }, [pathname]);
+  const animateEntrance = prevPath !== pathname;
 
   useLayoutEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
@@ -43,7 +51,11 @@ export function AppLayout() {
         <main ref={mainRef} className="flex-1 overflow-y-auto overscroll-none p-6">
           <div
             key={`${pathname}:${dataVersion}`}
-            className="mx-auto max-w-[1440px] animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
+            className={
+              animateEntrance
+                ? "mx-auto max-w-[1440px] animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
+                : "mx-auto max-w-[1440px]"
+            }
           >
             <Outlet />
           </div>
