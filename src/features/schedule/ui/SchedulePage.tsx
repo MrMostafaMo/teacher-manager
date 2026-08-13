@@ -1,54 +1,40 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { listGroups } from "@/features/groups/application/group-cases";
-import { deleteSession, listSchedule } from "@/features/schedule/application/schedule-cases";
+import { deleteSession } from "@/features/schedule/application/schedule-cases";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
-import type { GroupSession, StudyGroup } from "@/lib/db/schema";
+import type { GroupSession } from "@/lib/db/schema";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import WeekGrid from "./WeekGrid";
 import { ScheduleFormDialog } from "./ScheduleFormDialog";
+import { SessionOccurrenceDialog } from "./SessionOccurrenceDialog";
 import { ScheduleGroupsView } from "./schedule-groups-view";
 import { ScheduleHeaderActions } from "./schedule-header-actions";
 import { SessionAttendanceDialog } from "./SessionAttendanceDialog";
+import { useScheduleData } from "./use-schedule-data";
 import { useScheduleView } from "./use-schedule-view";
 
 export default function SchedulePage() {
   const { t } = useTranslation();
-  const [sessions, setSessions] = useState<SessionWithGroup[]>([]);
-  const [groups, setGroups] = useState<StudyGroup[]>([]);
-  const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
+  const { sessions, groups, memberCounts, exceptions, loading, reload } = useScheduleData();
   const [view, setView] = useState<"day" | "group">("day");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<GroupSession | null>(null);
   const [attendanceSession, setAttendanceSession] = useState<SessionWithGroup | null>(null);
+  const [occurrence, setOccurrence] = useState<{ session: SessionWithGroup; date: string } | null>(null);
   const { armed: deletingId, request, clear } = useConfirmDelete();
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [all, allGroups] = await Promise.all([listSchedule(), listGroups()]);
-      setSessions(all);
-      setGroups(allGroups.filter((g) => g.status === "active"));
-      setMemberCounts(Object.fromEntries(allGroups.map((g) => [g.id, g.memberCount])));
-    } catch (error) {
-      console.error("Failed to load schedule", error);
-      setSessions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
-
   const { byDay, conflicts, byGroup } = useScheduleView(sessions);
+
+  const occurrenceException = occurrence
+    ? (exceptions.find(
+        (ex) => ex.sessionId === occurrence.session.id && ex.date === occurrence.date,
+      ) ?? null)
+    : null;
 
   function openCreate() {
     setEditing(null);
@@ -106,11 +92,12 @@ export default function SchedulePage() {
       ) : view === "day" ? (
         <WeekGrid
           byDay={byDay}
-          conflicts={conflicts}
+          exceptions={exceptions}
           deletingId={deletingId}
           onEdit={openEdit}
           onDelete={(s) => void handleDelete(s)}
           onAttend={(s) => setAttendanceSession(s)}
+          onOccurrence={(s, date) => setOccurrence({ session: s, date })}
         />
       ) : (
         <ScheduleGroupsView
@@ -137,6 +124,15 @@ export default function SchedulePage() {
         session={attendanceSession}
         onClose={() => setAttendanceSession(null)}
         onSaved={() => undefined}
+      />
+
+      <SessionOccurrenceDialog
+        open={occurrence !== null}
+        session={occurrence?.session ?? null}
+        date={occurrence?.date ?? ""}
+        exception={occurrenceException}
+        onClose={() => setOccurrence(null)}
+        onSaved={() => void reload()}
       />
     </div>
   );

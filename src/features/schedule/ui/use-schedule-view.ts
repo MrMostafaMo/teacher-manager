@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import { DAYS } from "@/features/schedule/domain";
+import { conflictIds } from "@/features/schedule/application/schedule-exceptions";
 
 /** Day buckets, room-conflict ids and group buckets derived from the sessions. */
 export function useScheduleView(sessions: SessionWithGroup[]) {
@@ -10,32 +11,8 @@ export function useScheduleView(sessions: SessionWithGroup[]) {
     return buckets;
   }, [sessions]);
 
-  /** Sessions sharing a day + room whose time ranges overlap. */
-  const conflicts = useMemo(() => {
-    const ids = new Set<string>();
-    for (const daySessions of byDay) {
-      const byRoom = new Map<string, SessionWithGroup[]>();
-      for (const s of daySessions) {
-        if (!s.room) continue;
-        const list = byRoom.get(s.room) ?? [];
-        list.push(s);
-        byRoom.set(s.room, list);
-      }
-      for (const roomSessions of byRoom.values()) {
-        for (let i = 0; i < roomSessions.length; i++) {
-          for (let j = i + 1; j < roomSessions.length; j++) {
-            const a = roomSessions[i];
-            const b = roomSessions[j];
-            if (a.startTime < b.endTime && b.startTime < a.endTime) {
-              ids.add(a.id);
-              ids.add(b.id);
-            }
-          }
-        }
-      }
-    }
-    return ids;
-  }, [byDay]);
+  /** Sessions sharing a day + room whose time ranges overlap (shared rule). */
+  const conflicts = useMemo(() => conflictIds(byDay), [byDay]);
 
   const byGroup = useMemo(() => {
     const map = new Map<string, SessionWithGroup[]>();

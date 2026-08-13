@@ -1,42 +1,44 @@
 import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
-import type { GroupSession } from "@/lib/db/schema";
-import { cn } from "@/lib/utils";
+import type { GroupSession, SessionException } from "@/lib/db/schema";
 import { formatDate, formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { orderedDayIndices, useWeekStore } from "@/lib/week-store";
-import { DAYS } from "@/features/schedule/domain";
+import { applyExceptions, conflictIds } from "@/features/schedule/application/schedule-exceptions";
 import {
   HOUR_PX,
   gridTemplate,
+  isoDate,
   layoutDay,
   rangeFor,
   toLabel,
   weekDates,
 } from "./week-layout";
 import { DayColumn } from "./day-column";
+import { WeekHeader } from "./week-header";
 import { WeekNav } from "./week-nav";
 
 interface WeekGridProps {
   /** Sessions bucketed by day index (0=Sunday … 6=Saturday). */
   byDay: SessionWithGroup[][];
-  conflicts: Set<string>;
+  /** Per-occurrence cancellations/moves for the visible week. */
+  exceptions: SessionException[];
   deletingId: string | null;
   onEdit: (s: GroupSession) => void;
   onDelete: (s: GroupSession) => void;
   onAttend: (s: SessionWithGroup) => void;
+  onOccurrence: (s: SessionWithGroup, date: string) => void;
 }
 
 export default function WeekGrid({
   byDay,
-  conflicts,
+  exceptions,
   deletingId,
   onEdit,
   onDelete,
   onAttend,
+  onOccurrence,
 }: WeekGridProps) {
-  const { t } = useTranslation();
   const hour24 = useTimeStore((s) => s.hour24);
   const weekStartsOn = useWeekStore((s) => s.weekStartsOn);
   const daysOrder = orderedDayIndices(weekStartsOn);
@@ -44,12 +46,19 @@ export default function WeekGrid({
   const [weekOffset, setWeekOffset] = useState(0);
   const isCurrentWeek = weekOffset === 0;
 
-  const [rangeStart, rangeEnd] = useMemo(() => rangeFor(byDay), [byDay]);
-  const totalH = ((rangeEnd - rangeStart) / 60) * HOUR_PX;
-
   const now = new Date();
   const today = now.getDay();
   const dates = weekDates(now, weekStartsOn, weekOffset);
+
+  const effectiveByDay = useMemo(
+    () => applyExceptions(byDay, exceptions, dates),
+    [byDay, exceptions, dates],
+  );
+  const conflicts = useMemo(() => conflictIds(effectiveByDay), [effectiveByDay]);
+
+  const [rangeStart, rangeEnd] = useMemo(() => rangeFor(effectiveByDay), [effectiveByDay]);
+  const totalH = ((rangeEnd - rangeStart) / 60) * HOUR_PX;
+
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const nowVisible = isCurrentWeek && nowMin >= rangeStart && nowMin <= rangeEnd;
 
@@ -71,31 +80,7 @@ export default function WeekGrid({
 
       <div className="overflow-x-auto">
         <div className="min-w-[880px] overflow-hidden rounded-xl border bg-card">
-          {/* Day headers */}
-          <div className="grid" style={gridTemplate}>
-            <div className="border-b border-border/60" />
-            {daysOrder.map((day, i) => (
-              <div
-                key={day}
-                className={cn(
-                  "border-b border-inline-start border-border/60 px-2 py-2 text-center",
-                  isCurrentWeek && day === today && "bg-muted/60",
-                )}
-              >
-                <p
-                  className={cn(
-                    "text-xs font-semibold",
-                    isCurrentWeek && day === today && "text-foreground",
-                  )}
-                >
-                  {t(`schedule.days.${DAYS[day]}`)}
-                </p>
-                <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
-                  {dates[i].getDate()}
-                </p>
-              </div>
-            ))}
-          </div>
+          <WeekHeader daysOrder={daysOrder} dates={dates} today={today} isCurrentWeek={isCurrentWeek} />
 
           {/* Time gutter + day columns */}
           <div className="grid" style={gridTemplate}>
@@ -111,10 +96,11 @@ export default function WeekGrid({
               ))}
             </div>
 
-            {daysOrder.map((day) => (
+            {daysOrder.map((day, i) => (
               <DayColumn
                 key={day}
                 day={day}
+                date={isoDate(dates[i])}
                 today={today}
                 isCurrentWeek={isCurrentWeek}
                 nowVisible={nowVisible}
@@ -122,12 +108,13 @@ export default function WeekGrid({
                 hours={hours}
                 rangeStart={rangeStart}
                 totalH={totalH}
-                placed={layoutDay(byDay[day])}
+                placed={layoutDay(effectiveByDay[day])}
                 conflicts={conflicts}
                 deletingId={deletingId}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onAttend={onAttend}
+                onOccurrence={onOccurrence}
               />
             ))}
           </div>

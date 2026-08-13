@@ -54,6 +54,14 @@ export function toLabel(min: number): string {
   return `${String(Math.floor(min / 60)).padStart(2, "0")}:00`;
 }
 
+/** Date → "YYYY-MM-DD" in local time. */
+export function isoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 /**
  * Minimum height for a session block so its content stays readable: the group
  * name + time lines always fit, plus a room/conflict line when present. Capped
@@ -94,8 +102,8 @@ export function weekDates(now: Date, weekStartsOn: number, offset = 0): Date[] {
 
 export const gridTemplate = { gridTemplateColumns: `${GUTTER_W} repeat(7, minmax(0, 1fr))` } as const;
 
-export interface PlacedSession {
-  session: SessionWithGroup;
+export interface PlacedSession<T extends SessionWithGroup = SessionWithGroup> {
+  session: T;
   col: number;
   cols: number;
 }
@@ -105,7 +113,7 @@ export interface PlacedSession {
  * columns hold an overlapping session — so overlaps render side-by-side with
  * proportional widths, while non-overlapping sessions stay full-width.
  */
-export function layoutDay(sessions: SessionWithGroup[]): PlacedSession[] {
+export function layoutDay<T extends SessionWithGroup>(sessions: T[]): PlacedSession<T>[] {
   const sorted = [...sessions].sort(
     (a, b) => toMin(a.startTime) - toMin(b.startTime) || toMin(b.endTime) - toMin(a.endTime),
   );

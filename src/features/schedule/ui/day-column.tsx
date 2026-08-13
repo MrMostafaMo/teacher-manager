@@ -1,12 +1,13 @@
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession } from "@/lib/db/schema";
+import type { SessionWithException } from "@/features/schedule/application/schedule-exceptions";
 import { cn } from "@/lib/utils";
-import { HOUR_PX } from "./week-layout";
-import type { PlacedSession } from "./week-layout";
+import { HOUR_PX, type PlacedSession } from "./week-layout";
 import { SessionBlock } from "./SessionBlock";
 
 interface DayColumnProps {
   day: number;
+  date: string;
   today: number;
   isCurrentWeek: boolean;
   nowVisible: boolean;
@@ -14,16 +15,18 @@ interface DayColumnProps {
   hours: number[];
   rangeStart: number;
   totalH: number;
-  placed: PlacedSession[];
+  placed: PlacedSession<SessionWithException>[];
   conflicts: Set<string>;
   deletingId: string | null;
   onEdit: (s: GroupSession) => void;
   onDelete: (s: GroupSession) => void;
   onAttend: (s: SessionWithGroup) => void;
+  onOccurrence: (s: SessionWithGroup, date: string) => void;
 }
 
 export function DayColumn({
   day,
+  date,
   today,
   isCurrentWeek,
   nowVisible,
@@ -37,6 +40,7 @@ export function DayColumn({
   onEdit,
   onDelete,
   onAttend,
+  onOccurrence,
 }: DayColumnProps) {
   return (
     <div
@@ -71,9 +75,11 @@ export function DayColumn({
           rangeStart={rangeStart}
           conflicted={conflicts.has(p.session.id)}
           deleting={deletingId === p.session.id}
+          date={date}
           onEdit={onEdit}
           onDelete={onDelete}
           onAttend={onAttend}
+          onOccurrence={onOccurrence}
         />
       ))}
     </div>
