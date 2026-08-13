@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { NAV_ITEMS, NAV_SECTIONS } from "@/app/navigation";
 import { useCommandStore } from "@/lib/command-store";
 import { formatDate } from "@/lib/utils/format";
+import { NotificationDropdown } from "@/features/notifications/ui/notification-dropdown";
 
 export function Header() {
   const { t } = useTranslation();
@@ -34,6 +35,7 @@ export function Header() {
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        <NotificationDropdown />
         <Button
           variant="outline"
           size="sm"

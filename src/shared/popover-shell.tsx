@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { cn } from "@/lib/utils";
 
 const MARGIN = 8;
-const POPOVER_WIDTHS: Record<string, number> = { "w-56": 224, "w-64": 256, "w-72": 288 };
+const POPOVER_WIDTHS: Record<string, number> = { "w-56": 224, "w-64": 256, "w-72": 288, "w-80": 320 };
 
 export function PopoverShell({
   open,
