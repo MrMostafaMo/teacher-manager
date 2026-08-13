@@ -479,3 +479,23 @@ Phase 35 added a student report card PDF (بطاقة تقرير — no schema ch
   flag, and toasts saved/error; a «بطاقة التقرير» button (busy-disabled) sits
   in the profile header next to «تعديل الطالب» and «كشف الحساب».
 - i18n: `reportCard.*` namespace (ar + en).
+
+Phase 36 added one-off schedule exceptions (جلسات استثنائية): cancel or move a
+single occurrence of a recurring weekly session without touching the rule.
+
+- New `session_exceptions` table (migration v12): `sessionId` + `date` (ISO
+  `YYYY-MM-DD`) + `type` (`cancelled`/`moved`) + optional `startTime`/
+  `endTime`/`room`, unique `(sessionId, date)`. Cleanup wired into
+  `schedule-repo.ts`; upsert = `clearForSessionDate` + insert.
+- Pure logic in `schedule/application/schedule-exceptions.ts`
+  (`applyExceptions`, `conflictIds`, `activeGroupIdsForDate`) is unit-tested;
+  use-cases in `schedule-exception-cases.ts` (`listScheduleExceptions`,
+  `exceptionsForDates`, `cancelOccurrence`, `moveOccurrence` — same-date only
+  by design — `restoreOccurrence`); activity-logged.
+- The timetable renders exceptions: cancelled occurrences stay as a dimmed,
+  line-through block with a restore button; moved ones reposition to their
+  effective time/room with an amber badge. `WeekGrid` builds `effectiveByDay`
+  via `applyExceptions` and computes room conflicts from it.
+- Consumers honor exceptions: the daily attendance roster
+  (`rosterForDate`) and the dashboard's `todaySessions` drop cancelled
+  occurrences and show moved ones at their effective time.

@@ -859,3 +859,41 @@ Student report card PDF (بطاقة تقرير — no schema change):
 - i18n: `reportCard.*` namespace (ar + en).
 - Suite: 15 files / 104 tests, all green; `tsc --noEmit` clean; full
   `pnpm build` passes.
+
+## Phase 36 — completed
+
+Schedule exceptions (جلسات استثنائية): cancel or move a single occurrence of a
+recurring weekly session without touching the recurring rule.
+
+- **Schema** (migration v12): `session_exceptions` table —
+  `sessionId`/`date` (ISO `YYYY-MM-DD`)/`type` (`cancelled`/`moved`)/optional
+  `startTime`/`endTime`/`room`, unique `(sessionId, date)` = one exception per
+  occurrence. Cleanup wired into `schedule-repo.ts` (deleting a group or
+  session removes its exceptions; upsert = `clearForSessionDate` + insert).
+- **Domain** (`schedule/domain.ts`, + test): `dateRegex`,
+  `cancelSessionSchema`, `moveSessionSchema` with `end > start` refinement;
+  `timeRegex` exported from `schedule/domain.ts`.
+- **Repo** (`schedule/infrastructure/exception-repo.ts`): `list` (newest
+  first), `listForDates(sessionIds, dates)`, `clearForSessions`,
+  `clearForSessionDate`, `findById`, `remove`.
+- **Pure logic** (`schedule/application/schedule-exceptions.ts`, + tests):
+  `applyExceptions(byDay, exceptions, dates)` layers flags onto week buckets
+  (cancelled keeps its slot, moved repositions to effective time),
+  `conflictIds` (string-time room overlap, shared with the day view),
+  `activeGroupIdsForDate` (drops cancelled-that-date).
+- **Use-cases** (`schedule/application/schedule-exception-cases.ts`):
+  `listScheduleExceptions`, `exceptionsForDates`, `cancelOccurrence`,
+  `moveOccurrence` (same-date only, YAGNI), `restoreOccurrence`; activity-log
+  actions `schedule.exceptionCancel/Move/Restore`.
+- **UI**: `SessionOccurrenceDialog` (cancel/move toggle via `OccurrenceFields`,
+  restore confirm, zod errors via `mapZodErrors`), `ExceptionBadge` on blocks,
+  `BlockActions` hover stack, cancelled blocks dimmed + line-through with a
+  restore button; `WeekGrid` computes `effectiveByDay = applyExceptions(...)`
+  and room conflicts from it, so moved sessions reposition and extend the grid
+  window. `useScheduleData` hook owns data loading + reload.
+- **Consumers**: `rosterForDate` (attendance daily roster) and
+  `todaySessions` (dashboard) honor exceptions — cancelled occurrences drop
+  out, moved ones show effective time.
+- i18n: `schedule.exceptions.*` (ar + en); activity `scheduleException*`.
+- Suite: 19 files / 130 tests, all green; `tsc --noEmit` clean; full
+  `pnpm build` passes; every file within the 150-line guard.
