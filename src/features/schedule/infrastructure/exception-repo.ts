@@ -1,4 +1,4 @@
-import { and, asc, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { createRepository } from "@/lib/db/repository";
 import { sessionExceptions, type SessionException } from "@/lib/db/schema";
@@ -37,5 +37,17 @@ export const exceptionRepository = {
     await db
       .delete(sessionExceptions)
       .where(inArray(sessionExceptions.sessionId, sessionIds));
+  },
+
+  /** Delete the exception for one (session, date) pair (upsert helper). */
+  clearForSessionDate: async (sessionId: string, date: string): Promise<void> => {
+    await db
+      .delete(sessionExceptions)
+      .where(
+        and(
+          eq(sessionExceptions.sessionId, sessionId),
+          eq(sessionExceptions.date, date),
+        ),
+      );
   },
 };
