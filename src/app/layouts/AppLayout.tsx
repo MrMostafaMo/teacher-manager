@@ -5,6 +5,7 @@ import { Sidebar } from "@/app/layouts/Sidebar";
 import { CommandPalette } from "@/shared/CommandPalette";
 import { GlobalDialogs, DATA_CHANGED_EVENT } from "@/shared/GlobalDialogs";
 import { ToastViewport } from "@/shared/ToastViewport";
+import { NotificationSync } from "@/features/notifications/ui/notification-sync";
 import { useCommandStore } from "@/lib/command-store";
 
 export function AppLayout() {
@@ -63,6 +64,7 @@ export function AppLayout() {
       </div>
       <CommandPalette />
       <GlobalDialogs />
+      <NotificationSync />
       <ToastViewport />
     </div>
   );
