@@ -800,11 +800,22 @@ export async function refreshNotifications(): Promise<NotificationItem[]> {
       dismissed: false,
     });
   }
-  const all = await notificationRepository.listAll();
-  for (const row of all.slice(ACTIVE_NOTIFICATION_LIMIT)) {
-    await notificationRepository.remove(row.id);
-  }
+  await trimToLimit();
   return toInsert;
+}
+
+/** Removal priority: dismissed < read < active-unread, newest first per tier.
+ *  Keeps the newest ACTIVE_NOTIFICATION_LIMIT rows, pruning stale (read or
+ *  dismissed) rows before live unread ones (spec: "dismissed or read first"). */
+async function trimToLimit(): Promise<void> {
+  const all = await notificationRepository.listAll();
+  if (all.length <= ACTIVE_NOTIFICATION_LIMIT) return;
+  const priority = (r: { read: boolean; dismissed: boolean }): number =>
+    (r.dismissed ? 0 : 1) + (r.read ? 0 : 1);
+  const toRemove = [...all]
+    .sort((a, b) => priority(a) - priority(b) || a.createdAt - b.createdAt)
+    .slice(0, all.length - ACTIVE_NOTIFICATION_LIMIT);
+  for (const row of toRemove) await notificationRepository.remove(row.id);
 }
 ```
 
