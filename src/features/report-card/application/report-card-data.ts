@@ -14,7 +14,12 @@ export interface ReportCardData {
 }
 
 /** present + late + excused count as attended. */
-export function attendanceRate(s: StudentMonthlyStat): number {
+export function attendanceRate(s: {
+  present: number;
+  absent: number;
+  late: number;
+  excused: number;
+}): number {
   const total = s.present + s.absent + s.late + s.excused;
   return total ? Math.round(((s.present + s.late + s.excused) / total) * 100) : 0;
 }
