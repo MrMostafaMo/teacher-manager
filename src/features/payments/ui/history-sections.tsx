@@ -12,22 +12,33 @@ export function HistorySections({
   collapsed,
   onToggle,
   deletingId,
+  receiptBusyId,
   onEdit,
   onDelete,
+  onReceipt,
 }: {
   sections: HistorySection[];
   ungrouped: PaymentHistoryRow[];
   collapsed: Record<string, boolean>;
   onToggle: (id: string) => void;
   deletingId: string | null;
+  receiptBusyId: string | null;
   onEdit: (payment: Payment) => void;
   onDelete: (id: string) => void;
+  onReceipt: (row: PaymentHistoryRow) => void;
 }) {
   const { t } = useTranslation();
 
   function renderTable(list: PaymentHistoryRow[]) {
     return (
-      <HistoryTable list={list} deletingId={deletingId} onEdit={onEdit} onDelete={onDelete} />
+      <HistoryTable
+        list={list}
+        deletingId={deletingId}
+        receiptBusyId={receiptBusyId}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onReceipt={onReceipt}
+      />
     );
   }
 

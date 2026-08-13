@@ -39,6 +39,7 @@ next begins, and ends with a review checkpoint.
 | 31   | Per-student trend charts (التحليلات): attendance, exams, homework, payments | ✅ Done |
 | 32   | Code-health: file-splitting refactor (≤150 lines), shared primitives, unit-test coverage | ✅ Done |
 | 33   | Daily speed-ups: mark-all-present + reset, printable roster PDF, expense category chart | ✅ Done |
+| 34   | Payment receipt PDF (إيصال دفع) from the payment history | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -804,5 +805,32 @@ Daily speed-ups (no schema change):
 - i18n keys added in both locales: `attendance.markAllPresent`,
   `attendance.resetDraft`, `attendance.printRoster`/`rosterPrinting`/
   `rosterSaved`/`rosterError`/`rosterTitle`, `expenses.byCategory`.
+- Suite: 13 files / 94 tests, all green; `tsc --noEmit` clean; full
+  `pnpm build` passes.
+
+## Phase 34 — completed
+
+Payment receipt PDF (no schema change):
+
+- **Receipt data** (`src/features/payments/application/receipt-data.ts`):
+  `getPaymentReceiptData(row)` narrows a history row
+  (`{ payment, studentName, planName }`) into `PaymentReceiptData` — the
+  history query already resolves names, so no extra DB lookups.
+- **Receipt rows** (`application/receipt-rows.ts`, + test): `receiptRows()`
+  builds the display-ordered label/value field list (student, plan, period,
+  method, date, amount — highlighted — note) with `—` fallbacks for nulls.
+- **PDF builder** (`infrastructure/receipt-exporter.ts`): `buildReceiptPdf`
+  renders a single A4 page via the shared pdf-kit — title + rule, the label/
+  value rows (right-aligned when RTL, two columns), the amount row on a band
+  with a larger font, then a closing rule + footer.
+- **Export + hook**: `exportReceiptPdf` (`application/receipt-export.ts`)
+  drives the builder through the native save dialog via `saveFile()`;
+  `usePaymentReceipt` (`ui/use-payment-receipt.ts`) localizes the labels,
+  formats date/money/method, tracks a busy row id, and toasts success/error.
+- **History wiring**: a receipt icon button (with aria-label) sits next to
+  edit/delete in `HistoryTable`, threaded through `HistorySections` into
+  `HistoryView`.
+- i18n: `payments.date`, `payments.receipt`,
+  `receiptTitle`/`receiptFooter`/`receiptSaved`/`receiptError` (ar + en).
 - Suite: 13 files / 94 tests, all green; `tsc --noEmit` clean; full
   `pnpm build` passes.

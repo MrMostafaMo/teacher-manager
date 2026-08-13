@@ -444,3 +444,22 @@ Phase 33 added daily speed-ups (no schema change):
   `rosterTitle`, `expenses.byCategory` (ar + en).
 - Suite: 13 files / 94 tests, all green; `tsc --noEmit` clean; `pnpm build`
   passes; every file within the 150-line guard.
+
+Phase 34 added a per-payment receipt PDF (إيصال دفع — no schema change):
+
+- `receiptRows` (`payments/application/receipt-rows.ts`, + test) builds the
+  label/value field list (student, plan, period, method, date, amount —
+  highlighted — note) with `—` fallbacks; `getPaymentReceiptData`
+  (`receipt-data.ts`) narrows a history row into `PaymentReceiptData`
+  (names come from the history query — no extra DB lookups).
+- `buildReceiptPdf` (`payments/infrastructure/receipt-exporter.ts`) renders a
+  single A4 page via the shared pdf-kit: title + rule, two-column RTL-aware
+  label/value rows, the amount row on a band at a larger size, closing rule +
+  footer. `exportReceiptPdf` (`application/receipt-export.ts`) goes through
+  the native save dialog via `saveFile()`.
+- `usePaymentReceipt` (`payments/ui/use-payment-receipt.ts`) localizes labels,
+  formats date/money/method, tracks a busy row id, and toasts success/error;
+  a receipt icon button sits next to edit/delete in `HistoryTable`, threaded
+  through `HistorySections` into `HistoryView`.
+- i18n: `payments.date`, `payments.receipt`,
+  `receiptTitle`/`receiptFooter`/`receiptSaved`/`receiptError` (ar + en).

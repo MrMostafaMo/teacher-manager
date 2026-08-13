@@ -16,6 +16,7 @@ import { EmptyState } from "@/shared/EmptyState";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { groupPaymentHistory } from "./history-grouping";
 import { HistorySections } from "./history-sections";
+import { usePaymentReceipt } from "./use-payment-receipt";
 
 export const HistoryView = memo(function HistoryView({
   reloadKey,
@@ -37,6 +38,7 @@ export const HistoryView = memo(function HistoryView({
   const [error, setError] = useState("");
   const { armed: deletingId, request, clear } = useConfirmDelete();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { busyId: receiptBusyId, run: runReceipt } = usePaymentReceipt();
 
   useEffect(() => {
     void listStudents()
@@ -128,8 +130,10 @@ export const HistoryView = memo(function HistoryView({
           collapsed={collapsed}
           onToggle={(id) => setCollapsed((c) => ({ ...c, [id]: !c[id] }))}
           deletingId={deletingId}
+          receiptBusyId={receiptBusyId}
           onEdit={onEdit}
           onDelete={handleDelete}
+          onReceipt={(row) => void runReceipt(row)}
         />
       )}
     </div>
