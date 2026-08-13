@@ -38,6 +38,7 @@ next begins, and ends with a review checkpoint.
 | 30   | Per-student statement of account (كشف الحساب): monthly summary + payment ledger + export | ✅ Done |
 | 31   | Per-student trend charts (التحليلات): attendance, exams, homework, payments | ✅ Done |
 | 32   | Code-health: file-splitting refactor (≤150 lines), shared primitives, unit-test coverage | ✅ Done |
+| 33   | Daily speed-ups: mark-all-present + reset, printable roster PDF, expense category chart | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -772,3 +773,36 @@ Code-health round, no schema change: every source file split to ≤150 lines
   `useProfileActivityColumns`.
 - 9 new unit-test files (~80 cases) on the extracted helpers; suite is
   10 files / 80 tests, all green.
+
+## Phase 33 — completed
+
+Daily speed-ups (no schema change):
+
+- **Mark-all-present + reset** on the daily attendance view: `BulkActions`
+  (`src/features/attendance/ui/bulk-actions.tsx`) uses the pure helpers
+  `markAllPresent`/`isDirty` in `src/features/attendance/application/
+  attendance-bulk.ts` (+ test) — one tap sets every listed student present,
+  and a ghost «إعادة التعيين» button reverts the draft to the last saved
+  statuses while there are unsaved changes.
+- **Printable roster PDF**: `PrintRosterButton` exports the visible roster
+  (name + localized status per student) through the native save dialog. The
+  A4 builder is self-contained in `src/features/attendance/infrastructure/
+  roster-exporter.ts` (fontkit-shaped Arabic, RTL two-column layout, header
+  repeated across pages); `exportRosterPdf` (`application/roster-export.ts`)
+  drives it via the new shared `saveFile()` (`src/lib/export/save-file.ts`).
+- **Shared PDF kit**: `src/lib/export/pdf-kit.ts` hosts the A4 constants,
+  palette, `loadArabicFont()` and the shaped-text draw helpers
+  (`drawShapedText`/`drawFittedText`); `pdf-exporter.ts` was refactored onto
+  it, so all PDF output now shares one rendering core.
+- **Expense category chart**: `ExpenseCategoryChart` on the expenses page
+  renders the visible month as a donut per category, driven by the pure
+  `categoryTotals` (`src/features/expenses/application/expense-stats.ts`,
+  + test). Colors map to `--chart-1..5`; the tooltip formats money.
+- **Save-flow hook**: `useDailySave` (`src/features/attendance/ui/
+  use-daily-save.ts`) centralizes the daily sheet's persist + toast +
+  baseline-refresh logic (and keeps save errors separate from load errors).
+- i18n keys added in both locales: `attendance.markAllPresent`,
+  `attendance.resetDraft`, `attendance.printRoster`/`rosterPrinting`/
+  `rosterSaved`/`rosterError`/`rosterTitle`, `expenses.byCategory`.
+- Suite: 13 files / 94 tests, all green; `tsc --noEmit` clean; full
+  `pnpm build` passes.

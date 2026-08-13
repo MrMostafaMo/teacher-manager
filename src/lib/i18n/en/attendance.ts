@@ -41,6 +41,13 @@ export const attendance = {
     noSessionsToday: "No sessions scheduled for this day.",
     empty: "No active students.",
     emptyHint: "Add a student first to start recording attendance.",
+    markAllPresent: "Mark all present",
+    resetDraft: "Reset",
+    printRoster: "Print roster",
+    rosterPrinting: "Exporting…",
+    rosterSaved: "Attendance roster exported",
+    rosterError: "Could not export the roster",
+    rosterTitle: "Attendance roster",
     errors: {
       load: "Could not load attendance",
       save: "Could not save attendance",

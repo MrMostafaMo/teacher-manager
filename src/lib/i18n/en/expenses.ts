@@ -16,6 +16,7 @@ export const expenses = {
     date: "Date",
     note: "Note",
     total: "Total",
+    byCategory: "By category",
     empty: "No expenses recorded for this month.",
     loadError: "Failed to load expenses",
     save: "Save",

@@ -43,6 +43,13 @@ export const attendance: Messages["attendance"] = {
     noSessionsToday: "لا توجد حصص مجدولة لهذا اليوم.",
     empty: "لا يوجد طلاب نشطون.",
     emptyHint: "أضف طالبًا أولاً لبدء تسجيل الحضور.",
+    markAllPresent: "تعليم الكل حاضر",
+    resetDraft: "إعادة التعيين",
+    printRoster: "طباعة الكشف",
+    rosterPrinting: "جارٍ التصدير…",
+    rosterSaved: "تم تصدير كشف الحضور",
+    rosterError: "تعذّر تصدير كشف الحضور",
+    rosterTitle: "كشف الحضور",
     errors: {
       load: "تعذّر تحميل الحضور",
       save: "تعذّر حفظ الحضور",

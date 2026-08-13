@@ -1,20 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import {
-  getDaily,
-  saveDaily,
-} from "@/features/attendance/application/attendance-cases";
+import { getDaily } from "@/features/attendance/application/attendance-cases";
 import { listGroups } from "@/features/groups/application/group-cases";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { AttendanceStatus } from "@/features/attendance/domain";
 import type { Student } from "@/lib/db/schema";
-import { useSaveFeedback } from "@/shared/useSaveFeedback";
-import { toast } from "@/lib/toast-store";
 import { useMemberships, buildSections } from "./attendance-sections";
 import { SummaryCards } from "./SummaryCards";
 import { DailyRosterCard } from "./DailyRosterCard";
 import { DailyToolbar } from "./daily-toolbar";
+import { DailyActions } from "./daily-actions";
+import { useDailySave } from "./use-daily-save";
 
 export function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: string) => void }) {
   const { t } = useTranslation();
@@ -23,7 +20,6 @@ export function DailyView({ date, onDateChange }: { date: string; onDateChange: 
   const [savedStatuses, setSavedStatuses] = useState<Record<string, AttendanceStatus | undefined>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { saving, saved, run } = useSaveFeedback();
   const [groups, setGroups] = useState<GroupWithCount[]>([]);
   const [groupId, setGroupId] = useState("");
   const [hasSessionsToday, setHasSessionsToday] = useState(true);
@@ -81,29 +77,16 @@ export function DailyView({ date, onDateChange }: { date: string; onDateChange: 
     [students, groupsByStudent],
   );
 
-  async function handleSave() {
-    // Persist one row per student with an explicit status; unmarked students
-    // (future days / sessions that haven't started) are skipped so nothing is
-    // recorded before the day's session begins.
-    if (isFuture) return;
-    const entries = students
-      .map((s) => ({ studentId: s.id, status: draft[s.id] }))
-      .filter(
-        (e): e is { studentId: string; status: AttendanceStatus } => e.status != null,
-      );
-    if (entries.length === 0) return;
-    try {
-      await run(async () => {
-        await saveDaily({ date, entries });
-        setSavedStatuses(Object.fromEntries(entries.map((e) => [e.studentId, e.status])));
-        await load(date, groupId);
-        toast(t("attendance.saved"));
-      });
-    } catch (e) {
-      console.error("Failed to save attendance", e);
-      setError(t("attendance.errors.save"));
-    }
-  }
+  const { saving, saved, saveError, handleSave } = useDailySave({
+    date,
+    isFuture,
+    students,
+    draft,
+    onSaved: async (statuses) => {
+      setSavedStatuses(statuses);
+      await load(date, groupId);
+    },
+  });
 
   return (
     <div className="space-y-4">
@@ -120,11 +103,23 @@ export function DailyView({ date, onDateChange }: { date: string; onDateChange: 
         onSave={() => void handleSave()}
       />
 
+      <DailyActions
+        date={date}
+        groups={groups}
+        groupId={groupId}
+        students={students}
+        draft={draft}
+        saved={savedStatuses}
+        onDraftChange={setDraft}
+      />
+
       {dirty && !saving && students.length > 0 && (
         <p className="text-xs text-warning">{t("attendance.draftHint")}</p>
       )}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {(error || saveError) && (
+        <p className="text-sm text-destructive">{error || saveError}</p>
+      )}
 
       <SummaryCards
         total={students.length}

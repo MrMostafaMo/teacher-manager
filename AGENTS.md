@@ -417,3 +417,30 @@ to ≤150 lines and the campaign verified with tsc, `pnpm test`, and a full
   helpers, bidi levels, payment statement, attendance defaults,
   `useConfirmDelete`. Suite: 10 files / 80 tests, all green; every file
   within the 150-line guard.
+
+Phase 33 added daily speed-ups (no schema change):
+
+- **Mark-all-present + reset** in the daily attendance view: `BulkActions`
+  (`src/features/attendance/ui/bulk-actions.tsx`) built on the pure helpers
+  `markAllPresent`/`isDirty` (`attendance/application/attendance-bulk.ts`,
+  + test); the reset button appears only while the draft has unsaved changes.
+- **Printable roster PDF**: `PrintRosterButton` (`attendance/ui/`) exports
+  the visible roster via `exportRosterPdf` → the self-contained A4 builder
+  `attendance/infrastructure/roster-exporter.ts` (fontkit Arabic shaping,
+  RTL name/status layout, repeated header rows) → the shared `saveFile()`
+  (`src/lib/export/save-file.ts`, native save dialog + write).
+- **Shared PDF kit**: `src/lib/export/pdf-kit.ts` holds the A4 constants,
+  palette, `loadArabicFont()` and `drawShapedText`/`drawFittedText`;
+  `reports/infrastructure/pdf-exporter.ts` was refactored onto it so every
+  PDF shares one rendering core (reports, rosters, and later receipts).
+- **Expense category donut**: `ExpenseCategoryChart` (`expenses/ui/`) on the
+  expenses page, driven by pure `categoryTotals` (`expenses/application/
+  expense-stats.ts`, + test); colors follow `--chart-1..5`.
+- **Save-flow hook**: `useDailySave` (`attendance/ui/use-daily-save.ts`)
+  centralizes persist + toast + baseline refresh, with `saveError` separate
+  from load errors.
+- i18n: `attendance.markAllPresent`, `attendance.resetDraft`,
+  `attendance.printRoster`/`rosterPrinting`/`rosterSaved`/`rosterError`/
+  `rosterTitle`, `expenses.byCategory` (ar + en).
+- Suite: 13 files / 94 tests, all green; `tsc --noEmit` clean; `pnpm build`
+  passes; every file within the 150-line guard.

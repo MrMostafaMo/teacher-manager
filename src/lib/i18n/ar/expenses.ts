@@ -18,6 +18,7 @@ export const expenses: Messages["expenses"] = {
     date: "التاريخ",
     note: "ملاحظة",
     total: "الإجمالي",
+    byCategory: "حسب التصنيف",
     empty: "لا توجد مصروفات لهذا الشهر.",
     loadError: "تعذّر تحميل المصروفات",
     save: "حفظ",

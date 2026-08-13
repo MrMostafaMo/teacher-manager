@@ -18,6 +18,7 @@ import { RecordExpenseDialog } from "./RecordExpenseDialog";
 import { MonthPicker } from "@/shared/DatePicker";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { ExpensesTable } from "./expenses-table";
+import { ExpenseCategoryChart } from "./expense-category-chart";
 
 const inputClass =
   "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring";
@@ -98,6 +99,8 @@ export default function ExpensesPage() {
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {!loading && rows.length > 0 && <ExpenseCategoryChart rows={rows} />}
 
       {loading ? (
         <TableRowsSkeleton rows={5} cols={4} />
