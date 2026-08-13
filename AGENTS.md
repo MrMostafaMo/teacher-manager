@@ -499,3 +499,28 @@ single occurrence of a recurring weekly session without touching the rule.
 - Consumers honor exceptions: the daily attendance roster
   (`rosterForDate`) and the dashboard's `todaySessions` drop cancelled
   occurrences and show moved ones at their effective time.
+
+Phase 37 added a persisted notification center (مركز الإشعارات):
+
+- New `notifications` table (migration v13,
+  `src/lib/db/tables-notifications.ts`): `type` (5 kinds), a unique `key`
+  (stable dedup identity that survives regeneration), `details` JSON rendered
+  through i18n templates, `read`/`dismissed` flags, timestamps.
+- `buildNotificationItems` (`notifications/application/`) generates the desired
+  set from five sources with per-source dedup keys: overdue homework
+  (`homework:<id>`), unpaid dues (`payment:<studentId>:<period>`), upcoming
+  schedule exceptions (`exception:<id>`), weak skills (`weak:<skillId>`), and
+  low-attendance students (`attendance:<studentId>:<month>`, rate < 70%).
+- `refreshNotifications` (`notification-cases.ts`) merges the generated set
+  against the stored rows via `mergeItems` (insert new keys, keep matching,
+  delete resolved ones), then caps the table at 100 rows
+  (`ACTIVE_NOTIFICATION_LIMIT`) pruning dismissed/read rows before live unread.
+- Header bell (`NotificationDropdown` in `Header.tsx`): unread badge, a
+  `PopoverShell` dropdown with mark-all-read / dismiss-all, per-row dismiss,
+  and per-type routing on click (homework/payments/schedule/skills/attendance).
+- `NotificationSync` (mounted in `AppLayout`) refreshes on mount and on
+  `tm:data-changed`, firing Tauri OS banners for newly generated items via
+  `src/lib/notify-system.ts` (lazy-imported plugin; no-op outside Tauri).
+- i18n `notifications.*` namespace (ar + en); wired with
+  `@tauri-apps/plugin-notification`, `tauri-plugin-notification = "2"` and the
+  `"notification:default"` capability.

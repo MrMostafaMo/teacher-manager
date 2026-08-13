@@ -40,6 +40,9 @@ next begins, and ends with a review checkpoint.
 | 32   | Code-health: file-splitting refactor (≤150 lines), shared primitives, unit-test coverage | ✅ Done |
 | 33   | Daily speed-ups: mark-all-present + reset, printable roster PDF, expense category chart | ✅ Done |
 | 34   | Payment receipt PDF (إيصال دفع) from the payment history | ✅ Done |
+| 35   | Student report card PDF (بطاقة تقرير) from the profile | ✅ Done |
+| 36   | Schedule exceptions (جلسات استثنائية): cancel/move single occurrences | ✅ Done |
+| 37   | Notification center (مركز الإشعارات): persisted notifications + system banners | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -897,3 +900,42 @@ recurring weekly session without touching the recurring rule.
 - i18n: `schedule.exceptions.*` (ar + en); activity `scheduleException*`.
 - Suite: 19 files / 130 tests, all green; `tsc --noEmit` clean; full
   `pnpm build` passes; every file within the 150-line guard.
+
+## Phase 37 — completed
+
+Notification center (مركز الإشعارات): persisted in-app notifications with
+system banners.
+
+- **Schema** (migration v13): `notifications` table
+  (`src/lib/db/tables-notifications.ts`) — `type` (5 kinds), unique `key`
+  (stable dedup identity surviving regeneration), `details` JSON rendered
+  through i18n templates, `read`/`dismissed` flags, timestamps.
+- **Generator** (`notifications/application/build-notification-items.ts`,
+  + test): `buildNotificationItems` derives the desired set from five sources
+  with per-source dedup keys — overdue homework (`homework:<id>`), unpaid dues
+  (`payment:<studentId>:<period>`), upcoming schedule exceptions
+  (`exception:<id>`), weak skills (`weak:<skillId>`), low-attendance students
+  (`attendance:<studentId>:<month>`, rate < 70%).
+- **Merge** (`application/merge-items.ts`, + test): `mergeItems` diffs desired
+  vs stored by key → `toInsert`/`toRemove`; `refreshNotifications`
+  (`application/notification-cases.ts`, + test) deletes resolved keys, inserts
+  new ones, then `trimToLimit` caps the table at `ACTIVE_NOTIFICATION_LIMIT`
+  (100) pruning dismissed/read rows before live unread.
+- **Repo** (`infrastructure/notification-repo.ts`): generic repo + `listAll`/
+  `listActive` (non-dismissed, newest first) and bulk flag updates
+  (`markRead`/`markAllRead`/`dismiss`/`dismissAll`); query use-cases in
+  `notification-query-cases.ts`.
+- **UI**: `NotificationDropdown` (header bell in `Header.tsx`) — unread badge,
+  `PopoverShell` list via `NotificationList` with per-row dismiss, mark-all-read
+  / dismiss-all, and per-type routing on click (homework/payments/schedule/
+  skills/attendance pages); `useNotifications` + zustand `notifications-store`
+  (+ tests), localized text via `notification-text.ts`.
+- **System banners**: `NotificationSync` (mounted in `AppLayout`) refreshes on
+  mount and on `tm:data-changed` and fires Tauri OS banners for newly generated
+  items via `src/lib/notify-system.ts` (lazy-imported
+  `@tauri-apps/plugin-notification`; no-op outside Tauri via `isTauri()`).
+- i18n: `notifications.*` namespace (ar + en); `tauri-plugin-notification = "2"`
+  + `"notification:default"` capability in `capabilities/default.json`.
+- Suite: 24 files / 147 tests, all green; `tsc --noEmit` clean; full
+  `pnpm build` passes; one full `pnpm tauri build` produces the Linux
+  installers; every file within the 150-line guard.
