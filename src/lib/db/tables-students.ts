@@ -79,6 +79,33 @@ export const groupSessions = sqliteTable(
   ],
 );
 
+/**
+ * One-off exceptions to a recurring session occurrence (the weekly timetable).
+ * `type` is "cancelled" or "moved"; `startTime`/`endTime`/`room` are only set
+ * for moved occurrences. `date` is "YYYY-MM-DD"; at most one row per
+ * (session, date).
+ */
+export const sessionExceptions = sqliteTable(
+  "session_exceptions",
+  {
+    id: id(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => groupSessions.id),
+    date: text("date").notNull(),
+    type: text("type", { enum: ["cancelled", "moved"] }).notNull(),
+    startTime: text("start_time"),
+    endTime: text("end_time"),
+    room: text("room"),
+    ...timestamps,
+  },
+  (t) => [
+    index("session_exceptions_session").on(t.sessionId),
+    uniqueIndex("session_exceptions_session_date").on(t.sessionId, t.date),
+  ],
+);
+
 export type Student = typeof students.$inferSelect;
 export type StudyGroup = typeof studyGroups.$inferSelect;
 export type GroupSession = typeof groupSessions.$inferSelect;
+export type SessionException = typeof sessionExceptions.$inferSelect;

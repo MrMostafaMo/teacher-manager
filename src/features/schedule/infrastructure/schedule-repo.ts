@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { groupSessions, sessionAttendance } from "@/lib/db/schema";
+import { groupSessions, sessionAttendance, sessionExceptions } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
 import type { AttendanceStatus } from "@/features/attendance/domain";
@@ -23,14 +23,13 @@ export const scheduleRepository = {
       .from(groupSessions)
       .where(eq(groupSessions.groupId, groupId))) as Array<{ id: string }>;
     if (sessions.length > 0) {
+      const sessionIds = sessions.map((s) => s.id);
       await db
         .delete(sessionAttendance)
-        .where(
-          inArray(
-            sessionAttendance.sessionId,
-            sessions.map((s) => s.id),
-          ),
-        );
+        .where(inArray(sessionAttendance.sessionId, sessionIds));
+      await db
+        .delete(sessionExceptions)
+        .where(inArray(sessionExceptions.sessionId, sessionIds));
     }
     await db.delete(groupSessions).where(eq(groupSessions.groupId, groupId));
   },
@@ -74,6 +73,7 @@ export const scheduleRepository = {
   /** Delete a session's attendance rows (used when the session is deleted). */
   async clearForSession(sessionId: string): Promise<void> {
     await db.delete(sessionAttendance).where(eq(sessionAttendance.sessionId, sessionId));
+    await db.delete(sessionExceptions).where(eq(sessionExceptions.sessionId, sessionId));
   },
 
   /** Delete a student's session-attendance rows (used when the student is deleted). */
