@@ -19,7 +19,7 @@ export function NotificationSync() {
         if (!mounted) return;
         for (const item of fresh) {
           await notifySystem(
-            t(`notifications.types.${item.type}`),
+            t("notifications.title"),
             notificationText({ type: item.type, details: item.details }, t),
           );
         }
