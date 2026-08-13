@@ -21,6 +21,7 @@ import { schedule } from "./schedule";
 import { reports } from "./reports";
 import { activity } from "./activity";
 import { reportCard } from "./report-card";
+import { notifications } from "./notifications";
 import { error } from "./error";
 
 export const ar: Messages = {
@@ -46,5 +47,6 @@ export const ar: Messages = {
   reports,
   activity,
   reportCard,
+  notifications,
   error,
 };
