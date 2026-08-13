@@ -834,3 +834,28 @@ Payment receipt PDF (no schema change):
   `receiptTitle`/`receiptFooter`/`receiptSaved`/`receiptError` (ar + en).
 - Suite: 13 files / 94 tests, all green; `tsc --noEmit` clean; full
   `pnpm build` passes.
+
+## Phase 35 — completed
+
+Student report card PDF (بطاقة تقرير — no schema change):
+
+- **Data aggregation** (`src/features/report-card/application/report-card-data.ts`,
+  + test): `buildReportCardData(data)` shapes the already-loaded
+  `StudentProfileData` into `ReportCardData` — no new queries. Attendance
+  summary copies `attendanceStats`; homework counts `submitted`/`late` as done;
+  exams keep only scored rows; skills map to names. `attendanceRate()` treats
+  present + late + excused as attended.
+- **Localized PDF model** (`application/report-card-pdf-data.ts`, + test):
+  `buildReportCardPdfData` composes label + value strings (group, enrolled
+  date DD-MM-YYYY, attendance summary with rate, homework `done/total (rate%)`,
+  exam rows `score/max`, weak skills, notes) with «لا يوجد» fallbacks.
+- **Exporter + export** (`infrastructure/report-card-exporter.ts`,
+  `application/report-card-export.ts`): `buildReportCardPdf` renders one A4
+  page via the shared pdf-kit (title, name, ruled label/value rows, exam
+  section, footer); `exportReportCardPdf` drives the native save dialog.
+- **Wiring** (`ui/use-report-card.ts`, `profile-header.tsx`,
+  `StudentProfilePage.tsx`): «بطاقة التقرير» button in the profile header
+  (busy-disabled), hook localizes labels, toasts saved/error.
+- i18n: `reportCard.*` namespace (ar + en).
+- Suite: 15 files / 104 tests, all green; `tsc --noEmit` clean; full
+  `pnpm build` passes.

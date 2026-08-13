@@ -463,3 +463,19 @@ Phase 34 added a per-payment receipt PDF (إيصال دفع — no schema change
   through `HistorySections` into `HistoryView`.
 - i18n: `payments.date`, `payments.receipt`,
   `receiptTitle`/`receiptFooter`/`receiptSaved`/`receiptError` (ar + en).
+
+Phase 35 added a student report card PDF (بطاقة تقرير — no schema change):
+
+- `src/features/report-card/` follows the receipt pattern: `buildReportCardData`
+  (`application/report-card-data.ts`, + test) aggregates the already-loaded
+  `StudentProfileData` with zero new queries (attendance summary, homework
+  done/total, scored exams, weak skills); `buildReportCardPdfData`
+  (`application/report-card-pdf-data.ts`, + test) composes the localized
+  label/value strings with «لا يوجد» fallbacks; `buildReportCardPdf`
+  (`infrastructure/report-card-exporter.ts`) renders one A4 page via the
+  shared pdf-kit; `exportReportCardPdf` (`application/report-card-export.ts`)
+  goes through the native save dialog via `saveFile()`.
+- `useReportCard` (`ui/use-report-card.ts`) localizes labels, tracks a busy
+  flag, and toasts saved/error; a «بطاقة التقرير» button (busy-disabled) sits
+  in the profile header next to «تعديل الطالب» and «كشف الحساب».
+- i18n: `reportCard.*` namespace (ar + en).
