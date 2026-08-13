@@ -12,3 +12,5 @@ export * from "./tables-homework";
 export * from "./tables-exams";
 export * from "./tables-skills";
 export * from "./tables-activity";
+export { notifications } from "./tables-notifications";
+export type { NotificationRow } from "./tables-notifications";

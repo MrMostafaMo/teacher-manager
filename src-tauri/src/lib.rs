@@ -80,6 +80,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0011_odd_triton.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 13,
+            description: "notifications",
+            sql: include_str!("../migrations/0012_nasty_major_mapleleaf.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
