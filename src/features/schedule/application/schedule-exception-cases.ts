@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { cancelSessionSchema, moveSessionSchema } from "@/features/schedule/domain";
 import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
 import { exceptionRepository } from "@/features/schedule/infrastructure/exception-repo";
+import { activeGroupIdsForDate } from "@/features/schedule/application/schedule-exceptions";
 import { logActivity } from "@/lib/activity-log";
 import { uuid } from "@/lib/utils/uuid";
 import type { SessionException } from "@/lib/db/schema";
@@ -11,6 +12,8 @@ import type { SessionException } from "@/lib/db/schema";
  * occurrence of a recurring weekly session — either cancels it or moves it to
  * a new time/room on the same date. Writes are upserts per (session, date).
  */
+
+export { activeGroupIdsForDate };
 
 export function listScheduleExceptions(): Promise<SessionException[]> {
   return exceptionRepository.list({ newestFirst: true });

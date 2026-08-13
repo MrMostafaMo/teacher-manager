@@ -6,6 +6,7 @@ import { listHomeworks } from "@/features/homework/application/homework-cases";
 import { listExams } from "@/features/exams/application/exam-cases";
 import { listSkills } from "@/features/skills/application/skill-cases";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
+import { listScheduleExceptions } from "@/features/schedule/application/schedule-exception-cases";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { expenseRepository } from "@/features/expenses/infrastructure/expense-repo";
@@ -31,7 +32,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   const month = currentMonth();
   const prevMonth = previousMonth();
   const trendMonths = lastMonths(6);
-  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, expensesMonth, prevMonthly, prevDues, prevExpenses, financePayments, financeExpenses] =
+  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, exceptions, expensesMonth, prevMonthly, prevDues, prevExpenses, financePayments, financeExpenses] =
     await Promise.all([
       listStudents({ status: "all" }),
       getMonthly(month),
@@ -41,6 +42,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       listSkills(),
       attendanceRepository.monthlyTrend(6),
       listSchedule(),
+      listScheduleExceptions(),
       monthlyExpenseTotal(month),
       getMonthly(prevMonth),
       monthlyDues(prevMonth),
@@ -104,7 +106,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     .slice(0, 5);
 
   const now = new Date();
-  const daySessions = todaySessions(schedule, now);
+  const daySessions = todaySessions(schedule, now, exceptions);
 
   const financeTrend = trendMonths.map((m, i) => ({
     month: m,

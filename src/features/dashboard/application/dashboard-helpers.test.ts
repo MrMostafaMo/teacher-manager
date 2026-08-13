@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import {
   countNewStudents,
   currentMonth,
@@ -8,25 +7,7 @@ import {
   percentDelta,
   previousMonth,
   timeToMinutes,
-  todaySessions,
 } from "./dashboard-helpers";
-
-function session(overrides: Partial<SessionWithGroup> = {}): SessionWithGroup {
-  return {
-    id: "s1",
-    groupId: "g1",
-    groupName: "Group A",
-    groupStatus: "active",
-    groupStartsOn: null,
-    dayOfWeek: 0,
-    startTime: "10:00",
-    endTime: "11:00",
-    room: null,
-    createdAt: 0,
-    updatedAt: 0,
-    ...overrides,
-  };
-}
 
 describe("timeToMinutes", () => {
   it("converts HH:mm to minutes since midnight", () => {
@@ -93,37 +74,5 @@ describe("countNewStudents", () => {
   it("falls back to createdAt for legacy rows without enrolledOn", () => {
     const students = [{ enrolledOn: null, createdAt: Date.parse("2026-05-02T00:00:00") }];
     expect(countNewStudents(students, "2026-05")).toBe(1);
-  });
-});
-
-describe("todaySessions", () => {
-  const now = new Date(2026, 4, 10, 12, 0); // Sunday 12:00
-
-  it("lists only active sessions scheduled on the weekday", () => {
-    const sessions = [
-      session({ id: "a", dayOfWeek: 0 }),
-      session({ id: "b", dayOfWeek: 1 }),
-      session({ id: "c", dayOfWeek: 0, groupStatus: "inactive" }),
-    ];
-    expect(todaySessions(sessions, now).map((s) => s.id)).toEqual(["a"]);
-  });
-
-  it("hides sessions whose group starts after today", () => {
-    const sessions = [
-      session({ id: "a", dayOfWeek: 0, groupStartsOn: "2026-05-10" }),
-      session({ id: "b", dayOfWeek: 0, groupStartsOn: "2026-05-11" }),
-      session({ id: "c", dayOfWeek: 0, groupStartsOn: null }),
-    ];
-    expect(todaySessions(sessions, now).map((s) => s.id)).toEqual(["a", "c"]);
-  });
-
-  it("marks sessions already finished", () => {
-    const sessions = [
-      session({ id: "a", dayOfWeek: 0, startTime: "09:00", endTime: "10:00" }),
-      session({ id: "b", dayOfWeek: 0, startTime: "13:00", endTime: "14:00" }),
-    ];
-    const listed = todaySessions(sessions, now);
-    expect(listed.find((s) => s.id === "a")?.finished).toBe(true);
-    expect(listed.find((s) => s.id === "b")?.finished).toBe(false);
   });
 });

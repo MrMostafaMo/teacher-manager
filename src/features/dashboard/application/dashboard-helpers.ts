@@ -1,4 +1,5 @@
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
+import type { SessionException } from "@/lib/db/schema";
 
 export function timeToMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
@@ -57,6 +58,7 @@ export function countNewStudents(
 export function todaySessions(
   sessions: SessionWithGroup[],
   now: Date,
+  exceptions: SessionException[] = [],
 ): Array<{
   id: string;
   groupName: string;
@@ -67,19 +69,30 @@ export function todaySessions(
 }> {
   const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const todayExceptions = new Map<string, SessionException>();
+  for (const ex of exceptions) {
+    if (ex.date === todayIso) todayExceptions.set(ex.sessionId, ex);
+  }
   return sessions
     .filter(
       (s) =>
         s.groupStatus === "active" &&
         s.dayOfWeek === now.getDay() &&
-        (s.groupStartsOn == null || s.groupStartsOn <= todayIso),
+        (s.groupStartsOn == null || s.groupStartsOn <= todayIso) &&
+        todayExceptions.get(s.id)?.type !== "cancelled",
     )
-    .map((s) => ({
-      id: s.id,
-      groupName: s.groupName,
-      startTime: s.startTime,
-      endTime: s.endTime,
-      room: s.room,
-      finished: nowMinutes > timeToMinutes(s.endTime),
-    }));
+    .map((s) => {
+      const ex = todayExceptions.get(s.id);
+      const startTime = ex && ex.type === "moved" && ex.startTime ? ex.startTime : s.startTime;
+      const endTime = ex && ex.type === "moved" && ex.endTime ? ex.endTime : s.endTime;
+      const room = ex && ex.type === "moved" ? (ex.room ?? s.room) : s.room;
+      return {
+        id: s.id,
+        groupName: s.groupName,
+        startTime,
+        endTime,
+        room,
+        finished: nowMinutes > timeToMinutes(endTime),
+      };
+    });
 }
