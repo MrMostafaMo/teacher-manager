@@ -1,0 +1,16 @@
+export const reportCard = {
+  button: "Report card",
+  title: "Student report card",
+  footer: "Prepared by the study center",
+  group: "Group",
+  enrolled: "Enrolled on",
+  attendance: "Attendance",
+  homework: "Homework",
+  exams: "Exams",
+  weakSkills: "Weak skills",
+  notes: "Notes",
+  none: "None",
+  rate: "Rate",
+  saved: "Report card exported",
+  error: "Could not export the report card",
+} as const;

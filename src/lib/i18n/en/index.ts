@@ -19,6 +19,7 @@ import { skills } from "./skills";
 import { schedule } from "./schedule";
 import { reports } from "./reports";
 import { activity } from "./activity";
+import { reportCard } from "./report-card";
 import { error } from "./error";
 
 export const en = {
@@ -43,6 +44,7 @@ export const en = {
   schedule,
   reports,
   activity,
+  reportCard,
   error,
 } as const;
 

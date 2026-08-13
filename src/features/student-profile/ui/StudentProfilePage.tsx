@@ -10,6 +10,7 @@ import { StudentFormDialog } from "@/features/students/ui/StudentFormDialog";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
 import { StudentStatementDialog } from "@/features/student-profile/ui/StudentStatementDialog";
 import { StudentTrendsSection } from "@/features/student-profile/ui/StudentTrendsSection";
+import { useReportCard } from "@/features/report-card/ui/use-report-card";
 import { AttendanceSection, HomeworkSection, PaymentsSection } from "./profile-records-a";
 import { ActivitySection, ExamsSection, SessionsSection, SkillsSection } from "./profile-records-b";
 import { ProfileFactsCard, ProfileStatsGrid, useProfileSummary } from "./profile-overview";
@@ -61,6 +62,7 @@ export default function StudentProfilePage() {
   } = data;
 
   const { attendanceRate, examAverage, homeworkRate } = useProfileSummary(data);
+  const { busy: reportCardBusy, run: runReportCard } = useReportCard(data);
 
   return (
     <div className="space-y-6">
@@ -68,6 +70,8 @@ export default function StudentProfilePage() {
         student={student}
         onEdit={() => setEditOpen(true)}
         onStatement={() => setStatementOpen(true)}
+        onReportCard={runReportCard}
+        reportCardBusy={reportCardBusy}
       />
 
       <ProfileFactsCard student={student} planName={planName} groups={groups} />
