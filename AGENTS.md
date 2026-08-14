@@ -547,3 +547,37 @@ Phase 38 added per-student weak-points tracking (نقاط الضعف):
   `profile.manageWeakPoints`, `common.undo.weakPoint` (ar + en).
 - Suite: 36 files / 198 tests, all green; `tsc --noEmit` clean; `pnpm build`
   passes.
+
+Phase 39 added an undo/restore system, a standalone weak-points page,
+WhatsApp integration, and the sync foundation:
+
+- **Undo/restore**: `src/lib/undo-store.ts` (zustand) holds one undoable
+  action; `registerUndo(restore)` returns an id for toasts. Generic row
+  capture/restore lives in `src/lib/db/snapshot.ts` (`captureRows`,
+  `restoreRows`, `captureBy`), with `group-snapshot.ts` for
+  group+memberships+sessions. Every delete use-case
+  (students/exams/homework/expenses/payments/plans/skills/groups/members/
+  weak-points) now registers an undo and returns the undo id (or null when
+  called with `{ undo: false }`); tables render deletes via the shared
+  `ConfirmDeleteButton`; undo toasts show a countdown + «تراجع» action
+  (`toast-tokens`, `toast-action`, `toast-item`, `ToastViewport` rewrite);
+  i18n `undo.*` namespace replaces `common.undo`.
+- **Weak-points page**: `/weak-points` (`WeakPointsPage`,
+  `use-weak-points-data`, `weak-point-filter` — active/resolved/period
+  filters, `WeakPointEntryDialog`) sits on `weakPointRepository.all` +
+  `byStudent`; nav section `academic`.
+- **WhatsApp**: `src/features/whatsapp/` (templates persisted in a
+  `whatsapp_templates` table, variable chips, RTL-safe `wa.me` links via
+  `wa-link.ts`, opener plugin launch, `SendWhatsAppDialog` +
+  `SettingsWhatsAppCard`); `@tauri-apps/plugin-opener` + `opener:default`
+  capability.
+- **Sync foundation** (migration v15 = `0014_strong_stranger.sql`):
+  `sync_meta` key/value table + `sync_tombstones` filled by SQLite DELETE
+  triggers on every synced table (`src/lib/db/tables-sync.ts`); a tombstone
+  beats a live row only when its `deletedAt` is newer than the row's
+  `updatedAt` (keeps undo/restore safe).
+- `useCollapsedSections` shared hook adopted by homework/exams/payments/
+  attendance sections; `profile-summary.ts` powers the profile header
+  stat strip; `DATA_CHANGED_EVENT` moved to `undo-store` (re-exported by
+  `GlobalDialogs`).
+- Suite: 41 files / 259 tests, all green; `pnpm build` passes.
