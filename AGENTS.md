@@ -581,3 +581,22 @@ WhatsApp integration, and the sync foundation:
   stat strip; `DATA_CHANGED_EVENT` moved to `undo-store` (re-exported by
   `GlobalDialogs`).
 - Suite: 41 files / 259 tests, all green; `pnpm build` passes.
+
+Phase 40 added a theme-preset system and identity refinement (no schema change):
+
+- **Presets**: `src/styles/themes/{warm,midnight,academy}.css` define light+dark
+  variants overriding the base tokens (backgrounds, primary/accent/ring,
+  sidebar accents, chart + tint palettes, `--kpi-shadow`, `--primary-shadow`);
+  base `:root`/`.dark` in `globals.css` = the default "nile" preset.
+- **Selection**: `src/lib/theme/theme-store.ts` gained `ThemePreset`
+  (`nile|warm|midnight|academy`), `readInitialPreset()` and `applyTheme(theme,
+  preset)` which sets the `data-theme` attribute (orthogonal to light/dark);
+  the theme-provider applies it and `main.tsx` boots it pre-paint. Persisted in
+  the same `tm-theme` localStorage entry (merge-safe: default = nile).
+- **UI**: `PresetPicker` (`src/shared/preset-picker.tsx`, radiogroup with color
+  swatches) on the appearance settings card; i18n `settings.preset` +
+  `settings.presets.*` (ar + en).
+- **Identity polish**: primary button shadow now `var(--primary-shadow)`, KPI
+  cards use `var(--kpi-shadow)` with hover lift, DataTable thead `bg-muted/40`
+  + `align-middle`.
+- Tests: `theme-store.test.ts` (11) + `preset-picker.test.tsx` (3).
