@@ -600,3 +600,41 @@ Phase 40 added a theme-preset system and identity refinement (no schema change):
   cards use `var(--kpi-shadow)` with hover lift, DataTable thead `bg-muted/40`
   + `align-middle`.
 - Tests: `theme-store.test.ts` (11) + `preset-picker.test.tsx` (3).
+
+Phase 41 added two-way Google Drive sync + cloud backup/restore
+(schema from Phase 39):
+
+- **OAuth (PKCE)**: consent opens in the **system browser** (plugin-opener).
+  `src-tauri/src/oauth.rs` starts a tiny one-shot HTTP server on
+  `127.0.0.1:45467` (`start_oauth_server`, std TcpListener, no new deps); when
+  Google redirects to `http://127.0.0.1:45467/oauth?...` the server serves a
+  "you may close this page" HTML and emits the full URL as `oauth:callback`,
+  then shuts down. `src/features/sync/application/oauth-cases.ts` builds the
+  auth URL, parses the callback, and rejects with `OAuthCancelError` after 3
+  minutes with no redirect; tokens live in `sync_meta` (`oauth-client.ts`,
+  `sync-state-repo.ts`). The Client ID is user-supplied (Google Cloud
+  Console), never bundled.
+- **Drive client**: `drive-http.ts` (generic `bearerFetch` with 401 →
+  token-refresh retry, multipart, DriveError with kinds) + `drive-client.ts`
+  (findFile/upload/downloadBytes/uploadBytes/listFiles; 412 → "conflict").
+  `uploadBytes` = media POST + PATCH `{ name, parents }`.
+- **Round-based sync** (`sync-cases.ts`): `syncNow(reason)` runs
+  pull → `mergePull` → `applyPullResult` (insert/update/delete + tombstone
+  clear) → re-snapshot → `mergePush` → upload (ETag/If-Match, 3 attempts on
+  412). Row-level LWW by `updated_at`; a tombstone wins only when strictly
+  newer than the row (undo/restore survives). `merge-pull.ts` /
+  `merge-push.ts` / `tombstones.ts` are pure and unit-tested.
+- **UI**: settings card (client ID, sync now, cloud backup/restore,
+  disconnect), header badge + report dialog, `SyncManager` in AppLayout
+  (10s debounce on `tm:data-changed`, pull on launch, 15-min periodic;
+  remote changes re-dispatch `tm:data-changed` so pages refresh). Store in
+  `sync-store.ts`; i18n `sync.*`.
+- **Cloud backup**: `backup-cases.ts` — VACUUM INTO temp under `$APPCONFIG`
+  (capability `$APPCONFIG/**` added to `fs:allow-write-file`), upload to a
+  `backups` folder, restore via shared `swapDatabaseFrom` (version guard +
+  snapshot/rollback) in `backup-service.ts`.
+- Drizzle `.run()` is required on every insert/update/delete — the sync
+  bridge must not omit it (this was caught by the mock-based tests).
+- Suite: 53 files / 337 tests, all green; `tsc --noEmit` clean; `pnpm build`
+  and `cargo check` pass. Remaining: manual E2E in `tauri dev` (needs full
+  rebuild for the capability change) and a two-device conflict check.
