@@ -63,8 +63,9 @@ export function WeakPointsDialog({ open, studentId, onClose, onChanged }: WeakPo
     if (!studentId) return;
     setSaving(true);
     try {
-      if (editing) await updateWeakPoint(editing.id, input);
-      else await addWeakPoint(studentId, input);
+      if (editing) {
+        await updateWeakPoint(editing.id, { ...input, resolved: editing.resolved });
+      } else await addWeakPoint(studentId, input);
       setEditing(null);
       toast(t("weakPoints.saved"));
       onChanged();
