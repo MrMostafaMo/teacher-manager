@@ -43,6 +43,10 @@ next begins, and ends with a review checkpoint.
 | 35   | Student report card PDF (بطاقة تقرير) from the profile | ✅ Done |
 | 36   | Schedule exceptions (جلسات استثنائية): cancel/move single occurrences | ✅ Done |
 | 37   | Notification center (مركز الإشعارات): persisted notifications + system banners | ✅ Done |
+| 38   | Weak points (نقاط الضعف): per-student tracking + profile section | ✅ Done |
+| 39   | Undo/restore system + standalone weak-points page + WhatsApp links + sync foundation | ✅ Done |
+| 40   | Theme presets (nile/warm/midnight/academy) + identity refinement + contrast audit | ✅ Done |
+| 41   | Two-way Google Drive sync + cloud backup/restore | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -939,3 +943,44 @@ system banners.
 - Suite: 24 files / 147 tests, all green; `tsc --noEmit` clean; full
   `pnpm build` passes; one full `pnpm tauri build` produces the Linux
   installers; every file within the 150-line guard.
+
+## Phase 38 — completed
+
+Per-student weak points (نقاط الضعف): `weak_points` table (migration v14),
+`src/features/weak-points/` standard split (domain zod → cases → generic repo),
+`WeakPointsSection` badges on the profile after skills, editable via
+`WeakPointsDialog`; `textSchema(max)` shared validation helper; i18n
+`weakPoints.*`; activity-logged create/update/delete.
+
+## Phase 39 — completed
+
+Undo/restore system (`src/lib/undo-store.ts` + `snapshot.ts` row capture/
+restore), standalone `/weak-points` page with active/resolved/period filters,
+WhatsApp integration (persisted templates, RTL-safe `wa.me` links, plugin-opener),
+and the sync foundation — `sync_meta` key/value + `sync_tombstones` filled by
+SQLite DELETE triggers (migration v15); tombstones win only when newer than the
+row's `updated_at` (undo/restore safe). Suite: 41 files / 259 tests.
+
+## Phase 40 — completed
+
+Theme-preset system: `src/styles/themes/{warm,midnight,academy}.css` override
+the base "nile" tokens per light/dark; `data-theme` attribute orthogonal to
+light/dark, persisted in `tm-theme`; `PresetPicker` radiogroup on the
+appearance settings card; primary-button shadow via `--primary-shadow`, KPI
+cards via `--kpi-shadow` with hover lift, DataTable thead polish. A
+headless-chromium WCAG audit (13 routes × 4 presets × 2 modes = 104 combos)
+found two misses — warm-light `text-primary` links (3.8:1) and the
+midnight-dark nav pill/button text (4.45:1) — fixed by tuning warm `--primary`
+(0.62→0.57) and midnight-dark `--primary-strong` (0.62→0.64); audit re-run
+green.
+
+## Phase 41 — completed
+
+Two-way Google Drive sync + cloud backup/restore (schema from Phase 39):
+OAuth PKCE via a one-shot `127.0.0.1:45467` HTTP server in
+`src-tauri/src/oauth.rs` (system-browser consent, tokens in `sync_meta`),
+Drive HTTP client (bearer + refresh, multipart, ETag/If-Match), round-based
+sync (pull → merge → apply → snapshot → push, LWW by `updated_at`),
+settings card + header badge + `SyncManager` (launch pull, 15-min periodic,
+10s debounce on data changes), and cloud backup/restore via `VACUUM INTO`
+into a Drive `backups` folder with version-guarded restore.
