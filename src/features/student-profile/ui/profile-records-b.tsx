@@ -15,6 +15,8 @@ import {
   type ActivityLogItem,
 } from "./profile-columns-b";
 
+export { WeakPointsSection } from "@/features/weak-points/ui/weak-points-section";
+
 export function ExamsSection({ rows }: { rows: ProfileExam[] }) {
   const { t } = useTranslation();
   const columns = useExamColumns();
