@@ -7,6 +7,10 @@ import { examRepository } from "@/features/exams/infrastructure/exam-repo";
 import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
 import { listPaymentHistory, type PaymentHistoryRow } from "@/features/payments/application/payment-cases";
 import { getStudentSkills, type StudentSkillRow } from "@/features/skills/application/skill-cases";
+import {
+  listStudentWeakPoints,
+  type StudentWeakPoint,
+} from "@/features/weak-points/application/weak-point-cases";
 import { listRecentActivity } from "@/lib/activity-log";
 import type { Student, Attendance, Homework, Exam, SessionAttendance } from "@/lib/db/schema";
 import type { SubmissionStatus } from "@/features/homework/domain";
@@ -48,6 +52,7 @@ export interface StudentProfileData {
   exams: ProfileExam[];
   sessionAttendance: ProfileSessionAttendance[];
   skills: StudentSkillRow[];
+  weakPoints: StudentWeakPoint[];
   activity: Array<{ id: string; action: string; createdAt: number }>;
 }
 
@@ -64,6 +69,7 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     exams,
     sessionAttendance,
     skills,
+    weakPoints,
     activity,
   ] = await Promise.all([
     studentRepository.findById(studentId),
@@ -76,6 +82,7 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     examRepository.resultsForStudent(studentId),
     scheduleRepository.sessionAttendanceByStudent(studentId),
     getStudentSkills(studentId),
+    listStudentWeakPoints(studentId),
     listRecentActivity(300),
   ]);
   if (!student) throw new Error(`student ${studentId} not found`);
@@ -107,6 +114,7 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     exams,
     sessionAttendance,
     skills,
+    weakPoints,
     activity: scoped.map((row) => ({ id: row.id, action: row.action, createdAt: row.createdAt })),
   };
 }

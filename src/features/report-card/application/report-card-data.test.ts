@@ -23,6 +23,7 @@ function profile(over: Partial<StudentProfileData>): StudentProfileData {
     exams: [],
     sessionAttendance: [],
     skills: [],
+    weakPoints: [],
     activity: [],
     ...over,
   };
