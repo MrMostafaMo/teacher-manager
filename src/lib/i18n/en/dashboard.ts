@@ -51,4 +51,9 @@ export const dashboard = {
       empty: "No outstanding balances.",
       viewAll: "View all",
     },
+    weakPoints: {
+      title: "Student weaknesses",
+      empty: "No active weaknesses.",
+      count: "{{count}} active",
+    },
 } as const;

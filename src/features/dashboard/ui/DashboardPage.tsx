@@ -16,6 +16,7 @@ import {
   TodaySessionsCard,
   OverdueHomeworksCard,
   TopDebtorsCard,
+  WeakPointsCard,
   WeakSkillsCard,
 } from "./DashboardSectionCards";
 import { AttendanceHomeworkCharts, FinanceCharts } from "./DashboardChartsSection";
@@ -108,6 +109,7 @@ const DashboardContent = memo(function DashboardContent({ data }: { data: Dashbo
       <TodaySessionsCard sessions={data.todaySessions} />
       <OverdueHomeworksCard items={data.overdueHomeworks} />
       <TopDebtorsCard debtors={data.topDebtors} />
+      <WeakPointsCard items={data.topWeakPoints} />
       <AttendanceHomeworkCharts
         attendanceChart={attendanceChart}
         homeworkPie={homeworkPie}

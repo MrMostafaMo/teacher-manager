@@ -30,6 +30,7 @@ export interface DashboardData {
   }>;
   examAverage: number | null;
   weakSkills: Array<{ name: string; count: number }>;
+  topWeakPoints: Array<{ id: string; name: string; count: number; latest: string }>;
   todaySessions: Array<{
     id: string;
     groupName: string;

@@ -7,6 +7,7 @@ import { listExams } from "@/features/exams/application/exam-cases";
 import { listSkills } from "@/features/skills/application/skill-cases";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import { listScheduleExceptions } from "@/features/schedule/application/schedule-exception-cases";
+import { listAllWeakPoints } from "@/features/weak-points/application/weak-point-cases";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { expenseRepository } from "@/features/expenses/infrastructure/expense-repo";
@@ -17,6 +18,7 @@ import {
   percentDelta,
   previousMonth,
   todaySessions,
+  topWeaknessStudents,
 } from "./dashboard-helpers";
 import type { DashboardData } from "./dashboard-data";
 
@@ -32,7 +34,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   const month = currentMonth();
   const prevMonth = previousMonth();
   const trendMonths = lastMonths(6);
-  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, exceptions, expensesMonth, prevMonthly, prevDues, prevExpenses, financePayments, financeExpenses] =
+  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, exceptions, expensesMonth, prevMonthly, prevDues, prevExpenses, financePayments, financeExpenses, weakPoints] =
     await Promise.all([
       listStudents({ status: "all" }),
       getMonthly(month),
@@ -49,6 +51,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       monthlyExpenseTotal(prevMonth),
       Promise.all(trendMonths.map((m) => paymentRepository.byPeriod(m))),
       Promise.all(trendMonths.map((m) => expenseRepository.byMonth(m))),
+      listAllWeakPoints(),
     ]);
 
   const totalStudents = students.length;
@@ -104,10 +107,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     .map((s) => ({ name: s.name, count: s.weakCount }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
-
   const now = new Date();
   const daySessions = todaySessions(schedule, now, exceptions);
-
   const financeTrend = trendMonths.map((m, i) => ({
     month: m,
     collected: financePayments[i].reduce((a, p) => a + p.amount, 0),
@@ -140,6 +141,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     overdueHomeworks,
     examAverage,
     weakSkills,
+    topWeakPoints: topWeaknessStudents(weakPoints, students),
     todaySessions: daySessions,
   };
 }

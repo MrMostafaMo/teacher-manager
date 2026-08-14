@@ -53,4 +53,9 @@ export const dashboard: Messages["dashboard"] = {
       empty: "لا توجد مديونيات مستحقة.",
       viewAll: "عرض الكل",
     },
+    weakPoints: {
+      title: "نقاط ضعف الطلاب",
+      empty: "لا توجد نقاط ضعف نشطة.",
+      count: "{{count}} نشطة",
+    },
 };

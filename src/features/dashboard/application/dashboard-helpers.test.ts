@@ -7,6 +7,8 @@ import {
   percentDelta,
   previousMonth,
   timeToMinutes,
+  topWeaknessStudents,
+  type WeaknessRow,
 } from "./dashboard-helpers";
 
 describe("timeToMinutes", () => {
@@ -74,5 +76,37 @@ describe("countNewStudents", () => {
   it("falls back to createdAt for legacy rows without enrolledOn", () => {
     const students = [{ enrolledOn: null, createdAt: Date.parse("2026-05-02T00:00:00") }];
     expect(countNewStudents(students, "2026-05")).toBe(1);
+  });
+});
+
+describe("topWeaknessStudents", () => {
+  const rows: WeaknessRow[] = [
+    { studentId: "s1", description: "القسمة", recordedOn: 100, resolved: false },
+    { studentId: "s1", description: "الضرب", recordedOn: 200, resolved: false },
+    { studentId: "s1", description: "قديمة", recordedOn: 50, resolved: true },
+    { studentId: "s2", description: "القراءة", recordedOn: 300, resolved: false },
+    { studentId: "s3", description: "محلولة", recordedOn: 400, resolved: true },
+  ];
+  const students = [
+    { id: "s1", name: "علي" },
+    { id: "s2", name: "سارة" },
+    { id: "s3", name: "محمد" },
+  ];
+
+  it("keeps only unresolved weaknesses and picks the latest per student", () => {
+    const result = topWeaknessStudents(rows, students);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ id: "s1", name: "علي", count: 2, latest: "الضرب" });
+    expect(result[1]).toEqual({ id: "s2", name: "سارة", count: 1, latest: "القراءة" });
+  });
+
+  it("sorts by count descending and caps the list at the limit", () => {
+    const result = topWeaknessStudents(rows, students, 1);
+    expect(result).toEqual([{ id: "s1", name: "علي", count: 2, latest: "الضرب" }]);
+  });
+
+  it("returns an empty list when nothing is unresolved", () => {
+    const result = topWeaknessStudents(rows.filter((r) => r.resolved), students);
+    expect(result).toEqual([]);
   });
 });

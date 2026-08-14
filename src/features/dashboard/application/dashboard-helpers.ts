@@ -1,6 +1,14 @@
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { SessionException } from "@/lib/db/schema";
 
+/** A weakness row as seen by the dashboard (resolved already normalized). */
+export type WeaknessRow = {
+  studentId: string;
+  description: string;
+  recordedOn: number;
+  resolved: boolean;
+};
+
 export function timeToMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
@@ -95,4 +103,35 @@ export function todaySessions(
         finished: nowMinutes > timeToMinutes(endTime),
       };
     });
+}
+
+/**
+ * Top students by unresolved weaknesses: count per student plus their most
+ * recently recorded weakness. Order-independent — the latest is found by
+ * recordedOn, not by input position.
+ */
+export function topWeaknessStudents(
+  rows: WeaknessRow[],
+  students: Array<{ id: string; name: string }>,
+  limit = 5,
+): Array<{ id: string; name: string; count: number; latest: string }> {
+  const nameOf = new Map(students.map((s) => [s.id, s.name]));
+  const byStudent = new Map<string, { count: number; latest: string; latestOn: number }>();
+  for (const r of rows) {
+    if (r.resolved) continue;
+    const cur = byStudent.get(r.studentId);
+    if (!cur) {
+      byStudent.set(r.studentId, { count: 1, latest: r.description, latestOn: r.recordedOn });
+      continue;
+    }
+    cur.count++;
+    if (r.recordedOn > cur.latestOn) {
+      cur.latest = r.description;
+      cur.latestOn = r.recordedOn;
+    }
+  }
+  return [...byStudent.entries()]
+    .map(([id, { count, latest }]) => ({ id, name: nameOf.get(id) ?? "—", count, latest }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
 }
