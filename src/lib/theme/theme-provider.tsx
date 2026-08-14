@@ -2,19 +2,20 @@ import { useEffect, type ReactNode } from "react";
 import { applyTheme, useThemeStore } from "@/lib/theme/theme-store";
 
 /**
- * Keeps the document theme in sync with the persisted theme store and reacts
- * to OS-level scheme changes while the theme is set to "system".
+ * Keeps the document theme (mode + palette preset) in sync with the persisted
+ * store and reacts to OS-level scheme changes while the mode is "system".
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = useThemeStore((s) => s.theme);
+  const preset = useThemeStore((s) => s.preset);
 
   useEffect(() => {
-    applyTheme(theme);
+    applyTheme(theme, preset);
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => applyTheme(theme);
+    const onChange = () => applyTheme(theme, preset);
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
-  }, [theme]);
+  }, [theme, preset]);
 
   return <>{children}</>;
 }

@@ -1,0 +1,54 @@
+/*
+ * Warm preset — "paper & ink" classroom feel: amber/terracotta brand hues
+ * with a cream background. Applies when <html data-theme="warm">, orthogonal
+ * to the light/dark mode class (both variants are defined here).
+ */
+:root[data-theme="warm"] {
+  --background: oklch(0.985 0.008 85);
+  --card: oklch(0.998 0.003 85);
+  --primary: oklch(0.62 0.14 50);
+  --primary-strong: oklch(0.55 0.14 48);
+  --primary-foreground: oklch(0.985 0.002 80);
+  --accent: oklch(0.94 0.035 55);
+  --accent-foreground: oklch(0.46 0.11 48);
+  --ring: oklch(0.66 0.13 52);
+  --sidebar-accent: oklch(0.94 0.035 55);
+  --sidebar-accent-foreground: oklch(0.46 0.11 48);
+  --chart-1: oklch(0.62 0.14 50);
+  --chart-2: oklch(0.56 0.12 130);
+  --chart-3: oklch(0.6 0.14 35);
+  --chart-4: oklch(0.52 0.1 210);
+  --chart-5: oklch(0.57 0.1 320);
+  --chart-tint-1: color-mix(in oklch, var(--chart-1) 12%, transparent);
+  --chart-tint-2: color-mix(in oklch, var(--chart-2) 12%, transparent);
+  --chart-tint-3: color-mix(in oklch, var(--chart-3) 12%, transparent);
+  --chart-tint-4: color-mix(in oklch, var(--chart-4) 12%, transparent);
+  --chart-tint-5: color-mix(in oklch, var(--chart-5) 12%, transparent);
+  --kpi-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 14px rgb(180 100 30 / 0.1);
+  --primary-shadow: 0 1px 2px rgb(180 100 30 / 0.3);
+}
+
+.dark[data-theme="warm"] {
+  --background: oklch(0.16 0.012 70);
+  --card: oklch(0.215 0.014 70);
+  --primary: oklch(0.75 0.13 60);
+  --primary-strong: oklch(0.69 0.13 55);
+  --primary-foreground: oklch(0.28 0.05 50);
+  --accent: oklch(0.33 0.05 55);
+  --accent-foreground: oklch(0.93 0.04 60);
+  --ring: oklch(0.73 0.11 55);
+  --sidebar-accent: oklch(0.33 0.05 55);
+  --sidebar-accent-foreground: oklch(0.93 0.04 60);
+  --chart-1: oklch(0.74 0.13 60);
+  --chart-2: oklch(0.7 0.12 140);
+  --chart-3: oklch(0.73 0.13 35);
+  --chart-4: oklch(0.68 0.1 215);
+  --chart-5: oklch(0.7 0.11 320);
+  --chart-tint-1: color-mix(in oklch, var(--chart-1) 12%, transparent);
+  --chart-tint-2: color-mix(in oklch, var(--chart-2) 12%, transparent);
+  --chart-tint-3: color-mix(in oklch, var(--chart-3) 12%, transparent);
+  --chart-tint-4: color-mix(in oklch, var(--chart-4) 12%, transparent);
+  --chart-tint-5: color-mix(in oklch, var(--chart-5) 12%, transparent);
+  --kpi-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(0 0 0 / 0.35);
+  --primary-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+}

@@ -30,11 +30,11 @@ function DataTableInner<T>({
     <div className={cn("overflow-x-auto", className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-xs text-muted-foreground">
+          <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
             {columns.map((col, i) => (
               <th
                 key={i}
-                className={cn("px-4 py-2.5 text-start font-medium", col.headerClassName)}
+                className={cn("px-4 py-2.5 text-start align-middle font-medium", col.headerClassName)}
               >
                 {col.header}
               </th>
@@ -45,7 +45,7 @@ function DataTableInner<T>({
           {rows.map((row, i) => (
             <tr key={getRowKey(row, i)} className="border-b last:border-0 hover:bg-muted/50">
               {columns.map((col, i) => (
-                <td key={i} className={cn("px-4 py-2.5", col.className)}>
+                <td key={i} className={cn("px-4 py-2.5 align-middle", col.className)}>
                   {col.render(row)}
                 </td>
               ))}

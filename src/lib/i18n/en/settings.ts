@@ -4,6 +4,13 @@ export const settings = {
     aboutVersion: "Version",
     aboutTagline: "Fully offline — all your data lives in a local SQLite database.",
     appearance: "Appearance",
+    preset: "Color theme",
+    presets: {
+        nile: "Nile",
+        warm: "Warm",
+        midnight: "Midnight",
+        academy: "Academy",
+    },
     clock24: "24-hour clock",
     clock12: "12-hour clock",
     timeFormat: "Time format",

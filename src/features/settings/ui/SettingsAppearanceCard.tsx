@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Clock, Languages, MonitorCog, Moon, Settings2, Sun } from "lucide-react";
+import { CalendarDays, Clock, Languages, MonitorCog, Moon, Palette, Settings2, Sun } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LanguageSelector, ThemeSelector } from "@/shared/AppearanceControls";
+import { PresetPicker } from "@/shared/preset-picker";
 import { Segmented } from "@/shared/Segmented";
 import { useTimeStore } from "@/lib/time-store";
 import { useThemeStore } from "@/lib/theme/theme-store";
@@ -36,6 +37,13 @@ export function SettingsAppearanceCard() {
               {t("common.theme")}
             </div>
             <ThemeSelector />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Palette className="size-4 text-muted-foreground" />
+              {t("settings.preset")}
+            </div>
+            <PresetPicker />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm">

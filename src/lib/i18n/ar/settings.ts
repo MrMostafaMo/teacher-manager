@@ -6,6 +6,13 @@ export const settings: Messages["settings"] = {
     aboutVersion: "الإصدار",
     aboutTagline: "يعمل دون اتصال بالإنترنت — كل بياناتك مخزنة محليًا في قاعدة بيانات SQLite.",
     appearance: "المظهر",
+    preset: "نظام الألوان",
+    presets: {
+        nile: "النيلي",
+        warm: "دافئ",
+        midnight: "ليلي",
+        academy: "أكاديمي",
+    },
     clock24: "نظام 24 ساعة",
     clock12: "نظام 12 ساعة",
     timeFormat: "تنسيق الوقت",

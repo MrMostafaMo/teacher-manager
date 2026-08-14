@@ -92,7 +92,8 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
         return (
           <Card
             key={key}
-            className="transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+            style={{ boxShadow: "var(--kpi-shadow)" }}
+            className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10"
           >
             <CardContent className="flex items-start justify-between gap-2 p-4">
               <div className="min-w-0 space-y-2">
