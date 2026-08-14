@@ -18,6 +18,8 @@ export const weakPoints: Messages["weakPoints"] = {
     filterResolved: "المعالجة فقط",
     searchPlaceholder: "ابحث بالطالب أو الوصف…",
     noResults: "لا توجد نقاط ضعف مطابقة للفلترة.",
+    ungrouped: "بدون فرقة",
+    openProfile: "فتح ملف {{name}}",
     summary: "{{count}} نقطة ضعف",
     markResolved: "وضع علامة معالجة",
     reopen: "إعادة فتح",

@@ -16,6 +16,8 @@ export const weakPoints = {
     filterResolved: "Resolved only",
     searchPlaceholder: "Search by student or weakness…",
     noResults: "No weak points match your filters.",
+    ungrouped: "No group",
+    openProfile: "Open profile of {{name}}",
     summary: "{{count}} weak points",
     markResolved: "Mark as resolved",
     reopen: "Reopen",

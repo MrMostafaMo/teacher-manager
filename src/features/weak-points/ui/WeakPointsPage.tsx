@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Plus, TriangleAlert } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import { Avatar } from "@/shared/Avatar";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { buildSectionsByGroup } from "@/lib/build-grouped-sections";
 import { toast } from "@/lib/toast-store";
 import { notifyUndo } from "@/lib/undo-store";
 import {
@@ -18,12 +20,13 @@ import {
 import { filterWeakPoints, type WeakPointStatusFilter } from "@/features/weak-points/application/weak-point-filter";
 import { useWeakPointsPageData } from "./use-weak-points-data";
 import { WeakPointsFilters } from "./weak-points-filters";
-import { WeakPointsTable } from "./weak-points-table";
+import { WeakPointsSections } from "./weak-points-sections";
 import { WeakPointEntryDialog } from "./WeakPointEntryDialog";
 
 export default function WeakPointsPage() {
   const { t } = useTranslation();
-  const { rows, students, names, loading, error, reload } = useWeakPointsPageData(
+  const navigate = useNavigate();
+  const { rows, students, names, groupsByStudent, loading, error, reload } = useWeakPointsPageData(
     t("weakPoints.loadError"),
   );
   const [status, setStatus] = useState<WeakPointStatusFilter>("all");
@@ -31,10 +34,15 @@ export default function WeakPointsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<StudentWeakPoint | null>(null);
   const { armed, request, clear } = useConfirmDelete();
+  const { isCollapsed, toggle } = useCollapsedSections();
 
   const filtered = useMemo(
     () => filterWeakPoints(rows, status, query, (id) => names.get(id) ?? ""),
     [rows, status, query, names],
+  );
+  const grouped = useMemo(
+    () => buildSectionsByGroup(filtered, (r) => groupsByStudent.get(r.studentId) ?? []),
+    [filtered, groupsByStudent],
   );
   function handleToggleResolved(row: StudentWeakPoint) {
     void updateWeakPoint(row.id, {
@@ -45,7 +53,6 @@ export default function WeakPointsPage() {
       .then(reload)
       .catch(() => toast(t("weakPoints.saveError"), "error"));
   }
-
   function handleDelete(id: string) {
     const row = rows.find((r) => r.id === id);
     void removeWeakPoint(id)
@@ -110,32 +117,24 @@ export default function WeakPointsPage() {
           <p className="text-xs text-muted-foreground">
             {t("weakPoints.summary", { count: filtered.length })}
           </p>
-          <Card>
-            <CardContent className="p-0">
-              <WeakPointsTable
-                rows={filtered}
-                deletingId={armed}
-                renderStudent={(r) => {
-                  const name = names.get(r.studentId) ?? "—";
-                  return (
-                    <span className="flex items-center gap-2">
-                      <Avatar name={name} className="size-6 text-xs" />
-                      {name}
-                    </span>
-                  );
-                }}
-                onEdit={(row) => {
-                  clear();
-                  setEditing(row);
-                  setDialogOpen(true);
-                }}
-                onToggleResolved={handleToggleResolved}
-                onDelete={(id) => {
-                  if (request(id)) handleDelete(id);
-                }}
-              />
-            </CardContent>
-          </Card>
+          <WeakPointsSections
+            sections={grouped.sections}
+            ungrouped={grouped.ungrouped}
+            names={names}
+            deletingId={armed}
+            isCollapsed={isCollapsed}
+            onToggle={toggle}
+            onOpenProfile={(studentId) => navigate(`/students/${studentId}`)}
+            onEdit={(row) => {
+              clear();
+              setEditing(row);
+              setDialogOpen(true);
+            }}
+            onToggleResolved={handleToggleResolved}
+            onDelete={(id) => {
+              if (request(id)) handleDelete(id);
+            }}
+          />
         </>
       )}
 
