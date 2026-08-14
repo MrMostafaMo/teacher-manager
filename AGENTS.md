@@ -640,3 +640,22 @@ Phase 41 added two-way Google Drive sync + cloud backup/restore
 - Suite: 53 files / 337 tests, all green; `tsc --noEmit` clean; `pnpm build`
   and `cargo check` pass. Remaining: manual E2E in `tauri dev` (needs full
   rebuild for the capability change) and a two-device conflict check.
+
+## GitHub (CI/CD)
+
+Repo: `MrMostafaMo/teacher-manager` (private). Remote: `origin` = HTTPS.
+
+- `.github/workflows/publish.yml`: triggered by a tag `app-v*` (or
+  `workflow_dispatch`). Matrix builds macOS (aarch64 + x86_64), Windows
+  (x86_64 + aarch64), Linux x64 (deb/rpm/AppImage) via `tauri-action`; each
+  run publishes a GitHub Release (`releaseDraft: false`). No code signing
+  secrets configured. Linux ARM (aarch64/armv7) builds are deferred — they
+  need `pguyot/arm-runner-action` (QEMU, ~1h, billed on private repos).
+- `.github/workflows/ci.yml`: on push/PR to `main` — `pnpm test` +
+  `pnpm build` (file-length + tsc + vite) on ubuntu.
+- **Release process**: bump `version` in `src-tauri/tauri.conf.json` and
+  `package.json` (must match; `tagName: app-v__VERSION__`), commit, push tag
+  `app-vX.Y.Z`. Workflow permissions: repo Settings → Actions → "Read and
+  write permissions" must be enabled (contents: write is declared per job).
+- `pnpm` is pinned via the `packageManager` field (`pnpm@11.13.0`) so CI
+  uses the same version as local dev.
