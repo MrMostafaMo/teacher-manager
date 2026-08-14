@@ -21,6 +21,7 @@ const REPORT_KEYS: ReportKey[] = [
   "expenses",
   "finances",
   "skills",
+  "weakPoints",
 ];
 
 export default function ReportsPage() {
@@ -39,6 +40,7 @@ export default function ReportsPage() {
       headers: (t(`reports.types.${key}.headers`, { returnObjects: true }) as unknown as string[]) ?? [],
       status: (s) => (s === "active" ? t("students.statusActive") : t("students.statusInactive")),
       category: (c) => t(`expenses.categories.${c}`),
+      weakStatus: (s) => t(`weakPoints.${s}`),
     }),
     [t, key],
   );

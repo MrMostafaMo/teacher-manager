@@ -21,6 +21,8 @@ export type ReportTranslations = {
   status: (s: string) => string;
   /** Expense category name (localized). */
   category?: (c: string) => string;
+  /** Weak-point status name (active/resolved, localized). */
+  weakStatus?: (s: string) => string;
 };
 
 export async function studentsReport(t: ReportTranslations): Promise<ReportData> {

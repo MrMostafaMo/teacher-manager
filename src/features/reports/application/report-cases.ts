@@ -9,6 +9,7 @@ import {
   type ReportTranslations,
 } from "./report-builders";
 import { examsReport, expensesReport, financesReport } from "./report-financials";
+import { weakPointsReport } from "./report-weak-points";
 
 export type { ReportTranslations } from "./report-builders";
 
@@ -37,6 +38,8 @@ export async function buildReportData(
       return financesReport(t);
     case "skills":
       return skillsReport(t);
+    case "weakPoints":
+      return weakPointsReport(t);
     case "statement":
       // The student statement is scoped to a single student; use
       // buildStudentStatementReport(studentId, t) instead.

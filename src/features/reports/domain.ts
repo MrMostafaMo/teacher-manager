@@ -11,6 +11,7 @@ export type ReportKey =
   | "expenses"
   | "finances"
   | "skills"
+  | "weakPoints"
   | "statement";
 
 export interface ReportData {

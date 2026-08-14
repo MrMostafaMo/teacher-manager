@@ -44,5 +44,10 @@ export const reports = {
         title: "Skills Report",
         headers: ["Student", "Tracked", "Weak", "Weak skills"],
       },
+      weakPoints: {
+        label: "Weak Points",
+        title: "Weak Points Report",
+        headers: ["Student", "Description", "Recorded on", "Status"],
+      },
     },
 } as const;
