@@ -545,5 +545,5 @@ Phase 38 added per-student weak-points tracking (نقاط الضعف):
   `weakPoint.create/update/delete` (icon `TriangleAlert`).
 - i18n: `weakPoints.*` namespace + `profile.sections.weakPoints`,
   `profile.manageWeakPoints`, `common.undo.weakPoint` (ar + en).
-- Suite: 38 files / 206 tests, all green; `tsc --noEmit` clean; `pnpm build`
+- Suite: 36 files / 198 tests, all green; `tsc --noEmit` clean; `pnpm build`
   passes.
