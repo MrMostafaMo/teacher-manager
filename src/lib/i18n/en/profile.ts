@@ -10,6 +10,7 @@ export const profile = {
     phone: "Phone",
     notes: "Notes",
     manageSkills: "Manage skills",
+    manageWeakPoints: "Manage weak points",
     stats: {
       attendanceRate: "Attendance rate",
       homeworkCompletion: "Homework completion",
@@ -25,6 +26,7 @@ export const profile = {
       skills: "Skills",
       activity: "Recent activity",
       trends: "Trends",
+      weakPoints: "Weak points",
     },
     trends: {
       attendance: "Attendance by month",

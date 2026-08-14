@@ -22,6 +22,8 @@ import { reports } from "./reports";
 import { activity } from "./activity";
 import { reportCard } from "./report-card";
 import { notifications } from "./notifications";
+import { whatsapp } from "./whatsapp";
+import { weakPoints } from "./weak-points";
 import { error } from "./error";
 
 export const ar: Messages = {
@@ -48,5 +50,7 @@ export const ar: Messages = {
   activity,
   reportCard,
   notifications,
+  whatsapp,
+  weakPoints,
   error,
 };

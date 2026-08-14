@@ -12,6 +12,7 @@ export const profile: Messages["profile"] = {
     phone: "الهاتف",
     notes: "ملاحظات",
     manageSkills: "إدارة المهارات",
+    manageWeakPoints: "إدارة نقاط الضعف",
     stats: {
       attendanceRate: "نسبة الحضور",
       homeworkCompletion: "إنجاز الواجبات",
@@ -27,6 +28,7 @@ export const profile: Messages["profile"] = {
       skills: "المهارات",
       activity: "آخر الأنشطة",
       trends: "التحليلات",
+      weakPoints: "نقاط الضعف",
     },
     trends: {
       attendance: "الحضور حسب الشهر",

@@ -23,6 +23,7 @@ export const activity = {
       group: "Group",
       exam: "Exam",
       attendance: "Attendance",
+      weakPoint: "Weak point",
     },
     actions: {
       appLaunch: "App launched",
@@ -66,6 +67,9 @@ export const activity = {
       examDelete: "Deleted an exam",
       examResult: "Recorded an exam result",
       attendanceSave: "Saved attendance",
+      weakPointCreate: "Added a weak point",
+      weakPointUpdate: "Edited a weak point",
+      weakPointDelete: "Deleted a weak point",
       unknown: "Activity",
     },
 } as const;

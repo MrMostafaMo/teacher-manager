@@ -65,6 +65,9 @@ export const ACTION_KEYS: Record<string, string> = {
   "exam.delete": "examDelete",
   "exam.result": "examResult",
   "attendance.save": "attendanceSave",
+  "weakPoint.create": "weakPointCreate",
+  "weakPoint.update": "weakPointUpdate",
+  "weakPoint.delete": "weakPointDelete",
 };
 
 /** Writes one activity log entry. Never throws on its own failure. */

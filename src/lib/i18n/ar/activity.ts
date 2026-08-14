@@ -25,6 +25,7 @@ export const activity: Messages["activity"] = {
       group: "الفرقة",
       exam: "الاختبار",
       attendance: "الحضور",
+      weakPoint: "نقطة الضعف",
     },
     actions: {
       appLaunch: "فتح التطبيق",
@@ -68,6 +69,9 @@ export const activity: Messages["activity"] = {
       examDelete: "حذف اختبار",
       examResult: "تسجيل نتيجة اختبار",
       attendanceSave: "حفظ الحضور",
+      weakPointCreate: "إضافة نقطة ضعف",
+      weakPointUpdate: "تعديل نقطة ضعف",
+      weakPointDelete: "حذف نقطة ضعف",
       unknown: "نشاط",
     },
 };

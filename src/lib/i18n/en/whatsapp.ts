@@ -1,0 +1,58 @@
+export const whatsapp = {
+  button: "WhatsApp",
+  title: "Send WhatsApp message",
+  phone: "Phone",
+  phoneStudent: "Student phone",
+  phoneGuardian: "Guardian phone",
+  noPhone: "No phone number on file",
+  phoneCustom: "Other number…",
+  phoneNumber: "Phone number",
+  template: "Template",
+  message: "Message",
+  preview: "Preview",
+  send: "Open WhatsApp",
+  sending: "Opening…",
+  sent: "WhatsApp opened in your browser",
+  error: "Could not open WhatsApp",
+  insert: "Insert variable",
+  variables: "Variables",
+  purposes: {
+    general: "General",
+    homework: "Homework",
+    exams: "Exams",
+    skills: "Skills",
+  },
+  defaults: {
+    general:
+      "Hello {name}! We would like to share an update about the student's progress at the study center. {group}. Regards.",
+    homework:
+      "Hello {name}! Homework completion for the student is {homeworkRate}% ({homeworkDone} of {homeworkTotal} tasks). Regards.",
+    exams:
+      "Hello {name}! The student's average exam score is {examAverage}% across {examsCount} exams. Regards.",
+    skills:
+      "Hello {name}! Skill assessment for the student: {skillsCount} skills rated. Weak skills: {weakSkills}. Regards.",
+  },
+  varHints: {
+    name: "Student name",
+    group: "Groups",
+    plan: "Plan",
+    date: "Today's date",
+    homeworkDone: "Completed homework",
+    homeworkTotal: "Total homework",
+    homeworkRate: "Homework completion %",
+    examAverage: "Average exam score",
+    examsCount: "Number of graded exams",
+    weakSkills: "Weak skills list",
+    strongSkills: "Strong skills list",
+    skillsCount: "Number of rated skills",
+  },
+  settings: {
+    title: "WhatsApp messages",
+    hint: "Message templates for sending student performance updates via WhatsApp. Variables like {name} are replaced automatically.",
+    saved: "Template saved",
+    reset: "Reset to default",
+    resetDone: "Template restored to default",
+    maxLength: "Max 500 characters",
+  },
+  save: "Save template",
+} as const;

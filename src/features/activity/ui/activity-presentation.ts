@@ -7,6 +7,7 @@ import {
   NotebookPen,
   Receipt,
   Target,
+  TriangleAlert,
   User,
   Users2,
   Wallet,
@@ -28,6 +29,7 @@ export const ENTITY_ICONS: Record<string, LucideIcon> = {
   group: Users2,
   exam: ClipboardList,
   attendance: CalendarCheck,
+  weakPoint: TriangleAlert,
 };
 
 export function detailsParts(row: ActivityLogRow, names: Map<string, string>): string[] {
