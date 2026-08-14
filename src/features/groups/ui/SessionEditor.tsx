@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { TimePicker } from "@/shared/TimePicker";
 import { useTimeStore } from "@/lib/time-store";
 import { formatTime } from "@/lib/utils/format";
@@ -61,17 +62,12 @@ export function SessionEditor({
                   –{formatTime(s.endTime, hour24)}
                   {s.room ? ` · ${s.room}` : ""}
                 </span>
-                <Button
-                  type="button"
-                  variant={removingKey === s.key ? "destructive" : "ghost"}
-                  size="icon-sm"
-                  aria-label={
-                    removingKey === s.key ? t("groups.confirmDelete") : t("groups.sessionRemove")
-                  }
-                  onClick={() => onRemove(s.key)}
-                >
-                  <Trash2 />
-                </Button>
+                <ConfirmDeleteButton
+                  armed={removingKey === s.key}
+                  deleteLabel={t("groups.sessionRemove")}
+                  confirmLabel={t("groups.confirmDelete")}
+                  onDelete={() => onRemove(s.key)}
+                />
               </li>
             ))}
           </ul>

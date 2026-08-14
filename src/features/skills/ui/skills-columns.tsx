@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { PencilLine, Trash2 } from "lucide-react";
+import { PencilLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type DataTableColumn } from "@/shared/DataTable";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { cn } from "@/lib/utils";
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
 import type { Skill } from "@/lib/db/schema";
@@ -47,14 +48,12 @@ export function useSkillsColumns(
               <PencilLine />
               <span className="sr-only">{t("skills.edit")}</span>
             </Button>
-            <Button
-              variant={deletingId === s.id ? "destructive" : "ghost"}
-              size="icon-sm"
-              aria-label={deletingId === s.id ? t("skills.confirmDelete") : t("skills.delete")}
-              onClick={() => onDelete(s.id)}
-            >
-              <Trash2 />
-            </Button>
+            <ConfirmDeleteButton
+              armed={deletingId === s.id}
+              deleteLabel={t("skills.delete")}
+              confirmLabel={t("skills.confirmDelete")}
+              onDelete={() => onDelete(s.id)}
+            />
           </div>
         ),
       },

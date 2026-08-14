@@ -11,6 +11,7 @@
     "sql:allow-execute",
     "dialog:default",
     "notification:default",
+    "opener:default",
     {
       "identifier": "fs:allow-write-file",
       "allow": [

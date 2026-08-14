@@ -1,8 +1,9 @@
 import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
@@ -91,14 +92,12 @@ export const GroupsTable = memo(function GroupsTable({
             >
               <Pencil />
             </Button>
-            <Button
-              variant={deletingId === g.id ? "destructive" : "ghost"}
-              size="icon-sm"
-              aria-label={deletingId === g.id ? t("groups.confirmDelete") : t("groups.delete")}
-              onClick={() => void onDelete(g)}
-            >
-              <Trash2 />
-            </Button>
+            <ConfirmDeleteButton
+              armed={deletingId === g.id}
+              deleteLabel={t("groups.delete")}
+              confirmLabel={t("groups.confirmDelete")}
+              onDelete={() => void onDelete(g)}
+            />
           </div>
         ),
       },

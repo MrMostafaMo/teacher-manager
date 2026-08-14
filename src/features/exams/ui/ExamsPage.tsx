@@ -10,6 +10,8 @@ import { deleteExam, listExams, type ExamListItem } from "@/features/exams/appli
 import { listGroups } from "@/features/groups/application/group-cases";
 import type { Exam, StudyGroup } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { notifyUndo } from "@/lib/undo-store";
 import { ExamFormDialog } from "./ExamFormDialog";
 import { ExamDetailDialog } from "./ExamDetailDialog";
 import { ExamGroupSections } from "./exam-sections";
@@ -27,7 +29,7 @@ export default function ExamsPage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const { armed: deletingId, request, clear } = useConfirmDelete();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { isCollapsed, toggle } = useCollapsedSections();
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
 
@@ -55,8 +57,12 @@ export default function ExamsPage() {
     async (id: string) => {
       if (!request(id)) return;
       try {
-        await deleteExam(id);
+        const row = rows.find((e) => e.id === id);
+        const undoId = await deleteExam(id);
         setRows((r) => r.filter((e) => e.id !== id));
+        if (undoId !== null && row) {
+          notifyUndo(undoId, t("undo.deleted"), `${t("undo.exam")}: ${row.title}`, t("undo.undo"));
+        }
       } catch (e) {
         console.error("Failed to delete exam", e);
         setError(t("exams.deleteError"));
@@ -64,7 +70,7 @@ export default function ExamsPage() {
         clear();
       }
     },
-    [request, clear, t],
+    [request, clear, rows, t],
   );
 
   const openEdit = useCallback((e: Exam) => {
@@ -105,9 +111,9 @@ export default function ExamsPage() {
         <ExamGroupSections
           groups={groups}
           rows={rows}
-          collapsed={collapsed}
+          isCollapsed={isCollapsed}
           deletingId={deletingId}
-          onToggle={(id) => setCollapsed((c) => ({ ...c, [id]: !c[id] }))}
+          onToggle={toggle}
           onAdd={openCreate}
           onDetail={setDetailId}
           onEdit={openEdit}

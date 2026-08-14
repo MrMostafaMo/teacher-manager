@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteStudent } from "@/features/students/application/student-cases";
 import { setStudentGroup } from "@/features/groups/application/group-cases";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
 import type { Student } from "@/lib/db/schema";
 import { formatDateString } from "@/lib/utils/format";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { Modal } from "@/shared/Modal";
+import { notifyUndo } from "@/lib/undo-store";
 import { StatusBadge } from "./StatusBadge";
 import { useStudentDetail } from "./use-student-detail";
 import { StudentDetailBody } from "./student-detail-body";
@@ -48,9 +50,12 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
       return;
     }
     try {
-      await deleteStudent(student.id);
+      const undoId = await deleteStudent(student.id);
       onDeleted();
       onClose();
+      if (undoId !== null) {
+        notifyUndo(undoId, t("undo.deleted"), `${t("undo.student")}: ${student.name}`, t("undo.undo"));
+      }
     } catch {
       setError(t("students.deleteError"));
     }
@@ -81,10 +86,12 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="flex justify-end gap-2 pt-1">
-          <Button variant={confirming ? "destructive" : "ghost"} onClick={handleDelete}>
-            <Trash2 />
-            {confirming ? t("students.confirmDelete") : t("students.delete")}
-          </Button>
+          <ConfirmDeleteButton
+            armed={confirming}
+            deleteLabel={t("students.delete")}
+            confirmLabel={t("students.confirmDelete")}
+            onDelete={() => void handleDelete()}
+          />
           <Button onClick={onEdit}>
             <Pencil />
             {t("students.edit")}

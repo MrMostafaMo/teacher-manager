@@ -7,7 +7,16 @@ import { attendanceStatusSchema, type AttendanceStatus } from "@/features/attend
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { logActivity } from "@/lib/activity-log";
 import { enrolledBy } from "@/lib/utils/enrollment";
-import type { GroupSession, SessionAttendance, Student } from "@/lib/db/schema";
+import {
+  groupSessions,
+  sessionAttendance,
+  sessionExceptions,
+  type GroupSession,
+  type SessionAttendance,
+  type Student,
+} from "@/lib/db/schema";
+import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
+import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
 import dayjs from "dayjs";
 import { z } from "zod";
@@ -46,11 +55,28 @@ export async function updateSession(id: string, input: GroupSessionInput): Promi
   return row;
 }
 
-export async function deleteSession(id: string): Promise<void> {
+export async function deleteSession(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
+  const undoEnabled = options.undo !== false;
+  const sessionRows = undoEnabled ? await captureRows(groupSessions, [id]) : [];
+  const attendanceRows = undoEnabled
+    ? await captureBy(sessionAttendance, sessionAttendance.sessionId, id)
+    : [];
+  const exceptionRows = undoEnabled
+    ? await captureBy(sessionExceptions, sessionExceptions.sessionId, id)
+    : [];
   const removed = await scheduleRepository.remove(id);
   if (!removed) throw new Error(`session ${id} not found`);
   await scheduleRepository.clearForSession(id);
   await logActivity({ action: "schedule.delete", entityType: "schedule", entityId: id });
+  if (!undoEnabled) return null;
+  return registerUndo(async () => {
+    await restoreRows(groupSessions, sessionRows);
+    await restoreRows(sessionAttendance, attendanceRows);
+    await restoreRows(sessionExceptions, exceptionRows);
+  });
 }
 
 export interface SessionAttendanceSheet {

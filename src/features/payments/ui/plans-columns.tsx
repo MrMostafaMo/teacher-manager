@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type DataTableColumn } from "@/shared/DataTable";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { formatMoney } from "@/lib/utils/format";
 import type { PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import type { Plan } from "@/lib/db/schema";
@@ -55,14 +56,12 @@ export function usePlansColumns(
             >
               <Pencil />
             </Button>
-            <Button
-              variant={deletingId === p.id ? "destructive" : "ghost"}
-              size="icon-sm"
-              aria-label={deletingId === p.id ? t("plans.confirmDelete") : t("plans.delete")}
-              onClick={() => onDelete(p)}
-            >
-              <Trash2 />
-            </Button>
+            <ConfirmDeleteButton
+              armed={deletingId === p.id}
+              deleteLabel={t("plans.delete")}
+              confirmLabel={t("plans.confirmDelete")}
+              onDelete={() => onDelete(p)}
+            />
           </div>
         ),
       },

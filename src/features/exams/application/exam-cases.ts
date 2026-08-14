@@ -8,6 +8,9 @@ import {
 } from "@/features/exams/domain";
 import { uuid } from "@/lib/utils/uuid";
 import { computeExamDetail, examEligibleIds } from "./exam-stats";
+import { examResults, exams } from "@/lib/db/schema";
+import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
+import { registerUndo } from "@/lib/undo-store";
 import {
   logExamCreate,
   logExamDelete,
@@ -96,12 +99,24 @@ export async function updateExam(
   return exam;
 }
 
-export async function deleteExam(id: string): Promise<boolean> {
+export async function deleteExam(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
   const exam = await examRepository.findById(id);
+  const rows = await captureRows(exams, [id]);
+  const results = options.undo === false
+    ? []
+    : await captureBy(examResults, examResults.examId, id);
   await examRepository.clearForExam(id);
   const ok = await examRepository.remove(id);
-  if (ok && exam) await logExamDelete(exam.title, id);
-  return ok;
+  if (!ok) return null;
+  if (exam) await logExamDelete(exam.title, id);
+  if (options.undo === false) return null;
+  return registerUndo(async () => {
+    await restoreRows(exams, rows);
+    await restoreRows(examResults, results);
+  });
 }
 
 /** Batch-save result rows for an exam. Empty score clears the result. */

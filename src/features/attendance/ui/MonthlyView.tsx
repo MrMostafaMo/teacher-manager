@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMonthly, type StudentMonthlyRow } from "@/features/attendance/application/attendance-cases";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { MonthPicker } from "@/shared/DatePicker";
 import { useMemberships, buildSections } from "./attendance-sections";
@@ -20,7 +21,7 @@ export function MonthlyView({ month, onMonthChange }: { month: string; onMonthCh
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const groupsByStudent = useMemberships();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { isCollapsed, toggle } = useCollapsedSections();
 
   useEffect(() => {
     setLoading(true);
@@ -93,16 +94,14 @@ export function MonthlyView({ month, onMonthChange }: { month: string; onMonthCh
           ) : (
             <div className="space-y-4 p-4">
               {sections.map((sec) => {
-                const isCollapsed = !!collapsed[`summary-${sec.id}`];
+                const collapsed = isCollapsed(`summary-${sec.id}`);
                 return (
                   <CollapsibleSection
                     key={`summary-${sec.id}`}
                     title={sec.name}
                     meta={`${sec.list.length}`}
-                    collapsed={isCollapsed}
-                    onToggle={() =>
-                      setCollapsed((c) => ({ ...c, [`summary-${sec.id}`]: !isCollapsed }))
-                    }
+                    collapsed={collapsed}
+                    onToggle={() => toggle(`summary-${sec.id}`)}
                   >
                     <MonthlySummaryTable list={sec.list} groupLabel={sec.name} />
                   </CollapsibleSection>
@@ -113,13 +112,8 @@ export function MonthlyView({ month, onMonthChange }: { month: string; onMonthCh
                   key="summary-__ungrouped"
                   title={t("students.ungrouped")}
                   meta={`${ungrouped.length}`}
-                  collapsed={!!collapsed["summary-__ungrouped"]}
-                  onToggle={() =>
-                    setCollapsed((c) => ({
-                      ...c,
-                      "summary-__ungrouped": !collapsed["summary-__ungrouped"],
-                    }))
-                  }
+                  collapsed={isCollapsed("summary-__ungrouped")}
+                  onToggle={() => toggle("summary-__ungrouped")}
                 >
                   <MonthlySummaryTable list={ungrouped} groupLabel={t("students.ungrouped")} />
                 </CollapsibleSection>

@@ -1,4 +1,4 @@
-import { and, asc, eq, like, or } from "drizzle-orm";
+import { and, asc, eq, inArray, like, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { students, type Student } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
@@ -44,5 +44,14 @@ export const studentRepository = {
       .update(students)
       .set({ planId: null, updatedAt: Date.now() })
       .where(eq(students.planId, planId));
+  },
+
+  /** Re-attach students to a plan after its delete is undone. */
+  async restorePlan(planId: string, studentIds: string[]): Promise<void> {
+    if (studentIds.length === 0) return;
+    await db
+      .update(students)
+      .set({ planId, updatedAt: Date.now() })
+      .where(inArray(students.id, studentIds));
   },
 };

@@ -13,6 +13,7 @@ export const nav = {
     homework: "Homework",
     exams: "Exams",
     skills: "Skills",
+    weakPoints: "Weak points",
     schedule: "Schedule",
     reports: "Reports",
     activity: "Activity log",

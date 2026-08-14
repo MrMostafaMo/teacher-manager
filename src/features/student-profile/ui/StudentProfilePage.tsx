@@ -8,11 +8,19 @@ import {
 } from "@/features/student-profile/application/student-profile-cases";
 import { StudentFormDialog } from "@/features/students/ui/StudentFormDialog";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
+import { WeakPointsDialog } from "@/features/weak-points/ui/WeakPointsDialog";
+import { SendWhatsAppDialog } from "@/features/whatsapp/ui/SendWhatsAppDialog";
 import { StudentStatementDialog } from "@/features/student-profile/ui/StudentStatementDialog";
 import { StudentTrendsSection } from "@/features/student-profile/ui/StudentTrendsSection";
 import { useReportCard } from "@/features/report-card/ui/use-report-card";
 import { AttendanceSection, HomeworkSection, PaymentsSection } from "./profile-records-a";
-import { ActivitySection, ExamsSection, SessionsSection, SkillsSection } from "./profile-records-b";
+import {
+  ActivitySection,
+  ExamsSection,
+  SessionsSection,
+  SkillsSection,
+  WeakPointsSection,
+} from "./profile-records-b";
 import { ProfileFactsCard, ProfileStatsGrid, useProfileSummary } from "./profile-overview";
 import { ProfileHeader } from "./profile-header";
 import { ProfilePageSkeleton } from "./profile-skeleton";
@@ -24,8 +32,10 @@ export default function StudentProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [skillsOpen, setSkillsOpen] = useState(false);
+  const [weakPointsOpen, setWeakPointsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [statementOpen, setStatementOpen] = useState(false);
+  const [whatsAppOpen, setWhatsAppOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -39,6 +49,8 @@ export default function StudentProfilePage() {
       })
       .finally(() => setLoading(false));
   }, [id, reloadKey, t]);
+
+  const { busy: reportCardBusy, run: runReportCard } = useReportCard(data);
 
   if (loading) {
     return <ProfilePageSkeleton />;
@@ -58,11 +70,11 @@ export default function StudentProfilePage() {
     exams,
     sessionAttendance,
     skills,
+    weakPoints,
     activity,
   } = data;
 
   const { attendanceRate, examAverage, homeworkRate } = useProfileSummary(data);
-  const { busy: reportCardBusy, run: runReportCard } = useReportCard(data);
 
   return (
     <div className="space-y-6">
@@ -72,6 +84,7 @@ export default function StudentProfilePage() {
         onStatement={() => setStatementOpen(true)}
         onReportCard={runReportCard}
         reportCardBusy={reportCardBusy}
+        onWhatsApp={() => setWhatsAppOpen(true)}
       />
 
       <ProfileFactsCard student={student} planName={planName} groups={groups} />
@@ -103,6 +116,9 @@ export default function StudentProfilePage() {
       <Separator />
       <SkillsSection skills={skills} onManage={() => setSkillsOpen(true)} />
 
+      <Separator />
+      <WeakPointsSection weakPoints={weakPoints} onManage={() => setWeakPointsOpen(true)} />
+
       {activity.length > 0 && (
         <>
           <Separator />
@@ -115,6 +131,13 @@ export default function StudentProfilePage() {
         studentId={student.id}
         studentName={student.name}
         onClose={() => setSkillsOpen(false)}
+        onChanged={() => setReloadKey((k) => k + 1)}
+      />
+
+      <WeakPointsDialog
+        open={weakPointsOpen}
+        studentId={student.id}
+        onClose={() => setWeakPointsOpen(false)}
         onChanged={() => setReloadKey((k) => k + 1)}
       />
 
@@ -133,6 +156,12 @@ export default function StudentProfilePage() {
         studentId={student.id}
         studentName={student.name}
         onClose={() => setStatementOpen(false)}
+      />
+
+      <SendWhatsAppDialog
+        open={whatsAppOpen}
+        data={data}
+        onClose={() => setWhatsAppOpen(false)}
       />
     </div>
   );

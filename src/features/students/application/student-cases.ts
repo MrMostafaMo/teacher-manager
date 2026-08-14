@@ -8,7 +8,19 @@ import { homeworkRepository } from "@/features/homework/infrastructure/homework-
 import { examRepository } from "@/features/exams/infrastructure/exam-repo";
 import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
 import { logActivity } from "@/lib/activity-log";
-import type { Student } from "@/lib/db/schema";
+import {
+  attendance,
+  examResults,
+  homeworkSubmissions,
+  payments,
+  sessionAttendance,
+  studentGroups,
+  studentSkills,
+  students,
+  type Student,
+} from "@/lib/db/schema";
+import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
+import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
 
 /**
@@ -45,7 +57,24 @@ export async function updateStudent(id: string, input: StudentInput): Promise<St
   return row;
 }
 
-export async function deleteStudent(id: string): Promise<void> {
+export async function deleteStudent(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
+  const undoEnabled = options.undo !== false;
+  const studentRows = undoEnabled ? await captureRows(students, [id]) : [];
+  const paymentRows = undoEnabled ? await captureBy(payments, payments.studentId, id) : [];
+  const attendanceRows = undoEnabled ? await captureBy(attendance, attendance.studentId, id) : [];
+  const membershipRows = undoEnabled ? await captureBy(studentGroups, studentGroups.studentId, id) : [];
+  const sessionRows = undoEnabled
+    ? await captureBy(sessionAttendance, sessionAttendance.studentId, id)
+    : [];
+  const submissionRows = undoEnabled
+    ? await captureBy(homeworkSubmissions, homeworkSubmissions.studentId, id)
+    : [];
+  const resultRows = undoEnabled ? await captureBy(examResults, examResults.studentId, id) : [];
+  const skillRows = undoEnabled ? await captureBy(studentSkills, studentSkills.studentId, id) : [];
+
   // FKs are off — clear every child row or they orphan (attendance,
   // payments, memberships, submissions, results, skill levels).
   await Promise.all([
@@ -60,4 +89,15 @@ export async function deleteStudent(id: string): Promise<void> {
   const removed = await studentRepository.remove(id);
   if (!removed) throw new Error(`student ${id} not found`);
   await logActivity({ action: "student.delete", entityType: "student", entityId: id });
+  if (!undoEnabled) return null;
+  return registerUndo(async () => {
+    await restoreRows(students, studentRows);
+    await restoreRows(payments, paymentRows);
+    await restoreRows(attendance, attendanceRows);
+    await restoreRows(studentGroups, membershipRows);
+    await restoreRows(sessionAttendance, sessionRows);
+    await restoreRows(homeworkSubmissions, submissionRows);
+    await restoreRows(examResults, resultRows);
+    await restoreRows(studentSkills, skillRows);
+  });
 }

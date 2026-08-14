@@ -1,7 +1,9 @@
 import { expenseInputSchema, type ExpenseInput } from "@/features/expenses/domain";
 import { expenseRepository } from "@/features/expenses/infrastructure/expense-repo";
 import { logActivity } from "@/lib/activity-log";
-import type { Expense } from "@/lib/db/schema";
+import { expenses, type Expense } from "@/lib/db/schema";
+import { captureRows, restoreRows } from "@/lib/db/snapshot";
+import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
 
 /**
@@ -21,10 +23,16 @@ export async function recordExpense(input: ExpenseInput): Promise<Expense> {
   return row;
 }
 
-export async function deleteExpense(id: string): Promise<void> {
+export async function deleteExpense(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
+  const rows = options.undo === false ? [] : await captureRows(expenses, [id]);
   const removed = await expenseRepository.remove(id);
   if (!removed) throw new Error(`expense ${id} not found`);
   await logActivity({ action: "expense.delete", entityType: "expense", entityId: id });
+  if (options.undo === false) return null;
+  return registerUndo(() => restoreRows(expenses, rows));
 }
 
 export async function updateExpense(id: string, input: ExpenseInput): Promise<Expense> {

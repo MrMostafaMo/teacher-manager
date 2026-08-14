@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { CalendarCheck, Pencil, Trash2, Users } from "lucide-react";
+import { CalendarCheck, Pencil, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 
@@ -67,28 +68,12 @@ export function SessionCard({
           >
             <Pencil />
           </Button>
-          {deleting ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-7 gap-1 px-2 text-[11px]"
-              aria-label={t("schedule.confirmDelete")}
-              title={t("schedule.confirmDelete")}
-              onClick={onDelete}
-            >
-              <Trash2 className="size-3" />
-              {t("schedule.confirmDelete")}
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={t("schedule.delete")}
-              onClick={onDelete}
-            >
-              <Trash2 />
-            </Button>
-          )}
+          <ConfirmDeleteButton
+            armed={deleting}
+            deleteLabel={t("schedule.delete")}
+            confirmLabel={t("schedule.confirmDelete")}
+            onDelete={onDelete}
+          />
         </div>
       </div>
     </div>

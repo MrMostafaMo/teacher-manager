@@ -17,6 +17,7 @@ import { formatMoney } from "@/lib/utils/format";
 import { RecordExpenseDialog } from "./RecordExpenseDialog";
 import { MonthPicker } from "@/shared/DatePicker";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { notifyUndo } from "@/lib/undo-store";
 import { ExpensesTable } from "./expenses-table";
 import { ExpenseCategoryChart } from "./expense-category-chart";
 
@@ -53,15 +54,19 @@ export default function ExpensesPage() {
     async (id: string) => {
       if (!request(id)) return;
       try {
-        await deleteExpense(id);
+        const row = rows.find((r) => r.id === id);
+        const undoId = await deleteExpense(id);
         clear();
         bump();
+        if (undoId !== null && row) {
+          notifyUndo(undoId, t("undo.deleted"), `${t("undo.expense")}: ${row.title}`, t("undo.undo"));
+        }
       } catch (e) {
         console.error("Failed to delete expense", e);
         setError(t("expenses.deleteError"));
       }
     },
-    [request, clear, bump, t],
+    [request, clear, bump, rows, t],
   );
 
   const total = rows.reduce((acc, r) => acc + r.amount, 0);

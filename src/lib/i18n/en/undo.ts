@@ -1,0 +1,15 @@
+export const undo = {
+  deleted: "Deleted",
+  undo: "Undo",
+  student: "Student",
+  payment: "Payment",
+  expense: "Expense",
+  plan: "Plan",
+  skill: "Skill",
+  homework: "Homework",
+  exam: "Exam",
+  group: "Group",
+  session: "Session",
+  member: "Membership",
+  weakPoint: "Weak point",
+} as const;

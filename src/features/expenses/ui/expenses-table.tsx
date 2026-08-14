@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import type { Expense } from "@/lib/db/schema";
 import { formatDate, formatMoney } from "@/lib/utils/format";
 
@@ -61,21 +62,12 @@ export function ExpensesTable({
           >
             <Pencil className="size-4" />
           </Button>
-          {deletingId === r.id ? (
-            <Button variant="destructive" size="sm" onClick={() => onDelete(r.id)}>
-              {t("expenses.confirmDelete")}
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-muted-foreground hover:text-destructive"
-              aria-label={t("expenses.delete")}
-              onClick={() => onDelete(r.id)}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          )}
+          <ConfirmDeleteButton
+            armed={deletingId === r.id}
+            deleteLabel={t("expenses.delete")}
+            confirmLabel={t("expenses.confirmDelete")}
+            onDelete={() => onDelete(r.id)}
+          />
         </div>
       ),
     },

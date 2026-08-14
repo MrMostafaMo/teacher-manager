@@ -8,7 +8,9 @@ import { examRepository } from "@/features/exams/infrastructure/exam-repo";
 import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
 import { logActivity } from "@/lib/activity-log";
 import type { Student, StudyGroup } from "@/lib/db/schema";
+import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
+import { captureGroup, captureMember, restoreGroup, restoreMember } from "./group-snapshot";
 
 /**
  * Study-groups use-cases. Validate input, write through the repository, and
@@ -67,7 +69,11 @@ export async function updateGroup(id: string, input: StudyGroupInput): Promise<S
   return row;
 }
 
-export async function deleteGroup(id: string): Promise<void> {
+export async function deleteGroup(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
+  const snapshot = options.undo === false ? null : await captureGroup(id);
   await groupRepository.clearMembers(id);
   // FKs are off — clear this group's homework + submissions or they orphan.
   await homeworkRepository.clearForGroup(id);
@@ -76,6 +82,8 @@ export async function deleteGroup(id: string): Promise<void> {
   const removed = await groupRepository.remove(id);
   if (!removed) throw new Error(`group ${id} not found`);
   await logActivity({ action: "group.delete", entityType: "group", entityId: id });
+  if (!snapshot) return null;
+  return registerUndo(() => restoreGroup(snapshot));
 }
 
 export async function addStudentToGroup(studentId: string, groupId: string): Promise<void> {
@@ -88,7 +96,12 @@ export async function addStudentToGroup(studentId: string, groupId: string): Pro
   });
 }
 
-export async function removeStudentFromGroup(studentId: string, groupId: string): Promise<void> {
+export async function removeStudentFromGroup(
+  studentId: string,
+  groupId: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
+  const snapshot = options.undo === false ? null : await captureMember(studentId, groupId);
   const removed = await groupRepository.removeMember(studentId, groupId);
   if (!removed) throw new Error(`membership ${studentId}/${groupId} not found`);
   // FKs are off — the student's homework submissions + exam results for this
@@ -102,6 +115,8 @@ export async function removeStudentFromGroup(studentId: string, groupId: string)
     entityId: groupId,
     details: { studentId },
   });
+  if (!snapshot) return null;
+  return registerUndo(() => restoreMember(snapshot));
 }
 
 /** One class per student: replace every membership with a single one (or none). */

@@ -79,7 +79,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
       // Removed sessions first: re-adding a session at a freed (day, start)
       // slot must not collide with the still-present old row.
       for (const id of loadedIds.current) {
-        if (!sessions.some((s) => s.id === id)) await deleteSession(id);
+        if (!sessions.some((s) => s.id === id)) await deleteSession(id, { undo: false });
       }
       for (const s of sessions) {
         if (s.id) continue;

@@ -5,7 +5,9 @@ import {
 } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import { logActivity } from "@/lib/activity-log";
-import type { Plan } from "@/lib/db/schema";
+import { plans, students, type Plan } from "@/lib/db/schema";
+import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
+import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
 
 /**
@@ -42,9 +44,21 @@ export async function updatePlan(id: string, input: PlanInput): Promise<Plan> {
   return row;
 }
 
-export async function deletePlan(id: string): Promise<void> {
+export async function deletePlan(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
+  const undoEnabled = options.undo !== false;
+  const planRows = undoEnabled ? await captureRows(plans, [id]) : [];
+  const studentRows = undoEnabled ? await captureBy(students, students.planId, id) : [];
   await studentRepository.clearPlan(id);
   const removed = await planRepository.remove(id);
   if (!removed) throw new Error(`plan ${id} not found`);
   await logActivity({ action: "plan.delete", entityType: "plan", entityId: id });
+  if (!undoEnabled) return null;
+  const studentIds = studentRows.map((s) => s.id);
+  return registerUndo(async () => {
+    await restoreRows(plans, planRows);
+    await studentRepository.restorePlan(id, studentIds);
+  });
 }

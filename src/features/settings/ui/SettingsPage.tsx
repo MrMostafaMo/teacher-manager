@@ -12,6 +12,7 @@ import {
 import { liveDbSize } from "@/features/settings/infrastructure/backup-service";
 import { SettingsAboutCard } from "./SettingsAboutCard";
 import { SettingsAppearanceCard } from "./SettingsAppearanceCard";
+import { SettingsWhatsAppCard } from "@/features/whatsapp/ui/SettingsWhatsAppCard";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -83,6 +84,7 @@ export default function SettingsPage() {
 
       <SettingsAboutCard />
       <SettingsAppearanceCard />
+      <SettingsWhatsAppCard />
 
       <Card>
         <CardContent className="p-4">

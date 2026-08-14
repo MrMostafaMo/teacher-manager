@@ -8,7 +8,7 @@ interface StudentsSectionsProps {
   sections: Section<Student>[];
   ungrouped: Student[];
   deletingId: string | null;
-  collapsed: Record<string, boolean>;
+  isCollapsed: (id: string) => boolean;
   onToggle: (id: string) => void;
   onOpen: (student: Student) => void;
   onDelete: (student: Student) => void;
@@ -18,7 +18,7 @@ export function StudentsSections({
   sections,
   ungrouped,
   deletingId,
-  collapsed,
+  isCollapsed,
   onToggle,
   onOpen,
   onDelete,
@@ -27,13 +27,13 @@ export function StudentsSections({
   return (
     <div className="space-y-4">
       {sections.map((sec) => {
-        const isCollapsed = !!collapsed[sec.id];
+        const collapsed = isCollapsed(sec.id);
         return (
           <CollapsibleSection
             key={sec.id}
             title={sec.name}
             meta={`${sec.list.length}`}
-            collapsed={isCollapsed}
+            collapsed={collapsed}
             onToggle={() => onToggle(sec.id)}
           >
             <StudentsTable
@@ -50,7 +50,7 @@ export function StudentsSections({
           key="__ungrouped"
           title={t("students.ungrouped")}
           meta={`${ungrouped.length}`}
-          collapsed={!!collapsed.__ungrouped}
+          collapsed={isCollapsed("__ungrouped")}
           onToggle={() => onToggle("__ungrouped")}
         >
           <StudentsTable

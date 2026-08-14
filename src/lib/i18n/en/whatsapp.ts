@@ -34,6 +34,7 @@ export const whatsapp = {
   },
   varHints: {
     name: "Student name",
+    guardianName: "Guardian name",
     group: "Groups",
     plan: "Plan",
     date: "Today's date",
@@ -50,9 +51,16 @@ export const whatsapp = {
     title: "WhatsApp messages",
     hint: "Message templates for sending student performance updates via WhatsApp. Variables like {name} are replaced automatically.",
     saved: "Template saved",
-    reset: "Reset to default",
-    resetDone: "Template restored to default",
+    reset: "Restore defaults",
+    resetDone: "Templates restored to default",
     maxLength: "Max 500 characters",
+    add: "Add template",
+    edit: "Edit template",
+    delete: "Delete template",
+    name: "Template name",
+    noTemplates: "No templates yet",
+    noTemplatesHint:
+      "Add a template in Settings, or restore the defaults to start sending messages.",
   },
   save: "Save template",
 } as const;

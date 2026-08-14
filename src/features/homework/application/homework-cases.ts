@@ -8,6 +8,9 @@ import {
 import { uuid } from "@/lib/utils/uuid";
 import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
 import { buildHomeworkStudents, completionOf, isOverdue } from "./homework-stats";
+import { homeworks, homeworkSubmissions } from "@/lib/db/schema";
+import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
+import { registerUndo } from "@/lib/undo-store";
 import {
   logHomeworkCreate,
   logHomeworkDelete,
@@ -97,12 +100,24 @@ export async function updateHomework(
   return homework;
 }
 
-export async function deleteHomework(id: string): Promise<boolean> {
+export async function deleteHomework(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
   const homework = await homeworkRepository.findById(id);
+  const rows = await captureRows(homeworks, [id]);
+  const submissions = options.undo === false
+    ? []
+    : await captureBy(homeworkSubmissions, homeworkSubmissions.homeworkId, id);
   await homeworkRepository.clearForHomework(id);
   const ok = await homeworkRepository.remove(id);
-  if (ok && homework) await logHomeworkDelete(homework.title, id);
-  return ok;
+  if (!ok) return null;
+  if (homework) await logHomeworkDelete(homework.title, id);
+  if (options.undo === false) return null;
+  return registerUndo(async () => {
+    await restoreRows(homeworks, rows);
+    await restoreRows(homeworkSubmissions, submissions);
+  });
 }
 
 export async function setSubmissionStatus(

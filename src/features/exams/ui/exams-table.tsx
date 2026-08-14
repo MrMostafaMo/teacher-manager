@@ -1,7 +1,8 @@
 import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { PencilLine, Trash2, Users } from "lucide-react";
+import { PencilLine, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import type { ExamListItem } from "@/features/exams/application/exam-cases";
 import { formatDateString } from "@/lib/utils/format";
@@ -72,14 +73,12 @@ export const ExamsTable = memo(function ExamsTable({
               <PencilLine />
               <span className="sr-only">{t("exams.edit")}</span>
             </Button>
-            <Button
-              variant={deletingId === e.id ? "destructive" : "ghost"}
-              size="icon-sm"
-              aria-label={deletingId === e.id ? t("exams.confirmDelete") : t("exams.delete")}
-              onClick={() => onDelete(e.id)}
-            >
-              <Trash2 />
-            </Button>
+            <ConfirmDeleteButton
+              armed={deletingId === e.id}
+              deleteLabel={t("exams.delete")}
+              confirmLabel={t("exams.confirmDelete")}
+              onDelete={() => onDelete(e.id)}
+            />
           </div>
         ),
       },

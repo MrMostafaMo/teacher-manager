@@ -16,6 +16,7 @@ import { StatusBadge } from "@/features/students/ui/StatusBadge";
 import { formatTime, formatDateString } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { notifyUndo } from "@/lib/undo-store";
 import { GroupMembersSection } from "./group-members-section";
 
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
@@ -78,9 +79,13 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
     if (busy) return;
     setBusy(true);
     try {
-      await removeStudentFromGroup(studentId, group.id);
+      const member = members.find((m) => m.id === studentId);
+      const undoId = await removeStudentFromGroup(studentId, group.id);
       await reload();
       onChanged();
+      if (undoId !== null && member) {
+        notifyUndo(undoId, t("undo.deleted"), `${t("undo.member")}: ${member.name}`, t("undo.undo"));
+      }
     } catch {
       setError(t("groups.memberError"));
     } finally {

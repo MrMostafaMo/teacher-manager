@@ -14,6 +14,8 @@ import {
 import { listGroups } from "@/features/groups/application/group-cases";
 import type { Homework, StudyGroup } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { notifyUndo } from "@/lib/undo-store";
 import { HomeworkFormDialog } from "./HomeworkFormDialog";
 import { HomeworkDetailDialog } from "./HomeworkDetailDialog";
 import { HomeworksSection } from "./homework-sections";
@@ -31,7 +33,7 @@ export default function HomeworkPage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const { armed: deletingId, request, clear } = useConfirmDelete();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { isCollapsed, toggle } = useCollapsedSections();
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
 
@@ -59,8 +61,12 @@ export default function HomeworkPage() {
     async (id: string) => {
       if (!request(id)) return;
       try {
-        await deleteHomework(id);
+        const row = rows.find((h) => h.id === id);
+        const undoId = await deleteHomework(id);
         setRows((r) => r.filter((h) => h.id !== id));
+        if (undoId !== null && row) {
+          notifyUndo(undoId, t("undo.deleted"), `${t("undo.homework")}: ${row.title}`, t("undo.undo"));
+        }
       } catch (e) {
         console.error("Failed to delete homework", e);
         setError(t("homework.deleteError"));
@@ -68,7 +74,7 @@ export default function HomeworkPage() {
         clear();
       }
     },
-    [request, clear, t],
+    [request, clear, rows, t],
   );
 
   const openEdit = useCallback((h: Homework) => {
@@ -109,9 +115,9 @@ export default function HomeworkPage() {
         <HomeworksSection
           groups={groups}
           rows={rows}
-          collapsed={collapsed}
+          isCollapsed={isCollapsed}
           deletingId={deletingId}
-          onToggle={(id) => setCollapsed((c) => ({ ...c, [id]: !c[id] }))}
+          onToggle={toggle}
           onCreate={(groupId) => openCreate(groupId)}
           onDetail={setDetailId}
           onEdit={openEdit}

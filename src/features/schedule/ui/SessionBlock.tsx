@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Trash2, Undo2 } from "lucide-react";
+import { AlertTriangle, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { SessionWithException } from "@/features/schedule/application/schedule-exceptions";
 import type { GroupSession } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { CHIP_H, HOUR_PX, minBlockHeight, paletteFor, toMin, type PlacedSession } from "./week-layout";
@@ -93,17 +94,12 @@ export function SessionBlock({
 
       {deleting ? (
         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/90">
-          <Button
-            variant="destructive"
-            size="sm"
-            className="h-6 gap-1 px-1.5 text-[11px]"
-            aria-label={t("schedule.confirmDelete")}
-            title={t("schedule.confirmDelete")}
-            onClick={() => onDelete(session)}
-          >
-            <Trash2 className="size-3" />
-            <span className="max-w-28 truncate">{t("schedule.confirmDelete")}</span>
-          </Button>
+          <ConfirmDeleteButton
+            armed
+            deleteLabel={t("schedule.delete")}
+            confirmLabel={t("schedule.confirmDelete")}
+            onDelete={() => onDelete(session)}
+          />
         </div>
       ) : cancelled ? (
         <div className="absolute end-1 top-1 z-10">

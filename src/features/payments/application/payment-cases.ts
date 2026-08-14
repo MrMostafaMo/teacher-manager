@@ -5,7 +5,9 @@ import { studentRepository } from "@/features/students/infrastructure/student-re
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { logActivity } from "@/lib/activity-log";
 import { enrolledBy, monthEnd } from "@/lib/utils/enrollment";
-import type { Payment, Plan, Student } from "@/lib/db/schema";
+import { payments, type Payment, type Plan, type Student } from "@/lib/db/schema";
+import { captureRows, restoreRows } from "@/lib/db/snapshot";
+import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
 import {
   studentStatement,
@@ -35,10 +37,16 @@ export async function recordPayment(input: PaymentInput): Promise<Payment> {
   return row;
 }
 
-export async function deletePayment(id: string): Promise<void> {
+export async function deletePayment(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
+  const rows = options.undo === false ? [] : await captureRows(payments, [id]);
   const removed = await paymentRepository.remove(id);
   if (!removed) throw new Error(`payment ${id} not found`);
   await logActivity({ action: "payment.delete", entityType: "payment", entityId: id });
+  if (options.undo === false) return null;
+  return registerUndo(() => restoreRows(payments, rows));
 }
 
 export async function updatePayment(id: string, input: PaymentInput): Promise<Payment> {

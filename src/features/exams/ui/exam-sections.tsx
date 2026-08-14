@@ -9,7 +9,7 @@ import { ExamsTable } from "./exams-table";
 interface ExamGroupSectionsProps {
   groups: StudyGroup[];
   rows: ExamListItem[];
-  collapsed: Record<string, boolean>;
+  isCollapsed: (id: string) => boolean;
   deletingId: string | null;
   onToggle: (id: string) => void;
   onAdd: (groupId: string) => void;
@@ -21,7 +21,7 @@ interface ExamGroupSectionsProps {
 export function ExamGroupSections({
   groups,
   rows,
-  collapsed,
+  isCollapsed,
   deletingId,
   onToggle,
   onAdd,
@@ -34,13 +34,13 @@ export function ExamGroupSections({
     <div className="space-y-4">
       {groups.map((g) => {
         const items = rows.filter((e) => e.groupId === g.id);
-        const isCollapsed = !!collapsed[g.id];
+        const collapsed = isCollapsed(g.id);
         return (
           <CollapsibleSection
             key={g.id}
             title={g.name}
             meta={items.length}
-            collapsed={isCollapsed}
+            collapsed={collapsed}
             onToggle={() => onToggle(g.id)}
             actions={
               <Button size="sm" variant="outline" onClick={() => onAdd(g.id)}>

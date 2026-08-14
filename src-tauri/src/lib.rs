@@ -92,6 +92,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0013_absurd_kat_farrell.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 15,
+            description: "sync_meta, sync_tombstones + delete triggers",
+            sql: include_str!("../migrations/0014_strong_stranger.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

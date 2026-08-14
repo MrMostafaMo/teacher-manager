@@ -1,11 +1,12 @@
 import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Receipt, Trash2 } from "lucide-react";
+import { Pencil, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { PaymentHistoryRow } from "@/features/payments/application/payment-cases";
 import type { Payment } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/utils/format";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 
 export const methodKey: Record<string, string> = {
@@ -83,16 +84,12 @@ export const HistoryTable = memo(function HistoryTable({
             >
               <Pencil />
             </Button>
-            <Button
-              variant={deletingId === row.payment.id ? "destructive" : "ghost"}
-              size="icon-sm"
-              aria-label={
-                deletingId === row.payment.id ? t("payments.confirmDelete") : t("payments.delete")
-              }
-              onClick={() => void onDelete(row.payment.id)}
-            >
-              <Trash2 />
-            </Button>
+            <ConfirmDeleteButton
+              armed={deletingId === row.payment.id}
+              deleteLabel={t("payments.delete")}
+              confirmLabel={t("payments.confirmDelete")}
+              onDelete={() => void onDelete(row.payment.id)}
+            />
           </div>
         ),
       },

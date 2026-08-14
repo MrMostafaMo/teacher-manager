@@ -11,6 +11,7 @@ import { deleteSkill, listSkills } from "@/features/skills/application/skill-cas
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
 import type { Skill } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { notifyUndo } from "@/lib/undo-store";
 import { SkillFormDialog } from "./SkillFormDialog";
 import { useSkillsColumns } from "./skills-columns";
 
@@ -43,8 +44,12 @@ export default function SkillsPage() {
     async (id: string) => {
       if (!request(id)) return;
       try {
-        await deleteSkill(id);
+        const skill = rows.find((s) => s.id === id);
+        const undoId = await deleteSkill(id);
         setRows((r) => r.filter((s) => s.id !== id));
+        if (undoId !== null && skill) {
+          notifyUndo(undoId, t("undo.deleted"), `${t("undo.skill")}: ${skill.name}`, t("undo.undo"));
+        }
       } catch (e) {
         console.error("Failed to delete skill", e);
         setError(t("skills.deleteError"));
@@ -52,7 +57,7 @@ export default function SkillsPage() {
         clear();
       }
     },
-    [request, clear, t],
+    [request, clear, rows, t],
   );
 
   const openEdit = useCallback((s: Skill) => {

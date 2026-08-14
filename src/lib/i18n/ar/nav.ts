@@ -15,6 +15,7 @@ export const nav: Messages["nav"] = {
     homework: "الواجبات",
     exams: "الاختبارات",
     skills: "المهارات",
+    weakPoints: "نقاط الضعف",
     schedule: "الجدول",
     reports: "التقارير",
     activity: "سجل النشاط",

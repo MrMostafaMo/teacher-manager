@@ -9,6 +9,9 @@ import {
   type StudentSkillInput,
 } from "@/features/skills/domain";
 import { logActivity } from "@/lib/activity-log";
+import { skills, studentSkills } from "@/lib/db/schema";
+import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
+import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
 
 /**
@@ -57,11 +60,17 @@ export async function updateSkill(
   return skill;
 }
 
-export async function deleteSkill(id: string): Promise<boolean> {
+export async function deleteSkill(
+  id: string,
+  options: { undo?: boolean } = {},
+): Promise<number | null> {
   const skill = await skillRepository.findById(id);
+  const skillRows = await captureRows(skills, [id]);
+  const levelRows = options.undo === false ? [] : await captureBy(studentSkills, studentSkills.skillId, id);
   await skillRepository.clearForSkill(id);
   const ok = await skillRepository.remove(id);
-  if (ok && skill) {
+  if (!ok) return null;
+  if (skill) {
     await logActivity({
       action: "skill.delete",
       entityType: "skill",
@@ -69,7 +78,11 @@ export async function deleteSkill(id: string): Promise<boolean> {
       details: { name: skill.name },
     });
   }
-  return ok;
+  if (options.undo === false) return null;
+  return registerUndo(async () => {
+    await restoreRows(skills, skillRows);
+    await restoreRows(studentSkills, levelRows);
+  });
 }
 
 /** Every catalog skill with this student's mastery row (if any). */

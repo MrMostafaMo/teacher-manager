@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { useDialogStore } from "@/lib/dialog-store";
+import { DATA_CHANGED_EVENT } from "@/lib/undo-store";
 import { listGroups } from "@/features/groups/application/group-cases";
 import type { StudyGroup } from "@/lib/db/schema";
 import { StudentFormDialog } from "@/features/students/ui/StudentFormDialog";
@@ -12,8 +13,8 @@ import { HomeworkFormDialog } from "@/features/homework/ui/HomeworkFormDialog";
 import { ExamFormDialog } from "@/features/exams/ui/ExamFormDialog";
 import { SkillFormDialog } from "@/features/skills/ui/SkillFormDialog";
 
-/** Fired after any global create dialog saves, so pages can refresh. */
-export const DATA_CHANGED_EVENT = "tm:data-changed";
+/** Re-exported from the undo store so every dispatcher stays in sync. */
+export { DATA_CHANGED_EVENT };
 
 /**
  * Renders the cross-cutting create dialogs driven by the global dialog store

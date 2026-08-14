@@ -11,6 +11,7 @@ import type { PlanWithCount } from "@/features/payments/infrastructure/plan-repo
 import type { Plan } from "@/lib/db/schema";
 import { Modal } from "@/shared/Modal";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { notifyUndo } from "@/lib/undo-store";
 import { PlanFormDialog } from "./PlanFormDialog";
 import { usePlansColumns } from "./plans-columns";
 
@@ -58,9 +59,12 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
     async (plan: Plan) => {
       if (!request(plan.id)) return;
       try {
-        await deletePlan(plan.id);
+        const undoId = await deletePlan(plan.id);
         setRows((r) => r.filter((p) => p.id !== plan.id));
         onChanged();
+        if (undoId !== null) {
+          notifyUndo(undoId, t("undo.deleted"), `${t("undo.plan")}: ${plan.name}`, t("undo.undo"));
+        }
       } catch (e) {
         console.error("Failed to delete plan", e);
         setError(t("plans.deleteError"));

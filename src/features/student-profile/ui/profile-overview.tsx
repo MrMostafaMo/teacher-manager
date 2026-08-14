@@ -13,24 +13,11 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import type { Student } from "@/lib/db/schema";
 import type { StudentProfileData } from "@/features/student-profile/application/student-profile-cases";
+import { computeProfileSummary } from "@/features/student-profile/application/profile-summary";
 
 /** Attendance rate, exam average and homework completion for the header KPIs. */
 export function useProfileSummary(data: StudentProfileData) {
-  const { attendanceStats, exams, homeworks } = data;
-  const marked =
-    attendanceStats.present + attendanceStats.absent + attendanceStats.late + attendanceStats.excused;
-  const attended = attendanceStats.present + attendanceStats.late + attendanceStats.excused;
-  const attendanceRate = marked > 0 ? Math.round((attended / marked) * 100) : null;
-
-  const gradedExams = exams.filter((e) => e.score !== null);
-  const examAverage =
-    gradedExams.length > 0
-      ? Math.round((gradedExams.reduce((a, e) => a + (e.score ?? 0), 0) / gradedExams.length) * 10) / 10
-      : null;
-
-  const homeworkDone = homeworks.filter((h) => h.status !== "pending").length;
-  const homeworkRate = homeworks.length > 0 ? Math.round((homeworkDone / homeworks.length) * 100) : null;
-  return { attendanceRate, examAverage, homeworkRate };
+  return computeProfileSummary(data);
 }
 
 export function ProfileFactsCard({

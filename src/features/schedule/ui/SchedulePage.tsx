@@ -9,6 +9,7 @@ import type { GroupSession } from "@/lib/db/schema";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { notifyUndo } from "@/lib/undo-store";
 import WeekGrid from "./WeekGrid";
 import { ScheduleFormDialog } from "./ScheduleFormDialog";
 import { SessionOccurrenceDialog } from "./SessionOccurrenceDialog";
@@ -49,8 +50,17 @@ export default function SchedulePage() {
   async function handleDelete(session: GroupSession) {
     if (!request(session.id)) return;
     try {
-      await deleteSession(session.id);
+      const undoId = await deleteSession(session.id);
       void reload();
+      if (undoId !== null) {
+        const groupName = groups.find((g) => g.id === session.groupId)?.name;
+        notifyUndo(
+          undoId,
+          t("undo.deleted"),
+          `${t("undo.session")}: ${groupName ?? ""} ${session.startTime}`,
+          t("undo.undo"),
+        );
+      }
     } catch (error) {
       console.error("Failed to delete session", error);
     } finally {

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Trash2, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { CardSkeleton } from "@/shared/Skeletons";
 
 export interface GroupMemberRow {
@@ -51,16 +52,12 @@ export function GroupMembersSection({
             {members.map((m) => (
               <li key={m.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm">
                 <span className="truncate">{m.name}</span>
-                <Button
-                  variant={removingId === m.id ? "destructive" : "ghost"}
-                  size="icon-sm"
-                  aria-label={
-                    removingId === m.id ? t("groups.confirmDelete") : t("groups.removeMember")
-                  }
-                  onClick={() => onRemove(m.id)}
-                >
-                  <Trash2 />
-                </Button>
+                <ConfirmDeleteButton
+                  armed={removingId === m.id}
+                  deleteLabel={t("groups.removeMember")}
+                  confirmLabel={t("groups.confirmDelete")}
+                  onDelete={() => onRemove(m.id)}
+                />
               </li>
             ))}
           </ul>

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, Pencil, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -14,16 +14,28 @@ export function WeakPointsTable({
   onEdit,
   onToggleResolved,
   onDelete,
+  renderStudent,
 }: {
   rows: StudentWeakPoint[];
   deletingId: string | null;
   onEdit: (row: StudentWeakPoint) => void;
   onToggleResolved: (row: StudentWeakPoint) => void;
   onDelete: (id: string) => void;
+  /** When provided, a Student column is prepended (used by the page-wide table). */
+  renderStudent?: (row: StudentWeakPoint) => ReactNode;
 }) {
   const { t } = useTranslation();
   const columns = useMemo<DataTableColumn<StudentWeakPoint>[]>(
     () => [
+      ...(renderStudent
+        ? [
+            {
+              header: t("weakPoints.student"),
+              className: "font-medium",
+              render: renderStudent,
+            } as DataTableColumn<StudentWeakPoint>,
+          ]
+        : []),
       {
         header: t("weakPoints.description"),
         className: "font-medium",
@@ -76,7 +88,7 @@ export function WeakPointsTable({
         ),
       },
     ],
-    [t, deletingId, onEdit, onToggleResolved, onDelete],
+    [t, deletingId, renderStudent, onEdit, onToggleResolved, onDelete],
   );
   const getRowKey = useCallback((r: StudentWeakPoint) => r.id, []);
   return <DataTable<StudentWeakPoint> columns={columns} rows={rows} getRowKey={getRowKey} />;

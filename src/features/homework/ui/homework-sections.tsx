@@ -9,7 +9,7 @@ import { HomeworkTable } from "./homework-table";
 interface HomeworksSectionProps {
   groups: StudyGroup[];
   rows: HomeworkListItem[];
-  collapsed: Record<string, boolean>;
+  isCollapsed: (id: string) => boolean;
   deletingId: string | null;
   onToggle: (id: string) => void;
   onCreate: (groupId: string) => void;
@@ -21,7 +21,7 @@ interface HomeworksSectionProps {
 export function HomeworksSection({
   groups,
   rows,
-  collapsed,
+  isCollapsed,
   deletingId,
   onToggle,
   onCreate,
@@ -34,13 +34,13 @@ export function HomeworksSection({
     <div className="space-y-4">
       {groups.map((g) => {
         const items = rows.filter((h) => h.groupId === g.id);
-        const isCollapsed = !!collapsed[g.id];
+        const collapsed = isCollapsed(g.id);
         return (
           <CollapsibleSection
             key={g.id}
             title={g.name}
             meta={items.length}
-            collapsed={isCollapsed}
+            collapsed={collapsed}
             onToggle={() => onToggle(g.id)}
             actions={
               <Button size="sm" variant="outline" onClick={() => onCreate(g.id)}>

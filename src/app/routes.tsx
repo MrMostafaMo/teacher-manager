@@ -70,6 +70,12 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: "weak-points",
+        lazy: async () => ({
+          Component: (await import("@/features/weak-points/ui/WeakPointsPage")).default,
+        }),
+      },
+      {
         path: "schedule",
         lazy: async () => ({
           Component: (await import("@/features/schedule/ui/SchedulePage")).default,

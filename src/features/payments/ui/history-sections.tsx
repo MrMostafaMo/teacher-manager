@@ -9,7 +9,7 @@ import type { PaymentHistoryRow } from "@/features/payments/application/payment-
 export function HistorySections({
   sections,
   ungrouped,
-  collapsed,
+  isCollapsed,
   onToggle,
   deletingId,
   receiptBusyId,
@@ -19,7 +19,7 @@ export function HistorySections({
 }: {
   sections: HistorySection[];
   ungrouped: PaymentHistoryRow[];
-  collapsed: Record<string, boolean>;
+  isCollapsed: (id: string) => boolean;
   onToggle: (id: string) => void;
   deletingId: string | null;
   receiptBusyId: string | null;
@@ -45,13 +45,13 @@ export function HistorySections({
   return (
     <div className="space-y-4">
       {sections.map((sec) => {
-        const isCollapsed = !!collapsed[sec.id];
+        const collapsed = isCollapsed(sec.id);
         return (
           <CollapsibleSection
             key={sec.id}
             title={sec.name}
             meta={`${sec.list.length} · ${formatMoney(sectionTotal(sec.list))}`}
-            collapsed={isCollapsed}
+            collapsed={collapsed}
             onToggle={() => onToggle(sec.id)}
           >
             {renderTable(sec.list)}
@@ -63,7 +63,7 @@ export function HistorySections({
           key="__ungrouped"
           title={t("payments.ungrouped")}
           meta={`${ungrouped.length} · ${formatMoney(sectionTotal(ungrouped))}`}
-          collapsed={!!collapsed.__ungrouped}
+          collapsed={isCollapsed("__ungrouped")}
           onToggle={() => onToggle("__ungrouped")}
         >
           {renderTable(ungrouped)}

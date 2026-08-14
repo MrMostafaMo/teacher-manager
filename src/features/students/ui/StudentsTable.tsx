@@ -1,11 +1,12 @@
 import { memo, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Eye, Pencil, Trash2, Users } from "lucide-react";
+import { Eye, Pencil, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Student } from "@/lib/db/schema";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import { Avatar } from "@/shared/Avatar";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { EmptyState } from "@/shared/EmptyState";
 import { StatusBadge } from "./StatusBadge";
 
@@ -77,16 +78,12 @@ export const StudentsTable = memo(function StudentsTable({
             >
               <Pencil />
             </Button>
-            <Button
-              variant={deletingId === s.id ? "destructive" : "ghost"}
-              size="icon-sm"
-              aria-label={
-                deletingId === s.id ? t("students.confirmDelete") : t("students.delete")
-              }
-              onClick={() => void onDelete(s)}
-            >
-              <Trash2 />
-            </Button>
+            <ConfirmDeleteButton
+              armed={deletingId === s.id}
+              deleteLabel={t("students.delete")}
+              confirmLabel={t("students.confirmDelete")}
+              onDelete={() => void onDelete(s)}
+            />
           </div>
         ),
       },

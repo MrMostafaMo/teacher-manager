@@ -15,6 +15,7 @@ import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { notifyUndo } from "@/lib/undo-store";
 import { GroupDetailDialog } from "./GroupDetailDialog";
 import { GroupFormDialog } from "./GroupFormDialog";
 import { GroupsTable } from "./groups-table";
@@ -68,15 +69,18 @@ export default function GroupsPage() {
     async (group: StudyGroup) => {
       if (!request(group.id)) return;
       try {
-        await deleteGroup(group.id);
+        const undoId = await deleteGroup(group.id);
         void reload();
+        if (undoId !== null) {
+          notifyUndo(undoId, t("undo.deleted"), `${t("undo.group")}: ${group.name}`, t("undo.undo"));
+        }
       } catch (error) {
         console.error("Failed to delete group", error);
       } finally {
         clear();
       }
     },
-    [request, clear, reload],
+    [request, clear, reload, t],
   );
 
   return (

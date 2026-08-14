@@ -23,6 +23,7 @@ import { reportCard } from "./report-card";
 import { notifications } from "./notifications";
 import { whatsapp } from "./whatsapp";
 import { weakPoints } from "./weak-points";
+import { undo } from "./undo";
 import { error } from "./error";
 
 export const en = {
@@ -51,6 +52,7 @@ export const en = {
   notifications,
   whatsapp,
   weakPoints,
+  undo,
   error,
 } as const;
 

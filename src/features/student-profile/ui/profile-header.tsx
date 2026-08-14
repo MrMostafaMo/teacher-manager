@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, FileText, Pencil, ReceiptText } from "lucide-react";
+import { ArrowRight, FileText, MessageCircle, Pencil, ReceiptText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/shared/Avatar";
 import { PageHeader } from "@/shared/PageHeader";
@@ -13,6 +13,7 @@ interface ProfileHeaderProps {
   onEdit: () => void;
   onStatement: () => void;
   onReportCard: () => void;
+  onWhatsApp: () => void;
   reportCardBusy?: boolean;
 }
 
@@ -21,6 +22,7 @@ export function ProfileHeader({
   onEdit,
   onStatement,
   onReportCard,
+  onWhatsApp,
   reportCardBusy = false,
 }: ProfileHeaderProps) {
   const { t } = useTranslation();
@@ -50,6 +52,10 @@ export function ProfileHeader({
             <Button size="sm" variant="outline" onClick={onStatement}>
               <ReceiptText className="size-4" />
               {t("profile.statement.open")}
+            </Button>
+            <Button size="sm" variant="outline" onClick={onWhatsApp}>
+              <MessageCircle className="size-4" />
+              {t("whatsapp.button")}
             </Button>
             <Button size="sm" onClick={onReportCard} disabled={reportCardBusy}>
               <FileText className="size-4" />

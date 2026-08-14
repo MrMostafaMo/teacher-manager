@@ -1,8 +1,9 @@
 import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Trash2, Users } from "lucide-react";
+import { CalendarDays, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 import type { HomeworkListItem } from "@/features/homework/application/homework-cases";
 import { formatDateString } from "@/lib/utils/format";
@@ -69,14 +70,12 @@ export const HomeworkTable = memo(function HomeworkTable({
               <CalendarDays />
               <span className="sr-only">{t("homework.edit")}</span>
             </Button>
-            <Button
-              variant={deletingId === h.id ? "destructive" : "ghost"}
-              size="icon-sm"
-              aria-label={deletingId === h.id ? t("homework.confirmDelete") : t("homework.delete")}
-              onClick={() => onDelete(h.id)}
-            >
-              <Trash2 />
-            </Button>
+            <ConfirmDeleteButton
+              armed={deletingId === h.id}
+              deleteLabel={t("homework.delete")}
+              confirmLabel={t("homework.confirmDelete")}
+              onDelete={() => onDelete(h.id)}
+            />
           </div>
         ),
       },

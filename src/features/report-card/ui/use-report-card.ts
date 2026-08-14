@@ -7,11 +7,12 @@ import { buildReportCardPdfData } from "@/features/report-card/application/repor
 import { toast } from "@/lib/toast-store";
 
 /** Drives the report-card export from the profile header; toasts success/error. */
-export function useReportCard(data: StudentProfileData) {
+export function useReportCard(data: StudentProfileData | null) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const run = useCallback(async () => {
+    if (!data) return;
     setBusy(true);
     try {
       const pdf = buildReportCardPdfData(buildReportCardData(data), {

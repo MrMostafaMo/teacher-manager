@@ -14,6 +14,8 @@ import type { Payment, Student } from "@/lib/db/schema";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { EmptyState } from "@/shared/EmptyState";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { notifyUndo } from "@/lib/undo-store";
 import { groupPaymentHistory } from "./history-grouping";
 import { HistorySections } from "./history-sections";
 import { usePaymentReceipt } from "./use-payment-receipt";
@@ -37,7 +39,7 @@ export const HistoryView = memo(function HistoryView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { armed: deletingId, request, clear } = useConfirmDelete();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { isCollapsed, toggle } = useCollapsedSections();
   const { busyId: receiptBusyId, run: runReceipt } = usePaymentReceipt();
 
   useEffect(() => {
@@ -77,9 +79,13 @@ export const HistoryView = memo(function HistoryView({
     async (id: string) => {
       if (!request(id)) return;
       try {
-        await deletePayment(id);
+        const row = rows.find((p) => p.payment.id === id);
+        const undoId = await deletePayment(id);
         setRows((r) => r.filter((p) => p.payment.id !== id));
         onChanged();
+        if (undoId !== null && row) {
+          notifyUndo(undoId, t("undo.deleted"), `${t("undo.payment")}: ${row.studentName}`, t("undo.undo"));
+        }
       } catch (e) {
         console.error("Failed to delete payment", e);
         setError(t("payments.deleteError"));
@@ -87,7 +93,7 @@ export const HistoryView = memo(function HistoryView({
         clear();
       }
     },
-    [request, clear, onChanged, t],
+    [request, clear, onChanged, rows, t],
   );
 
   const { sections, ungrouped } = useMemo(
@@ -127,8 +133,8 @@ export const HistoryView = memo(function HistoryView({
         <HistorySections
           sections={sections}
           ungrouped={ungrouped}
-          collapsed={collapsed}
-          onToggle={(id) => setCollapsed((c) => ({ ...c, [id]: !c[id] }))}
+          isCollapsed={isCollapsed}
+          onToggle={toggle}
           deletingId={deletingId}
           receiptBusyId={receiptBusyId}
           onEdit={onEdit}

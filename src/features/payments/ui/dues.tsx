@@ -8,6 +8,7 @@ import { monthlyDues, type DuesRow } from "@/features/payments/application/payme
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/utils/format";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { MonthPicker } from "@/shared/DatePicker";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { EmptyState } from "@/shared/EmptyState";
@@ -33,7 +34,7 @@ export const DuesView = memo(function DuesView({
   const [rows, setRows] = useState<DuesRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { isCollapsed, toggle } = useCollapsedSections();
 
   useEffect(() => {
     setLoading(true);
@@ -102,14 +103,14 @@ export const DuesView = memo(function DuesView({
       ) : (
         <div className="space-y-4">
           {sections.map((sec) => {
-            const isCollapsed = !!collapsed[sec.id];
+            const collapsed = isCollapsed(sec.id);
             return (
               <CollapsibleSection
                 key={sec.id}
                 title={sec.name}
                 meta={`${sec.rows.length} · ${formatMoney(subtotal(sec.rows))}`}
-                collapsed={isCollapsed}
-                onToggle={() => setCollapsed((c) => ({ ...c, [sec.id]: !isCollapsed }))}
+                collapsed={collapsed}
+                onToggle={() => toggle(sec.id)}
               >
                 <DuesTable list={sec.rows} />
               </CollapsibleSection>
@@ -120,10 +121,8 @@ export const DuesView = memo(function DuesView({
               key="__ungrouped"
               title={t("payments.ungrouped")}
               meta={`${ungrouped.length} · ${formatMoney(subtotal(ungrouped))}`}
-              collapsed={!!collapsed.__ungrouped}
-              onToggle={() =>
-                setCollapsed((c) => ({ ...c, __ungrouped: !collapsed.__ungrouped }))
-              }
+              collapsed={isCollapsed("__ungrouped")}
+              onToggle={() => toggle("__ungrouped")}
             >
               <DuesTable list={ungrouped} />
             </CollapsibleSection>

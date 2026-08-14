@@ -10,6 +10,8 @@ import { deleteStudent, listStudents } from "@/features/students/application/stu
 import { listMemberships } from "@/features/groups/application/group-cases";
 import type { Student } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { notifyUndo } from "@/lib/undo-store";
 import { StudentFilters } from "./StudentFilters";
 import { StudentsDialogs } from "./students-dialogs";
 import { StudentsEmpty } from "./StudentsTable";
@@ -28,8 +30,7 @@ export default function StudentsPage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const { armed: deletingId, request, clear } = useConfirmDelete();
   const [groupsByStudent, setGroupsByStudent] = useState<Map<string, Array<{ id: string; name: string }>>>(new Map());
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-
+  const { isCollapsed, toggle } = useCollapsedSections();
   const reload = useCallback(async () => {
     setLoading(true);
     try {
@@ -74,15 +75,18 @@ export default function StudentsPage() {
     async (student: Student) => {
       if (!request(student.id)) return;
       try {
-        await deleteStudent(student.id);
+        const undoId = await deleteStudent(student.id);
         void reload();
+        if (undoId !== null) {
+          notifyUndo(undoId, t("undo.deleted"), `${t("undo.student")}: ${student.name}`, t("undo.undo"));
+        }
       } catch (error) {
         console.error("Failed to delete student", error);
       } finally {
         clear();
       }
     },
-    [request, clear, reload],
+    [request, clear, reload, t],
   );
 
   const { sections, ungrouped } = useMemo(
@@ -124,8 +128,8 @@ export default function StudentsPage() {
           sections={sections}
           ungrouped={ungrouped}
           deletingId={deletingId}
-          collapsed={collapsed}
-          onToggle={(id) => setCollapsed((c) => ({ ...c, [id]: !c[id] }))}
+          isCollapsed={isCollapsed}
+          onToggle={toggle}
           onOpen={openEdit}
           onDelete={handleRowDelete}
         />

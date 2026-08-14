@@ -2,11 +2,20 @@ import { create } from "zustand";
 
 export type ToastVariant = "success" | "error" | "info";
 
+export interface ToastAction {
+  label: string;
+  onPress: () => void;
+}
+
 export interface Toast {
   id: number;
   variant: ToastVariant;
   message: string;
   description?: string;
+  /** Overrides the default auto-dismiss delay (ms). */
+  duration?: number;
+  /** Optional action button (e.g. «تراجع» for undo toasts). */
+  action?: ToastAction;
 }
 
 let nextId = 1;
@@ -24,7 +33,7 @@ export const useToastStore = create<ToastStore>((set) => ({
     set((s) => ({ toasts: [...s.toasts, { ...toast, id }] }));
     window.setTimeout(() => {
       set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
-    }, 3500);
+    }, toast.duration ?? 3500);
   },
   dismiss: (id) =>
     set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
