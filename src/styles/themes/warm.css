@@ -6,7 +6,7 @@
 :root[data-theme="warm"] {
   --background: oklch(0.985 0.008 85);
   --card: oklch(0.998 0.003 85);
-  --primary: oklch(0.62 0.14 50);
+  --primary: oklch(0.57 0.14 50);
   --primary-strong: oklch(0.55 0.14 48);
   --primary-foreground: oklch(0.985 0.002 80);
   --accent: oklch(0.94 0.035 55);
