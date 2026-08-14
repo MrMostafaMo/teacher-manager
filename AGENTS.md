@@ -657,5 +657,6 @@ Repo: `MrMostafaMo/teacher-manager` (private). Remote: `origin` = HTTPS.
   `package.json` (must match; `tagName: app-v__VERSION__`), commit, push tag
   `app-vX.Y.Z`. Workflow permissions: repo Settings → Actions → "Read and
   write permissions" must be enabled (contents: write is declared per job).
-- `pnpm` is pinned via the `packageManager` field (`pnpm@11.13.0`) so CI
-  uses the same version as local dev.
+- `pnpm` is pinned via the `packageManager` field (`pnpm@11.21.0`) so CI
+  uses the same version as local dev (11.12.0/11.13.0 are marked BROKEN in
+  pnpm's registry and fail `pnpm/action-setup`).
