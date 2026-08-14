@@ -3,12 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Plus, TriangleAlert } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { Avatar } from "@/shared/Avatar";
-import { SearchInput } from "@/shared/SearchInput";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { toast } from "@/lib/toast-store";
 import { notifyUndo } from "@/lib/undo-store";
@@ -19,6 +17,7 @@ import {
 } from "@/features/weak-points/application/weak-point-cases";
 import { filterWeakPoints, type WeakPointStatusFilter } from "@/features/weak-points/application/weak-point-filter";
 import { useWeakPointsPageData } from "./use-weak-points-data";
+import { WeakPointsFilters } from "./weak-points-filters";
 import { WeakPointsTable } from "./weak-points-table";
 import { WeakPointEntryDialog } from "./WeakPointEntryDialog";
 
@@ -37,7 +36,6 @@ export default function WeakPointsPage() {
     () => filterWeakPoints(rows, status, query, (id) => names.get(id) ?? ""),
     [rows, status, query, names],
   );
-
   function handleToggleResolved(row: StudentWeakPoint) {
     void updateWeakPoint(row.id, {
       description: row.description,
@@ -85,24 +83,12 @@ export default function WeakPointsPage() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchInput
-          value={query}
-          onChange={setQuery}
-          placeholder={t("weakPoints.searchPlaceholder")}
-          ariaLabel={t("weakPoints.searchPlaceholder")}
-        />
-        <Select
-          value={status}
-          onChange={(e) => setStatus(e.target.value as WeakPointStatusFilter)}
-          aria-label={t("weakPoints.filterAll")}
-          className="w-auto shrink-0"
-        >
-          <option value="all">{t("weakPoints.filterAll")}</option>
-          <option value="active">{t("weakPoints.filterActive")}</option>
-          <option value="resolved">{t("weakPoints.filterResolved")}</option>
-        </Select>
-      </div>
+      <WeakPointsFilters
+        status={status}
+        onStatusChange={setStatus}
+        query={query}
+        onQueryChange={setQuery}
+      />
 
       {loading ? (
         <TableRowsSkeleton rows={8} cols={5} />
