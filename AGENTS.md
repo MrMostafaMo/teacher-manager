@@ -613,7 +613,9 @@ Phase 41 added two-way Google Drive sync + cloud backup/restore
   auth URL, parses the callback, and rejects with `OAuthCancelError` after 3
   minutes with no redirect; tokens live in `sync_meta` (`oauth-client.ts`,
   `sync-state-repo.ts`). The Client ID is user-supplied (Google Cloud
-  Console), never bundled.
+  Console), never bundled — the settings card prefills it from `sync_meta`,
+  disables the sign-in button until it matches the desktop pattern, and shows
+  a collapsible Arabic/English one-time setup guide.
 - **Drive client**: `drive-http.ts` (generic `bearerFetch` with 401 →
   token-refresh retry, multipart, DriveError with kinds) + `drive-client.ts`
   (findFile/upload/downloadBytes/uploadBytes/listFiles; 412 → "conflict").

@@ -25,6 +25,7 @@ import { whatsapp } from "./whatsapp";
 import { weakPoints } from "./weak-points";
 import { undo } from "./undo";
 import { error } from "./error";
+import { sync } from "./sync";
 
 export const en = {
   app,
@@ -54,6 +55,7 @@ export const en = {
   weakPoints,
   undo,
   error,
+  sync,
 } as const;
 
 /** Locale shape — every leaf widened to `string` so translations can differ. */

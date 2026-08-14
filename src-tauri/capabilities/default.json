@@ -26,6 +26,9 @@
         },
         {
           "path": "$DESKTOP/**"
+        },
+        {
+          "path": "$APPCONFIG/**"
         }
       ]
     },

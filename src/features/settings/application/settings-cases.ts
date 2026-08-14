@@ -1,31 +1,13 @@
 import { open, save, ask } from "@tauri-apps/plugin-dialog";
-import { copyFile, open as openFile, remove } from "@tauri-apps/plugin-fs";
-import Database from "@tauri-apps/plugin-sql";
-import { db, closeDatabase, queryFirst } from "@/lib/db/client";
-import { appMeta } from "@/lib/db/schema";
+import { open as openFile } from "@tauri-apps/plugin-fs";
 import {
   backupDatabase,
   liveDbPath,
+  swapDatabaseFrom,
 } from "@/features/settings/infrastructure/backup-service";
 
 /** 16-byte SQLite file header: "SQLite format 3\0". */
 const SQLITE_MAGIC = "SQLite format 3\0";
-
-/** Highest applied migration in a database file (tracks the schema version). */
-async function schemaVersion(uri: string): Promise<number | null> {
-  const probe = await Database.load(uri);
-  try {
-    const rows = await probe.select<Array<{ v: number | null }>>(
-      "SELECT MAX(version) AS v FROM _sqlx_migrations",
-      [],
-    );
-    return rows[0]?.v ?? null;
-  } catch {
-    return null;
-  } finally {
-    await probe.close();
-  }
-}
 
 export type BackupResult = { saved: boolean; path?: string };
 export type RestoreResult = { status: "cancelled" | "done" | "error"; message?: string };
@@ -69,43 +51,7 @@ export async function restoreFromBackup(confirmMessage: string): Promise<Restore
     await handle.close();
   }
 
-  // Schema-version guard: restoring a backup from a different migration level
-  // would desync the app's queries from the real table shape.
-  const [backupVersion, live] = await Promise.all([
-    schemaVersion(`sqlite:${path}`),
-    queryFirst<{ v: number | null }>(
-      "SELECT MAX(version) AS v FROM _sqlx_migrations",
-      [],
-    ),
-  ]);
-  const liveVersion = live?.v ?? null;
-  if (backupVersion === null || backupVersion !== liveVersion) {
-    return { status: "error", message: "restoreVersionMismatch" };
-  }
-
-  const confirmed = await ask(confirmMessage, { kind: "warning" });
-  if (!confirmed) return { status: "cancelled" };
-
-  // Keep a snapshot of the current DB so a failed swap can be rolled back.
-  const snapshotPath = dbPath + ".pre-restore";
-  await remove(snapshotPath).catch(() => undefined);
-  await copyFile(dbPath, snapshotPath);
-
-  try {
-    await closeDatabase();
-    await copyFile(path, dbPath);
-    for (const suffix of ["-wal", "-shm"]) {
-      await remove(dbPath + suffix).catch(() => undefined);
-    }
-    await db.select().from(appMeta).limit(1);
-    return { status: "done" };
-  } catch (error) {
-    console.error("Restore failed, rolling back", error);
-    await closeDatabase().catch(() => undefined);
-    await copyFile(snapshotPath, dbPath).catch(() => undefined);
-    await remove(snapshotPath).catch(() => undefined);
-    return { status: "error", message: "restoreError" };
-  }
+  return swapDatabaseFrom(path, async () => ask(confirmMessage, { kind: "warning" }));
 }
 
 export { liveDbPath };

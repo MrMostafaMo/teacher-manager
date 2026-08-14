@@ -1,6 +1,7 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { AnySQLiteColumn, AnySQLiteTable } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db/client";
+import { syncTombstones } from "@/lib/db/schema";
 
 /**
  * Delete snapshots: capture rows before a delete and re-insert them verbatim
@@ -43,4 +44,28 @@ export async function restoreRows<T extends AnySQLiteTable>(
     // Verbatim insert: rows carry every column including id + timestamps.
     await db.insert(table).values(row as never).run();
   }
+  // Undo resurrects the row, so its delete tombstone must not outlive it —
+  // otherwise the next sync would delete it from every device again.
+  await clearSyncTombstones(table, rows);
+}
+
+/** Remove sync tombstones for the restored rows. */
+async function clearSyncTombstones<T extends AnySQLiteTable>(
+  table: T,
+  rows: T["$inferSelect"][],
+): Promise<void> {
+  if (rows.length === 0) return;
+  const tableName = (table as unknown as Record<symbol, string>)[Symbol.for("drizzle:Name")];
+  await db
+    .delete(syncTombstones)
+    .where(
+      and(
+        eq(syncTombstones.tableName, tableName),
+        inArray(
+          syncTombstones.rowId,
+          rows.map((row) => row.id as string),
+        ),
+      ),
+    )
+    .run();
 }

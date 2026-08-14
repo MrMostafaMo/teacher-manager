@@ -1,5 +1,7 @@
 use tauri_plugin_sql::{Migration, MigrationKind};
 
+mod oauth;
+
 /// SQL migrations embedded into the binary. drizzle-kit generates these files
 /// (see `drizzle/`), `scripts/sync-migrations.mjs` copies them into
 /// `src-tauri/migrations/`, and the SQL plugin applies pending migrations
@@ -113,6 +115,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
+        .invoke_handler(tauri::generate_handler![oauth::start_oauth_server])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

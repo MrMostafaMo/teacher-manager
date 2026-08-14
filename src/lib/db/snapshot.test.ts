@@ -34,6 +34,11 @@ vi.mock("@/lib/db/client", () => ({
         },
       }),
     }),
+    delete: () => ({
+      where: () => ({
+        run: async () => {},
+      }),
+    }),
   },
 }));
 

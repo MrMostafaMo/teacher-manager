@@ -26,6 +26,7 @@ import { whatsapp } from "./whatsapp";
 import { weakPoints } from "./weak-points";
 import { undo } from "./undo";
 import { error } from "./error";
+import { sync } from "./sync";
 
 export const ar: Messages = {
   app,
@@ -55,4 +56,5 @@ export const ar: Messages = {
   weakPoints,
   undo,
   error,
+  sync,
 };
