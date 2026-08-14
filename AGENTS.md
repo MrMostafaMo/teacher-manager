@@ -524,3 +524,26 @@ Phase 37 added a persisted notification center (مركز الإشعارات):
 - i18n `notifications.*` namespace (ar + en); wired with
   `@tauri-apps/plugin-notification`, `tauri-plugin-notification = "2"` and the
   `"notification:default"` capability.
+
+Phase 38 added per-student weak-points tracking (نقاط الضعف):
+
+- New `weak_points` table (migration v14,
+  `src/lib/db/tables-weak-points.ts`): `student_id` FK (cascade), required
+  free-text `description`, `recorded_on` (unix-ms, user-editable via the date
+  picker, defaults to today), `resolved` flag (0/1), timestamps, index on
+  `student_id`.
+- `src/features/weak-points/` follows the standard split: `domain.ts`
+  (`weakPointInputSchema` via the shared `textSchema(200)`), application
+  `weak-point-cases.ts` (`listStudentWeakPoints` — unresolved first, newest
+  recorded first — `addWeakPoint`/`updateWeakPoint`/`removeWeakPoint`, all
+  activity-logged, delete undoable; DB 0/1 normalized to boolean), repo on the
+  generic `createRepository` + `byStudent`, and ui (`WeakPointsSection` badges,
+  `WeakPointsDialog` with `WeakPointForm` + `WeakPointsTable`).
+- `src/lib/validation` gained `textSchema(max)` with `nameSchema` redefined on
+  top of it (DRY, no behavior change).
+- Profile page shows the section after skills; activity log maps
+  `weakPoint.create/update/delete` (icon `TriangleAlert`).
+- i18n: `weakPoints.*` namespace + `profile.sections.weakPoints`,
+  `profile.manageWeakPoints`, `common.undo.weakPoint` (ar + en).
+- Suite: 38 files / 206 tests, all green; `tsc --noEmit` clean; `pnpm build`
+  passes.
