@@ -86,6 +86,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0012_nasty_major_mapleleaf.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 14,
+            description: "weak_points",
+            sql: include_str!("../migrations/0013_absurd_kat_farrell.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -100,6 +106,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
