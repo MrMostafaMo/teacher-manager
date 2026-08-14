@@ -19,4 +19,13 @@ export const weakPointRepository = {
       .orderBy(asc(weakPoints.resolved), desc(weakPoints.recordedOn))) as WeakPoint[];
     return rows;
   },
+
+  /** Every weakness point, unresolved first, newest recorded first. */
+  async all(): Promise<WeakPoint[]> {
+    const rows = (await db
+      .select()
+      .from(weakPoints)
+      .orderBy(asc(weakPoints.resolved), desc(weakPoints.recordedOn))) as WeakPoint[];
+    return rows;
+  },
 };

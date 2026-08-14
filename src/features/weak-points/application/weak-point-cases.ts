@@ -20,6 +20,11 @@ export async function listStudentWeakPoints(studentId: string): Promise<StudentW
   return rows.map(toView);
 }
 
+export async function listAllWeakPoints(): Promise<StudentWeakPoint[]> {
+  const rows = await weakPointRepository.all();
+  return rows.map(toView);
+}
+
 export async function addWeakPoint(
   studentId: string,
   input: WeakPointInput,

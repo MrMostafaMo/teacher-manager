@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
 import {
   addWeakPoint,
+  listAllWeakPoints,
   listStudentWeakPoints,
   removeWeakPoint,
   updateWeakPoint,
@@ -13,9 +14,10 @@ const insert = vi.hoisted(() => vi.fn());
 const update = vi.hoisted(() => vi.fn());
 const remove = vi.hoisted(() => vi.fn());
 const byStudent = vi.hoisted(() => vi.fn());
+const all = vi.hoisted(() => vi.fn());
 
 vi.mock("@/features/weak-points/infrastructure/weak-point-repo", () => ({
-  weakPointRepository: { insert, update, remove, byStudent },
+  weakPointRepository: { insert, update, remove, byStudent, all },
 }));
 
 vi.mock("@/lib/db/snapshot", () => ({
@@ -54,6 +56,10 @@ beforeEach(() => {
     row,
     { ...row, id: "wp-2", resolved: 1 },
   ]);
+  all.mockImplementation(async () => [
+    row,
+    { ...row, id: "wp-2", resolved: 1 },
+  ]);
   remove.mockImplementation(async (id: string) => store.delete(id));
   store.set(row.id, { ...row });
 });
@@ -62,6 +68,15 @@ afterEach(() => {
   store.clear();
   vi.clearAllMocks();
   useUndoStore.setState({ entries: [] });
+});
+
+describe("listAllWeakPoints", () => {
+  it("normalizes every row's resolved flag to a boolean", async () => {
+    const rows = await listAllWeakPoints();
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({ id: "wp-1", resolved: false });
+    expect(rows[1]).toMatchObject({ id: "wp-2", resolved: true });
+  });
 });
 
 describe("listStudentWeakPoints", () => {
