@@ -36,4 +36,18 @@ describe("useCollapsedSections", () => {
     expect(result.current.isCollapsed("g1")).toBe(false);
     expect(result.current.isCollapsed("g2")).toBe(true);
   });
+
+  it("honours per-section defaults", () => {
+    const { result } = renderHook(() => useCollapsedSections({ attendance: false }));
+    expect(result.current.isCollapsed("attendance")).toBe(false);
+    expect(result.current.isCollapsed("payments")).toBe(true);
+  });
+
+  it("lets a toggle override a default", () => {
+    const { result } = renderHook(() => useCollapsedSections({ attendance: false }));
+    act(() => {
+      result.current.toggle("attendance");
+    });
+    expect(result.current.isCollapsed("attendance")).toBe(true);
+  });
 });

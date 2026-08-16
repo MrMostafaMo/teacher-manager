@@ -10,6 +10,13 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [react(), tailwindcss()],
 
+  build: {
+    // ponytail: desktop app loads every chunk from local disk, so no network
+    // cost from large chunks; pdf-kit (pdf-lib+fontkit) alone is ~1.13MB.
+    // The limit is set above it so the build stays quiet.
+    chunkSizeWarningLimit: 1200,
+  },
+
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),

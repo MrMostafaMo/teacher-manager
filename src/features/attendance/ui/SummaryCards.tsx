@@ -58,8 +58,8 @@ export function SummaryCards({
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-2",
-        unmarked !== undefined ? "sm:grid-cols-7" : "sm:grid-cols-6",
+        "grid grid-cols-2 gap-2 sm:grid-cols-3",
+        unmarked !== undefined ? "lg:grid-cols-7" : "lg:grid-cols-6",
       )}
     >
       {cards.map((c) => (

@@ -25,6 +25,7 @@ function profile(over: Partial<StudentProfileData>): StudentProfileData {
     skills: [],
     weakPoints: [],
     activity: [],
+    balance: 0,
     ...over,
   };
 }

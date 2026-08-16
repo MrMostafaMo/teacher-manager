@@ -24,11 +24,11 @@ export function NotificationList({
           <button
             type="button"
             onClick={() => onOpen(item)}
-            className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-start hover:bg-accent"
+            className="flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-start hover:bg-accent"
           >
             <span
               className={cn(
-                "mt-1.5 size-1.5 shrink-0 rounded-full",
+                "mt-1.5 size-2 shrink-0 rounded-full",
                 item.read ? "bg-muted-foreground/30" : "bg-primary",
               )}
               aria-hidden

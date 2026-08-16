@@ -16,7 +16,7 @@ export function SettingsAboutCard() {
           <img
             src="/logo.png"
             alt={t("app.name")}
-            className="size-16 shrink-0 rounded-xl object-contain ring-1 ring-border"
+            className="size-16 shrink-0 rounded-xl object-contain"
           />
           <div className="space-y-1 text-sm">
             <p className="text-lg font-semibold">{t("app.name")}</p>

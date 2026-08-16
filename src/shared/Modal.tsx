@@ -41,11 +41,11 @@ export function Modal({ open, title, description, onClose, children, className }
         if (e.target === ref.current) onClose();
       }}
       className={cn(
-        "m-auto w-full max-w-md overflow-hidden rounded-xl bg-background text-foreground shadow-lg ring-1 ring-foreground/20 backdrop:bg-black/40 backdrop:backdrop-blur-sm animate-in fade-in-0 zoom-in-95 duration-200 backdrop:animate-in backdrop:fade-in-0 backdrop:duration-200",
+        "m-auto w-full max-w-md overflow-hidden rounded-2xl bg-background text-foreground shadow-(--popover-shadow) ring-1 ring-foreground/10 backdrop:bg-black/40 backdrop:backdrop-blur-sm animate-in fade-in-0 zoom-in-95 duration-200 backdrop:animate-in backdrop:fade-in-0 backdrop:duration-200",
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-2 border-b px-4 py-3">
+      <div className="flex items-start justify-between gap-2 border-b bg-muted/30 px-5 py-4">
         <div className="min-w-0">
           <h3 id={titleId} className="text-base font-semibold">
             {title}
@@ -58,7 +58,7 @@ export function Modal({ open, title, description, onClose, children, className }
           <X />
         </Button>
       </div>
-      <div className="max-h-[calc(90dvh-3.5rem)] overflow-y-auto p-4">{children}</div>
+      <div className="max-h-[calc(90dvh-3.5rem)] overflow-y-auto p-4 sm:p-5">{children}</div>
     </dialog>
   );
 }

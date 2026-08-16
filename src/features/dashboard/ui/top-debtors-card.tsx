@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
 import { TrendingDown } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardLink } from "@/shared/CardLink";
 import { Avatar } from "@/shared/Avatar";
 import type { DashboardData } from "@/features/dashboard/application/dashboard-cases";
 import { formatMoney } from "@/lib/utils/format";
@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/utils/format";
 export function TopDebtorsCard({ debtors }: { debtors: DashboardData["topDebtors"] }) {
   const { t } = useTranslation();
   return (
-    <Card>
+    <CardLink to="/payments" label={t("dashboard.debtors.title")}>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm font-medium">{t("dashboard.debtors.title")}</CardTitle>
         <TrendingDown className="size-4 text-muted-foreground" />
@@ -30,12 +30,9 @@ export function TopDebtorsCard({ debtors }: { debtors: DashboardData["topDebtors
                 </span>
               </div>
             ))}
-            <Link to="/payments" className="inline-block pt-2 text-xs font-medium hover:underline">
-              {t("dashboard.debtors.viewAll")}
-            </Link>
           </div>
         )}
       </CardContent>
-    </Card>
+    </CardLink>
   );
 }

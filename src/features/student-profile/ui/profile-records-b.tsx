@@ -17,11 +17,24 @@ import {
 
 export { WeakPointsSection } from "@/features/weak-points/ui/weak-points-section";
 
-export function ExamsSection({ rows }: { rows: ProfileExam[] }) {
+export function ExamsSection({
+  rows,
+  collapsed,
+  onToggle,
+}: {
+  rows: ProfileExam[];
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const { t } = useTranslation();
   const columns = useExamColumns();
   return (
-    <ProfileSection title={t("profile.sections.exams")}>
+    <ProfileSection
+      title={t("profile.sections.exams")}
+      meta={String(rows.length)}
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.exams")} />
       ) : (
@@ -31,11 +44,24 @@ export function ExamsSection({ rows }: { rows: ProfileExam[] }) {
   );
 }
 
-export function SessionsSection({ rows }: { rows: ProfileSessionAttendance[] }) {
+export function SessionsSection({
+  rows,
+  collapsed,
+  onToggle,
+}: {
+  rows: ProfileSessionAttendance[];
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const { t } = useTranslation();
   const columns = useSessionColumns();
   return (
-    <ProfileSection title={t("profile.sections.sessions")}>
+    <ProfileSection
+      title={t("profile.sections.sessions")}
+      meta={String(rows.length)}
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.sessions")} />
       ) : (
@@ -52,20 +78,28 @@ export function SessionsSection({ rows }: { rows: ProfileSessionAttendance[] }) 
 export function SkillsSection({
   skills,
   onManage,
+  collapsed,
+  onToggle,
 }: {
   skills: StudentSkillRow[];
   onManage: () => void;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   const { t } = useTranslation();
   return (
-    <ProfileSection title={t("profile.sections.skills")}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold">{t("profile.sections.skills")}</h3>
+    <ProfileSection
+      title={t("profile.sections.skills")}
+      meta={String(skills.length)}
+      actions={
         <Button size="sm" variant="outline" onClick={onManage}>
           <Sparkles className="size-4" />
           {t("profile.manageSkills")}
         </Button>
-      </div>
+      }
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       {skills.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.skills")} />
       ) : (
@@ -82,11 +116,24 @@ export function SkillsSection({
   );
 }
 
-export function ActivitySection({ rows }: { rows: ActivityLogItem[] }) {
+export function ActivitySection({
+  rows,
+  collapsed,
+  onToggle,
+}: {
+  rows: ActivityLogItem[];
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const { t } = useTranslation();
   const columns = useProfileActivityColumns();
   return (
-    <ProfileSection title={t("profile.sections.activity")}>
+    <ProfileSection
+      title={t("profile.sections.activity")}
+      meta={String(rows.length)}
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       <ProfileTable<ActivityLogItem> columns={columns} rows={rows} getRowKey={(row) => row.id} />
     </ProfileSection>
   );

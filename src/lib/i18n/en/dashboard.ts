@@ -3,6 +3,8 @@ export const dashboard = {
     subtitle: "An overview of your center — students, attendance, payments and homework.",
     loadError: "Failed to load dashboard",
     empty: "No data yet.",
+    monthLabel: "Showing data for",
+    selectMonth: "Select month",
     quickActions: "Quick actions",
     quick: {
       students: "Add student",
@@ -49,7 +51,6 @@ export const dashboard = {
     debtors: {
       title: "Top debtors",
       empty: "No outstanding balances.",
-      viewAll: "View all",
     },
     weakPoints: {
       title: "Student weaknesses",

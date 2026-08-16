@@ -56,7 +56,7 @@ export function ProfileFactsCard({
       <CardContent className="grid gap-x-6 gap-y-4 p-5 sm:grid-cols-2">
         {facts.map(({ key, value, icon: Icon, ltr }) => (
           <div key={key} className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/70 ring-1 ring-foreground/5">
               <Icon className="size-4 text-muted-foreground" />
             </div>
             <div className="min-w-0">
@@ -69,7 +69,7 @@ export function ProfileFactsCard({
         ))}
         {student.notes ? (
           <div className="flex items-start gap-3 sm:col-span-2">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/70 ring-1 ring-foreground/5">
               <StickyNote className="size-4 text-muted-foreground" />
             </div>
             <div className="min-w-0">

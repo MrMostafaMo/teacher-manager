@@ -984,3 +984,14 @@ sync (pull → merge → apply → snapshot → push, LWW by `updated_at`),
 settings card + header badge + `SyncManager` (launch pull, 15-min periodic,
 10s debounce on data changes), and cloud backup/restore via `VACUUM INTO`
 into a Drive `backups` folder with version-guarded restore.
+
+## Phase 42 — completed
+
+Responsive across every screen size (no schema change):
+lowered the Tauri window floor to 800×600; the sidebar becomes a `w-16`
+icon rail below `lg` that expands to `w-64` on hover/focus-within (pure CSS,
+in-flow, RTL-safe); main padding `p-4 sm:p-6 xl:p-8` with the content cap
+widened to `max-w-[1720px]` for 4K; `SummaryCards` switches to
+`sm:grid-cols-3 lg:grid-cols-6/7`; `Modal` body padding `p-4 sm:p-5`.
+Verified via headless-chromium sweeps (360–1600px, no body overflow, rail
+collapse exactly at 1024px, hover/focus expand).

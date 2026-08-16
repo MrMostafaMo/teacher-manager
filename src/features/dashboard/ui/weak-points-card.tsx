@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { TriangleAlert } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardLink } from "@/shared/CardLink";
 import { Avatar } from "@/shared/Avatar";
 import type { DashboardData } from "@/features/dashboard/application/dashboard-cases";
 
@@ -11,7 +12,7 @@ export function WeakPointsCard({
 }) {
   const { t } = useTranslation();
   return (
-    <Card>
+    <CardLink to="/weak-points" label={t("dashboard.weakPoints.title")}>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm font-medium">{t("dashboard.weakPoints.title")}</CardTitle>
         <TriangleAlert className="size-4 text-warning" />
@@ -38,6 +39,6 @@ export function WeakPointsCard({
           </div>
         )}
       </CardContent>
-    </Card>
+    </CardLink>
   );
 }

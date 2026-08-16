@@ -36,6 +36,7 @@ function buildData(): StudentProfileData {
     skills: [],
     weakPoints: [],
     activity: [],
+    balance: 0,
   };
 }
 

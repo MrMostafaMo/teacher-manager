@@ -81,7 +81,7 @@ export function DatePicker({ value, onChange, ariaLabel, className }: PickerProp
               type="button"
               onClick={() => pick(iso)}
               className={cn(
-                "flex size-8 items-center justify-center rounded-md text-sm hover:bg-accent",
+                "flex size-8 items-center justify-center rounded-lg text-sm hover:bg-accent",
                 !inMonth && "text-muted-foreground/40 hover:text-muted-foreground",
                 isToday && !isSelected && "font-semibold text-primary",
                 isSelected && "bg-primary font-medium text-primary-foreground hover:bg-primary",
@@ -95,7 +95,7 @@ export function DatePicker({ value, onChange, ariaLabel, className }: PickerProp
       <div className="mt-1.5 flex items-center gap-1 border-t pt-1.5">
         <button
           type="button"
-          className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          className="rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           onClick={() => pick(today.format("YYYY-MM-DD"))}
         >
           {t("common.today")}
@@ -103,7 +103,7 @@ export function DatePicker({ value, onChange, ariaLabel, className }: PickerProp
         {value && (
           <button
             type="button"
-            className="ms-auto rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className="ms-auto rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             onClick={() => pick("")}
           >
             {t("common.clear")}

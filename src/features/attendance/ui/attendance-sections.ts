@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listMemberships } from "@/features/groups/application/group-cases";
+import { compareGroupsByName } from "@/lib/utils/group-sort";
 
 export interface Membership {
   id: string;
@@ -56,6 +57,6 @@ export function buildSections<T>(
       sec.list.push(row);
     }
   }
-  const sorted = [...byGroup.values()].sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  const sorted = [...byGroup.values()].sort((a, b) => compareGroupsByName(a, b));
   return { sections: sorted, ungrouped: ungroupedList };
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Separator } from "@/components/ui/separator";
 import {
   getStudentProfile,
   type StudentProfileData,
@@ -13,17 +12,11 @@ import { SendWhatsAppDialog } from "@/features/whatsapp/ui/SendWhatsAppDialog";
 import { StudentStatementDialog } from "@/features/student-profile/ui/StudentStatementDialog";
 import { StudentTrendsSection } from "@/features/student-profile/ui/StudentTrendsSection";
 import { useReportCard } from "@/features/report-card/ui/use-report-card";
-import { AttendanceSection, HomeworkSection, PaymentsSection } from "./profile-records-a";
-import {
-  ActivitySection,
-  ExamsSection,
-  SessionsSection,
-  SkillsSection,
-  WeakPointsSection,
-} from "./profile-records-b";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { ProfileFactsCard, ProfileStatsGrid, useProfileSummary } from "./profile-overview";
 import { ProfileHeader } from "./profile-header";
 import { ProfilePageSkeleton } from "./profile-skeleton";
+import { ProfileSections, profileSectionDefaults } from "./profile-sections";
 
 export default function StudentProfilePage() {
   const { id = "" } = useParams();
@@ -52,6 +45,10 @@ export default function StudentProfilePage() {
 
   const { busy: reportCardBusy, run: runReportCard } = useReportCard(data);
 
+  const { isCollapsed, toggle } = useCollapsedSections(
+    data ? profileSectionDefaults(data) : undefined,
+  );
+
   if (loading) {
     return <ProfilePageSkeleton />;
   }
@@ -59,27 +56,14 @@ export default function StudentProfilePage() {
     return <p className="py-16 text-center text-destructive">{error || t("profile.notFound")}</p>;
   }
 
-  const {
-    student,
-    planName,
-    groups,
-    attendanceStats,
-    attendanceHistory,
-    payments,
-    homeworks,
-    exams,
-    sessionAttendance,
-    skills,
-    weakPoints,
-    activity,
-  } = data;
-
-  const { attendanceRate, examAverage, homeworkRate } = useProfileSummary(data);
+  const { student, planName, groups, sessionAttendance } = data;
+  const { attendanceRate, homeworkRate, examAverage } = useProfileSummary(data);
 
   return (
     <div className="space-y-6">
       <ProfileHeader
         student={student}
+        balance={data.balance}
         onEdit={() => setEditOpen(true)}
         onStatement={() => setStatementOpen(true)}
         onReportCard={runReportCard}
@@ -98,33 +82,14 @@ export default function StudentProfilePage() {
 
       <StudentTrendsSection data={data} />
 
-      <Separator />
-      <AttendanceSection rows={attendanceHistory} stats={attendanceStats} rate={attendanceRate} />
-
-      <Separator />
-      <PaymentsSection rows={payments} />
-
-      <Separator />
-      <HomeworkSection rows={homeworks} />
-
-      <Separator />
-      <ExamsSection rows={exams} />
-
-      <Separator />
-      <SessionsSection rows={sessionAttendance} />
-
-      <Separator />
-      <SkillsSection skills={skills} onManage={() => setSkillsOpen(true)} />
-
-      <Separator />
-      <WeakPointsSection weakPoints={weakPoints} onManage={() => setWeakPointsOpen(true)} />
-
-      {activity.length > 0 && (
-        <>
-          <Separator />
-          <ActivitySection rows={activity.slice(0, 10)} />
-        </>
-      )}
+      <ProfileSections
+        data={data}
+        attendanceRate={attendanceRate}
+        isCollapsed={isCollapsed}
+        toggle={toggle}
+        onManageSkills={() => setSkillsOpen(true)}
+        onManageWeakPoints={() => setWeakPointsOpen(true)}
+      />
 
       <StudentSkillsDialog
         open={skillsOpen}
@@ -158,11 +123,7 @@ export default function StudentProfilePage() {
         onClose={() => setStatementOpen(false)}
       />
 
-      <SendWhatsAppDialog
-        open={whatsAppOpen}
-        data={data}
-        onClose={() => setWhatsAppOpen(false)}
-      />
+      <SendWhatsAppDialog open={whatsAppOpen} data={data} onClose={() => setWhatsAppOpen(false)} />
     </div>
   );
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.0
+
+- **Design-system polish**: every surface tightened into the Nile identity —
+  rounded-corner and height standardization across buttons, inputs, selects
+  (`h-9`), textareas, cards and the shared components (DataTable,
+  CommandPalette, Modal, CollapsibleSection, toasts, popovers, date/month
+  pickers); soft shadow surfaces (`--card-shadow`, `--popover-shadow`,
+  `--kpi-shadow` with hover lift, `--primary-shadow`); dashboard KPI grid,
+  quick-action chips and chart tooltips restyled; the four theme presets
+  (nile/warm/midnight/academy × light/dark) audited so every shadow/primary/
+  accent token resolves. No schema changes.
+
 ## v0.1.7
 
 - **Per-student trend charts (التحليلات)**: the student profile gains a new

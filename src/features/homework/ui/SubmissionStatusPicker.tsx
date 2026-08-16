@@ -34,7 +34,7 @@ export function SubmissionStatusPicker({
           disabled={disabled}
           onClick={() => onChange(s)}
           className={cn(
-            "rounded-md border px-2.5 py-1 text-xs transition-colors",
+            "rounded-lg border px-3 py-1.5 text-xs transition-colors",
             value === s ? STATUS_BADGE[s] : "border-input text-muted-foreground hover:bg-muted/50",
           )}
         >

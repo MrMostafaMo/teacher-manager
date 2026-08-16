@@ -5,6 +5,8 @@ export const dashboard: Messages["dashboard"] = {
     subtitle: "لمحة عن مركزك — الطلاب والحضور والمدفوعات والواجبات.",
     loadError: "تعذّر تحميل لوحة التحكم",
     empty: "لا توجد بيانات بعد.",
+    monthLabel: "البيانات المعروضة لشهر",
+    selectMonth: "اختيار الشهر",
     quickActions: "إجراءات سريعة",
     quick: {
       students: "إضافة طالب",
@@ -51,7 +53,6 @@ export const dashboard: Messages["dashboard"] = {
     debtors: {
       title: "أعلى المديونين",
       empty: "لا توجد مديونيات مستحقة.",
-      viewAll: "عرض الكل",
     },
     weakPoints: {
       title: "نقاط ضعف الطلاب",

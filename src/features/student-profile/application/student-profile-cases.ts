@@ -11,6 +11,11 @@ import {
   listStudentWeakPoints,
   type StudentWeakPoint,
 } from "@/features/weak-points/application/weak-point-cases";
+import {
+  computeStatement,
+  statementPeriods,
+} from "@/features/payments/application/payment-statement";
+import { currentMonth } from "@/lib/utils/months";
 import { listRecentActivity } from "@/lib/activity-log";
 import type { Student, Attendance, Homework, Exam, SessionAttendance } from "@/lib/db/schema";
 import type { SubmissionStatus } from "@/features/homework/domain";
@@ -54,6 +59,8 @@ export interface StudentProfileData {
   skills: StudentSkillRow[];
   weakPoints: StudentWeakPoint[];
   activity: Array<{ id: string; action: string; createdAt: number }>;
+  /** due − paid across all statement months; negative means paid ahead. */
+  balance: number;
 }
 
 /** Load everything for the profile page in one call. */
@@ -86,8 +93,8 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     listRecentActivity(300),
   ]);
   if (!student) throw new Error(`student ${studentId} not found`);
-  const planName =
-    (plans as PlanWithCount[]).find((p) => p.id === student.planId)?.name ?? null;
+  const plan = (plans as PlanWithCount[]).find((p) => p.id === student.planId) ?? null;
+  const planName = plan?.name ?? null;
   const groups = memberships
     .filter((m) => m.studentId === studentId)
     .map((m) => ({ id: m.groupId, name: m.groupName }));
@@ -103,6 +110,7 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     }
     return false;
   });
+  const statement = buildStatement(plan?.amount ?? 0, student, payments);
   return {
     student,
     planName,
@@ -116,5 +124,17 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     skills,
     weakPoints,
     activity: scoped.map((row) => ({ id: row.id, action: row.action, createdAt: row.createdAt })),
+    balance: statement.totalBalance,
   };
+}
+
+function buildStatement(
+  duePerMonth: number,
+  student: Student,
+  paymentRows: PaymentHistoryRow[],
+): { totalBalance: number } {
+  const payments = paymentRows.map((r) => r.payment);
+  const todayIso = currentMonth();
+  const { firstPeriod, endPeriod } = statementPeriods(student, payments, todayIso);
+  return computeStatement(duePerMonth, payments, firstPeriod, endPeriod);
 }

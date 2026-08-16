@@ -10,20 +10,28 @@ import type { StudentWeakPoint } from "../application/weak-point-cases";
 export function WeakPointsSection({
   weakPoints,
   onManage,
+  collapsed,
+  onToggle,
 }: {
   weakPoints: StudentWeakPoint[];
   onManage: () => void;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   const { t } = useTranslation();
   return (
-    <ProfileSection title={t("profile.sections.weakPoints")}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold">{t("profile.sections.weakPoints")}</h3>
+    <ProfileSection
+      title={t("profile.sections.weakPoints")}
+      meta={String(weakPoints.length)}
+      actions={
         <Button size="sm" variant="outline" onClick={onManage}>
           <TriangleAlert className="size-4" />
           {t("profile.manageWeakPoints")}
         </Button>
-      </div>
+      }
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       {weakPoints.length === 0 ? (
         <ProfileEmpty text={t("weakPoints.empty")} />
       ) : (

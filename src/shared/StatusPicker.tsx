@@ -36,7 +36,7 @@ export const StatusPicker = memo(function StatusPicker({
           aria-pressed={value === status}
           onClick={() => onChange(status)}
           className={cn(
-            "rounded-md border px-2.5 py-1 text-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring",
+            "rounded-lg border px-3 py-1.5 text-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring",
             value === status
               ? STATUS_BADGE[status]
               : "border-input text-muted-foreground hover:bg-muted/50",

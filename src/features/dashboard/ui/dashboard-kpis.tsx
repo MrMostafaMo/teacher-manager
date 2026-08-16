@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import {
   CalendarCheck,
   ClipboardList,
@@ -43,12 +44,26 @@ const KPI_TINT: Record<string, string> = {
   examAverage: "var(--chart-tint-5)",
 };
 
+/** The page each KPI navigates to when clicked (undefined = not clickable). */
+const KPI_ROUTE: Record<string, string> = {
+  totalStudents: "/students",
+  activeStudents: "/students",
+  attendanceRate: "/attendance",
+  collected: "/payments",
+  expensesMonth: "/expenses",
+  net: "/payments",
+  outstanding: "/payments",
+  homeworkCompletion: "/homework",
+  examAverage: "/exams",
+};
+
 export type KpiItem = {
   key: string;
   value: string | number;
   icon: LucideIcon;
   delta?: number | null;
   invert?: boolean;
+  to?: string;
 };
 
 function KpiDelta({ delta, invert }: { delta: number | null; invert?: boolean }) {
@@ -71,46 +86,63 @@ function KpiDelta({ delta, invert }: { delta: number | null; invert?: boolean })
 
 export function buildKpis(data: DashboardData): KpiItem[] {
   return [
-    { key: "totalStudents", value: data.totalStudents, icon: Users },
-    { key: "activeStudents", value: data.activeStudents, icon: UserCheck },
-    { key: "attendanceRate", value: `${data.attendanceRate}%`, icon: CalendarCheck, delta: data.deltas.attendanceRate },
-    { key: "collected", value: formatMoney(data.collected), icon: Wallet, delta: data.deltas.collected },
-    { key: "expensesMonth", value: formatMoney(data.expensesMonth), icon: Receipt, delta: data.deltas.expenses, invert: true },
-    { key: "net", value: formatMoney(data.net), icon: Scale, delta: data.deltas.net },
-    { key: "outstanding", value: formatMoney(data.outstanding), icon: TrendingDown },
-    { key: "homeworkCompletion", value: `${data.homeworkCompletion}%`, icon: ClipboardList },
-    { key: "examAverage", value: data.examAverage === null ? "—" : String(data.examAverage), icon: GraduationCap },
+    { key: "totalStudents", value: data.totalStudents, icon: Users, to: KPI_ROUTE.totalStudents },
+    { key: "activeStudents", value: data.activeStudents, icon: UserCheck, to: KPI_ROUTE.activeStudents },
+    { key: "attendanceRate", value: `${data.attendanceRate}%`, icon: CalendarCheck, delta: data.deltas.attendanceRate, to: KPI_ROUTE.attendanceRate },
+    { key: "collected", value: formatMoney(data.collected), icon: Wallet, delta: data.deltas.collected, to: KPI_ROUTE.collected },
+    { key: "expensesMonth", value: formatMoney(data.expensesMonth), icon: Receipt, delta: data.deltas.expenses, invert: true, to: KPI_ROUTE.expensesMonth },
+    { key: "net", value: formatMoney(data.net), icon: Scale, delta: data.deltas.net, to: KPI_ROUTE.net },
+    { key: "outstanding", value: formatMoney(data.outstanding), icon: TrendingDown, to: KPI_ROUTE.outstanding },
+    { key: "homeworkCompletion", value: `${data.homeworkCompletion}%`, icon: ClipboardList, to: KPI_ROUTE.homeworkCompletion },
+    { key: "examAverage", value: data.examAverage === null ? "—" : String(data.examAverage), icon: GraduationCap, to: KPI_ROUTE.examAverage },
   ];
 }
 
 export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-      {kpis.map(({ key, value, icon: Icon, delta, invert }) => {
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      {kpis.map((kpi) => {
+        const { key, value, icon: Icon, delta, invert, to } = kpi;
         const accent = KPI_COLOR[key];
+        const body = (
+          <CardContent className="flex items-start justify-between gap-2 p-4">
+            <div className="min-w-0 space-y-2">
+              <span className="block truncate text-xs text-muted-foreground">
+                {t(`dashboard.kpis.${key}`)}
+              </span>
+              <div className="text-2xl font-semibold tabular-nums">{value}</div>
+              {delta !== undefined && <KpiDelta delta={delta} invert={invert} />}
+            </div>
+            <span
+              aria-hidden
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-foreground/5"
+              style={{ color: accent, backgroundColor: KPI_TINT[key] }}
+            >
+              <Icon className="size-4.5" />
+            </span>
+          </CardContent>
+        );
         return (
           <Card
             key={key}
             style={{ boxShadow: "var(--kpi-shadow)" }}
-            className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10"
+            className={cn(
+              "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
+              to && "hover:ring-primary/30",
+            )}
           >
-            <CardContent className="flex items-start justify-between gap-2 p-4">
-              <div className="min-w-0 space-y-2">
-                <span className="block truncate text-xs text-muted-foreground">
-                  {t(`dashboard.kpis.${key}`)}
-                </span>
-                <div className="text-2xl font-semibold tabular-nums">{value}</div>
-                {delta !== undefined && <KpiDelta delta={delta} invert={invert} />}
-              </div>
-              <span
-                aria-hidden
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg"
-                style={{ color: accent, backgroundColor: KPI_TINT[key] }}
+            {to ? (
+              <Link
+                to={to}
+                aria-label={t(`dashboard.kpis.${key}`)}
+                className="block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Icon className="size-4" />
-              </span>
-            </CardContent>
+                {body}
+              </Link>
+            ) : (
+              body
+            )}
           </Card>
         );
       })}

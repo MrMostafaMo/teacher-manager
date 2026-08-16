@@ -5,7 +5,7 @@ import {
   lastMonths,
   monthWindow,
   percentDelta,
-  previousMonth,
+  shiftMonth,
   timeToMinutes,
   topWeaknessStudents,
   type WeaknessRow,
@@ -19,7 +19,7 @@ describe("timeToMinutes", () => {
   });
 });
 
-describe("currentMonth / previousMonth / lastMonths", () => {
+describe("currentMonth / lastMonths", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 4, 10));
@@ -28,17 +28,33 @@ describe("currentMonth / previousMonth / lastMonths", () => {
 
   it("returns the ISO month key for now", () => {
     expect(currentMonth()).toBe("2026-05");
-    expect(previousMonth()).toBe("2026-04");
   });
 
   it("rolls across the year boundary", () => {
     vi.setSystemTime(new Date(2026, 0, 15));
-    expect(previousMonth()).toBe("2025-12");
+    expect(lastMonths(3)).toEqual(["2025-11", "2025-12", "2026-01"]);
   });
 
   it("lists the last n months oldest-first", () => {
     expect(lastMonths(3)).toEqual(["2026-03", "2026-04", "2026-05"]);
     expect(lastMonths(1)).toEqual(["2026-05"]);
+  });
+});
+
+describe("shiftMonth / lastMonths end", () => {
+  it("shifts a month key by a signed delta", () => {
+    expect(shiftMonth("2026-05", -1)).toBe("2026-04");
+    expect(shiftMonth("2026-05", 2)).toBe("2026-07");
+  });
+
+  it("rolls across the year boundary", () => {
+    expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+    expect(shiftMonth("2026-12", 1)).toBe("2027-01");
+  });
+
+  it("lists the last n months ending at a given month", () => {
+    expect(lastMonths(3, "2026-05")).toEqual(["2026-03", "2026-04", "2026-05"]);
+    expect(lastMonths(2, "2026-01")).toEqual(["2025-12", "2026-01"]);
   });
 });
 

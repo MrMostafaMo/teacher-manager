@@ -50,13 +50,13 @@ export function AppLayout() {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />
-        <main ref={mainRef} className="flex-1 overflow-y-auto overscroll-none p-6">
+        <main ref={mainRef} className="flex-1 overflow-y-auto overscroll-none p-4 sm:p-6 xl:p-8">
           <div
             key={`${pathname}:${dataVersion}`}
             className={
               animateEntrance
-                ? "mx-auto max-w-[1440px] animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
-                : "mx-auto max-w-[1440px]"
+                ? "mx-auto max-w-[1720px] animate-in fade-in-0 slide-in-from-bottom-1 duration-300 ease-out"
+                : "mx-auto max-w-[1720px]"
             }
           >
             <Outlet />

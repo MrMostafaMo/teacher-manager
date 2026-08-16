@@ -1,7 +1,15 @@
 import { and, asc, count, eq, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { studentGroups, students, studyGroups, type Student, type StudyGroup } from "@/lib/db/schema";
+import {
+  groupSessions,
+  studentGroups,
+  students,
+  studyGroups,
+  type Student,
+  type StudyGroup,
+} from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
+import { compareGroupsWithRoom, firstSessionRoom } from "@/lib/utils/group-sort";
 import { uuid } from "@/lib/utils/uuid";
 
 /**
@@ -16,7 +24,32 @@ export const groupRepository = {
   ...createRepository(studyGroups),
 
   async list(): Promise<GroupWithCount[]> {
-    const groups = (await db.select().from(studyGroups).orderBy(asc(studyGroups.name))) as StudyGroup[];
+    const groups = (await db.select().from(studyGroups)) as StudyGroup[];
+    const sessions = (await db
+      .select({
+        groupId: groupSessions.groupId,
+        dayOfWeek: groupSessions.dayOfWeek,
+        startTime: groupSessions.startTime,
+        room: groupSessions.room,
+      })
+      .from(groupSessions)) as Array<{
+      groupId: string;
+      dayOfWeek: number;
+      startTime: string;
+      room: string | null;
+    }>;
+    const bySessionGroup = new Map<string, Array<(typeof sessions)[number]>>();
+    for (const s of sessions) {
+      const bucket = bySessionGroup.get(s.groupId) ?? [];
+      bucket.push(s);
+      bySessionGroup.set(s.groupId, bucket);
+    }
+    groups.sort((a, b) =>
+      compareGroupsWithRoom(
+        { name: a.name, room: firstSessionRoom(bySessionGroup.get(a.id) ?? []) },
+        { name: b.name, room: firstSessionRoom(bySessionGroup.get(b.id) ?? []) },
+      ),
+    );
     const counts = (await db
       .select({ groupId: studentGroups.groupId, n: count() })
       .from(studentGroups)

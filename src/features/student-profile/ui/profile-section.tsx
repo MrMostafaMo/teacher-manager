@@ -1,13 +1,33 @@
 import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
 
-export function ProfileSection({ title, children }: { title: string; children: ReactNode }) {
+export function ProfileSection({
+  title,
+  meta,
+  actions,
+  collapsed,
+  onToggle,
+  children,
+}: {
+  title: string;
+  meta?: ReactNode;
+  actions?: ReactNode;
+  collapsed: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
   return (
-    <section className="space-y-3">
-      <h3 className="text-base font-semibold">{title}</h3>
+    <CollapsibleSection
+      title={title}
+      meta={meta}
+      actions={actions}
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       {children}
-    </section>
+    </CollapsibleSection>
   );
 }
 

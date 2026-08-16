@@ -23,7 +23,7 @@ const ATTENDANCE_COLORS = {
 function TrendTooltip({ active, payload, label, format }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
+    <div className="rounded-xl border bg-popover px-3 py-2 text-xs shadow-(--popover-shadow)">
       <p className="mb-1 font-medium">{label}</p>
       <div className="space-y-1">
         {payload.map((p: any) => (

@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { CalendarDays } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CardLink } from "@/shared/CardLink";
 import type { DashboardData } from "@/features/dashboard/application/dashboard-cases";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/format";
@@ -11,7 +12,7 @@ export function TodaySessionsCard({ sessions }: { sessions: DashboardData["today
   const { t } = useTranslation();
   const hour24 = useTimeStore((s) => s.hour24);
   return (
-    <Card>
+    <CardLink to="/schedule" label={t("dashboard.today.title")}>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm font-medium">{t("dashboard.today.title")}</CardTitle>
         <CalendarDays className="size-4 text-muted-foreground" />
@@ -48,6 +49,6 @@ export function TodaySessionsCard({ sessions }: { sessions: DashboardData["today
           </div>
         )}
       </CardContent>
-    </Card>
+    </CardLink>
   );
 }

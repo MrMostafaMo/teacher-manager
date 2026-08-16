@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { monthlyDues, type DuesRow } from "@/features/payments/application/payment-cases";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/utils/format";
+import { compareGroupsByName } from "@/lib/utils/group-sort";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { MonthPicker } from "@/shared/DatePicker";
@@ -15,7 +16,7 @@ import { EmptyState } from "@/shared/EmptyState";
 import { DuesTable } from "./dues-table";
 
 export const inputClass =
-  "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring";
+  "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring";
 
 export function subtotal(list: DuesRow[]): number {
   return list.reduce((acc, r) => acc + Math.max(r.remaining, 0), 0);
@@ -68,7 +69,7 @@ export const DuesView = memo(function DuesView({
         sec.rows.push(r);
       }
     }
-    const sorted = [...byGroup.values()].sort((a, b) => a.name.localeCompare(b.name, "ar"));
+    const sorted = [...byGroup.values()].sort((a, b) => compareGroupsByName(a, b));
     return { sections: sorted, ungrouped: ungroupedRows };
   }, [rows]);
 

@@ -16,6 +16,7 @@ function profile(overrides: Partial<StudentProfileData> = {}): StudentProfileDat
     skills: [],
     weakPoints: [],
     activity: [],
+    balance: 0,
     ...overrides,
   };
 }

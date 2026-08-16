@@ -13,7 +13,7 @@ import { MonthlySummaryTable } from "./MonthlySummaryTable";
 import { EmptyStudents } from "./EmptyStudents";
 
 const inputClass =
-  "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
+  "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
 
 export function MonthlyView({ month, onMonthChange }: { month: string; onMonthChange: (m: string) => void }) {
   const { t } = useTranslation();

@@ -1,7 +1,10 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
+import { MonthPicker } from "@/shared/month-picker";
 import { getDashboardData, type DashboardData } from "@/features/dashboard/application/dashboard-cases";
+import { currentMonth } from "@/features/dashboard/application/dashboard-helpers";
 import {
   HOMEWORK_COLORS,
   monthShort,
@@ -25,14 +28,17 @@ type ChartStatus = "loading" | "ready" | "error";
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedMonth = searchParams.get("month") ?? currentMonth();
   const [status, setStatus] = useState<ChartStatus>("loading");
   const [data, setData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setStatus("loading");
     void (async () => {
       try {
-        const d = await getDashboardData();
+        const d = await getDashboardData(selectedMonth);
         if (!cancelled) {
           setData(d);
           setStatus("ready");
@@ -45,7 +51,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedMonth]);
 
   if (status === "error") {
     return (
@@ -61,11 +67,25 @@ export default function DashboardPage() {
     return <DashboardSkeleton />;
   }
 
-  return <DashboardContent data={data} />;
+  return (
+    <DashboardContent
+      data={data}
+      selectedMonth={selectedMonth}
+      onMonthChange={(month) => setSearchParams(month ? { month } : {})}
+    />
+  );
 }
 
 /** The loaded dashboard: hooks live here so the loading guards can't break hook order. */
-const DashboardContent = memo(function DashboardContent({ data }: { data: DashboardData }) {
+const DashboardContent = memo(function DashboardContent({
+  data,
+  selectedMonth,
+  onMonthChange,
+}: {
+  data: DashboardData;
+  selectedMonth: string;
+  onMonthChange: (month: string) => void;
+}) {
   const { t } = useTranslation();
 
   const attendanceChart = useMemo<AttendancePoint[]>(
@@ -104,6 +124,14 @@ const DashboardContent = memo(function DashboardContent({ data }: { data: Dashbo
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{t("dashboard.monthLabel")}</p>
+        <MonthPicker
+          value={selectedMonth}
+          onChange={onMonthChange}
+          ariaLabel={t("dashboard.selectMonth")}
+        />
+      </div>
       <DashboardQuickActions newStudents={data.deltas.newStudents} />
       <KpiGrid kpis={kpis} />
       <TodaySessionsCard sessions={data.todaySessions} />

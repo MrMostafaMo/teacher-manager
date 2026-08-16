@@ -13,6 +13,11 @@ export const profile: Messages["profile"] = {
     notes: "ملاحظات",
     manageSkills: "إدارة المهارات",
     manageWeakPoints: "إدارة نقاط الضعف",
+    balance: {
+      due: "عليه",
+      credit: "له رصيد",
+      settled: "مسدد",
+    },
     stats: {
       attendanceRate: "نسبة الحضور",
       homeworkCompletion: "إنجاز الواجبات",

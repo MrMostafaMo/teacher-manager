@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardLink } from "@/shared/CardLink";
 import type { DashboardData } from "@/features/dashboard/application/dashboard-cases";
 
 export function WeakSkillsCard({
@@ -11,7 +12,7 @@ export function WeakSkillsCard({
 }) {
   const { t } = useTranslation();
   return (
-    <Card>
+    <CardLink to="/skills" label={t("dashboard.charts.weakSkills")}>
       <CardHeader>
         <CardTitle className="text-sm font-medium">{t("dashboard.charts.weakSkills")}</CardTitle>
       </CardHeader>
@@ -45,6 +46,6 @@ export function WeakSkillsCard({
           </div>
         )}
       </CardContent>
-    </Card>
+    </CardLink>
   );
 }

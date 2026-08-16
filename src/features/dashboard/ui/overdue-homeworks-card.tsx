@@ -23,7 +23,12 @@ export function OverdueHomeworksCard({
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((h) => (
-              <div key={h.id} className="rounded-lg border bg-muted/40 p-3">
+              <Link
+                key={h.id}
+                to={`/homework?group=${h.groupId}`}
+                aria-label={h.title}
+                className="block rounded-lg border bg-muted/40 p-3 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-sm font-medium">{h.title}</p>
                   <span className="shrink-0 text-xs tabular-nums text-destructive" dir="ltr">
@@ -33,7 +38,7 @@ export function OverdueHomeworksCard({
                 <p className="text-xs text-muted-foreground">
                   {h.groupName ?? "—"} · {t("dashboard.overdue.pending", { count: h.pending })}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         )}

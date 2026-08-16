@@ -100,7 +100,7 @@ export function CommandPalette() {
         role="dialog"
         aria-modal="true"
         aria-label={t("common.commandPalette.title")}
-        className="w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-200 ease-out overflow-hidden rounded-xl border bg-background shadow-popover"
+        className="w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-200 ease-out overflow-hidden rounded-2xl border bg-background shadow-(--popover-shadow)"
       >
         <div className="flex items-center gap-2 border-b px-4">
           <Search className="size-4 shrink-0 text-muted-foreground" />

@@ -13,15 +13,24 @@ export function AttendanceSection({
   rows,
   stats,
   rate,
+  collapsed,
+  onToggle,
 }: {
   rows: Attendance[];
   stats: StudentMonthlyStat;
   rate: number | null;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   const { t } = useTranslation();
   const columns = useAttendanceColumns();
   return (
-    <ProfileSection title={t("profile.sections.attendance")}>
+    <ProfileSection
+      title={t("profile.sections.attendance")}
+      meta={String(rows.length)}
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
         {ATTENDANCE_STATUSES.map((status) => (
           <Badge key={status} className={STATUS_BADGE[status]}>
@@ -43,11 +52,24 @@ export function AttendanceSection({
   );
 }
 
-export function PaymentsSection({ rows }: { rows: PaymentHistoryRow[] }) {
+export function PaymentsSection({
+  rows,
+  collapsed,
+  onToggle,
+}: {
+  rows: PaymentHistoryRow[];
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const { t } = useTranslation();
   const columns = usePaymentColumns();
   return (
-    <ProfileSection title={t("profile.sections.payments")}>
+    <ProfileSection
+      title={t("profile.sections.payments")}
+      meta={String(rows.length)}
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.payments")} />
       ) : (
@@ -61,11 +83,24 @@ export function PaymentsSection({ rows }: { rows: PaymentHistoryRow[] }) {
   );
 }
 
-export function HomeworkSection({ rows }: { rows: ProfileHomework[] }) {
+export function HomeworkSection({
+  rows,
+  collapsed,
+  onToggle,
+}: {
+  rows: ProfileHomework[];
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const { t } = useTranslation();
   const columns = useHomeworkColumns();
   return (
-    <ProfileSection title={t("profile.sections.homework")}>
+    <ProfileSection
+      title={t("profile.sections.homework")}
+      meta={String(rows.length)}
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.homework")} />
       ) : (

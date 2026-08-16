@@ -70,7 +70,7 @@ export function PopoverShell({
             maxHeight: pos.maxHeight,
           }}
           className={cn(
-            "fixed z-50 animate-in fade-in-0 zoom-in-95 overflow-y-auto rounded-lg border bg-popover p-2 text-popover-foreground shadow-md",
+            "fixed z-50 animate-in fade-in-0 zoom-in-95 overflow-y-auto rounded-xl border bg-popover p-2 text-popover-foreground shadow-(--popover-shadow)",
             width,
           )}
         >

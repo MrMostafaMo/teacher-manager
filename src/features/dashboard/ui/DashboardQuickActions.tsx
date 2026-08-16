@@ -13,7 +13,7 @@ export function DashboardQuickActions({ newStudents }: { newStudents: number }) 
     <div className="flex flex-wrap items-end justify-between gap-4">
       <PageHeader title={t("dashboard.welcome")} description={t("dashboard.subtitle")} />
       <div className="flex flex-wrap items-center gap-2">
-        <span className="flex items-center gap-1.5 rounded-lg border bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/10 px-3 py-1.5 text-xs text-muted-foreground">
           <UserPlus className="size-3.5 text-primary" />
           {t("dashboard.newStudents.label")}:{" "}
           <span className="font-semibold tabular-nums text-foreground" dir="ltr">

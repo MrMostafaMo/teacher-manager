@@ -53,7 +53,7 @@ export function SessionBlock({
   return (
     <div
       className={cn(
-        "group absolute overflow-hidden rounded-md border p-1.5 transition-shadow hover:shadow-md",
+        "group absolute overflow-hidden rounded-lg border p-1.5 transition-shadow hover:shadow-md",
         pal.bg,
         pal.border,
         conflicted && "ring-1 ring-destructive/60",
@@ -93,7 +93,7 @@ export function SessionBlock({
       </div>
 
       {deleting ? (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-card/90">
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-card/90">
           <ConfirmDeleteButton
             armed
             deleteLabel={t("schedule.delete")}

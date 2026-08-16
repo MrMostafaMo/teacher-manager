@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Cloud, CloudUpload, Download, LogOut, RefreshCw, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useToastStore } from "@/lib/toast-store";
 import { useTimeStore } from "@/lib/time-store";
 import { formatDateTime } from "@/lib/utils/format";
@@ -106,12 +107,12 @@ export function SyncSettingsCard() {
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground">{t("sync.settings.hint")}</p>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <input
+              <Input
                 value={clientId ?? ""}
                 onChange={(e) => useSyncStore.getState().setClientId(e.target.value)}
                 placeholder={t("sync.settings.clientIdPlaceholder")}
                 dir="ltr"
-                className="h-9 flex-1 rounded-md border bg-transparent px-3 text-sm focus-visible:outline-none focus-visible:ring-1"
+                className="flex-1"
               />
               <GoogleSignInButton
                 onClick={() => void handleConnect()}

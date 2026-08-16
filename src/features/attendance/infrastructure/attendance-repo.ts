@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { attendance, type Attendance } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
+import { currentMonth, lastMonths } from "@/lib/utils/months";
 import type { AttendanceStatus } from "@/features/attendance/domain";
 
 /**
@@ -107,16 +108,12 @@ export const attendanceRepository = {
   },
 
   /**
-   * Present/absent/late counts per month for the last `months` months,
-   * zero-filled so the trend never has gaps.
+   * Present/absent/late counts per month for the last `months` months ending
+   * at `endMonth` (default: the current month), zero-filled so the trend
+   * never has gaps.
    */
-  async monthlyTrend(months: number): Promise<MonthlyTrendRow[]> {
-    const now = new Date();
-    const labels: string[] = [];
-    for (let i = months - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      labels.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-    }
+  async monthlyTrend(months: number, endMonth?: string): Promise<MonthlyTrendRow[]> {
+    const labels = lastMonths(months, endMonth ?? currentMonth());
     const monthKey = sql`substr(${attendance.date}, 1, 7)`;
     const rows = (await db
       .select({ month: monthKey, status: attendance.status, n: count() })

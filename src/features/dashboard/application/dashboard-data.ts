@@ -23,6 +23,7 @@ export interface DashboardData {
   homeworkLate: number;
   overdueHomeworks: Array<{
     id: string;
+    groupId: string;
     title: string;
     groupName: string | null;
     dueDate: string | null;

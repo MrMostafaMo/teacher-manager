@@ -18,7 +18,7 @@ interface TimePickerProps {
 }
 
 const triggerClass =
-  "inline-flex h-8 items-center gap-1.5 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted";
+  "inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted";
 
 export function TimePicker({ value, onChange, ariaLabel, className }: TimePickerProps) {
   const { t } = useTranslation();
@@ -89,7 +89,7 @@ export function TimePicker({ value, onChange, ariaLabel, className }: TimePicker
         <div className="mt-1.5 flex items-center border-t pt-1.5">
           <button
             type="button"
-            className="ms-auto rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className="ms-auto rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             onClick={() => onChange("")}
           >
             {t("common.clear")}

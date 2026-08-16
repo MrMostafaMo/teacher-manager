@@ -8,7 +8,7 @@ import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo
 import { DatePicker } from "@/shared/DatePicker";
 
 const inputClass =
-  "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
+  "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
 
 interface DailyToolbarProps {
   date: string;

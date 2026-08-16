@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { ResponsiveContainer } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardLink } from "@/shared/CardLink";
 import { formatNumber } from "@/lib/utils/format";
 import {
   ATTENDANCE_COLORS,
@@ -28,7 +29,7 @@ export function AttendanceHomeworkCharts({
   const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
+      <CardLink to="/attendance" label={t("dashboard.charts.attendance")} className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-sm font-medium">{t("dashboard.charts.attendance")}</CardTitle>
         </CardHeader>
@@ -54,9 +55,9 @@ export function AttendanceHomeworkCharts({
             ))}
           </div>
         </CardContent>
-      </Card>
+      </CardLink>
 
-      <Card>
+      <CardLink to="/homework" label={t("dashboard.charts.homework")}>
         <CardHeader>
           <CardTitle className="text-sm font-medium">{t("dashboard.charts.homework")}</CardTitle>
         </CardHeader>
@@ -80,7 +81,7 @@ export function AttendanceHomeworkCharts({
             </ul>
           )}
         </CardContent>
-      </Card>
+      </CardLink>
     </div>
   );
 }
@@ -89,7 +90,7 @@ export function FinanceCharts({ financeChart }: { financeChart: FinancePoint[] }
   const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
+      <CardLink to="/payments" label={t("dashboard.charts.finance")} className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-sm font-medium">{t("dashboard.charts.finance")}</CardTitle>
         </CardHeader>
@@ -110,8 +111,8 @@ export function FinanceCharts({ financeChart }: { financeChart: FinancePoint[] }
             </span>
           </div>
         </CardContent>
-      </Card>
-      <Card>
+      </CardLink>
+      <CardLink to="/payments" label={t("dashboard.charts.financeNet")}>
         <CardHeader>
           <CardTitle className="text-sm font-medium">{t("dashboard.charts.financeNet")}</CardTitle>
         </CardHeader>
@@ -122,7 +123,7 @@ export function FinanceCharts({ financeChart }: { financeChart: FinancePoint[] }
             </ResponsiveContainer>
           </LazyChart>
         </CardContent>
-      </Card>
+      </CardLink>
     </div>
   );
 }

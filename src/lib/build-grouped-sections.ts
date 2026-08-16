@@ -1,3 +1,5 @@
+import { compareGroupsByName } from "@/lib/utils/group-sort";
+
 export interface Section<T> {
   id: string;
   name: string;
@@ -35,6 +37,6 @@ export function buildSectionsByGroup<T>(
       sec.list.push(row);
     }
   }
-  const sections = [...byGroup.values()].sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  const sections = [...byGroup.values()].sort((a, b) => compareGroupsByName(a, b));
   return { sections, ungrouped };
 }

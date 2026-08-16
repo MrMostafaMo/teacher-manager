@@ -1,4 +1,5 @@
 import type { PaymentHistoryRow } from "@/features/payments/application/payment-cases";
+import { compareGroupsByName } from "@/lib/utils/group-sort";
 
 export interface HistorySection {
   id: string;
@@ -33,7 +34,7 @@ export function groupPaymentHistory(
       sec.list.push(row);
     }
   }
-  const sections = [...byGroup.values()].sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  const sections = [...byGroup.values()].sort((a, b) => compareGroupsByName(a, b));
   return { sections, ungrouped };
 }
 

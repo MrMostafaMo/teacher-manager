@@ -22,7 +22,7 @@ import { ExpensesTable } from "./expenses-table";
 import { ExpenseCategoryChart } from "./expense-category-chart";
 
 const inputClass =
-  "h-8 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring";
+  "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring";
 
 export default function ExpensesPage() {
   const { t } = useTranslation();

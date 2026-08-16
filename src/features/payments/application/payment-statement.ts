@@ -31,6 +31,63 @@ export interface StudentStatement {
   totalBalance: number;
 }
 
+/** The months a statement spans: enrollment (or first paid) through today. */
+export function statementPeriods(
+  student: Student,
+  payments: Payment[],
+  todayIso: string,
+): { firstPeriod: string; endPeriod: string } {
+  const sorted = [...payments].sort((a, b) => a.paidAt - b.paidAt);
+  const firstPaidPeriod = sorted.find((p) => p.period)?.period;
+  const firstPeriod = student.enrolledOn?.slice(0, 7) ?? firstPaidPeriod ?? todayIso;
+  const lastPaidPeriod = [...sorted].reverse().find((p) => p.period)?.period;
+  const endPeriod = lastPaidPeriod && lastPaidPeriod > todayIso ? lastPaidPeriod : todayIso;
+  return { firstPeriod, endPeriod };
+}
+
+/**
+ * Pure statement math: one row per month from `firstPeriod` to `endPeriod`,
+ * charging `duePerMonth` and crediting each month's payments, plus the
+ * chronological ledger. A negative running/total means paid ahead (credit).
+ */
+export function computeStatement(
+  duePerMonth: number,
+  payments: Payment[],
+  firstPeriod: string,
+  endPeriod: string,
+): { months: StatementMonth[]; payments: StatementPayment[]; totalDue: number; totalPaid: number; totalBalance: number } {
+  const sorted = [...payments].sort((a, b) => a.paidAt - b.paidAt);
+  const paidByPeriod = new Map<string, number>();
+  for (const p of sorted) {
+    if (!p.period) continue;
+    paidByPeriod.set(p.period, (paidByPeriod.get(p.period) ?? 0) + p.amount);
+  }
+
+  const months: StatementMonth[] = [];
+  let running = 0;
+  for (
+    let cur = firstPeriod;
+    cur <= endPeriod;
+    cur = dayjs(`${cur}-01`).add(1, "month").format("YYYY-MM")
+  ) {
+    const due = duePerMonth;
+    const paid = paidByPeriod.get(cur) ?? 0;
+    running += due - paid;
+    months.push({ period: cur, due, paid, balance: due - paid, running });
+  }
+
+  let cumulative = 0;
+  const ledger = sorted.map((p) => {
+    cumulative += p.amount;
+    return { payment: p, cumulativePaid: cumulative };
+  });
+
+  const totalDue = months.reduce((a, m) => a + m.due, 0);
+  const totalPaid = sorted.reduce((a, p) => a + p.amount, 0);
+
+  return { months, payments: ledger, totalDue, totalPaid, totalBalance: totalDue - totalPaid };
+}
+
 /**
  * Statement of account for one student: one row per month from the month they
  * enrolled (or first paid) through today, each charging the current plan
@@ -48,40 +105,13 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
   const plan = student.planId ? plans.find((p) => p.id === student.planId) : null;
   const duePerMonth = plan?.amount ?? 0;
 
-  const sorted = [...allPayments].sort((a, b) => a.paidAt - b.paidAt);
-  const paidByPeriod = new Map<string, number>();
-  for (const p of sorted) {
-    if (!p.period) continue;
-    paidByPeriod.set(p.period, (paidByPeriod.get(p.period) ?? 0) + p.amount);
-  }
-
-  const today = dayjs().format("YYYY-MM");
-  const firstPaidPeriod = sorted.find((p) => p.period)?.period;
-  const firstPeriod = student.enrolledOn?.slice(0, 7) ?? firstPaidPeriod ?? today;
-  const lastPaidPeriod = [...sorted].reverse().find((p) => p.period)?.period;
-  const endPeriod = lastPaidPeriod && lastPaidPeriod > today ? lastPaidPeriod : today;
-
-  const months: StatementMonth[] = [];
-  let running = 0;
-  for (
-    let cur = firstPeriod;
-    cur <= endPeriod;
-    cur = dayjs(`${cur}-01`).add(1, "month").format("YYYY-MM")
-  ) {
-    const due = duePerMonth;
-    const paid = paidByPeriod.get(cur) ?? 0;
-    running += due - paid;
-    months.push({ period: cur, due, paid, balance: due - paid, running });
-  }
-
-  let cumulative = 0;
-  const payments = sorted.map((p) => {
-    cumulative += p.amount;
-    return { payment: p, cumulativePaid: cumulative };
-  });
-
-  const totalDue = months.reduce((a, m) => a + m.due, 0);
-  const totalPaid = sorted.reduce((a, p) => a + p.amount, 0);
+  const { firstPeriod, endPeriod } = statementPeriods(student, allPayments, dayjs().format("YYYY-MM"));
+  const { months, payments, totalDue, totalPaid, totalBalance } = computeStatement(
+    duePerMonth,
+    allPayments,
+    firstPeriod,
+    endPeriod,
+  );
 
   return {
     student,
@@ -90,6 +120,6 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
     payments,
     totalDue,
     totalPaid,
-    totalBalance: totalDue - totalPaid,
+    totalBalance,
   };
 }

@@ -19,7 +19,7 @@ export function ToastItem({ toast, onDismiss }: ToastItemProps) {
   return (
     <div
       role="status"
-      className="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border bg-background px-4 py-3 shadow-popover animate-in fade-in-0 slide-in-from-bottom-2 duration-200 ease-out"
+      className="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border bg-background px-4 py-3 shadow-(--popover-shadow) animate-in fade-in-0 slide-in-from-bottom-2 duration-200 ease-out"
     >
       {toast.action ? (
         <span
@@ -50,7 +50,7 @@ export function ToastItem({ toast, onDismiss }: ToastItemProps) {
         type="button"
         aria-label={t("common.dismiss")}
         onClick={() => onDismiss(toast.id)}
-        className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="shrink-0 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <X className="size-3.5" />
       </button>

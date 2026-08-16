@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { BookOpen, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,11 @@ export default function HomeworkPage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const { armed: deletingId, request, clear } = useConfirmDelete();
-  const { isCollapsed, toggle } = useCollapsedSections();
+  const [searchParams] = useSearchParams();
+  const groupFilter = searchParams.get("group");
+  const { isCollapsed, toggle } = useCollapsedSections(
+    groupFilter ? { [groupFilter]: false } : undefined,
+  );
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
 

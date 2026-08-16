@@ -119,7 +119,7 @@ export function SessionEditor({
             </Label>
             <Input
               id="session-room"
-              className="h-8 w-28"
+              className="h-9 w-28"
               value={draft.room}
               onChange={(e) => onUpdateDraft({ room: e.target.value })}
             />

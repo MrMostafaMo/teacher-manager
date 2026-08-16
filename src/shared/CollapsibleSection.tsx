@@ -36,9 +36,14 @@ export function CollapsibleSection({
             title={collapsed ? t("common.expand") : t("common.collapse")}
             onClick={onToggle}
           >
-            <ChevronDown
-              className={cn("size-4 shrink-0 transition-transform", !collapsed && "rotate-180")}
-            />
+            <span
+              className={cn(
+                "flex size-6 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground transition-transform",
+                !collapsed && "rotate-180",
+              )}
+            >
+              <ChevronDown className="size-3.5" />
+            </span>
             <span className="truncate font-semibold">{title}</span>
             {meta && (
               <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{meta}</span>

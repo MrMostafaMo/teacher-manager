@@ -4,20 +4,23 @@ import { ShieldCheck } from "lucide-react";
 import { APP_VERSION, NAV_ITEMS, NAV_SECTIONS } from "@/app/navigation";
 import { cn } from "@/lib/utils";
 
+/**
+ * Sidebar with two modes: full (w-64) at lg+; a compact icon rail (w-16)
+ * below lg that expands to w-64 on hover/focus to reveal labels. The rail
+ * stays in flow so expanding simply pushes content (RTL-safe, no overlap).
+ */
 export function Sidebar() {
   const { t } = useTranslation();
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-e bg-sidebar">
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b px-3.5">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--primary),var(--primary-strong))] shadow-(--card-shadow) ring-1 ring-white/20">
-          <img
-            src="/logo.png"
-            alt={t("app.name")}
-            className="size-5 shrink-0 object-contain invert brightness-[1.05]"
-          />
-        </div>
-        <div className="min-w-0">
+    <aside className="group z-30 flex w-16 shrink-0 flex-col border-e bg-sidebar transition-[width] duration-200 ease-out hover:w-64 focus-within:w-64 lg:w-64">
+      <div className="flex h-16 shrink-0 items-center justify-center gap-3 border-b px-3 group-hover:justify-start lg:justify-start lg:px-4">
+        <img
+          src="/logo.png"
+          alt={t("app.name")}
+          className="size-10 shrink-0 rounded-xl object-contain"
+        />
+        <div className="hidden min-w-0 group-hover:block lg:block">
           <span className="block truncate text-sm font-bold text-foreground">
             {t("app.name")}
           </span>
@@ -27,23 +30,24 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto overscroll-none p-2.5">
+      <nav className="flex-1 space-y-4 overflow-y-auto overscroll-none p-3">
         {NAV_SECTIONS.map((section) => (
           <div key={section.id}>
-            <p className="px-2.5 pb-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground/60">
+            <p className="hidden px-3 pb-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground/60 group-hover:block lg:block">
               {t(section.labelKey)}
             </p>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {NAV_ITEMS.filter((item) => item.section === section.id).map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   end={item.to === "/"}
+                  title={t(item.labelKey)}
                   className={({ isActive }) =>
                     cn(
-                      "relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-all",
+                      "relative flex items-center justify-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all group-hover:justify-start lg:justify-start",
                       isActive
-                        ? "bg-[linear-gradient(90deg,var(--primary),var(--primary-strong))] font-semibold text-primary-foreground shadow-(--card-shadow)"
+                        ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
                         : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                     )
                   }
@@ -53,11 +57,13 @@ export function Sidebar() {
                       {isActive && (
                         <span
                           aria-hidden
-                          className="absolute inset-y-1.5 inset-inline-start-0 w-0.5 rounded-full bg-white/70"
+                          className="absolute inset-y-1.5 -inset-inline-start-1 w-0.5 rounded-full bg-primary"
                         />
                       )}
                       <item.icon className="size-4 shrink-0" />
-                      <span className="truncate">{t(item.labelKey)}</span>
+                      <span className="hidden truncate group-hover:inline lg:inline">
+                        {t(item.labelKey)}
+                      </span>
                     </>
                   )}
                 </NavLink>
@@ -67,12 +73,12 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="shrink-0 border-t p-3">
-        <div className="flex items-center gap-2.5 rounded-lg bg-muted/60 px-2.5 py-2">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-success/15 text-success">
+      <div className="shrink-0 border-t p-2 lg:p-3">
+        <div className="flex items-center justify-center gap-2.5 rounded-xl bg-muted/60 px-1 py-2.5 group-hover:justify-start lg:justify-start lg:px-3">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success">
             <ShieldCheck className="size-4" />
           </div>
-          <div className="min-w-0 text-[11px] leading-tight">
+          <div className="hidden min-w-0 text-[11px] leading-tight group-hover:block lg:block">
             <p className="truncate font-medium text-foreground">{t("app.name")}</p>
             <p className="truncate text-muted-foreground">
               {t("app.localData")} · v{APP_VERSION}

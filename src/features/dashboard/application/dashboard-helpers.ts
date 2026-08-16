@@ -1,5 +1,18 @@
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { SessionException } from "@/lib/db/schema";
+import {
+  currentMonth,
+  lastMonths as sharedLastMonths,
+  monthWindow,
+  shiftMonth,
+} from "@/lib/utils/months";
+
+export { currentMonth, monthWindow, shiftMonth };
+
+/** The last `n` months ending at `endMonth` (default: the current month). */
+export function lastMonths(n: number, endMonth = currentMonth()): string[] {
+  return sharedLastMonths(n, endMonth);
+}
 
 /** A weakness row as seen by the dashboard (resolved already normalized). */
 export type WeaknessRow = {
@@ -14,40 +27,9 @@ export function timeToMinutes(t: string): number {
   return h * 60 + m;
 }
 
-export function currentMonth(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-export function previousMonth(): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-/** ISO month keys for the last `n` months, oldest first. */
-export function lastMonths(n: number): string[] {
-  const months: string[] = [];
-  const d = new Date();
-  for (let i = n - 1; i >= 0; i--) {
-    const dd = new Date(d.getFullYear(), d.getMonth() - i, 1);
-    months.push(`${dd.getFullYear()}-${String(dd.getMonth() + 1).padStart(2, "0")}`);
-  }
-  return months;
-}
-
 export function percentDelta(current: number, previous: number): number | null {
   if (previous === 0) return null;
   return Math.round(((current - previous) / previous) * 100);
-}
-
-/** [start, end) unix-ms window for an ISO YYYY-MM month. */
-export function monthWindow(month: string): { start: number; end: number } {
-  const prefix = month.slice(0, 7);
-  const start = Date.parse(`${prefix}-01T00:00:00`);
-  const d = new Date(start);
-  d.setMonth(d.getMonth() + 1);
-  return { start, end: d.getTime() };
 }
 
 /** Students whose enrollment (or creation) fell inside the month window. */

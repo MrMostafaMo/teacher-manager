@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import { DAYS } from "@/features/schedule/domain";
 import { conflictIds } from "@/features/schedule/application/schedule-exceptions";
+import { compareGroupsByName } from "@/lib/utils/group-sort";
 
 /** Day buckets, room-conflict ids and group buckets derived from the sessions. */
 export function useScheduleView(sessions: SessionWithGroup[]) {
@@ -21,7 +22,9 @@ export function useScheduleView(sessions: SessionWithGroup[]) {
       list.push(s);
       map.set(s.groupId, list);
     }
-    return [...map.entries()].sort((a, b) => a[1][0].groupName.localeCompare(b[1][0].groupName));
+    return [...map.entries()].sort((a, b) =>
+      compareGroupsByName({ name: a[1][0].groupName }, { name: b[1][0].groupName }),
+    );
   }, [sessions]);
 
   return { byDay, conflicts, byGroup };

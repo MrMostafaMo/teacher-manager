@@ -7,9 +7,11 @@ import { PageHeader } from "@/shared/PageHeader";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
 import { formatDateString } from "@/lib/utils/format";
 import type { Student } from "@/lib/db/schema";
+import { BalanceBadge } from "./profile-balance";
 
 interface ProfileHeaderProps {
   student: Student;
+  balance: number;
   onEdit: () => void;
   onStatement: () => void;
   onReportCard: () => void;
@@ -19,6 +21,7 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({
   student,
+  balance,
   onEdit,
   onStatement,
   onReportCard,
@@ -61,6 +64,7 @@ export function ProfileHeader({
               <FileText className="size-4" />
               {t("reportCard.button")}
             </Button>
+            <BalanceBadge balance={balance} />
             <Avatar name={student.name} className="size-9 text-xs" />
             <StatusBadge status={student.status} />
           </div>

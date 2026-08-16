@@ -16,7 +16,7 @@ import {
   currentMonth,
   lastMonths,
   percentDelta,
-  previousMonth,
+  shiftMonth,
   todaySessions,
   topWeaknessStudents,
 } from "./dashboard-helpers";
@@ -30,10 +30,9 @@ export type { DashboardData };
  * the feature pages show, so the dashboard can't disagree with them.
  */
 
-export async function getDashboardData(): Promise<DashboardData> {
-  const month = currentMonth();
-  const prevMonth = previousMonth();
-  const trendMonths = lastMonths(6);
+export async function getDashboardData(month = currentMonth()): Promise<DashboardData> {
+  const prevMonth = shiftMonth(month, -1);
+  const trendMonths = lastMonths(6, month);
   const [students, monthly, dues, homeworks, exams, skills, trend, schedule, exceptions, expensesMonth, prevMonthly, prevDues, prevExpenses, financePayments, financeExpenses, weakPoints] =
     await Promise.all([
       listStudents({ status: "all" }),
@@ -42,7 +41,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       listHomeworks(),
       listExams(),
       listSkills(),
-      attendanceRepository.monthlyTrend(6),
+      attendanceRepository.monthlyTrend(6, month),
       listSchedule(),
       listScheduleExceptions(),
       monthlyExpenseTotal(month),
@@ -91,6 +90,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     .slice(0, 5)
     .map((h) => ({
       id: h.id,
+      groupId: h.groupId,
       title: h.title,
       groupName: h.groupName,
       dueDate: h.dueDate,

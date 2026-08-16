@@ -63,7 +63,7 @@ export function MonthPicker({ value, onChange, ariaLabel, className }: PickerPro
               type="button"
               onClick={() => pick(iso)}
               className={cn(
-                "rounded-md px-2 py-1.5 text-xs hover:bg-accent",
+                "rounded-lg px-2 py-1.5 text-xs hover:bg-accent",
                 isNow && !isSelected && "font-semibold text-primary",
                 isSelected && "bg-primary font-medium text-primary-foreground hover:bg-primary",
               )}
@@ -76,7 +76,7 @@ export function MonthPicker({ value, onChange, ariaLabel, className }: PickerPro
       <div className="mt-1.5 flex items-center border-t pt-1.5">
         <button
           type="button"
-          className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          className="rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           onClick={() => pick(now.format("YYYY-MM"))}
         >
           {t("common.today")}
@@ -84,7 +84,7 @@ export function MonthPicker({ value, onChange, ariaLabel, className }: PickerPro
         {value && (
           <button
             type="button"
-            className="ms-auto rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className="ms-auto rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             onClick={() => pick("")}
           >
             {t("common.clear")}

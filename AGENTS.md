@@ -641,6 +641,65 @@ Phase 41 added two-way Google Drive sync + cloud backup/restore
   and `cargo check` pass. Remaining: manual E2E in `tauri dev` (needs full
   rebuild for the capability change) and a two-device conflict check.
 
+Phase 42 was a design-system polish campaign (no schema change, no new
+features) that tightened every visual surface into the Nile identity:
+
+- **Foundations**: `globals.css` tokens tuned (primary gradient + shadow via
+  `--primary-shadow`, `--kpi-shadow` with hover lift, `--card-shadow/-hover`,
+  `--popover-shadow`, DataTable thead `bg-muted/40` + `align-middle`); the
+  four theme presets (nile/warm/midnight/academy × light/dark) audited so
+  every shadow/primary/accent token resolves with no broken values.
+- **Primitives** (`src/components/ui/`): buttons, inputs, selects, textareas
+  and cards standardized on a consistent radius/height (native selects `h-9`);
+  `dropdown-menu` gained a soft shadow surface.
+- **App shell**: Header, Sidebar and AppLayout rebuilt — grouped nav, active
+  states, logo badge (`rounded-lg`), date + Ctrl K search button; theme and
+  language pickers open the new popover surfaces.
+- **Shared components** (`src/shared/`): `DataTable` (typed columns,
+  `getRowKey`), `CommandPalette`, `Avatar`, `PageHeader`, `EmptyState`,
+  `Modal` (scale/fade honoring `prefers-reduced-motion`), `CollapsibleSection`
+  (whole header is a toggle Button), toasts, popovers, and the date/month
+  pickers all conform to the same radius scale.
+- **Feature surfaces**: KPI cards (9-tile `md:grid-cols-3` grid, `gap-4`,
+  hover lift), dashboard quick-action chips (`rounded-full`), chart tooltips,
+  profile stat tiles (`rounded-xl bg-muted/70 ring-1 ring-foreground/5`),
+  `StatusPicker`/`SubmissionStatusPicker` (`rounded-lg px-3 py-1.5`),
+  notification list rows, `TimePicker` (`h-9`) and `SessionEditor` room input
+  (`h-9`), `SyncSettingsCard` now uses the shared `Input`, `SessionBlock`
+  `rounded-lg`, toast dismiss + Sidebar badge + CollapsibleSection chevron
+  `rounded-lg`.
+- Deliberately left: `size-8` ghost action buttons, `h-8` exam score inputs,
+  `SyncStatusBadge`, avatars `size-8`, shadcn dropdown/tooltip/skeleton
+  internals, and the Google Sign-In brand colors.
+- Verification: `pnpm build` clean, 60 files / 371 tests green, computed-style
+  audits (headless chromium) and a full theme-token audit across presets.
+
+Phase 42 made the app responsive across every screen size (no schema change):
+
+- **Window floor lowered**: `tauri.conf.json` `minWidth` 1000→800,
+  `minHeight` 680→600 (window still opens 1280×800 maximized).
+- **Icon rail sidebar**: `Sidebar` keeps its in-flow slot but drops to a
+  `w-16` icon rail below `lg` (1024px), expanding back to `w-64` on
+  hover/focus-within to reveal labels (pure CSS `group` + `hover:w-64` +
+  `focus-within:w-64`; labels `hidden group-hover:inline lg:inline`). Brand
+  text, section labels and the footer status card do the same; rail items
+  center icons and justify-start when expanded. No hamburger — the rail is
+  always visible.
+- **Content shell**: `main` padding `p-8` → `p-4 sm:p-6 xl:p-8`; the content
+  column cap widened `max-w-[1440px]` → `max-w-[1720px]` so large/4K
+  screens spread out. Header padding `px-4 sm:px-5`.
+- **Grid audit**: `SummaryCards` now `sm:grid-cols-3 lg:grid-cols-6/7` so
+  the 6–7 attendance cards don't crush below 1024. Other grids were already
+  responsive (dashboard KPIs `grid-cols-2 md:grid-cols-3`, charts
+  `lg:grid-cols-3`, profile strips `md:grid-cols-4`).
+- **Dialogs**: `Modal` body padding `p-4 sm:p-5` (already `w-full m-auto`
+  with inner scroll). Icon-only buttons left at `icon-sm`/`icon-xs` —
+  already ≥ the 24px WCAG 2.2 target size.
+- DataTable and the WeekGrid (`min-w-[880px]`) already scroll horizontally;
+  verified no body-level horizontal overflow from 360px up to 1600px via
+  headless chromium, rail collapse exactly at 1024px, hover/focus expand,
+  and keyboard focus expansion.
+
 ## GitHub (CI/CD)
 
 Repo: `MrMostafaMo/teacher-manager` (private). Remote: `origin` = HTTPS.

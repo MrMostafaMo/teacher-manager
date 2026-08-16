@@ -11,6 +11,11 @@ export const profile = {
     notes: "Notes",
     manageSkills: "Manage skills",
     manageWeakPoints: "Manage weak points",
+    balance: {
+      due: "Owes",
+      credit: "Has credit",
+      settled: "Settled",
+    },
     stats: {
       attendanceRate: "Attendance rate",
       homeworkCompletion: "Homework completion",
