@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { DashboardData } from "@/features/dashboard/application/dashboard-cases";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/utils/format";
+import { useCountUp } from "@/shared/useCountUp";
 
 /** Accent color per KPI category (theme-aware CSS variables). */
 const KPI_COLOR: Record<string, string> = {
@@ -66,6 +67,15 @@ export type KpiItem = {
   to?: string;
 };
 
+function AnimatedValue({ value }: { value: string | number }) {
+  const numeric = typeof value === "number" ? value : parseInt(String(value).replace(/[^0-9]/g, ""), 10);
+  const animated = useCountUp(Number.isFinite(numeric) ? numeric : 0, 800);
+  if (!Number.isFinite(numeric)) return <>{value}</>;
+  const prefix = String(value).match(/^[^0-9-]*/)?.[0] ?? "";
+  const suffix = String(value).match(/[^0-9]*$/)?.[0] ?? "";
+  return <>{prefix}{animated}{suffix}</>;
+}
+
 function KpiDelta({ delta, invert }: { delta: number | null; invert?: boolean }) {
   if (delta === null) return null;
   const good = invert ? delta < 0 : delta >= 0;
@@ -102,7 +112,7 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
   const { t } = useTranslation();
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-      {kpis.map((kpi) => {
+      {kpis.map((kpi, i) => {
         const { key, value, icon: Icon, delta, invert, to } = kpi;
         const accent = KPI_COLOR[key];
         const body = (
@@ -111,12 +121,14 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
               <span className="block truncate text-xs text-muted-foreground">
                 {t(`dashboard.kpis.${key}`)}
               </span>
-              <div className="text-2xl font-semibold tabular-nums">{value}</div>
+              <div className="text-2xl font-semibold tabular-nums">
+                <AnimatedValue value={value} />
+              </div>
               {delta !== undefined && <KpiDelta delta={delta} invert={invert} />}
             </div>
             <span
               aria-hidden
-              className="flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-foreground/5"
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-foreground/5 animate-[pulse_0.6s_ease-in-out_1]"
               style={{ color: accent, backgroundColor: KPI_TINT[key] }}
             >
               <Icon className="size-4.5" />
@@ -126,9 +138,13 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
         return (
           <Card
             key={key}
-            style={{ boxShadow: "var(--kpi-shadow)" }}
+            style={{
+              boxShadow: "var(--kpi-shadow)",
+              animationDelay: `${i * 50}ms`,
+              backgroundImage: `linear-gradient(135deg, ${KPI_TINT[key]}, transparent)`,
+            }}
             className={cn(
-              "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
+              "animate-in fade-in slide-in-from-bottom-2 fill-mode-both transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
               to && "hover:ring-primary/30",
             )}
           >

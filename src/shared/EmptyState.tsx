@@ -25,8 +25,13 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="flex size-16 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,color-mix(in_oklch,var(--primary)_12%,transparent),color-mix(in_oklch,var(--chart-5)_10%,transparent))] shadow-(--card-shadow) ring-1 ring-primary/10">
+      <div className="relative flex size-16 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,color-mix(in_oklch,var(--primary)_12%,transparent),color-mix(in_oklch,var(--chart-5)_10%,transparent))] shadow-(--card-shadow) ring-1 ring-primary/10">
         <Icon className="size-7 text-primary" />
+        <Icon
+          aria-hidden="true"
+          className="pointer-events-none absolute size-24 text-muted-foreground/10"
+          style={{ transform: "translate(25%, -25%)" }}
+        />
       </div>
       <p className="text-sm font-semibold">{title}</p>
       {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}

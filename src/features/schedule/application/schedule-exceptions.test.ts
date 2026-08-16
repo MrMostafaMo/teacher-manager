@@ -4,6 +4,7 @@ import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedu
 import {
   applyExceptions,
   conflictIds,
+  upcomingExceptions,
   type SessionWithException,
 } from "./schedule-exceptions";
 
@@ -137,5 +138,36 @@ describe("conflictIds", () => {
     const a = session({ id: "a", startTime: "10:00", endTime: "11:00", room: "R1" });
     const b = session({ id: "b", startTime: "10:30", endTime: "11:30", room: "R1" });
     expect(conflictIds([[a], [b]])).toEqual(new Set());
+  });
+});
+
+describe("upcomingExceptions", () => {
+  it("returns empty array when no exceptions match the session", () => {
+    expect(upcomingExceptions([], "s1", "2026-08-16")).toEqual([]);
+  });
+  it("groups cancelled and moved exceptions, dates >= today only", () => {
+    const exs: SessionException[] = [
+      exception({ id: "e1", sessionId: "s1", date: "2026-08-15", type: "cancelled" }),
+      exception({ id: "e2", sessionId: "s1", date: "2026-08-18", type: "moved" }),
+      exception({ id: "e3", sessionId: "s1", date: "2026-08-20", type: "cancelled" }),
+      exception({ id: "e4", sessionId: "s1", date: "2026-08-10", type: "cancelled" }),
+    ];
+    const result = upcomingExceptions(exs, "s1", "2026-08-16");
+    expect(result).toEqual([
+      { type: "cancelled", count: 1, dates: ["2026-08-20"] },
+      { type: "moved", count: 1, dates: ["2026-08-18"] },
+    ]);
+  });
+  it("does not include exceptions for other sessions", () => {
+    const exs = [exception({ id: "e1", sessionId: "s2", date: "2026-08-18" })];
+    expect(upcomingExceptions(exs, "s1", "2026-08-16")).toEqual([]);
+  });
+  it("sorts dates within each type ascending", () => {
+    const exs: SessionException[] = [
+      exception({ id: "e1", sessionId: "s1", date: "2026-08-25", type: "cancelled" }),
+      exception({ id: "e2", sessionId: "s1", date: "2026-08-18", type: "cancelled" }),
+    ];
+    const result = upcomingExceptions(exs, "s1", "2026-08-16");
+    expect(result[0].dates).toEqual(["2026-08-18", "2026-08-25"]);
   });
 });

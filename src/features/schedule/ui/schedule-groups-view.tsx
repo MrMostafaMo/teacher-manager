@@ -1,14 +1,19 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
-import type { GroupSession } from "@/lib/db/schema";
+import type { GroupSession, SessionException } from "@/lib/db/schema";
+import { CollapsibleSection } from "@/shared/CollapsibleSection";
+import { paletteFor } from "./week-layout";
+import { upcomingExceptions } from "@/features/schedule/application/schedule-exceptions";
 import { SessionCard } from "./session-card";
 
 interface ScheduleGroupsViewProps {
   byGroup: Array<[string, SessionWithGroup[]]>;
   memberCounts: Record<string, number>;
+  exceptions: SessionException[];
+  today: string;
+  isCollapsed: (id: string) => boolean;
+  onToggle: (id: string) => void;
   conflicts: Set<string>;
   deletingId: string | null;
   onEdit: (session: GroupSession) => void;
@@ -19,6 +24,10 @@ interface ScheduleGroupsViewProps {
 export function ScheduleGroupsView({
   byGroup,
   memberCounts,
+  exceptions,
+  today,
+  isCollapsed,
+  onToggle,
   conflicts,
   deletingId,
   onEdit,
@@ -26,35 +35,50 @@ export function ScheduleGroupsView({
   onAttend,
 }: ScheduleGroupsViewProps) {
   const { t } = useTranslation();
+
+  const exceptionMap = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof upcomingExceptions>>();
+    for (const [, sessions] of byGroup) {
+      for (const s of sessions) {
+        map.set(s.id, upcomingExceptions(exceptions, s.id, today));
+      }
+    }
+    return map;
+  }, [exceptions, today, byGroup]);
+
   return (
     <div className="space-y-4">
-      {byGroup.map(([groupId, groupSessions]) => (
-        <Card key={groupId}>
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold">{groupSessions[0].groupName}</h3>
-              <Badge variant="secondary">
-                <Users className="size-3.5" />
-                {memberCounts[groupId] ?? 0} {t("schedule.members")}
-              </Badge>
-            </div>
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {byGroup.map(([groupId, groupSessions]) => {
+        const pal = paletteFor(groupId);
+        const memberCount = memberCounts[groupId] ?? 0;
+        return (
+          <CollapsibleSection
+            key={groupId}
+            leading={
+              <span className={`size-2.5 shrink-0 rounded-full ${pal.bar}`} aria-hidden="true" />
+            }
+            title={groupSessions[0].groupName}
+            meta={`${groupSessions.length} ${t("schedule.view.sessionCount")} · ${memberCount} ${t("schedule.members")}`}
+            collapsed={isCollapsed(groupId)}
+            onToggle={() => onToggle(groupId)}
+          >
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {groupSessions.map((s) => (
                 <SessionCard
                   key={s.id}
                   session={s}
-                  memberCount={memberCounts[s.groupId] ?? 0}
                   conflicted={conflicts.has(s.id)}
                   deleting={deletingId === s.id}
+                  upcomingExceptions={exceptionMap.get(s.id)}
                   onEdit={onEdit}
                   onDelete={() => onDelete(s)}
                   onAttend={() => onAttend(s)}
                 />
               ))}
             </div>
-          </CardContent>
-        </Card>
-      ))}
+          </CollapsibleSection>
+        );
+      })}
     </div>
   );
 }

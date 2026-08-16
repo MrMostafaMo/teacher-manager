@@ -12,6 +12,7 @@ import {
 import { liveDbSize } from "@/features/settings/infrastructure/backup-service";
 import { SettingsAboutCard } from "./SettingsAboutCard";
 import { SettingsAppearanceCard } from "./SettingsAppearanceCard";
+import { SettingsShortcutsCard } from "./SettingsShortcutsCard";
 import { SettingsWhatsAppCard } from "@/features/whatsapp/ui/SettingsWhatsAppCard";
 import { SyncSettingsCard } from "@/features/sync/ui/SyncSettingsCard";
 
@@ -85,6 +86,7 @@ export default function SettingsPage() {
 
       <SettingsAboutCard />
       <SettingsAppearanceCard />
+      <SettingsShortcutsCard />
       <SettingsWhatsAppCard />
       <SyncSettingsCard />
 

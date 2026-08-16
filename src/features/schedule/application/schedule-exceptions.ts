@@ -126,3 +126,25 @@ export function activeGroupIdsForDate(
   }
   return ids;
 }
+
+/** Group upcoming exceptions (date >= today) for one session by type. */
+export function upcomingExceptions(
+  exceptions: SessionException[],
+  sessionId: string,
+  today: string,
+): Array<{ type: "cancelled" | "moved"; count: number; dates: string[] }> {
+  const grouped = new Map<string, string[]>();
+  for (const ex of exceptions) {
+    if (ex.sessionId === sessionId && ex.date >= today) {
+      const list = grouped.get(ex.type) ?? [];
+      list.push(ex.date);
+      grouped.set(ex.type, list);
+    }
+  }
+  return (["cancelled", "moved"] as const)
+    .filter((t) => grouped.has(t))
+    .map((type) => {
+      const dates = grouped.get(type)!.sort();
+      return { type, count: dates.length, dates };
+    });
+}

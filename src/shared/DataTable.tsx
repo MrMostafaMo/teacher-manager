@@ -27,7 +27,7 @@ function DataTableInner<T>({
   className,
 }: DataTableProps<T>) {
   return (
-    <div className={cn("overflow-x-auto", className)}>
+    <div className={cn("group/table overflow-x-auto", className)}>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/60 text-xs text-muted-foreground">
@@ -43,7 +43,7 @@ function DataTableInner<T>({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={getRowKey(row, i)} className="border-b transition-colors last:border-0 hover:bg-muted/40">
+            <tr key={getRowKey(row, i)} className="border-b transition-colors last:border-0 even:bg-muted/20 hover:bg-muted/40">
               {columns.map((col, i) => (
                 <td key={i} className={cn("px-4 py-3 align-middle", col.className)}>
                   {col.render(row)}

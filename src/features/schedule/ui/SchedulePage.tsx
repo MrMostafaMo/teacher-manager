@@ -9,6 +9,7 @@ import type { GroupSession } from "@/lib/db/schema";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { notifyUndo } from "@/lib/undo-store";
 import WeekGrid from "./WeekGrid";
 import { ScheduleFormDialog } from "./ScheduleFormDialog";
@@ -28,22 +29,15 @@ export default function SchedulePage() {
   const [attendanceSession, setAttendanceSession] = useState<SessionWithGroup | null>(null);
   const [occurrence, setOccurrence] = useState<{ session: SessionWithGroup; date: string } | null>(null);
   const { armed: deletingId, request, clear } = useConfirmDelete();
-
   const { byDay, conflicts, byGroup } = useScheduleView(sessions);
+  const { isCollapsed, toggle } = useCollapsedSections();
+  const dateKey = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
 
-  const occurrenceException = occurrence
-    ? (exceptions.find(
-        (ex) => ex.sessionId === occurrence.session.id && ex.date === occurrence.date,
-      ) ?? null)
-    : null;
-
-  function openCreate() {
-    setEditing(null);
-    setFormOpen(true);
-  }
-
-  function openEdit(session: GroupSession) {
-    setEditing(session);
+  function openForm(s?: GroupSession) {
+    setEditing(s ?? null);
     setFormOpen(true);
   }
 
@@ -54,12 +48,7 @@ export default function SchedulePage() {
       void reload();
       if (undoId !== null) {
         const groupName = groups.find((g) => g.id === session.groupId)?.name;
-        notifyUndo(
-          undoId,
-          t("undo.deleted"),
-          `${t("undo.session")}: ${groupName ?? ""} ${session.startTime}`,
-          t("undo.undo"),
-        );
+        notifyUndo(undoId, t("undo.deleted"), `${t("undo.session")}: ${groupName ?? ""} ${session.startTime}`, t("undo.undo"));
       }
     } catch (error) {
       console.error("Failed to delete session", error);
@@ -74,16 +63,9 @@ export default function SchedulePage() {
         title={t("nav.schedule")}
         description={t("schedule.subtitle")}
         actions={
-          <ScheduleHeaderActions
-            count={sessions.length}
-            canAdd={groups.length > 0}
-            view={view}
-            onViewChange={setView}
-            onCreate={openCreate}
-          />
+          <ScheduleHeaderActions count={sessions.length} canAdd={groups.length > 0} view={view} onViewChange={setView} onCreate={() => openForm()} />
         }
       />
-
       {loading ? (
         <div className="space-y-3">
           <Skeleton className="h-9 w-64" />
@@ -92,57 +74,28 @@ export default function SchedulePage() {
       ) : sessions.length === 0 ? (
         <Card>
           <CardContent className="p-0">
-            <EmptyState
-              icon={CalendarDays}
-              title={groups.length === 0 ? t("schedule.noGroups") : t("schedule.empty")}
-              description={t("schedule.emptyHint")}
-            />
+            <EmptyState icon={CalendarDays} title={groups.length === 0 ? t("schedule.noGroups") : t("schedule.empty")} description={t("schedule.emptyHint")} />
           </CardContent>
         </Card>
       ) : view === "day" ? (
         <WeekGrid
-          byDay={byDay}
-          exceptions={exceptions}
-          deletingId={deletingId}
-          onEdit={openEdit}
-          onDelete={(s) => void handleDelete(s)}
-          onAttend={(s) => setAttendanceSession(s)}
-          onOccurrence={(s, date) => setOccurrence({ session: s, date })}
+          byDay={byDay} exceptions={exceptions} deletingId={deletingId}
+          onEdit={openForm} onDelete={(s) => void handleDelete(s)}
+          onAttend={(s) => setAttendanceSession(s)} onOccurrence={(s, date) => setOccurrence({ session: s, date })}
         />
       ) : (
         <ScheduleGroupsView
-          byGroup={byGroup}
-          memberCounts={memberCounts}
-          conflicts={conflicts}
-          deletingId={deletingId}
-          onEdit={openEdit}
-          onDelete={(s) => void handleDelete(s)}
-          onAttend={(s) => setAttendanceSession(s)}
+          byGroup={byGroup} memberCounts={memberCounts} exceptions={exceptions} today={dateKey}
+          isCollapsed={isCollapsed} onToggle={toggle} conflicts={conflicts} deletingId={deletingId}
+          onEdit={openForm} onDelete={(s) => void handleDelete(s)} onAttend={(s) => setAttendanceSession(s)}
         />
       )}
-
-      <ScheduleFormDialog
-        open={formOpen}
-        session={editing}
-        groups={groups}
-        onClose={() => setFormOpen(false)}
-        onSaved={() => void reload()}
-      />
-
-      <SessionAttendanceDialog
-        open={attendanceSession !== null}
-        session={attendanceSession}
-        onClose={() => setAttendanceSession(null)}
-        onSaved={() => undefined}
-      />
-
+      <ScheduleFormDialog open={formOpen} session={editing} groups={groups} onClose={() => setFormOpen(false)} onSaved={() => void reload()} />
+      <SessionAttendanceDialog open={attendanceSession !== null} session={attendanceSession} onClose={() => setAttendanceSession(null)} onSaved={() => undefined} />
       <SessionOccurrenceDialog
-        open={occurrence !== null}
-        session={occurrence?.session ?? null}
-        date={occurrence?.date ?? ""}
-        exception={occurrenceException}
-        onClose={() => setOccurrence(null)}
-        onSaved={() => void reload()}
+        open={occurrence !== null} session={occurrence?.session ?? null} date={occurrence?.date ?? ""}
+        exception={occurrence ? (exceptions.find((ex) => ex.sessionId === occurrence.session.id && ex.date === occurrence.date) ?? null) : null}
+        onClose={() => setOccurrence(null)} onSaved={() => void reload()}
       />
     </div>
   );

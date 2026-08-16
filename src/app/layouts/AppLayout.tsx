@@ -5,9 +5,11 @@ import { Sidebar } from "@/app/layouts/Sidebar";
 import { CommandPalette } from "@/shared/CommandPalette";
 import { GlobalDialogs, DATA_CHANGED_EVENT } from "@/shared/GlobalDialogs";
 import { ToastViewport } from "@/shared/ToastViewport";
+import { ShortcutsOverlay } from "@/shared/ShortcutsOverlay";
 import { NotificationSync } from "@/features/notifications/ui/notification-sync";
 import { SyncManager } from "@/features/sync/ui/sync-events";
 import { useCommandStore } from "@/lib/command-store";
+import { useShortcuts } from "@/lib/shortcuts/use-shortcuts";
 
 export function AppLayout() {
   const mainRef = useRef<HTMLElement>(null);
@@ -15,6 +17,8 @@ export function AppLayout() {
   const setCommandOpen = useCommandStore((s) => s.setOpen);
   const [dataVersion, setDataVersion] = useState(0);
   const [prevPath, setPrevPath] = useState<string | null>(null);
+
+  useShortcuts();
 
   // Only animate the page entrance on route changes; global-dialog saves
   // remount via dataVersion without replaying the slide-in.
@@ -55,7 +59,7 @@ export function AppLayout() {
             key={`${pathname}:${dataVersion}`}
             className={
               animateEntrance
-                ? "mx-auto max-w-[1720px] animate-in fade-in-0 slide-in-from-bottom-1 duration-300 ease-out"
+                ? "mx-auto max-w-[1720px] animate-in fade-in-0 slide-in-from-bottom-2 duration-500 ease-out fill-mode-both"
                 : "mx-auto max-w-[1720px]"
             }
           >
@@ -64,6 +68,7 @@ export function AppLayout() {
         </main>
       </div>
       <CommandPalette />
+      <ShortcutsOverlay />
       <GlobalDialogs />
       <NotificationSync />
       <SyncManager />

@@ -27,6 +27,7 @@ import { weakPoints } from "./weak-points";
 import { undo } from "./undo";
 import { error } from "./error";
 import { sync } from "./sync";
+import { shortcuts } from "./shortcuts";
 
 export const ar: Messages = {
   app,
@@ -57,4 +58,5 @@ export const ar: Messages = {
   undo,
   error,
   sync,
+  shortcuts,
 };

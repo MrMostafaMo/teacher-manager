@@ -22,7 +22,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:px-5">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300">
           <Icon className="size-4.5" />
         </div>
         <div className="min-w-0">
@@ -51,7 +51,7 @@ export function Header() {
             Ctrl K
           </kbd>
         </Button>
-        <span className="flex shrink-0 items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
+        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1 text-xs font-medium tabular-nums text-muted-foreground">
           <CalendarDays className="size-3.5" />
           <span className="hidden lg:inline">{formatDate(Date.now(), "dddd")}</span>
           <span dir="ltr">{formatDate(Date.now(), "DD-MM-YYYY")}</span>

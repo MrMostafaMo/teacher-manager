@@ -37,6 +37,7 @@ export const schedule: Messages["schedule"] = {
       label: "طريقة العرض",
       day: "تقويم",
       group: "بالفرق",
+      sessionCount: "جلسات",
     },
     conflict: "تعارض في القاعة",
     attend: "تسجيل الحضور",

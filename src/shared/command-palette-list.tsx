@@ -8,6 +8,7 @@ export interface CommandPaletteItem {
   label: string;
   hint: string;
   icon: LucideIcon;
+  shortcutCombo?: string;
   run: () => void;
 }
 
@@ -51,6 +52,11 @@ export function CommandPaletteList({
                 >
                   <Icon className="size-4 shrink-0 text-muted-foreground" />
                   <span className="flex-1 font-medium">{item.label}</span>
+                  {item.shortcutCombo && (
+                    <kbd className="rounded border bg-muted px-1 py-0.5 font-mono text-[10px] text-muted-foreground">
+                      {item.shortcutCombo}
+                    </kbd>
+                  )}
                   {item.hint && (
                     <span className="text-[11px] font-medium text-muted-foreground">
                       {item.hint}

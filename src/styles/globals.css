@@ -228,6 +228,26 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Base layer using logical properties so layout mirrors under RTL automatically */
 @layer base {
   * {
@@ -266,12 +286,12 @@
     pointer-events: none;
     background: radial-gradient(
         900px 480px at 92% -8%,
-        color-mix(in oklch, var(--primary) 8%, transparent),
+        color-mix(in oklch, var(--primary) 10%, transparent),
         transparent 70%
       ),
       radial-gradient(
         700px 400px at 0% 110%,
-        color-mix(in oklch, var(--chart-2) 5%, transparent),
+        color-mix(in oklch, var(--chart-2) 7%, transparent),
         transparent 70%
       );
   }
@@ -311,6 +331,24 @@
     background-clip: padding-box;
     border: 3px solid transparent;
   }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--muted) 25%,
+      color-mix(in oklch, var(--muted) 50%, transparent) 50%,
+      var(--muted) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
 }
 
 /* Accessibility: respect users who prefer reduced motion */

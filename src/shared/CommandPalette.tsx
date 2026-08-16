@@ -5,6 +5,9 @@ import { Search } from "lucide-react";
 import { NAV_ITEMS } from "@/app/navigation";
 import { useCommandStore } from "@/lib/command-store";
 import { useDialogStore } from "@/lib/dialog-store";
+import { useShortcutsStore } from "@/lib/shortcuts/shortcuts-store";
+import { parseCombo, formatCombo } from "@/lib/shortcuts/combo";
+import type { ShortcutActionId } from "@/lib/shortcuts/types";
 import { QUICK_ACTIONS } from "./command-palette-actions";
 import { CommandPaletteList, type CommandPaletteItem } from "./command-palette-list";
 
@@ -14,6 +17,9 @@ export function CommandPalette() {
   const open = useCommandStore((s) => s.open);
   const setOpen = useCommandStore((s) => s.setOpen);
   const openDialog = useDialogStore((s) => s.openDialog);
+  const shortcuts = useShortcutsStore((s) => s.shortcuts);
+  const isMac =
+    typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -29,11 +35,16 @@ export function CommandPalette() {
 
   const items = useMemo<CommandPaletteItem[]>(() => {
     const q = query.trim().toLowerCase();
+    const fmt = (id: string) => {
+      const c = shortcuts[id as ShortcutActionId];
+      return c ? formatCombo(parseCombo(c), isMac) : undefined;
+    };
     const nav = NAV_ITEMS.map((item) => ({
       id: `nav:${item.to}`,
       label: t(item.labelKey),
       hint: "",
       icon: item.icon,
+      shortcutCombo: fmt(`nav:${item.to}`),
       run: () => {
         setOpen(false);
         navigate(item.to);
@@ -44,6 +55,7 @@ export function CommandPalette() {
       label: t(a.labelKey),
       hint: "+",
       icon: a.icon,
+      shortcutCombo: fmt(`dialog:${a.id}`) ?? fmt(`action:${a.id}`),
       run: () => {
         setOpen(false);
         if (a.dialog) openDialog(a.dialog);
@@ -53,7 +65,7 @@ export function CommandPalette() {
     const all = [...nav, ...actions];
     if (!q) return all;
     return all.filter((n) => n.label.toLowerCase().includes(q));
-  }, [query, navigate, setOpen, openDialog, t]);
+  }, [query, navigate, setOpen, openDialog, t, shortcuts, isMac]);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -95,22 +107,22 @@ export function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-[12vh] backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[12vh] backdrop-blur-lg">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={t("common.commandPalette.title")}
         className="w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-200 ease-out overflow-hidden rounded-2xl border bg-background shadow-(--popover-shadow)"
       >
-        <div className="flex items-center gap-2 border-b px-4">
-          <Search className="size-4 shrink-0 text-muted-foreground" />
+        <div className="flex items-center gap-3 border-b px-5">
+          <Search className="size-5 shrink-0 text-muted-foreground" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("common.commandPalette.placeholder")}
             aria-label={t("common.commandPalette.placeholder")}
-            className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="h-12 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
           />
           <kbd className="hidden shrink-0 rounded border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
             ESC

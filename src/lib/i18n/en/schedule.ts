@@ -35,6 +35,7 @@ export const schedule = {
       label: "View mode",
       day: "Calendar",
       group: "By group",
+      sessionCount: "sessions",
     },
     conflict: "Room conflict",
     attend: "Mark attendance",

@@ -26,6 +26,7 @@ import { weakPoints } from "./weak-points";
 import { undo } from "./undo";
 import { error } from "./error";
 import { sync } from "./sync";
+import { shortcuts } from "./shortcuts";
 
 export const en = {
   app,
@@ -56,6 +57,7 @@ export const en = {
   undo,
   error,
   sync,
+  shortcuts,
 } as const;
 
 /** Locale shape — every leaf widened to `string` so translations can differ. */

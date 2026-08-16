@@ -19,14 +19,12 @@ export function ToastItem({ toast, onDismiss }: ToastItemProps) {
   return (
     <div
       role="status"
-      className="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border bg-background px-4 py-3 shadow-(--popover-shadow) animate-in fade-in-0 slide-in-from-bottom-2 duration-200 ease-out"
+      className="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border bg-background px-4 py-3 shadow-(--popover-shadow) animate-in fade-in-0 slide-in-from-top-full duration-300 ease-out"
     >
-      {toast.action ? (
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 start-0 w-1 rounded-s-xl bg-gradient-to-b from-primary to-primary-strong"
-        />
-      ) : null}
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 start-0 w-1 rounded-s-xl bg-gradient-to-b from-primary to-primary-strong"
+      />
       <span
         className={cn(
           "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg",

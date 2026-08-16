@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 /** A section card with a collapsible header (collapse state is up to the caller). */
 export function CollapsibleSection({
   title,
+  leading,
   meta,
   actions,
   collapsed,
@@ -15,6 +16,7 @@ export function CollapsibleSection({
   children,
 }: {
   title: string;
+  leading?: ReactNode;
   meta?: ReactNode;
   actions?: ReactNode;
   collapsed: boolean;
@@ -44,6 +46,7 @@ export function CollapsibleSection({
             >
               <ChevronDown className="size-3.5" />
             </span>
+            {leading}
             <span className="truncate font-semibold">{title}</span>
             {meta && (
               <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{meta}</span>
