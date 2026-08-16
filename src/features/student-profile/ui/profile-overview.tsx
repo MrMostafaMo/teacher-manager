@@ -106,7 +106,7 @@ export function ProfileStatsGrid({
       value: homeworkRate === null ? "—" : `${homeworkRate}%`,
       icon: ClipboardList,
     },
-    { key: "profile.stats.examAverage", value: examAverage === null ? "—" : String(examAverage), icon: GraduationCap },
+    { key: "profile.stats.examAverage", value: examAverage === null ? "—" : `${examAverage}%`, icon: GraduationCap },
     { key: "profile.stats.sessionsAttended", value: String(sessionCount), icon: Layers },
   ];
   return (

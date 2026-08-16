@@ -9,6 +9,13 @@ import {
 
 export { currentMonth, monthWindow, shiftMonth };
 
+/** Extract YYYY-MM from an ISO date string or unix-ms timestamp. */
+export function monthOf(dateOrTimestamp: string | number): string {
+  if (typeof dateOrTimestamp === "string") return dateOrTimestamp.slice(0, 7);
+  const d = new Date(dateOrTimestamp);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 /** The last `n` months ending at `endMonth` (default: the current month). */
 export function lastMonths(n: number, endMonth = currentMonth()): string[] {
   return sharedLastMonths(n, endMonth);

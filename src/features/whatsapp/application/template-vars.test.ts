@@ -45,7 +45,7 @@ describe("buildTemplateVars", () => {
         { status: "done" },
         { status: "pending" },
       ] as StudentProfileData["homeworks"],
-      exams: [{ score: 80 }, { score: null }] as StudentProfileData["exams"],
+      exams: [{ score: 80, maxScore: 100 }, { score: null, maxScore: 100 }] as StudentProfileData["exams"],
       skills: [{ name: "القراءة", weak: true, level: 1 }] as StudentProfileData["skills"],
     });
     const vars = buildTemplateVars(data);

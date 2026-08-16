@@ -94,6 +94,9 @@ export async function updateExam(
     if (existing && existing.groupId !== data.groupId) {
       await examRepository.pruneResultsToMembers(id, data.groupId);
     }
+    if (existing && existing.maxScore !== data.maxScore) {
+      await examRepository.clampResultsToMax(id, data.maxScore);
+    }
     await logExamUpdate(exam);
   }
   return exam;

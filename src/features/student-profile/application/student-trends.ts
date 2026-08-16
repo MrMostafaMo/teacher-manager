@@ -85,7 +85,7 @@ export function buildStudentTrends(data: StudentProfileData): StudentTrends {
         date,
         label: date.slice(5),
         score,
-        pct: e.maxScore ? Math.round((score / e.maxScore) * 100) : 0,
+        pct: e.maxScore ? Math.min(100, Math.round((score / e.maxScore) * 100)) : 0,
       };
     })
     .sort((a, b) => a.date.localeCompare(b.date))

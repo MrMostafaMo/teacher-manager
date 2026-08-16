@@ -15,6 +15,7 @@ import {
   countNewStudents,
   currentMonth,
   lastMonths,
+  monthOf,
   percentDelta,
   shiftMonth,
   todaySessions,
@@ -33,7 +34,7 @@ export type { DashboardData };
 export async function getDashboardData(month = currentMonth()): Promise<DashboardData> {
   const prevMonth = shiftMonth(month, -1);
   const trendMonths = lastMonths(6, month);
-  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, exceptions, expensesMonth, prevMonthly, prevDues, prevExpenses, financePayments, financeExpenses, weakPoints] =
+  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, exceptions, expensesMonth, prevMonthly, prevExpenses, financePayments, financeExpenses, weakPoints] =
     await Promise.all([
       listStudents({ status: "all" }),
       getMonthly(month),
@@ -46,7 +47,6 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
       listScheduleExceptions(),
       monthlyExpenseTotal(month),
       getMonthly(prevMonth),
-      monthlyDues(prevMonth),
       monthlyExpenseTotal(prevMonth),
       Promise.all(trendMonths.map((m) => paymentRepository.byPeriod(m))),
       Promise.all(trendMonths.map((m) => expenseRepository.byMonth(m))),
@@ -56,17 +56,21 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
   const totalStudents = students.length;
   const activeStudents = students.filter((s) => s.status === "active").length;
 
+  const monthHw = homeworks.filter((h) => monthOf(h.dueDate ?? h.createdAt) === month);
+  const monthExams = exams.filter((e) => monthOf(e.date ?? e.createdAt) === month);
+
   const marked = monthly.reduce((a, r) => a + r.present + r.absent + r.late + r.excused, 0);
   const attended = monthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
   const attendanceRate = marked > 0 ? Math.round((attended / marked) * 100) : 0;
 
-  const collected = dues.reduce((a, r) => a + r.paid, 0);
+  const sumPaid = (payments: Array<{ amount: number }>) => payments.reduce((a, p) => a + p.amount, 0);
+  const collected = sumPaid(financePayments[financePayments.length - 1]);
   const outstanding = dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
 
   const prevMarked = prevMonthly.reduce((a, r) => a + r.present + r.absent + r.late + r.excused, 0);
   const prevAttended = prevMonthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
   const prevAttendanceRate = prevMarked > 0 ? Math.round((prevAttended / prevMarked) * 100) : 0;
-  const prevCollected = prevDues.reduce((a, r) => a + r.paid, 0);
+  const prevCollected = sumPaid(financePayments[financePayments.length - 2]);
   const prevNet = prevCollected - prevExpenses;
 
   const newStudents = countNewStudents(students, month);
@@ -76,15 +80,15 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     .slice(0, 5)
     .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remaining }));
 
+  const totalHwStudents = monthHw.reduce((a, h) => a + h.submitted + h.pending + h.late, 0);
   const homeworkCompletion =
-    homeworks.length > 0
-      ? Math.round(homeworks.reduce((a, h) => a + h.completion, 0) / homeworks.length)
+    totalHwStudents > 0
+      ? Math.round(monthHw.reduce((a, h) => a + h.submitted + h.late, 0) / totalHwStudents * 100)
       : 0;
-  const homeworkSubmitted = homeworks.reduce((a, h) => a + h.submitted, 0);
-  const homeworkPending = homeworks.reduce((a, h) => a + h.pending, 0);
-  const homeworkLate = homeworks.reduce((a, h) => a + h.late, 0);
-
-  const overdueHomeworks = homeworks
+  const homeworkSubmitted = monthHw.reduce((a, h) => a + h.submitted, 0);
+  const homeworkPending = monthHw.reduce((a, h) => a + h.pending, 0);
+  const homeworkLate = monthHw.reduce((a, h) => a + h.late, 0);
+  const overdueHomeworks = monthHw
     .filter((h) => h.overdue)
     .sort((a, b) => (a.dueDate ?? "").localeCompare(b.dueDate ?? ""))
     .slice(0, 5)
@@ -97,11 +101,10 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
       pending: h.pending,
     }));
 
-  const graded = exams.filter((e) => e.average !== null);
+  const graded = monthExams.filter((e) => e.average !== null);
   const scoreSum = graded.reduce((a, e) => a + ((e.average ?? 0) / e.maxScore) * 100 * e.resultCount, 0);
   const scoreCount = graded.reduce((a, e) => a + e.resultCount, 0);
   const examAverage = scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 10) / 10 : null;
-
   const weakSkills = skills
     .filter((s) => s.weakCount > 0)
     .map((s) => ({ name: s.name, count: s.weakCount }))
@@ -111,7 +114,7 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
   const daySessions = todaySessions(schedule, now, exceptions);
   const financeTrend = trendMonths.map((m, i) => ({
     month: m,
-    collected: financePayments[i].reduce((a, p) => a + p.amount, 0),
+    collected: sumPaid(financePayments[i]),
     expenses: financeExpenses[i].reduce((a, e) => a + e.amount, 0),
   }));
 
@@ -134,7 +137,7 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
       newStudents,
     },
     homeworkCompletion,
-    homeworkCount: homeworks.length,
+    homeworkCount: monthHw.length,
     homeworkSubmitted,
     homeworkPending,
     homeworkLate,

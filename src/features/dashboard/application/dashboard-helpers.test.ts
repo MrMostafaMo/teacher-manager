@@ -3,6 +3,7 @@ import {
   countNewStudents,
   currentMonth,
   lastMonths,
+  monthOf,
   monthWindow,
   percentDelta,
   shiftMonth,
@@ -92,6 +93,18 @@ describe("countNewStudents", () => {
   it("falls back to createdAt for legacy rows without enrolledOn", () => {
     const students = [{ enrolledOn: null, createdAt: Date.parse("2026-05-02T00:00:00") }];
     expect(countNewStudents(students, "2026-05")).toBe(1);
+  });
+});
+
+describe("monthOf", () => {
+  it("extracts YYYY-MM from an ISO date string", () => {
+    expect(monthOf("2026-05-15")).toBe("2026-05");
+    expect(monthOf("2026-12-01")).toBe("2026-12");
+  });
+
+  it("extracts YYYY-MM from a unix-ms timestamp", () => {
+    expect(monthOf(Date.parse("2026-05-15T10:30:00"))).toBe("2026-05");
+    expect(monthOf(Date.parse("2026-01-01T00:00:00"))).toBe("2026-01");
   });
 });
 

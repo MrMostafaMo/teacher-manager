@@ -20,7 +20,13 @@ export function computeProfileSummary(data: StudentProfileData): ProfileSummary 
   const gradedExams = exams.filter((e) => e.score !== null);
   const examAverage =
     gradedExams.length > 0
-      ? Math.round((gradedExams.reduce((a, e) => a + (e.score ?? 0), 0) / gradedExams.length) * 10) / 10
+      ? Math.round(
+          (gradedExams.reduce(
+            (a, e) => a + Math.min(100, ((e.score ?? 0) / e.maxScore) * 100),
+            0,
+          ) /
+            gradedExams.length) * 10,
+        ) / 10
       : null;
 
   const homeworkDone = homeworks.filter((h) => h.status !== "pending").length;

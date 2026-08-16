@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { examResults, exams, type Exam, type ExamResult } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
@@ -86,6 +86,14 @@ export const examResultQueries = {
     await db
       .delete(examResults)
       .where(and(eq(examResults.examId, examId), eq(examResults.studentId, studentId)));
+  },
+
+  /** Cap existing scores at a new, lower maxScore (used when the exam is edited). */
+  async clampResultsToMax(examId: string, maxScore: number): Promise<void> {
+    await db
+      .update(examResults)
+      .set({ score: maxScore, updatedAt: Date.now() })
+      .where(and(eq(examResults.examId, examId), gt(examResults.score, maxScore)));
   },
 
   async clearForExam(examId: string): Promise<void> {
