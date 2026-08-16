@@ -68,7 +68,7 @@ export type KpiItem = {
 };
 
 function AnimatedValue({ value }: { value: string | number }) {
-  const numeric = typeof value === "number" ? value : parseInt(String(value).replace(/[^0-9]/g, ""), 10);
+  const numeric = typeof value === "number" ? value : parseInt(String(value).replace(/[^0-9-]/g, ""), 10);
   const animated = useCountUp(Number.isFinite(numeric) ? numeric : 0, 800);
   if (!Number.isFinite(numeric)) return <>{value}</>;
   const prefix = String(value).match(/^[^0-9-]*/)?.[0] ?? "";
@@ -104,7 +104,7 @@ export function buildKpis(data: DashboardData): KpiItem[] {
     { key: "net", value: formatMoney(data.net), icon: Scale, delta: data.deltas.net, to: KPI_ROUTE.net },
     { key: "outstanding", value: formatMoney(data.outstanding), icon: TrendingDown, to: KPI_ROUTE.outstanding },
     { key: "homeworkCompletion", value: `${data.homeworkCompletion}%`, icon: ClipboardList, to: KPI_ROUTE.homeworkCompletion },
-    { key: "examAverage", value: data.examAverage === null ? "—" : String(data.examAverage), icon: GraduationCap, to: KPI_ROUTE.examAverage },
+    { key: "examAverage", value: data.examAverage === null ? "—" : `${data.examAverage}%`, icon: GraduationCap, to: KPI_ROUTE.examAverage },
   ];
 }
 

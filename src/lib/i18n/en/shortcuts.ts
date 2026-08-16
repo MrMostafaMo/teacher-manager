@@ -1,5 +1,6 @@
 export const shortcuts = {
     title: "Shortcuts",
+    manage: "Manage Shortcuts",
     navigation: "Navigation",
     create: "Create",
     actions: "Actions",

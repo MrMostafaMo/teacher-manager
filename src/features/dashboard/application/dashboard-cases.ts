@@ -98,7 +98,7 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     }));
 
   const graded = exams.filter((e) => e.average !== null);
-  const scoreSum = graded.reduce((a, e) => a + (e.average ?? 0) * e.resultCount, 0);
+  const scoreSum = graded.reduce((a, e) => a + ((e.average ?? 0) / e.maxScore) * 100 * e.resultCount, 0);
   const scoreCount = graded.reduce((a, e) => a + e.resultCount, 0);
   const examAverage = scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 10) / 10 : null;
 

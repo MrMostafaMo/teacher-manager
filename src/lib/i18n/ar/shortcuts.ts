@@ -2,6 +2,7 @@ import type { Messages } from "@/lib/i18n/en";
 
 export const shortcuts: Messages["shortcuts"] = {
     title: "الاختصارات",
+    manage: "إدارة الاختصارات",
     navigation: "التنقل",
     create: "إنشاء",
     actions: "إجراءات",
