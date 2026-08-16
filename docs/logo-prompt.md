@@ -1,17 +1,48 @@
-# برومبت لوجو Teacher Manager
+# برومبت اللوجو — مدير المعلم
 
-برنامج إدارة تعليمية للمدرّسين: طلاب، حضور، دفع، واجبات، امتحانات، مهارات، تقارير وإحصائيات — بدون إنترنت.
+برومبت جاهز للاستخدام مع مولدات الصور بالذكاء الاصطناعي (Midjourney / DALL‑E /
+Recraft / Ideogram). الاتجاه المختار: **أيقونة فقط + النيلي + قبعة تخرج مع دفتر**.
 
-## برومبت Nano Banana (بالإنجليزي)
+## البرومبت الأساسي (المقترح)
 
-> Flat vector app icon for a desktop education-management app called "Teacher Manager". Center: a friendly teacher silhouette standing at a chalkboard with an open book. Around it, a clean ring of small flat icons representing the app's features: a student head, a calendar with a clock, a coin/payment symbol, an attendance checkmark list, an exam paper, and a rising bar chart. Colors: deep indigo and teal gradient with a warm amber accent on the chalkboard. Smooth rounded corners, modern minimal flat design, subtle soft shadows, crisp edges, high contrast, centered square composition on a white background, no text, no watermark, 1:1 icon, vector-like, clean, simple, not cluttered.
+> Minimal app icon, flat vector style, on a rounded-square (squircle) badge
+> with a smooth indigo gradient background (#4F46E5 → #6366F1 → #4338CA),
+> subtle soft glow at top.
+>
+> Centered geometric mark combining a graduation cap and an open notebook:
+> the mortarboard sits at a slight angle, its side edge flows into an open
+> book/notebook below, and the cap's tassel curves down into a bold
+> checkmark (✓) — implying attendance and completion.
+>
+> White/very-light indigo glyphs, flat shading with minimal highlights,
+> generous negative space, crisp rounded corners, modern SaaS iconography,
+> professional, clean, timeless.
+>
+> No text, no letters, no watermark. Perfectly legible at 16px favicon and
+> 512px icon.
 
-## الوصف بالعربي
+## البرومبت البديل (بدون خلفية)
 
-> لوجو بتصميم مسطح (Flat) لبرنامج إدارة تعليمية. الرمز الأساسي: معلّم واقف عند سبورة وفي يده كتاب مفتوح، وحوله حلقة من أيقونات صغيرة ترمز لمميزات البرنامج: طالب، تقويم بساعة، عملة/دفع، قائمة حضور بعلامة صح، ورقة امتحان، ومخطط إحصائي صاعد. الألوان: تدرج بين الأزرق الكحلي والتركوازي مع لمسة برتقالية دافئة. بدون كتابة، خلفية بيضاء، أيقونة مربّعة مناسبة لسطح المكتب، أسلوب متجه حديث وواضح.
+> Flat minimal vector logo mark only, no background, no badge: a graduation
+> cap flowing into an open notebook, tassel curving into a checkmark, solid
+> deep indigo (#4338CA) glyph with a single #4F46E5 accent, clean geometric
+> lines, rounded terminals, generous negative space, no text, scalable from
+> 16px to 512px.
 
-## نصائح سريعة
+## إعدادات موصى بها عند التوليد
 
-- اكتب الـ prompt بالإنجليزي (يعطي نتائج أفضل في مولّدات الصور).
-- لو ظهر حروف أو كتابة غلط: اطلب "remove all text".
-- الناتج يصلح كأيقونة التطبيق (Tauri) بحجم 512×512 مع `1:1`.
+| الأداة    | الإعداد                                            |
+| --------- | -------------------------------------------------- |
+| Midjourney| `--ar 1:1 --v 6 --style raw` أو `--v 7`، ثم ارفع الجودة بـ `--upbeta` |
+| DALL‑E / GPT‑4o | الصق البرومبت كما هو، اطلب "SVG-style, flat" |
+| Recraft / Iconify | اختر preset "App icon / minimal"             |
+| بعد الاختيار | نظّف النتيجة بحذف الخلفية وأعد تصديرها إلى `public/logo.png` (1024×1024) و `src-tauri/icons/` |
+
+## لماذا هذا التصميم؟
+
+- **قبعة + دفتر** = التعليم + الإدارة، يغطي الطلاب/الامتحانات/الحصص.
+- **التسيلة كعلامة صح (✓)** = لمسة ذكية توحي بالحضور والإنجاز — وهي أبرز ميزة في البرنامج.
+- **النيلي المتدرج** = مطابقة تامة لهوية `--primary` الحالية في
+  `src/styles/globals.css` (oklch 0.5 0.17 262) حتى لا ينفصل اللوجو عن الواجهة.
+- **مربع بزوايا دائرية** = يطابق «badge» السايدبار الحالي (`rounded-xl` + gradient).
+- **بسيط ومسطّح** = ينجح في أي حجم، من الفافيكون 16px لأيقونة 512px.
