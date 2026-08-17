@@ -1,4 +1,4 @@
-import { buildRosterPdf, type RosterPdfData } from "@/features/attendance/infrastructure/roster-exporter";
+import type { RosterPdfData } from "@/features/attendance/infrastructure/roster-exporter";
 import { saveFile } from "@/lib/export/save-file";
 
 /**
@@ -6,6 +6,7 @@ import { saveFile } from "@/lib/export/save-file";
  * Returns true when the user saved the PDF, false when they cancelled.
  */
 export async function exportRosterPdf(data: RosterPdfData): Promise<boolean> {
+  const { buildRosterPdf } = await import("@/features/attendance/infrastructure/roster-exporter");
   const bytes = await buildRosterPdf(data);
   return saveFile("attendance-roster.pdf", bytes, "PDF", "pdf");
 }

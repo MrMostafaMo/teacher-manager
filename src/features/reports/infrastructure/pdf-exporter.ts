@@ -78,7 +78,13 @@ export async function buildReportPdf(
     const headerBaseline = y + 16;
     data.headers.forEach((h, i) => {
       const colX = opts.rtl ? hx - colWidths[i] : hx;
-      page.drawRectangle({ x: colX, y, width: colWidths[i], height: HEADER_HEIGHT, color: bandColor });
+      page.drawRectangle({
+        x: colX,
+        y,
+        width: colWidths[i],
+        height: HEADER_HEIGHT,
+        color: bandColor,
+      });
       const savedY = y;
       y = headerBaseline;
       drawCell(h, colX, colWidths[i], inkColor);
@@ -139,10 +145,20 @@ export async function buildReportPdf(
       cx += opts.rtl ? -colWidths[i] : colWidths[i];
     });
     y = savedY;
-    page.drawLine({ start: { x: PAGE_MARGIN, y: rowTop }, end: { x: PAGE_WIDTH - PAGE_MARGIN, y: rowTop }, thickness: 0.5, color: gridColor });
+    page.drawLine({
+      start: { x: PAGE_MARGIN, y: rowTop },
+      end: { x: PAGE_WIDTH - PAGE_MARGIN, y: rowTop },
+      thickness: 0.5,
+      color: gridColor,
+    });
     y -= LINE_HEIGHT;
   }
-  page.drawLine({ start: { x: PAGE_MARGIN, y }, end: { x: PAGE_WIDTH - PAGE_MARGIN, y }, thickness: 0.5, color: gridColor });
+  page.drawLine({
+    start: { x: PAGE_MARGIN, y },
+    end: { x: PAGE_WIDTH - PAGE_MARGIN, y },
+    thickness: 0.5,
+    color: gridColor,
+  });
 
   return doc.save();
 }

@@ -30,16 +30,10 @@ export const attendanceRepository = {
   ...createRepository(attendance),
 
   byDate(date: string): Promise<Attendance[]> {
-    return db
-      .select()
-      .from(attendance)
-      .where(eq(attendance.date, date)) as Promise<Attendance[]>;
+    return db.select().from(attendance).where(eq(attendance.date, date)) as Promise<Attendance[]>;
   },
 
-  byStudentAndDate(
-    studentId: string,
-    date: string,
-  ): Promise<Attendance | undefined> {
+  byStudentAndDate(studentId: string, date: string): Promise<Attendance | undefined> {
     return db
       .select()
       .from(attendance)
@@ -52,6 +46,22 @@ export const attendanceRepository = {
     const existing = await attendanceRepository.byStudentAndDate(studentId, date);
     if (existing) await attendanceRepository.update(existing.id, { status });
     else await attendanceRepository.insert({ id: uuid(), studentId, date, status });
+  },
+
+  /** Batch upsert: insert or update multiple attendance rows in one query. */
+  async batchUpsert(
+    entries: Array<{ studentId: string; date: string; status: AttendanceStatus }>,
+  ): Promise<void> {
+    if (entries.length === 0) return;
+    const now = Date.now();
+    await db
+      .insert(attendance)
+      .values(entries.map((e) => ({ id: uuid(), ...e, createdAt: now, updatedAt: now })))
+      .onConflictDoUpdate({
+        target: [attendance.studentId, attendance.date],
+        set: { status: sql`excluded.status`, updatedAt: now },
+      })
+      .run();
   },
 
   /** Per-student status counts for one month ("YYYY-MM"). */
@@ -72,7 +82,13 @@ export const attendanceRepository = {
 
     const byId = new Map<string, StudentMonthlyStat>();
     for (const row of rows) {
-      const stat = byId.get(row.studentId) ?? { studentId: row.studentId, present: 0, absent: 0, late: 0, excused: 0 };
+      const stat = byId.get(row.studentId) ?? {
+        studentId: row.studentId,
+        present: 0,
+        absent: 0,
+        late: 0,
+        excused: 0,
+      };
       stat[row.status] = row.n;
       byId.set(row.studentId, stat);
     }
@@ -126,10 +142,18 @@ export const attendanceRepository = {
     }>;
     const byMonth = new Map<string, MonthlyTrendRow>();
     for (const r of rows) {
-      const cur = byMonth.get(r.month) ?? { month: r.month, present: 0, absent: 0, late: 0, excused: 0 };
+      const cur = byMonth.get(r.month) ?? {
+        month: r.month,
+        present: 0,
+        absent: 0,
+        late: 0,
+        excused: 0,
+      };
       cur[r.status] = r.n;
       byMonth.set(r.month, cur);
     }
-    return labels.map((m) => byMonth.get(m) ?? { month: m, present: 0, absent: 0, late: 0, excused: 0 });
+    return labels.map(
+      (m) => byMonth.get(m) ?? { month: m, present: 0, absent: 0, late: 0, excused: 0 },
+    );
   },
 };

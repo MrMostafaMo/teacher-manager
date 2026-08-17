@@ -1,5 +1,6 @@
 import type { RowRef, SyncPayload, SyncRow, SyncTombstoneItem } from "../domain";
 import { tombstoneBeatsRow } from "./tombstones";
+import { updatedAt, differs } from "./sync-utils";
 
 /**
  * Pure merge of a remote payload into local state (last-write-wins per row).
@@ -47,15 +48,6 @@ export function buildTombstoneIndex(tombstones: SyncTombstoneItem[]): Map<string
     if (current === undefined || t.deletedAt > current) index.set(key, t.deletedAt);
   }
   return index;
-}
-
-function updatedAt(row: SyncRow): number {
-  return Number(row.updated_at ?? 0);
-}
-
-/** True when a row changed between local and remote (content differs). */
-function differs(a: SyncRow, b: SyncRow): boolean {
-  return JSON.stringify(a) !== JSON.stringify(b);
 }
 
 export function mergePull(remote: SyncPayload, local: LocalState): PullResult {

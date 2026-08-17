@@ -35,7 +35,8 @@ export async function weakPointsReport(t: ReportTranslations): Promise<ReportDat
       r.name,
       r.description,
       dayjs(r.recordedOn).format("DD-MM-YYYY"),
-      t.weakStatus?.(r.resolved === 1 ? "resolved" : "active") ?? (r.resolved === 1 ? "resolved" : "active"),
+      t.weakStatus?.(r.resolved === 1 ? "resolved" : "active") ??
+        (r.resolved === 1 ? "resolved" : "active"),
     ]),
   };
 }

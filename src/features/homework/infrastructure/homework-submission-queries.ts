@@ -1,6 +1,11 @@
 import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { homeworkSubmissions, homeworks, type Homework, type HomeworkSubmission } from "@/lib/db/schema";
+import {
+  homeworkSubmissions,
+  homeworks,
+  type Homework,
+  type HomeworkSubmission,
+} from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
 import { effectiveDate } from "@/lib/utils/enrollment";
 import { eligibleStudentIds, groupIdsForStudent, groupNames } from "@/lib/db/group-scoped";
@@ -38,7 +43,10 @@ export const homeworkSubmissionQueries = {
           .select()
           .from(homeworkSubmissions)
           .where(
-            and(inArray(homeworkSubmissions.homeworkId, homeworkIds), eq(homeworkSubmissions.studentId, studentId)),
+            and(
+              inArray(homeworkSubmissions.homeworkId, homeworkIds),
+              eq(homeworkSubmissions.studentId, studentId),
+            ),
           )) as HomeworkSubmission[])
       : [];
     const byId = new Map(submissions.map((s) => [s.homeworkId, s]));
@@ -58,7 +66,10 @@ export const homeworkSubmissionQueries = {
       .select({ id: homeworkSubmissions.id })
       .from(homeworkSubmissions)
       .where(
-        and(eq(homeworkSubmissions.homeworkId, homeworkId), eq(homeworkSubmissions.studentId, studentId)),
+        and(
+          eq(homeworkSubmissions.homeworkId, homeworkId),
+          eq(homeworkSubmissions.studentId, studentId),
+        ),
       )
       .get();
     const ts = Date.now();
@@ -91,9 +102,12 @@ export const homeworkSubmissionQueries = {
       .from(homeworks)
       .where(eq(homeworks.groupId, groupId))) as Array<{ id: string }>;
     if (hw.length === 0) return;
-    await db
-      .delete(homeworkSubmissions)
-      .where(inArray(homeworkSubmissions.homeworkId, hw.map((h) => h.id)));
+    await db.delete(homeworkSubmissions).where(
+      inArray(
+        homeworkSubmissions.homeworkId,
+        hw.map((h) => h.id),
+      ),
+    );
     await db.delete(homeworks).where(eq(homeworks.groupId, groupId));
   },
 
@@ -104,20 +118,19 @@ export const homeworkSubmissionQueries = {
       .from(homeworks)
       .where(eq(homeworks.groupId, groupId))) as Array<{ id: string }>;
     if (hw.length === 0) return;
-    await db
-      .delete(homeworkSubmissions)
-      .where(
-        and(
-          inArray(homeworkSubmissions.homeworkId, hw.map((h) => h.id)),
-          eq(homeworkSubmissions.studentId, studentId),
+    await db.delete(homeworkSubmissions).where(
+      and(
+        inArray(
+          homeworkSubmissions.homeworkId,
+          hw.map((h) => h.id),
         ),
-      );
+        eq(homeworkSubmissions.studentId, studentId),
+      ),
+    );
   },
 
   async clearForHomework(homeworkId: string): Promise<void> {
-    await db
-      .delete(homeworkSubmissions)
-      .where(eq(homeworkSubmissions.homeworkId, homeworkId));
+    await db.delete(homeworkSubmissions).where(eq(homeworkSubmissions.homeworkId, homeworkId));
   },
 
   /** Drop submissions from students no longer in the group or not yet enrolled (used when the group changes). */

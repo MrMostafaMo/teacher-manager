@@ -48,7 +48,12 @@ export default function SkillsPage() {
         const undoId = await deleteSkill(id);
         setRows((r) => r.filter((s) => s.id !== id));
         if (undoId !== null && skill) {
-          notifyUndo(undoId, t("undo.deleted"), `${t("undo.skill")}: ${skill.name}`, t("undo.undo"));
+          notifyUndo(
+            undoId,
+            t("undo.deleted"),
+            `${t("undo.skill")}: ${skill.name}`,
+            t("undo.undo"),
+          );
         }
       } catch (e) {
         console.error("Failed to delete skill", e);
@@ -93,13 +98,13 @@ export default function SkillsPage() {
           {loading ? (
             <TableRowsSkeleton rows={5} cols={4} />
           ) : rows.length === 0 ? (
-            <EmptyState icon={Target} title={t("skills.empty")} description={t("skills.emptyHint")} />
-          ) : (
-            <DataTable<SkillWithWeakCount>
-              columns={columns}
-              rows={rows}
-              getRowKey={getRowKey}
+            <EmptyState
+              icon={Target}
+              title={t("skills.empty")}
+              description={t("skills.emptyHint")}
             />
+          ) : (
+            <DataTable<SkillWithWeakCount> columns={columns} rows={rows} getRowKey={getRowKey} />
           )}
         </CardContent>
       </Card>

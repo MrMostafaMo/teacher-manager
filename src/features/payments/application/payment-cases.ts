@@ -120,10 +120,7 @@ export async function listPaymentHistory(options?: {
     ? await paymentRepository.byStudent(options.studentId)
     : await paymentRepository.list({ newestFirst: true, limit: options?.limit });
   if (payments.length === 0) return [];
-  const [students, plans] = await Promise.all([
-    studentRepository.list(),
-    planRepository.list(),
-  ]);
+  const [students, plans] = await Promise.all([studentRepository.list(), planRepository.list()]);
   const studentById = new Map(students.map((s) => [s.id, s]));
   const planById = new Map(plans.map((p) => [p.id, p]));
   return payments.map((p) => ({

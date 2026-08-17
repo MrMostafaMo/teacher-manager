@@ -17,12 +17,7 @@ export function SettingsShortcutsCard() {
             <Keyboard className="size-4" />
             {t("shortcuts.title")}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={() => setOpen(true)}
-          >
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setOpen(true)}>
             {t("shortcuts.manage")}
           </Button>
         </CardContent>

@@ -16,7 +16,7 @@ import {
   Settings,
 } from "lucide-react";
 
-export const APP_VERSION = "0.2.0";
+export const APP_VERSION = "0.4.0";
 
 export interface NavItem {
   /** Route path. */
@@ -28,12 +28,7 @@ export interface NavItem {
   section: NavSectionId;
 }
 
-export type NavSectionId =
-  | "main"
-  | "finance"
-  | "academic"
-  | "insights"
-  | "system";
+export type NavSectionId = "main" | "finance" | "academic" | "insights" | "system";
 
 export const NAV_SECTIONS: { id: NavSectionId; labelKey: string }[] = [
   { id: "main", labelKey: "nav.sectionMain" },

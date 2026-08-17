@@ -1,12 +1,13 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import { CreditCard, Plus } from "lucide-react";
+import { CreditCard, ListChecks, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Payment } from "@/lib/db/schema";
 import { Segmented } from "@/shared/Segmented";
 import { PageHeader } from "@/shared/PageHeader";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
+import { BatchPaymentDialog } from "./BatchPaymentDialog";
 import { PlansDialog } from "./PlansDialog";
 import { DuesView } from "./dues";
 import { HistoryView } from "./history";
@@ -16,6 +17,7 @@ export default function PaymentsPage() {
   const [view, setView] = useState<"dues" | "history">("dues");
   const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
   const [recordOpen, setRecordOpen] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
   const [editing, setEditing] = useState<Payment | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -56,6 +58,10 @@ export default function PaymentsPage() {
               <CreditCard />
               {t("payments.managePlans")}
             </Button>
+            <Button variant="outline" onClick={() => setBatchOpen(true)}>
+              <ListChecks />
+              {t("payments.batchRecord")}
+            </Button>
           </>
         }
       />
@@ -77,6 +83,12 @@ export default function PaymentsPage() {
         onSaved={bump}
       />
       <PlansDialog open={plansOpen} onClose={() => setPlansOpen(false)} onChanged={bump} />
+      <BatchPaymentDialog
+        open={batchOpen}
+        defaultPeriod={month}
+        onClose={() => setBatchOpen(false)}
+        onSaved={bump}
+      />
     </div>
   );
 }

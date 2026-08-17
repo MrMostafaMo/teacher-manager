@@ -9,8 +9,8 @@ import { nameSchema, optionalText } from "@/lib/validation";
 export const studyGroupInputSchema = z.object({
   name: nameSchema,
   subject: optionalText(100),
-  schedule: optionalText(100),
   startsOn: optionalText(10),
+  maxStudents: z.number().int().positive().optional().nullable(),
   status: z.enum(["active", "inactive"]),
   notes: optionalText(2000),
 });

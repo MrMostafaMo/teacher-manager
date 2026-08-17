@@ -32,7 +32,9 @@ export function WeekHeader({ daysOrder, dates, today, isCurrentWeek }: WeekHeade
           >
             {t(`schedule.days.${DAYS[day]}`)}
           </p>
-          <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">{dates[i].getDate()}</p>
+          <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
+            {dates[i].getDate()}
+          </p>
         </div>
       ))}
     </div>

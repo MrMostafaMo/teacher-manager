@@ -29,7 +29,15 @@ describe("groupPaymentHistory", () => {
   });
 
   it("buckets rows per group, sorted by name", () => {
-    const groupsByStudent = new Map([["s1", [{ id: "gB", name: "Beta" }, { id: "gA", name: "Alpha" }]]]);
+    const groupsByStudent = new Map([
+      [
+        "s1",
+        [
+          { id: "gB", name: "Beta" },
+          { id: "gA", name: "Alpha" },
+        ],
+      ],
+    ]);
     const rows = [row("p1", "s1", 100), row("p2", "s1", 50)];
     const { sections } = groupPaymentHistory(rows, groupsByStudent);
     expect(sections.map((s) => s.name)).toEqual(["Alpha", "Beta"]);
@@ -46,7 +54,9 @@ describe("groupPaymentHistory", () => {
 
 describe("sectionTotal", () => {
   it("sums the payment amounts in a list", () => {
-    expect(sectionTotal([row("p1", "s1", 100), row("p2", "s1", 50), row("p3", "s2", 25)])).toBe(175);
+    expect(sectionTotal([row("p1", "s1", 100), row("p2", "s1", 50), row("p3", "s2", 25)])).toBe(
+      175,
+    );
   });
 
   it("is zero for an empty list", () => {

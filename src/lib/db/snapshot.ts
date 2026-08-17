@@ -40,9 +40,8 @@ export async function restoreRows<T extends AnySQLiteTable>(
   table: T,
   rows: T["$inferSelect"][],
 ): Promise<void> {
-  for (const row of rows) {
-    // Verbatim insert: rows carry every column including id + timestamps.
-    await db.insert(table).values(row as never).run();
+  if (rows.length > 0) {
+    await db.insert(table).values(rows as never).run();
   }
   // Undo resurrects the row, so its delete tombstone must not outlive it —
   // otherwise the next sync would delete it from every device again.

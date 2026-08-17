@@ -30,7 +30,9 @@ vi.mock("@/lib/db/client", () => ({
     insert: () => ({
       values: (row: unknown) => ({
         run: async () => {
-          store.set([...store.get(), row as Record<string, unknown>]);
+          const prev = store.get();
+          const next = Array.isArray(row) ? row : [row];
+          store.set([...prev, ...next] as Record<string, unknown>[]);
         },
       }),
     }),
@@ -59,9 +61,7 @@ describe("snapshot helpers", () => {
 
   it("captureBy returns the planted rows", async () => {
     store.set([{ id: "s1", planId: "p1" }]);
-    expect(await captureBy(students, students.planId, "p1")).toEqual([
-      { id: "s1", planId: "p1" },
-    ]);
+    expect(await captureBy(students, students.planId, "p1")).toEqual([{ id: "s1", planId: "p1" }]);
   });
 
   it("captureIn with empty values is a no-op", async () => {
@@ -70,7 +70,7 @@ describe("snapshot helpers", () => {
 
   it("restoreRows re-inserts rows verbatim (ids + timestamps preserved)", async () => {
     const original = [{ id: "x", amount: 50, createdAt: 11, updatedAt: 12 }];
-    await restoreRows(expenses, original as unknown as typeof expenses.$inferSelect[]);
+    await restoreRows(expenses, original as unknown as (typeof expenses.$inferSelect)[]);
     expect(store.get()).toEqual(original);
   });
 

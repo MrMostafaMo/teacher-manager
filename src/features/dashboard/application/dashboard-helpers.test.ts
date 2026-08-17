@@ -135,7 +135,10 @@ describe("topWeaknessStudents", () => {
   });
 
   it("returns an empty list when nothing is unresolved", () => {
-    const result = topWeaknessStudents(rows.filter((r) => r.resolved), students);
+    const result = topWeaknessStudents(
+      rows.filter((r) => r.resolved),
+      students,
+    );
     expect(result).toEqual([]);
   });
 });

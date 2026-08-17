@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { MonthPicker } from "@/shared/month-picker";
-import { getDashboardData, type DashboardData } from "@/features/dashboard/application/dashboard-cases";
+import {
+  getDashboardData,
+  type DashboardData,
+} from "@/features/dashboard/application/dashboard-cases";
 import { currentMonth } from "@/features/dashboard/application/dashboard-helpers";
 import {
   HOMEWORK_COLORS,
@@ -13,7 +16,8 @@ import {
   type HomeworkSlice,
 } from "./dashboard-chart-data";
 import { DashboardSkeleton } from "./DashboardSkeleton";
-import { buildKpis, KpiGrid } from "./dashboard-kpis";
+import { buildKpis } from "./dashboard-kpi-data";
+import { KpiGrid } from "./dashboard-kpis";
 import { DashboardQuickActions } from "./DashboardQuickActions";
 import {
   TodaySessionsCard,
@@ -113,9 +117,24 @@ const DashboardContent = memo(function DashboardContent({
 
   const homeworkPie = useMemo<HomeworkSlice[]>(
     () => [
-      { key: "submitted", value: data.homeworkSubmitted, fill: HOMEWORK_COLORS.submitted, label: t("homework.statusSubmitted") },
-      { key: "pending", value: data.homeworkPending, fill: HOMEWORK_COLORS.pending, label: t("homework.statusPending") },
-      { key: "late", value: data.homeworkLate, fill: HOMEWORK_COLORS.late, label: t("homework.statusLate") },
+      {
+        key: "submitted",
+        value: data.homeworkSubmitted,
+        fill: HOMEWORK_COLORS.submitted,
+        label: t("homework.statusSubmitted"),
+      },
+      {
+        key: "pending",
+        value: data.homeworkPending,
+        fill: HOMEWORK_COLORS.pending,
+        label: t("homework.statusPending"),
+      },
+      {
+        key: "late",
+        value: data.homeworkLate,
+        fill: HOMEWORK_COLORS.late,
+        label: t("homework.statusLate"),
+      },
     ],
     [data, t],
   );

@@ -52,22 +52,63 @@ export async function buildReceiptPdf(data: ReceiptPdfData): Promise<Uint8Array>
   y -= TITLE_SIZE + 8;
   drawFittedText(page, font, rtl, data.title, left, y, TITLE_SIZE, inkColor, tableWidth);
   y -= 14;
-  page.drawLine({ start: { x: PAGE_MARGIN, y }, end: { x: PAGE_WIDTH - PAGE_MARGIN, y }, thickness: 0.8, color: inkColor });
+  page.drawLine({
+    start: { x: PAGE_MARGIN, y },
+    end: { x: PAGE_WIDTH - PAGE_MARGIN, y },
+    thickness: 0.8,
+    color: inkColor,
+  });
 
   for (const line of data.lines) {
     const rowTop = y;
     if (line.highlight) {
-      page.drawRectangle({ x: PAGE_MARGIN, y: rowTop - 2, width: tableWidth, height: ROW_HEIGHT + 2, color: bandColor });
+      page.drawRectangle({
+        x: PAGE_MARGIN,
+        y: rowTop - 2,
+        width: tableWidth,
+        height: ROW_HEIGHT + 2,
+        color: bandColor,
+      });
     }
     y = rowTop + 17;
-    drawFittedText(page, font, rtl, line.label, left, y, LABEL_SIZE, line.highlight ? inkColor : mutedColor, labelW);
-    drawFittedText(page, font, rtl, line.value, valueEdge, y, line.highlight ? HIGHLIGHT_SIZE : VALUE_SIZE, line.highlight ? inkColor : bodyColor, valueW);
+    drawFittedText(
+      page,
+      font,
+      rtl,
+      line.label,
+      left,
+      y,
+      LABEL_SIZE,
+      line.highlight ? inkColor : mutedColor,
+      labelW,
+    );
+    drawFittedText(
+      page,
+      font,
+      rtl,
+      line.value,
+      valueEdge,
+      y,
+      line.highlight ? HIGHLIGHT_SIZE : VALUE_SIZE,
+      line.highlight ? inkColor : bodyColor,
+      valueW,
+    );
     y = rowTop - ROW_HEIGHT;
-    page.drawLine({ start: { x: PAGE_MARGIN, y: rowTop }, end: { x: PAGE_WIDTH - PAGE_MARGIN, y: rowTop }, thickness: 0.5, color: gridColor });
+    page.drawLine({
+      start: { x: PAGE_MARGIN, y: rowTop },
+      end: { x: PAGE_WIDTH - PAGE_MARGIN, y: rowTop },
+      thickness: 0.5,
+      color: gridColor,
+    });
   }
 
   y -= 18;
-  page.drawLine({ start: { x: PAGE_MARGIN, y }, end: { x: PAGE_WIDTH - PAGE_MARGIN, y }, thickness: 0.8, color: inkColor });
+  page.drawLine({
+    start: { x: PAGE_MARGIN, y },
+    end: { x: PAGE_WIDTH - PAGE_MARGIN, y },
+    thickness: 0.8,
+    color: inkColor,
+  });
   y -= FOOTER_SIZE + 8;
   drawFittedText(page, font, rtl, data.footer, left, y, FOOTER_SIZE, mutedColor, tableWidth);
 

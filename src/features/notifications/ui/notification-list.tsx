@@ -1,20 +1,22 @@
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { VolumeX, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/format";
 import { notificationText } from "./notification-text";
 import type { ActiveNotification } from "@/features/notifications/application/notification-query-cases";
 
-/** Scrollable notification rows: unread dot, body text, timestamp, dismiss. */
+/** Scrollable notification rows: unread dot, body text, timestamp, dismiss + mute. */
 export function NotificationList({
   items,
   onOpen,
   onDismiss,
+  onMute,
 }: {
   items: ActiveNotification[];
   onOpen: (item: ActiveNotification) => void;
   onDismiss: (id: string) => void;
+  onMute?: (type: string) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -40,16 +42,28 @@ export function NotificationList({
               </span>
             </span>
           </button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            className="absolute end-1 top-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
-            aria-label={t("notifications.dismiss")}
-            title={t("notifications.dismiss")}
-            onClick={() => onDismiss(item.id)}
-          >
-            <X className="size-3" />
-          </Button>
+          <div className="absolute end-1 top-1 flex gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
+            {onMute && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                aria-label={t("notifications.mute")}
+                title={t("notifications.mute")}
+                onClick={() => onMute(item.type)}
+              >
+                <VolumeX className="size-3" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label={t("notifications.dismiss")}
+              title={t("notifications.dismiss")}
+              onClick={() => onDismiss(item.id)}
+            >
+              <X className="size-3" />
+            </Button>
+          </div>
         </li>
       ))}
     </ul>

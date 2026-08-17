@@ -12,7 +12,9 @@ export type ReportKey =
   | "finances"
   | "skills"
   | "weakPoints"
-  | "statement";
+  | "statement"
+  | "homework"
+  | "sessionAttendance";
 
 export interface ReportData {
   key: ReportKey;

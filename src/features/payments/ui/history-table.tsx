@@ -56,9 +56,7 @@ export const HistoryTable = memo(function HistoryTable({
       {
         header: t("payments.method"),
         render: ({ payment }) => (
-          <Badge variant="secondary">
-            {t(methodKey[payment.method] ?? "payments.cash")}
-          </Badge>
+          <Badge variant="secondary">{t(methodKey[payment.method] ?? "payments.cash")}</Badge>
         ),
       },
       {
@@ -97,7 +95,5 @@ export const HistoryTable = memo(function HistoryTable({
     [t, deletingId, receiptBusyId, onEdit, onDelete, onReceipt],
   );
   const getRowKey = useCallback((row: PaymentHistoryRow) => row.payment.id, []);
-  return (
-    <DataTable<PaymentHistoryRow> columns={columns} rows={list} getRowKey={getRowKey} />
-  );
+  return <DataTable<PaymentHistoryRow> columns={columns} rows={list} getRowKey={getRowKey} />;
 });

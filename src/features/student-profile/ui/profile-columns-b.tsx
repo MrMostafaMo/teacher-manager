@@ -4,7 +4,10 @@ import { type DataTableColumn } from "@/shared/DataTable";
 import { formatDateString, formatDateTime, formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { ACTION_KEYS } from "@/lib/activity-log";
-import type { ProfileExam, ProfileSessionAttendance } from "@/features/student-profile/application/student-profile-cases";
+import type {
+  ProfileExam,
+  ProfileSessionAttendance,
+} from "@/features/student-profile/application/student-profile-cases";
 import { DAY_KEYS, STATUS_BADGE, STATUS_LABEL } from "./profile-constants";
 
 export interface ActivityLogItem {
@@ -35,7 +38,9 @@ export function useExamColumns(): DataTableColumn<ProfileExam>[] {
       header: t("profile.columns.score"),
       className: "font-medium tabular-nums",
       render: (e) => (
-        <span dir="ltr">{e.score === null ? t("exams.ungraded") : `${e.score} / ${e.maxScore}`}</span>
+        <span dir="ltr">
+          {e.score === null ? t("exams.ungraded") : `${e.score} / ${e.maxScore}`}
+        </span>
       ),
     },
   ];

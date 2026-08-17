@@ -4,9 +4,11 @@ import { useTranslation } from "react-i18next";
 import { Bell, CheckCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PopoverShell } from "@/shared/popover-shell";
+import { useNotificationSettings } from "@/lib/notification-settings-store";
 import { useNotifications } from "./use-notifications";
 import { NotificationList } from "./notification-list";
 import type { ActiveNotification } from "@/features/notifications/application/notification-query-cases";
+import type { NotificationType } from "@/features/notifications/domain";
 
 const ROUTE_BY_TYPE: Record<string, string> = {
   homework_overdue: "/homework",
@@ -14,13 +16,17 @@ const ROUTE_BY_TYPE: Record<string, string> = {
   exception: "/schedule",
   weak_skill: "/skills",
   low_attendance: "/attendance",
+  exam_upcoming: "/exams",
+  student_birthday: "/students",
 };
 
 /** Header bell: unread badge + popover with mark-read/dismiss actions. */
 export function NotificationDropdown() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { items, unreadCount, loading, refresh, markRead, markAllRead, dismiss, dismissAll } = useNotifications();
+  const { items, unreadCount, loading, refresh, markRead, markAllRead, dismiss, dismissAll } =
+    useNotifications();
+  const toggleType = useNotificationSettings((s) => s.toggleType);
   const [open, setOpen] = useState(false);
 
   function openBell() {
@@ -32,6 +38,10 @@ export function NotificationDropdown() {
     void markRead(item.id);
     setOpen(false);
     navigate(ROUTE_BY_TYPE[item.type] ?? "/");
+  }
+
+  function onMute(type: string) {
+    toggleType(type as NotificationType);
   }
 
   return (
@@ -86,9 +96,11 @@ export function NotificationDropdown() {
       {loading ? (
         <p className="px-1 py-4 text-center text-xs text-muted-foreground">{t("common.loading")}</p>
       ) : items.length === 0 ? (
-        <p className="px-1 py-4 text-center text-xs text-muted-foreground">{t("notifications.empty")}</p>
+        <p className="px-1 py-4 text-center text-xs text-muted-foreground">
+          {t("notifications.empty")}
+        </p>
       ) : (
-        <NotificationList items={items} onOpen={onRowClick} onDismiss={(id) => void dismiss(id)} />
+        <NotificationList items={items} onOpen={onRowClick} onDismiss={(id) => void dismiss(id)} onMute={onMute} />
       )}
     </PopoverShell>
   );

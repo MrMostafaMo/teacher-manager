@@ -28,8 +28,7 @@ export const optionalDate = z
 export const amountSchema = z.number().int().positive().max(100_000_000);
 
 /** Non-blank free-text field (trimmed). */
-export const textSchema = (max: number) =>
-  z.string().trim().pipe(z.string().min(1).max(max));
+export const textSchema = (max: number) => z.string().trim().pipe(z.string().min(1).max(max));
 
 /** Non-blank name / short title field. */
 export const nameSchema = textSchema(100);

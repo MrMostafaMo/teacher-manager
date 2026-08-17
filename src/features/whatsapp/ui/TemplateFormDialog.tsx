@@ -8,7 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/shared/Field";
 import { Modal } from "@/shared/Modal";
 import { useToastStore } from "@/lib/toast-store";
-import { WHATSAPP_PURPOSES, WHATSAPP_MAX_LENGTH, WHATSAPP_MAX_NAME, type WhatsAppPurpose, type WhatsAppTemplate } from "../domain";
+import {
+  WHATSAPP_PURPOSES,
+  WHATSAPP_MAX_LENGTH,
+  WHATSAPP_MAX_NAME,
+  type WhatsAppPurpose,
+  type WhatsAppTemplate,
+} from "../domain";
 import { VariableChips } from "./VariableChips";
 import { upsertTemplate } from "../application/whatsapp-cases";
 
@@ -40,10 +46,7 @@ export function TemplateFormDialog({ open, template, onClose, onSaved }: Props) 
     if (!canSave || busy) return;
     setBusy(true);
     try {
-      await upsertTemplate(
-        { id: template?.id, name, purpose, text },
-        t,
-      );
+      await upsertTemplate({ id: template?.id, name, purpose, text }, t);
       toast({ message: t("whatsapp.settings.saved"), variant: "success" });
       onSaved();
     } finally {

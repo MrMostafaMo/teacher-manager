@@ -74,10 +74,7 @@ export async function swapDatabaseFrom(
   const dbPath = await liveDbPath();
   const [backupVersion, live] = await Promise.all([
     schemaVersion(`sqlite:${sourcePath}`),
-    queryFirst<{ v: number | null }>(
-      "SELECT MAX(version) AS v FROM _sqlx_migrations",
-      [],
-    ),
+    queryFirst<{ v: number | null }>("SELECT MAX(version) AS v FROM _sqlx_migrations", []),
   ]);
   const liveVersion = live?.v ?? null;
   if (backupVersion === null || backupVersion !== liveVersion) {

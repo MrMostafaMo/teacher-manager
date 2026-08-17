@@ -13,7 +13,10 @@ export interface ProfileSummary {
 export function computeProfileSummary(data: StudentProfileData): ProfileSummary {
   const { attendanceStats, exams, homeworks } = data;
   const marked =
-    attendanceStats.present + attendanceStats.absent + attendanceStats.late + attendanceStats.excused;
+    attendanceStats.present +
+    attendanceStats.absent +
+    attendanceStats.late +
+    attendanceStats.excused;
   const attended = attendanceStats.present + attendanceStats.late + attendanceStats.excused;
   const attendanceRate = marked > 0 ? Math.round((attended / marked) * 100) : null;
 
@@ -21,11 +24,9 @@ export function computeProfileSummary(data: StudentProfileData): ProfileSummary 
   const examAverage =
     gradedExams.length > 0
       ? Math.round(
-          (gradedExams.reduce(
-            (a, e) => a + Math.min(100, ((e.score ?? 0) / e.maxScore) * 100),
-            0,
-          ) /
-            gradedExams.length) * 10,
+          (gradedExams.reduce((a, e) => a + Math.min(100, ((e.score ?? 0) / e.maxScore) * 100), 0) /
+            gradedExams.length) *
+            10,
         ) / 10
       : null;
 

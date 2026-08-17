@@ -14,7 +14,7 @@ export interface ActiveNotification {
 }
 
 function parseDetails(row: NotificationRow): ActiveNotification {
-  let details: NotificationItem["details"] = {};
+  let details: NotificationItem["details"];
   try {
     details = JSON.parse(row.details) as NotificationItem["details"];
   } catch {

@@ -2,14 +2,7 @@ import { create } from "zustand";
 
 /** Dialogs that can be opened from anywhere (command palette, quick actions). */
 export type GlobalDialogId =
-  | "student"
-  | "payment"
-  | "expense"
-  | "group"
-  | "schedule"
-  | "homework"
-  | "exam"
-  | "skill";
+  "student" | "payment" | "expense" | "group" | "schedule" | "homework" | "exam" | "skill";
 
 interface DialogState {
   dialog: GlobalDialogId | null;

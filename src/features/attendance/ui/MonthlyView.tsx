@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { Card, CardContent } from "@/components/ui/card";
-import { getMonthly, type StudentMonthlyRow } from "@/features/attendance/application/attendance-cases";
+import {
+  getMonthly,
+  type StudentMonthlyRow,
+} from "@/features/attendance/application/attendance-cases";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
@@ -15,7 +18,13 @@ import { EmptyStudents } from "./EmptyStudents";
 const inputClass =
   "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
 
-export function MonthlyView({ month, onMonthChange }: { month: string; onMonthChange: (m: string) => void }) {
+export function MonthlyView({
+  month,
+  onMonthChange,
+}: {
+  month: string;
+  onMonthChange: (m: string) => void;
+}) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<StudentMonthlyRow[]>([]);
   const [loading, setLoading] = useState(true);

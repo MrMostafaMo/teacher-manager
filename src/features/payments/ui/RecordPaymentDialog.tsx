@@ -101,7 +101,11 @@ export function RecordPaymentDialog({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={payment ? t("payments.edit") : t("payments.record")}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={payment ? t("payments.edit") : t("payments.record")}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <PaymentFormFields
           form={form}

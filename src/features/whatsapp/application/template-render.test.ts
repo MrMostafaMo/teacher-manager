@@ -3,8 +3,9 @@ import { renderTemplate, templateTokens } from "./template-render";
 
 describe("renderTemplate", () => {
   it("replaces known tokens with values", () => {
-    expect(renderTemplate("أهلاً {name}، النسبة {homeworkRate}%", { name: "علي", homeworkRate: "80" }))
-      .toBe("أهلاً علي، النسبة 80%");
+    expect(
+      renderTemplate("أهلاً {name}، النسبة {homeworkRate}%", { name: "علي", homeworkRate: "80" }),
+    ).toBe("أهلاً علي، النسبة 80%");
   });
 
   it("leaves unknown tokens untouched", () => {

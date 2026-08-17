@@ -36,9 +36,24 @@ export const AttendanceTrendChart = memo(function AttendanceTrendChart({
       <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
       <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
       <Tooltip content={chartTooltipContent} />
-      <Bar dataKey="present" stackId="a" fill={ATTENDANCE_COLORS.present} name={t("attendance.statusPresent")} />
-      <Bar dataKey="late" stackId="a" fill={ATTENDANCE_COLORS.late} name={t("attendance.statusLate")} />
-      <Bar dataKey="absent" stackId="a" fill={ATTENDANCE_COLORS.absent} name={t("attendance.statusAbsent")} />
+      <Bar
+        dataKey="present"
+        stackId="a"
+        fill={ATTENDANCE_COLORS.present}
+        name={t("attendance.statusPresent")}
+      />
+      <Bar
+        dataKey="late"
+        stackId="a"
+        fill={ATTENDANCE_COLORS.late}
+        name={t("attendance.statusLate")}
+      />
+      <Bar
+        dataKey="absent"
+        stackId="a"
+        fill={ATTENDANCE_COLORS.absent}
+        name={t("attendance.statusAbsent")}
+      />
       <Bar
         dataKey="excused"
         stackId="a"
@@ -51,7 +66,12 @@ export const AttendanceTrendChart = memo(function AttendanceTrendChart({
 });
 
 /** Homework status donut. Re-renders only when `data` changes. */
-export const HomeworkPieChart = memo(function HomeworkPieChart({ data }: { data: HomeworkSlice[] }) {
+export const HomeworkPieChart = memo(function HomeworkPieChart({
+  data,
+}: {
+  data: HomeworkSlice[];
+}) {
+  const total = data.reduce((sum, s) => sum + s.value, 0);
   return (
     <PieChart>
       <Pie
@@ -66,6 +86,9 @@ export const HomeworkPieChart = memo(function HomeworkPieChart({ data }: { data:
           <Cell key={s.key} fill={s.fill} />
         ))}
       </Pie>
+      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" className="fill-foreground text-lg font-bold">
+        {total}
+      </text>
       <Tooltip content={chartTooltipContent} />
     </PieChart>
   );

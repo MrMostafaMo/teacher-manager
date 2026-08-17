@@ -15,101 +15,33 @@
     {
       "identifier": "fs:allow-write-file",
       "allow": [
-        {
-          "path": "$HOME/**"
-        },
-        {
-          "path": "$DOWNLOAD/**"
-        },
-        {
-          "path": "$DOCUMENT/**"
-        },
-        {
-          "path": "$DESKTOP/**"
-        },
-        {
-          "path": "$APPCONFIG/**"
-        }
+        { "path": "$HOME/**" },
+        { "path": "$APPCONFIG/**" }
       ]
     },
     {
       "identifier": "fs:allow-read-file",
       "allow": [
-        {
-          "path": "$HOME/**"
-        },
-        {
-          "path": "$DOWNLOAD/**"
-        },
-        {
-          "path": "$DOCUMENT/**"
-        },
-        {
-          "path": "$DESKTOP/**"
-        },
-        {
-          "path": "$APPCONFIG/**"
-        }
+        { "path": "$HOME/**" },
+        { "path": "$APPCONFIG/**" }
       ]
     },
     {
       "identifier": "fs:allow-copy-file",
       "allow": [
-        {
-          "path": "$HOME/**"
-        },
-        {
-          "path": "$DOWNLOAD/**"
-        },
-        {
-          "path": "$DOCUMENT/**"
-        },
-        {
-          "path": "$DESKTOP/**"
-        },
-        {
-          "path": "$APPCONFIG/**"
-        }
+        { "path": "$APPCONFIG/**" }
       ]
     },
     {
       "identifier": "fs:allow-remove",
       "allow": [
-        {
-          "path": "$HOME/**"
-        },
-        {
-          "path": "$DOWNLOAD/**"
-        },
-        {
-          "path": "$DOCUMENT/**"
-        },
-        {
-          "path": "$DESKTOP/**"
-        },
-        {
-          "path": "$APPCONFIG/**"
-        }
+        { "path": "$APPCONFIG/**" }
       ]
     },
     {
       "identifier": "fs:allow-stat",
       "allow": [
-        {
-          "path": "$HOME/**"
-        },
-        {
-          "path": "$DOWNLOAD/**"
-        },
-        {
-          "path": "$DOCUMENT/**"
-        },
-        {
-          "path": "$DESKTOP/**"
-        },
-        {
-          "path": "$APPCONFIG/**"
-        }
+        { "path": "$APPCONFIG/**" }
       ]
     }
   ]

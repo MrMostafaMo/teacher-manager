@@ -70,7 +70,10 @@ describe("backup-cases", () => {
   });
 
   it("restores the newest backup through the shared swap flow", async () => {
-    listFiles.mockResolvedValue([{ id: "f2", name: "b2" }, { id: "f1", name: "b1" }]);
+    listFiles.mockResolvedValue([
+      { id: "f2", name: "b2" },
+      { id: "f1", name: "b1" },
+    ]);
     downloadBytes.mockResolvedValue(new Uint8Array([9]));
     swapDatabaseFrom.mockResolvedValue({ status: "done" });
     const confirm = vi.fn(async () => true);

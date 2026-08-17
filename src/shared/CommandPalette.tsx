@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Search } from "lucide-react";
+import { Search, User } from "lucide-react";
 import { NAV_ITEMS } from "@/app/navigation";
 import { useCommandStore } from "@/lib/command-store";
 import { useDialogStore } from "@/lib/dialog-store";
@@ -10,6 +10,7 @@ import { parseCombo, formatCombo } from "@/lib/shortcuts/combo";
 import type { ShortcutActionId } from "@/lib/shortcuts/types";
 import { QUICK_ACTIONS } from "./command-palette-actions";
 import { CommandPaletteList, type CommandPaletteItem } from "./command-palette-list";
+import { useStudentSearch } from "./use-student-search";
 
 export function CommandPalette() {
   const { t } = useTranslation();
@@ -18,12 +19,12 @@ export function CommandPalette() {
   const setOpen = useCommandStore((s) => s.setOpen);
   const openDialog = useDialogStore((s) => s.openDialog);
   const shortcuts = useShortcutsStore((s) => s.shortcuts);
-  const isMac =
-    typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
+  const isMac = typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const studentMatches = useStudentSearch(open, query);
 
   useEffect(() => {
     if (open) {
@@ -62,10 +63,20 @@ export function CommandPalette() {
         else if (a.to) navigate(a.to);
       },
     }));
-    const all = [...nav, ...actions];
+    const students = studentMatches.map((s) => ({
+      id: `student:${s.id}`,
+      label: s.name,
+      hint: t("commandPalette.student"),
+      icon: User,
+      run: () => {
+        setOpen(false);
+        navigate(`/students/${s.id}`);
+      },
+    }));
+    const all = [...nav, ...actions, ...students];
     if (!q) return all;
     return all.filter((n) => n.label.toLowerCase().includes(q));
-  }, [query, navigate, setOpen, openDialog, t, shortcuts, isMac]);
+  }, [query, navigate, setOpen, openDialog, t, shortcuts, isMac, studentMatches]);
 
   useEffect(() => {
     setActiveIndex(0);

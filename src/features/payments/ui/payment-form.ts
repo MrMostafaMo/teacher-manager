@@ -26,7 +26,10 @@ export function paymentFormFromPayment(payment: Payment): PaymentFormState {
   };
 }
 
-export function paymentFormErrors(t: (key: string) => string, error: ZodError): Record<string, string> {
+export function paymentFormErrors(
+  t: (key: string) => string,
+  error: ZodError,
+): Record<string, string> {
   return mapZodErrors(error, (field) =>
     field === "amount"
       ? t("payments.errors.amountInvalid")

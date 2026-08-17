@@ -50,7 +50,7 @@ export function formatTime(time: string, hour24: boolean): string {
     ? time
     : (() => {
         const [h, m] = time.split(":").map(Number);
-        const hr = ((h % 12) || 12).toString().padStart(2, "0");
+        const hr = (h % 12 || 12).toString().padStart(2, "0");
         const suffix = h < 12 ? i18n.t("common.am") : i18n.t("common.pm");
         return `${hr}:${String(m).padStart(2, "0")} ${suffix}`;
       })();

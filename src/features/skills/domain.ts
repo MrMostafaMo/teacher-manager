@@ -21,7 +21,9 @@ export const WEAK_LEVEL = 2;
 /** Raw form shape for one student's skill row. Empty level clears the row. */
 export const studentSkillInputSchema = z.object({
   skillId: z.string().min(1),
-  level: z.union([z.literal(""), z.number(), z.string()]).transform((v) => (v === "" ? null : Number(v))),
+  level: z
+    .union([z.literal(""), z.number(), z.string()])
+    .transform((v) => (v === "" ? null : Number(v))),
   note: optionalText(500),
 });
 

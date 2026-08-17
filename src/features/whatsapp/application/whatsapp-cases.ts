@@ -19,10 +19,7 @@ export function defaultTemplates(t: TFunction): WhatsAppTemplate[] {
 }
 
 /** Localize names that are still raw purpose keys (legacy rows). */
-function localizeLegacyNames(
-  templates: WhatsAppTemplate[],
-  t: TFunction,
-): WhatsAppTemplate[] {
+function localizeLegacyNames(templates: WhatsAppTemplate[], t: TFunction): WhatsAppTemplate[] {
   return templates.map((template) => {
     const isKey = WHATSAPP_PURPOSES.includes(template.name as WhatsAppPurpose);
     return isKey ? { ...template, name: t(`whatsapp.purposes.${template.name}`) } : template;

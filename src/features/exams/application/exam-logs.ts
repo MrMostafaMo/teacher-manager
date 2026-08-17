@@ -28,11 +28,7 @@ export function logExamDelete(title: string, id: string): Promise<void> {
   });
 }
 
-export function logExamResult(
-  examId: string,
-  studentId: string,
-  score: number,
-): Promise<void> {
+export function logExamResult(examId: string, studentId: string, score: number): Promise<void> {
   return logActivity({
     action: "exam.result",
     entityType: "exam",

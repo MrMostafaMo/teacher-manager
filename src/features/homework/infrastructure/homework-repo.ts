@@ -69,7 +69,9 @@ export const homeworkRepository = {
     return (rows as Homework[]).map((h) => {
       const refDate = effectiveDate(h.dueDate, h.createdAt);
       const eligibleIds = new Set(
-        (membersOf.get(h.groupId) ?? []).filter((m) => enrolledBy(m, refDate)).map((m) => m.studentId),
+        (membersOf.get(h.groupId) ?? [])
+          .filter((m) => enrolledBy(m, refDate))
+          .map((m) => m.studentId),
       );
       let submitted = 0;
       let late = 0;

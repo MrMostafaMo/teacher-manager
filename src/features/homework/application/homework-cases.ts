@@ -106,9 +106,10 @@ export async function deleteHomework(
 ): Promise<number | null> {
   const homework = await homeworkRepository.findById(id);
   const rows = await captureRows(homeworks, [id]);
-  const submissions = options.undo === false
-    ? []
-    : await captureBy(homeworkSubmissions, homeworkSubmissions.homeworkId, id);
+  const submissions =
+    options.undo === false
+      ? []
+      : await captureBy(homeworkSubmissions, homeworkSubmissions.homeworkId, id);
   await homeworkRepository.clearForHomework(id);
   const ok = await homeworkRepository.remove(id);
   if (!ok) return null;

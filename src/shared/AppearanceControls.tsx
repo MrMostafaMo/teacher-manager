@@ -9,11 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  LANGUAGES,
-  useLanguageStore,
-  type Language,
-} from "@/lib/i18n/language-store";
+import { LANGUAGES, useLanguageStore, type Language } from "@/lib/i18n/language-store";
 import { useThemeStore, type Theme } from "@/lib/theme/theme-store";
 
 const THEME_ITEMS: { value: Theme; labelKey: string; icon: typeof Sun }[] = [

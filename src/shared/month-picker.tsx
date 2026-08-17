@@ -38,17 +38,29 @@ export function MonthPicker({ value, onChange, ariaLabel, className }: PickerPro
         >
           <CalendarRange className="size-3.5 shrink-0 text-muted-foreground" />
           <span className={cn(value ? "" : "text-muted-foreground")}>
-            {value ? `${months[Number(value.slice(5, 7)) - 1]} ${selected}` : t("common.selectMonth")}
+            {value
+              ? `${months[Number(value.slice(5, 7)) - 1]} ${selected}`
+              : t("common.selectMonth")}
           </span>
         </button>
       }
     >
       <div className="flex items-center justify-between pb-1">
-        <button type="button" aria-label={t("common.previous")} className={navBtn} onClick={() => setYear((y) => y - 1)}>
+        <button
+          type="button"
+          aria-label={t("common.previous")}
+          className={navBtn}
+          onClick={() => setYear((y) => y - 1)}
+        >
           <ChevronRight className="size-4 rtl:rotate-180" />
         </button>
         <div className="text-sm font-medium">{year}</div>
-        <button type="button" aria-label={t("common.next")} className={navBtn} onClick={() => setYear((y) => y + 1)}>
+        <button
+          type="button"
+          aria-label={t("common.next")}
+          className={navBtn}
+          onClick={() => setYear((y) => y + 1)}
+        >
           <ChevronLeft className="size-4 rtl:rotate-180" />
         </button>
       </div>

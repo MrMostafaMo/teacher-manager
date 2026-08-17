@@ -26,28 +26,35 @@ describe("oauth-client", () => {
   });
 
   it("refreshes an access token", async () => {
-    const fetchImpl = vi.fn(async (_url: RequestInfo | URL, _init: RequestInit | undefined) => okResponse({ access_token: "at2", expires_in: 60 }));
+    const fetchImpl = vi.fn(async (_url: RequestInfo | URL, _init: RequestInit | undefined) =>
+      okResponse({ access_token: "at2", expires_in: 60 }),
+    );
     const result = await refreshAccessToken(fetchImpl, "client", "rt");
     expect(result.accessToken).toBe("at2");
     expect(result.refreshToken).toBeUndefined();
   });
 
   it("throws when the token endpoint errors", async () => {
-    const fetchImpl = vi.fn(async (_url: RequestInfo | URL, _init: RequestInit | undefined) =>
-      new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 }),
+    const fetchImpl = vi.fn(
+      async (_url: RequestInfo | URL, _init: RequestInit | undefined) =>
+        new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 }),
     );
     await expect(refreshAccessToken(fetchImpl, "client", "rt")).rejects.toThrow("400");
   });
 
   it("fetches the account email", async () => {
-    const fetchImpl = vi.fn(async (_url: RequestInfo | URL, _init: RequestInit | undefined) => okResponse({ email: "me@example.com" }));
+    const fetchImpl = vi.fn(async (_url: RequestInfo | URL, _init: RequestInit | undefined) =>
+      okResponse({ email: "me@example.com" }),
+    );
     expect(await fetchAccountEmail(fetchImpl, "at")).toBe("me@example.com");
     const headers = fetchImpl.mock.calls[0]?.[1]?.headers as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer at");
   });
 
   it("throws when userinfo has no email", async () => {
-    const fetchImpl = vi.fn(async (_url: RequestInfo | URL, _init: RequestInit | undefined) => okResponse({}));
+    const fetchImpl = vi.fn(async (_url: RequestInfo | URL, _init: RequestInit | undefined) =>
+      okResponse({}),
+    );
     await expect(fetchAccountEmail(fetchImpl, "at")).rejects.toThrow("missing email");
   });
 });

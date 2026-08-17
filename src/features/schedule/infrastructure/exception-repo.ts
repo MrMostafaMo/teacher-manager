@@ -13,10 +13,7 @@ export const exceptionRepository = {
   ...createRepository(sessionExceptions),
 
   /** Exceptions for the given session ids restricted to the given dates. */
-  listForDates: async (
-    sessionIds: string[],
-    dates: string[],
-  ): Promise<SessionException[]> => {
+  listForDates: async (sessionIds: string[], dates: string[]): Promise<SessionException[]> => {
     if (sessionIds.length === 0 || dates.length === 0) return [];
     const rows = await db
       .select()
@@ -34,20 +31,13 @@ export const exceptionRepository = {
   /** Delete every exception for the given session ids. */
   clearForSessions: async (sessionIds: string[]): Promise<void> => {
     if (sessionIds.length === 0) return;
-    await db
-      .delete(sessionExceptions)
-      .where(inArray(sessionExceptions.sessionId, sessionIds));
+    await db.delete(sessionExceptions).where(inArray(sessionExceptions.sessionId, sessionIds));
   },
 
   /** Delete the exception for one (session, date) pair (upsert helper). */
   clearForSessionDate: async (sessionId: string, date: string): Promise<void> => {
     await db
       .delete(sessionExceptions)
-      .where(
-        and(
-          eq(sessionExceptions.sessionId, sessionId),
-          eq(sessionExceptions.date, date),
-        ),
-      );
+      .where(and(eq(sessionExceptions.sessionId, sessionId), eq(sessionExceptions.date, date)));
   },
 };

@@ -9,15 +9,15 @@ interface ToastCountdownProps {
  */
 export function ToastCountdown({ duration }: ToastCountdownProps) {
   return (
+    <span
+      aria-hidden="true"
+      className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground/5 motion-reduce:hidden"
+    >
       <span
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground/5 motion-reduce:hidden"
-      >
-        <span
-          data-testid="toast-countdown"
-          className="block h-full bg-primary animate-toast-countdown"
-          style={{ animationDuration: `${duration}ms` }}
-        />
-      </span>
+        data-testid="toast-countdown"
+        className="block h-full bg-primary animate-toast-countdown"
+        style={{ animationDuration: `${duration}ms` }}
+      />
+    </span>
   );
 }

@@ -88,7 +88,12 @@ export function HomeworkFormDialog({
   return (
     <Modal open={open} onClose={onClose} title={homework ? t("homework.edit") : t("homework.add")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field id="homework-group" label={t("homework.fields.group")} required error={errors.groupId}>
+        <Field
+          id="homework-group"
+          label={t("homework.fields.group")}
+          required
+          error={errors.groupId}
+        >
           <Select
             id="homework-group"
             value={form.groupId}
@@ -123,7 +128,11 @@ export function HomeworkFormDialog({
           </Field>
         </div>
 
-        <Field id="homework-description" label={t("homework.fields.description")} error={errors.description}>
+        <Field
+          id="homework-description"
+          label={t("homework.fields.description")}
+          error={errors.description}
+        >
           <Textarea
             id="homework-description"
             value={form.description}

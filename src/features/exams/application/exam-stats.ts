@@ -18,10 +18,7 @@ interface ExamLike {
   maxScore: number;
 }
 
-export function examEligibleIds(
-  exam: ExamLike,
-  members: EligibleMember[],
-): string[] {
+export function examEligibleIds(exam: ExamLike, members: EligibleMember[]): string[] {
   return members
     .filter((m) => enrolledBy(m, effectiveDate(exam.date, exam.createdAt)))
     .map((m) => m.id);

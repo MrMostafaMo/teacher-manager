@@ -63,13 +63,9 @@ export function ShortcutInput({ value, onChange, isMac = false, error }: Props) 
       aria-label={t("shortcuts.pressKeys")}
     >
       {recording ? (
-        <span className="animate-pulse text-muted-foreground">
-          {t("shortcuts.pressKeys")}
-        </span>
+        <span className="animate-pulse text-muted-foreground">{t("shortcuts.pressKeys")}</span>
       ) : formatted ? (
-        <kbd className="flex items-center gap-0.5">
-          {formatted}
-        </kbd>
+        <kbd className="flex items-center gap-0.5">{formatted}</kbd>
       ) : (
         <span className="text-muted-foreground">—</span>
       )}

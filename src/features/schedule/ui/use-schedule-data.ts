@@ -12,7 +12,7 @@ export interface ScheduleData {
   exceptions: SessionException[];
   loading: boolean;
   reload: () => Promise<void>;
-}/** Loads schedule data on mount and re-fetches on every `reload()` call. */
+} /** Loads schedule data on mount and re-fetches on every `reload()` call. */
 export function useScheduleData(): ScheduleData {
   const [sessions, setSessions] = useState<SessionWithGroup[]>([]);
   const [groups, setGroups] = useState<StudyGroup[]>([]);

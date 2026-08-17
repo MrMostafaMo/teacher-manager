@@ -98,13 +98,14 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
                 <CardSkeleton lines={3} />
               </div>
             ) : rows.length === 0 ? (
-              <EmptyState icon={CreditCard} title={t("plans.empty")} description={t("plans.emptyHint")} className="py-14" />
-            ) : (
-              <DataTable<PlanWithCount>
-                columns={columns}
-                rows={rows}
-                getRowKey={getRowKey}
+              <EmptyState
+                icon={CreditCard}
+                title={t("plans.empty")}
+                description={t("plans.emptyHint")}
+                className="py-14"
               />
+            ) : (
+              <DataTable<PlanWithCount> columns={columns} rows={rows} getRowKey={getRowKey} />
             )}
           </CardContent>
         </Card>

@@ -86,10 +86,7 @@ export interface SyncPayload {
   tombstones: SyncTombstoneItem[];
 }
 
-export const syncRowSchema = z.record(
-  z.string(),
-  z.union([z.string(), z.number(), z.null()]),
-);
+export const syncRowSchema = z.record(z.string(), z.union([z.string(), z.number(), z.null()]));
 
 export const syncTombstoneSchema = z.object({
   tableName: z.string(),

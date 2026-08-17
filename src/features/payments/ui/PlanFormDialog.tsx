@@ -65,7 +65,11 @@ export function PlanFormDialog({ open, plan, onClose, onSaved }: PlanFormDialogP
     setErrors({});
     setFatal("");
     try {
-      const input = { name: form.name, amount: Number(form.amount), billingInterval: form.billingInterval };
+      const input = {
+        name: form.name,
+        amount: Number(form.amount),
+        billingInterval: form.billingInterval,
+      };
       planInputSchema.parse(input);
       if (plan) await updatePlan(plan.id, input);
       else await createPlan(input);
@@ -107,7 +111,9 @@ export function PlanFormDialog({ open, plan, onClose, onSaved }: PlanFormDialogP
             <Select
               id="plan-interval"
               value={form.billingInterval}
-              onChange={(e) => setField("billingInterval", e.target.value as FormState["billingInterval"])}
+              onChange={(e) =>
+                setField("billingInterval", e.target.value as FormState["billingInterval"])
+              }
             >
               <option value="monthly">{t("plans.monthly")}</option>
               <option value="term">{t("plans.term")}</option>

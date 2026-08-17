@@ -1,16 +1,20 @@
+import dayjs from "dayjs";
 import type { HomeworkListItem } from "@/features/homework/application/homework-cases";
+import type { ExamListItem } from "@/features/exams/application/exam-cases";
 import type { DuesRow } from "@/features/payments/application/payment-cases";
 import type { StudentMonthlyRow } from "@/features/attendance/application/attendance-cases";
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
-import type { SessionException } from "@/lib/db/schema";
+import type { SessionException, Student } from "@/lib/db/schema";
 import type { NotificationItem } from "@/features/notifications/domain";
 
 export interface NotificationSourceData {
   homeworks: HomeworkListItem[];
+  exams: ExamListItem[];
   dues: DuesRow[];
   exceptions: SessionException[];
   skills: SkillWithWeakCount[];
   monthly: StudentMonthlyRow[];
+  students: Student[];
 }
 
 /** Low-attendance threshold: rate strictly below this notifies. */
@@ -56,13 +60,29 @@ function attendanceItem(r: StudentMonthlyRow, month: string, rate: number): Noti
   };
 }
 
+function examUpcomingItem(e: ExamListItem, date: string): NotificationItem {
+  return {
+    type: "exam_upcoming",
+    key: `exam:${e.id}`,
+    details: { title: e.title, examDate: date, groupName: e.groupName },
+  };
+}
+
+function birthdayItem(s: Student, today: string): NotificationItem {
+  return {
+    type: "student_birthday",
+    key: `birthday:${s.id}:${today}`,
+    details: { name: s.name, gradeLevel: s.gradeLevel },
+  };
+}
+
 function attendanceRate(r: StudentMonthlyRow): number {
   const marked = r.present + r.absent + r.late + r.excused;
   if (marked === 0) return 1;
   return (r.present + r.late + r.excused) / marked;
 }
 
-/** Build the desired notification set from the five source lists. */
+/** Build the desired notification set from the seven source lists. */
 export function buildNotificationItems(
   data: NotificationSourceData,
   month: string,
@@ -76,6 +96,14 @@ export function buildNotificationItems(
   for (const r of data.monthly) {
     const rate = attendanceRate(r);
     if (rate < LOW_ATTENDANCE_RATE) items.push(attendanceItem(r, month, rate));
+  }
+  const deadline = dayjs().add(7, "day").format("YYYY-MM-DD");
+  for (const e of data.exams) if (e.date && e.date >= today && e.date <= deadline) {
+    items.push(examUpcomingItem(e, e.date));
+  }
+  const mmdd = today.slice(5);
+  for (const s of data.students) if (s.birthDate && s.birthDate.slice(5) === mmdd) {
+    items.push(birthdayItem(s, today));
   }
   return items;
 }

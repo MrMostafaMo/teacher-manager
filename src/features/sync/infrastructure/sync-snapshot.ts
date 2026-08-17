@@ -69,11 +69,7 @@ export async function applyPullResult(result: PullResult): Promise<void> {
 
 async function upsertRow(table: IdTable | undefined, op: PullOp): Promise<void> {
   if (table === undefined) return;
-  const existing = await db
-    .select()
-    .from(table)
-    .where(eq(table.id, op.key.rowId))
-    .get();
+  const existing = await db.select().from(table).where(eq(table.id, op.key.rowId)).get();
   if (existing !== undefined) {
     await db
       .update(table)
@@ -83,7 +79,10 @@ async function upsertRow(table: IdTable | undefined, op: PullOp): Promise<void> 
     return;
   }
   try {
-    await db.insert(table).values(op.row as never).run();
+    await db
+      .insert(table)
+      .values(op.row as never)
+      .run();
   } catch (error) {
     // Unique-key clash (e.g. attendance student+date from another device):
     // keep the local row; the report flags it via the skipped count.

@@ -63,10 +63,7 @@ export function SummaryCards({
       )}
     >
       {cards.map((c) => (
-        <div
-          key={c.key}
-          className="flex flex-col gap-1 rounded-lg border bg-card p-3 text-sm"
-        >
+        <div key={c.key} className="flex flex-col gap-1 rounded-lg border bg-card p-3 text-sm">
           <p className="text-xs text-muted-foreground">{t(c.key)}</p>
           <p className={cn("text-lg font-semibold", c.className)}>{c.value}</p>
         </div>

@@ -81,10 +81,7 @@ function errorKey(error: unknown): string {
   }
 }
 
-async function runRound(
-  client: DriveClient,
-  schemaVersion: number,
-): Promise<SyncReport> {
+async function runRound(client: DriveClient, schemaVersion: number): Promise<SyncReport> {
   const device = await deviceName();
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const remote = await client.download(PAYLOAD_FILE);

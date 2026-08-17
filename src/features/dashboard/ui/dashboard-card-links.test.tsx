@@ -22,13 +22,10 @@ describe("dashboard section cards", () => {
     [<TopDebtorsCard key="debtors" debtors={[]} />, "Top debtors", "/payments"],
     [<WeakPointsCard key="weak" items={[]} />, "Student weaknesses", "/weak-points"],
     [<WeakSkillsCard key="skills" skills={[]} totalStudents={0} />, "Weakest skills", "/skills"],
-  ] as Array<[React.ReactNode, string, string]>)(
-    "navigates to %s",
-    (node, label, href) => {
-      render(<MemoryRouter>{node}</MemoryRouter>);
-      expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", href);
-    },
-  );
+  ] as Array<[React.ReactNode, string, string]>)("navigates to %s", (node, label, href) => {
+    render(<MemoryRouter>{node}</MemoryRouter>);
+    expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", href);
+  });
 });
 
 describe("OverdueHomeworksCard", () => {
@@ -37,8 +34,22 @@ describe("OverdueHomeworksCard", () => {
       <MemoryRouter>
         <OverdueHomeworksCard
           items={[
-            { id: "h1", groupId: "g1", title: "Worksheet 4", groupName: "Group A", dueDate: "2026-08-01", pending: 3 },
-            { id: "h2", groupId: "g2", title: "Revision", groupName: "Group B", dueDate: "2026-08-03", pending: 1 },
+            {
+              id: "h1",
+              groupId: "g1",
+              title: "Worksheet 4",
+              groupName: "Group A",
+              dueDate: "2026-08-01",
+              pending: 3,
+            },
+            {
+              id: "h2",
+              groupId: "g2",
+              title: "Revision",
+              groupName: "Group B",
+              dueDate: "2026-08-03",
+              pending: 1,
+            },
           ]}
         />
       </MemoryRouter>,
@@ -57,7 +68,16 @@ describe("OverdueHomeworksCard", () => {
     render(
       <MemoryRouter>
         <OverdueHomeworksCard
-          items={[{ id: "h1", groupId: "g1", title: "Worksheet 4", groupName: "Group A", dueDate: "2026-08-01", pending: 3 }]}
+          items={[
+            {
+              id: "h1",
+              groupId: "g1",
+              title: "Worksheet 4",
+              groupName: "Group A",
+              dueDate: "2026-08-01",
+              pending: 3,
+            },
+          ]}
         />
       </MemoryRouter>,
     );

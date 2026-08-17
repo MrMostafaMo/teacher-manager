@@ -8,10 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import {
-  deleteExpense,
-  listExpenses,
-} from "@/features/expenses/application/expense-cases";
+import { deleteExpense, listExpenses } from "@/features/expenses/application/expense-cases";
 import type { Expense } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/utils/format";
 import { RecordExpenseDialog } from "./RecordExpenseDialog";
@@ -59,7 +56,12 @@ export default function ExpensesPage() {
         clear();
         bump();
         if (undoId !== null && row) {
-          notifyUndo(undoId, t("undo.deleted"), `${t("undo.expense")}: ${row.title}`, t("undo.undo"));
+          notifyUndo(
+            undoId,
+            t("undo.deleted"),
+            `${t("undo.expense")}: ${row.title}`,
+            t("undo.undo"),
+          );
         }
       } catch (e) {
         console.error("Failed to delete expense", e);
@@ -77,10 +79,12 @@ export default function ExpensesPage() {
         title={t("nav.expenses")}
         description={t("expenses.subtitle")}
         actions={
-          <Button onClick={() => {
-            setEditing(null);
-            setRecordOpen(true);
-          }}>
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setRecordOpen(true);
+            }}
+          >
             <Plus />
             {t("expenses.record")}
           </Button>

@@ -17,7 +17,10 @@ import {
   updateWeakPoint,
   type StudentWeakPoint,
 } from "@/features/weak-points/application/weak-point-cases";
-import { filterWeakPoints, type WeakPointStatusFilter } from "@/features/weak-points/application/weak-point-filter";
+import {
+  filterWeakPoints,
+  type WeakPointStatusFilter,
+} from "@/features/weak-points/application/weak-point-filter";
 import { useWeakPointsPageData } from "./use-weak-points-data";
 import { WeakPointsFilters } from "./weak-points-filters";
 import { WeakPointsSections } from "./weak-points-sections";

@@ -24,12 +24,8 @@ export const scheduleRepository = {
       .where(eq(groupSessions.groupId, groupId))) as Array<{ id: string }>;
     if (sessions.length > 0) {
       const sessionIds = sessions.map((s) => s.id);
-      await db
-        .delete(sessionAttendance)
-        .where(inArray(sessionAttendance.sessionId, sessionIds));
-      await db
-        .delete(sessionExceptions)
-        .where(inArray(sessionExceptions.sessionId, sessionIds));
+      await db.delete(sessionAttendance).where(inArray(sessionAttendance.sessionId, sessionIds));
+      await db.delete(sessionExceptions).where(inArray(sessionExceptions.sessionId, sessionIds));
     }
     await db.delete(groupSessions).where(eq(groupSessions.groupId, groupId));
   },
@@ -44,7 +40,7 @@ export const scheduleRepository = {
       .from(sessionAttendance)
       .where(and(eq(sessionAttendance.sessionId, sessionId), eq(sessionAttendance.date, date)))
       .orderBy(asc(sessionAttendance.studentId));
-    return rows as unknown as typeof sessionAttendance.$inferSelect[];
+    return rows as unknown as (typeof sessionAttendance.$inferSelect)[];
   },
 
   /** Replace one session sheet: delete-then-insert, idempotent per (session, date). */

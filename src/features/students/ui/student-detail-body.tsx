@@ -93,7 +93,9 @@ export function StudentDetailBody({
         <>
           <Separator />
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">{t("students.fields.notes")}</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              {t("students.fields.notes")}
+            </p>
             <p className="text-sm whitespace-pre-wrap">{student.notes}</p>
           </div>
         </>

@@ -13,12 +13,12 @@ import { useTimeStore } from "@/lib/time-store";
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 function scheduleText(
-  g: GroupWithCount,
+  _g: GroupWithCount,
   sessions: GroupSession[],
   hour24: boolean,
   t: (key: string) => string,
 ): string {
-  if (sessions.length === 0) return g.schedule ?? "—";
+  if (sessions.length === 0) return "—";
   return sessions
     .map(
       (s) =>
@@ -64,7 +64,8 @@ export const GroupsTable = memo(function GroupsTable({
       {
         header: t("groups.columns.members"),
         className: "text-muted-foreground tabular-nums",
-        render: (g) => g.memberCount,
+        render: (g) =>
+          g.maxStudents != null ? `${g.memberCount}/${g.maxStudents}` : g.memberCount,
       },
       {
         header: t("groups.columns.status"),

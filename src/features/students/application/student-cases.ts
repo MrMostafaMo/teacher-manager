@@ -1,5 +1,8 @@
 import { studentInputSchema, type StudentInput } from "@/features/students/domain";
-import { studentRepository, type StudentFilters } from "@/features/students/infrastructure/student-repo";
+import {
+  studentRepository,
+  type StudentFilters,
+} from "@/features/students/infrastructure/student-repo";
 import { skillRepository } from "@/features/skills/infrastructure/skill-repo";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
@@ -65,7 +68,9 @@ export async function deleteStudent(
   const studentRows = undoEnabled ? await captureRows(students, [id]) : [];
   const paymentRows = undoEnabled ? await captureBy(payments, payments.studentId, id) : [];
   const attendanceRows = undoEnabled ? await captureBy(attendance, attendance.studentId, id) : [];
-  const membershipRows = undoEnabled ? await captureBy(studentGroups, studentGroups.studentId, id) : [];
+  const membershipRows = undoEnabled
+    ? await captureBy(studentGroups, studentGroups.studentId, id)
+    : [];
   const sessionRows = undoEnabled
     ? await captureBy(sessionAttendance, sessionAttendance.studentId, id)
     : [];

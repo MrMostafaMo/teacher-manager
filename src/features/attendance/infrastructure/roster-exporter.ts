@@ -137,10 +137,20 @@ export async function buildRosterPdf(data: RosterPdfData): Promise<Uint8Array> {
       cx += rtl ? -w : w;
     });
     y = savedY;
-    page.drawLine({ start: { x: PAGE_MARGIN, y: rowTop }, end: { x: PAGE_WIDTH - PAGE_MARGIN, y: rowTop }, thickness: 0.5, color: gridColor });
+    page.drawLine({
+      start: { x: PAGE_MARGIN, y: rowTop },
+      end: { x: PAGE_WIDTH - PAGE_MARGIN, y: rowTop },
+      thickness: 0.5,
+      color: gridColor,
+    });
     y -= LINE_HEIGHT;
   }
-  page.drawLine({ start: { x: PAGE_MARGIN, y }, end: { x: PAGE_WIDTH - PAGE_MARGIN, y }, thickness: 0.5, color: gridColor });
+  page.drawLine({
+    start: { x: PAGE_MARGIN, y },
+    end: { x: PAGE_WIDTH - PAGE_MARGIN, y },
+    thickness: 0.5,
+    color: gridColor,
+  });
 
   return doc.save();
 }

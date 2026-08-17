@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   BookMarked,
   CalendarCheck,
+  CalendarDays,
   ClipboardList,
   GraduationCap,
   Layers,
@@ -49,6 +50,18 @@ export function ProfileFactsCard({
       ltr: false,
     },
     { key: "profile.phone", value: student.phone ?? "—", icon: Phone, ltr: Boolean(student.phone) },
+    {
+      key: "profile.birthDate",
+      value: student.birthDate ?? "—",
+      icon: CalendarDays,
+      ltr: false,
+    },
+    {
+      key: "profile.gradeLevel",
+      value: student.gradeLevel ?? "—",
+      icon: GraduationCap,
+      ltr: false,
+    },
   ] as const;
 
   return (
@@ -106,7 +119,11 @@ export function ProfileStatsGrid({
       value: homeworkRate === null ? "—" : `${homeworkRate}%`,
       icon: ClipboardList,
     },
-    { key: "profile.stats.examAverage", value: examAverage === null ? "—" : `${examAverage}%`, icon: GraduationCap },
+    {
+      key: "profile.stats.examAverage",
+      value: examAverage === null ? "—" : `${examAverage}%`,
+      icon: GraduationCap,
+    },
     { key: "profile.stats.sessionsAttended", value: String(sessionCount), icon: Layers },
   ];
   return (

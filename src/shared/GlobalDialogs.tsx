@@ -1,33 +1,57 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { useDialogStore } from "@/lib/dialog-store";
 import { DATA_CHANGED_EVENT } from "@/lib/undo-store";
 import { listGroups } from "@/features/groups/application/group-cases";
 import type { StudyGroup } from "@/lib/db/schema";
-import { StudentFormDialog } from "@/features/students/ui/StudentFormDialog";
-import { RecordPaymentDialog } from "@/features/payments/ui/RecordPaymentDialog";
-import { RecordExpenseDialog } from "@/features/expenses/ui/RecordExpenseDialog";
-import { GroupFormDialog } from "@/features/groups/ui/GroupFormDialog";
-import { ScheduleFormDialog } from "@/features/schedule/ui/ScheduleFormDialog";
-import { HomeworkFormDialog } from "@/features/homework/ui/HomeworkFormDialog";
-import { ExamFormDialog } from "@/features/exams/ui/ExamFormDialog";
-import { SkillFormDialog } from "@/features/skills/ui/SkillFormDialog";
 
 /** Re-exported from the undo store so every dispatcher stays in sync. */
 export { DATA_CHANGED_EVENT };
 
+const StudentFormDialog = lazy(() =>
+  import("@/features/students/ui/StudentFormDialog").then((m) => ({ default: m.StudentFormDialog })),
+);
+const RecordPaymentDialog = lazy(() =>
+  import("@/features/payments/ui/RecordPaymentDialog").then((m) => ({
+    default: m.RecordPaymentDialog,
+  })),
+);
+const RecordExpenseDialog = lazy(() =>
+  import("@/features/expenses/ui/RecordExpenseDialog").then((m) => ({
+    default: m.RecordExpenseDialog,
+  })),
+);
+const GroupFormDialog = lazy(() =>
+  import("@/features/groups/ui/GroupFormDialog").then((m) => ({ default: m.GroupFormDialog })),
+);
+const ScheduleFormDialog = lazy(() =>
+  import("@/features/schedule/ui/ScheduleFormDialog").then((m) => ({
+    default: m.ScheduleFormDialog,
+  })),
+);
+const HomeworkFormDialog = lazy(() =>
+  import("@/features/homework/ui/HomeworkFormDialog").then((m) => ({
+    default: m.HomeworkFormDialog,
+  })),
+);
+const ExamFormDialog = lazy(() =>
+  import("@/features/exams/ui/ExamFormDialog").then((m) => ({ default: m.ExamFormDialog })),
+);
+const SkillFormDialog = lazy(() =>
+  import("@/features/skills/ui/SkillFormDialog").then((m) => ({ default: m.SkillFormDialog })),
+);
+
 /**
  * Renders the cross-cutting create dialogs driven by the global dialog store
- * (command palette, dashboard quick actions). Each dialog is mounted once and
- * shown on demand; on save it closes itself and notifies the app to refresh.
+ * (command palette, dashboard quick actions). Only the active dialog is mounted;
+ * on save it closes itself and notifies the app to refresh.
  */
 export function GlobalDialogs() {
   const dialog = useDialogStore((s) => s.dialog);
   const closeDialog = useDialogStore((s) => s.closeDialog);
   const [groups, setGroups] = useState<StudyGroup[]>([]);
 
-  const needsGroups =
-    dialog === "schedule" || dialog === "homework" || dialog === "exam";
+  const needsGroups = dialog === "schedule" || dialog === "homework" || dialog === "exam";
 
   useEffect(() => {
     if (!needsGroups) return;
@@ -42,43 +66,42 @@ export function GlobalDialogs() {
   }
 
   return (
-    <>
-      <StudentFormDialog
-        open={dialog === "student"}
-        student={null}
-        onClose={closeDialog}
-        onSaved={handleSaved}
-      />
-      <RecordPaymentDialog
-        open={dialog === "payment"}
-        defaultPeriod={dayjs().format("YYYY-MM")}
-        onClose={closeDialog}
-        onSaved={handleSaved}
-      />
-      <RecordExpenseDialog open={dialog === "expense"} onClose={closeDialog} onSaved={handleSaved} />
-      <GroupFormDialog open={dialog === "group"} group={null} onClose={closeDialog} onSaved={handleSaved} />
-      <ScheduleFormDialog
-        open={dialog === "schedule"}
-        session={null}
-        groups={groups}
-        onClose={closeDialog}
-        onSaved={handleSaved}
-      />
-      <HomeworkFormDialog
-        open={dialog === "homework"}
-        homework={null}
-        groups={groups}
-        onClose={closeDialog}
-        onSaved={handleSaved}
-      />
-      <ExamFormDialog
-        open={dialog === "exam"}
-        exam={null}
-        groups={groups}
-        onClose={closeDialog}
-        onSaved={handleSaved}
-      />
-      <SkillFormDialog open={dialog === "skill"} skill={null} onClose={closeDialog} onSaved={handleSaved} />
-    </>
+    <Suspense>
+      {dialog === "student" && (
+        <StudentFormDialog open student={null} onClose={closeDialog} onSaved={handleSaved} />
+      )}
+      {dialog === "payment" && (
+        <RecordPaymentDialog
+          open
+          defaultPeriod={dayjs().format("YYYY-MM")}
+          onClose={closeDialog}
+          onSaved={handleSaved}
+        />
+      )}
+      {dialog === "expense" && (
+        <RecordExpenseDialog open onClose={closeDialog} onSaved={handleSaved} />
+      )}
+      {dialog === "group" && (
+        <GroupFormDialog open group={null} onClose={closeDialog} onSaved={handleSaved} />
+      )}
+      {dialog === "schedule" && (
+        <ScheduleFormDialog
+          open
+          session={null}
+          groups={groups}
+          onClose={closeDialog}
+          onSaved={handleSaved}
+        />
+      )}
+      {dialog === "homework" && (
+        <HomeworkFormDialog open homework={null} groups={groups} onClose={closeDialog} onSaved={handleSaved} />
+      )}
+      {dialog === "exam" && (
+        <ExamFormDialog open exam={null} groups={groups} onClose={closeDialog} onSaved={handleSaved} />
+      )}
+      {dialog === "skill" && (
+        <SkillFormDialog open skill={null} onClose={closeDialog} onSaved={handleSaved} />
+      )}
+    </Suspense>
   );
 }

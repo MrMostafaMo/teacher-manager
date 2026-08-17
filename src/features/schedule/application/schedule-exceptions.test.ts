@@ -98,7 +98,11 @@ describe("applyExceptions", () => {
   it("only affects the matching (session, date) pair", () => {
     const a = session({ id: "s1" });
     const b = session({ id: "s2" });
-    const out = applyExceptions([[a], [b]], [exception()], [new Date(2026, 7, 13), new Date(2026, 7, 14)]);
+    const out = applyExceptions(
+      [[a], [b]],
+      [exception()],
+      [new Date(2026, 7, 13), new Date(2026, 7, 14)],
+    );
     expect(out[0][0]).not.toBe(a);
     expect(out[1][0]).toBe(b);
   });
@@ -106,11 +110,7 @@ describe("applyExceptions", () => {
   it("matches the exception only on its exact date", () => {
     const s = session({ id: "s1" });
     // 2026-08-12 — the exception targets 2026-08-13.
-    const out = applyExceptions(
-      [[s]],
-      [exception()],
-      [new Date(2026, 7, 12)],
-    );
+    const out = applyExceptions([[s]], [exception()], [new Date(2026, 7, 12)]);
     expect(out[0][0]).toBe(s);
   });
 });

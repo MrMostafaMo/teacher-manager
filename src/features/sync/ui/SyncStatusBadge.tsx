@@ -16,11 +16,7 @@ export function SyncStatusBadge() {
   const [open, setOpen] = useState(false);
 
   const connected = accountEmail !== null;
-  const label = busy
-    ? t("sync.status.syncing")
-    : connected
-      ? accountEmail
-      : t("sync.status.off");
+  const label = busy ? t("sync.status.syncing") : connected ? accountEmail : t("sync.status.off");
 
   return (
     <>

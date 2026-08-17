@@ -74,14 +74,24 @@ describe("todaySessions", () => {
 
   it("keeps a session whose cancellation falls on another date", () => {
     const sessions = [session({ id: "a", dayOfWeek: 0 })];
-    const listed = todaySessions(sessions, now, [exception({ sessionId: "a", date: "2026-05-17" })]);
+    const listed = todaySessions(sessions, now, [
+      exception({ sessionId: "a", date: "2026-05-17" }),
+    ]);
     expect(listed.map((s) => s.id)).toEqual(["a"]);
   });
 
   it("uses the moved time for a same-date move", () => {
-    const sessions = [session({ id: "a", dayOfWeek: 0, startTime: "09:00", endTime: "10:00", room: "R1" })];
+    const sessions = [
+      session({ id: "a", dayOfWeek: 0, startTime: "09:00", endTime: "10:00", room: "R1" }),
+    ];
     const listed = todaySessions(sessions, now, [
-      exception({ sessionId: "a", type: "moved", startTime: "13:00", endTime: "14:00", room: "R2" }),
+      exception({
+        sessionId: "a",
+        type: "moved",
+        startTime: "13:00",
+        endTime: "14:00",
+        room: "R2",
+      }),
     ]);
     const row = listed[0];
     expect(row.startTime).toBe("13:00");

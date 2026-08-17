@@ -5,11 +5,7 @@ import { CardLink } from "@/shared/CardLink";
 import { Avatar } from "@/shared/Avatar";
 import type { DashboardData } from "@/features/dashboard/application/dashboard-cases";
 
-export function WeakPointsCard({
-  items,
-}: {
-  items: DashboardData["topWeakPoints"];
-}) {
+export function WeakPointsCard({ items }: { items: DashboardData["topWeakPoints"] }) {
   const { t } = useTranslation();
   return (
     <CardLink to="/weak-points" label={t("dashboard.weakPoints.title")}>

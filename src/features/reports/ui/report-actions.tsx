@@ -20,16 +20,14 @@ export function useReportColumns(
   const { t } = useTranslation();
   return useMemo(() => {
     if (!data) return [];
-    return data.headers.map(
-      (h, j): DataTableColumn<(string | number)[]> => ({
-        header: h,
-        className: "whitespace-nowrap",
-        render: (row) =>
-          typeof row[j] === "number" && MONEY_COLUMNS[key]?.includes(j)
-            ? formatMoney(row[j] as number)
-            : String(row[j]),
-      }),
-    );
+    return data.headers.map((h, j): DataTableColumn<(string | number)[]> => ({
+      header: h,
+      className: "whitespace-nowrap",
+      render: (row) =>
+        typeof row[j] === "number" && MONEY_COLUMNS[key]?.includes(j)
+          ? formatMoney(row[j] as number)
+          : String(row[j]),
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, key, t]);
 }
@@ -46,7 +44,11 @@ export function ReportExportActions({
   const { t } = useTranslation();
   return (
     <>
-      <Button variant="outline" onClick={() => onExport("excel")} disabled={!data || exporting !== null}>
+      <Button
+        variant="outline"
+        onClick={() => onExport("excel")}
+        disabled={!data || exporting !== null}
+      >
         <FileSpreadsheet />
         {exporting === "excel" ? t("reports.exporting") : t("reports.exportExcel")}
       </Button>

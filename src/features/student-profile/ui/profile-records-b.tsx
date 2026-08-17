@@ -105,7 +105,11 @@ export function SkillsSection({
       ) : (
         <div className="flex flex-wrap gap-2">
           {skills.map((s) => (
-            <Badge key={s.skillId} variant={s.weak ? "destructive" : "secondary"} className="px-3 py-1">
+            <Badge
+              key={s.skillId}
+              variant={s.weak ? "destructive" : "secondary"}
+              className="px-3 py-1"
+            >
               {s.name}
               {s.level !== null ? ` · ${t(`skills.levels.${s.level}`)}` : ""}
             </Badge>

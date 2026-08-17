@@ -75,7 +75,11 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={expense ? t("expenses.edit") : t("expenses.record")}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={expense ? t("expenses.edit") : t("expenses.record")}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field id="expense-title" label={t("expenses.title")} required error={errors.title}>
           <Input

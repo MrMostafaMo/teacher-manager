@@ -62,9 +62,16 @@ export function buildStudentTrends(data: StudentProfileData): StudentTrends {
   const attendance = new Map<string, AttendanceTrendPoint>();
   for (const row of data.attendanceHistory) {
     const month = row.date.slice(0, 7);
-    const point =
-      attendance.get(month) ??
-      { month, label: monthShort(month), present: 0, late: 0, absent: 0, excused: 0, total: 0, rate: 0 };
+    const point = attendance.get(month) ?? {
+      month,
+      label: monthShort(month),
+      present: 0,
+      late: 0,
+      absent: 0,
+      excused: 0,
+      total: 0,
+      rate: 0,
+    };
     point.total += 1;
     if (row.status === "present") point.present += 1;
     else if (row.status === "late") point.late += 1;
@@ -94,8 +101,13 @@ export function buildStudentTrends(data: StudentProfileData): StudentTrends {
   const homework = new Map<string, HomeworkTrendPoint>();
   for (const row of data.homeworks) {
     const month = (row.dueDate ?? dayjs(row.createdAt).format("YYYY-MM")).slice(0, 7);
-    const point =
-      homework.get(month) ?? { month, label: monthShort(month), total: 0, done: 0, rate: 0 };
+    const point = homework.get(month) ?? {
+      month,
+      label: monthShort(month),
+      total: 0,
+      done: 0,
+      rate: 0,
+    };
     point.total += 1;
     if (row.status === "submitted" || row.status === "late") point.done += 1;
     homework.set(month, point);
@@ -112,7 +124,9 @@ export function buildStudentTrends(data: StudentProfileData): StudentTrends {
     point.amount += row.payment.amount;
     payments.set(month, point);
   }
-  const paymentSeries = [...payments.values()].sort((a, b) => a.month.localeCompare(b.month)).slice(-MAX_MONTHS);
+  const paymentSeries = [...payments.values()]
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .slice(-MAX_MONTHS);
 
   return {
     attendance: attendanceSeries,

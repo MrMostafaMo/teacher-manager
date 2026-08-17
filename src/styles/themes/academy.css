@@ -24,7 +24,8 @@
   --chart-tint-3: color-mix(in oklch, var(--chart-3) 12%, transparent);
   --chart-tint-4: color-mix(in oklch, var(--chart-4) 12%, transparent);
   --chart-tint-5: color-mix(in oklch, var(--chart-5) 12%, transparent);
-  --kpi-shadow: 0 1px 2px rgb(15 23 42 / 0.03), 0 2px 8px rgb(15 23 42 / 0.04), 0 6px 18px rgb(147 51 234 / 0.1);
+  --kpi-shadow:
+    0 1px 2px rgb(15 23 42 / 0.03), 0 2px 8px rgb(15 23 42 / 0.04), 0 6px 18px rgb(147 51 234 / 0.1);
   --primary-shadow: 0 1px 2px rgb(147 51 234 / 0.22), 0 4px 12px rgb(147 51 234 / 0.16);
 }
 
@@ -49,6 +50,6 @@
   --chart-tint-3: color-mix(in oklch, var(--chart-3) 12%, transparent);
   --chart-tint-4: color-mix(in oklch, var(--chart-4) 12%, transparent);
   --chart-tint-5: color-mix(in oklch, var(--chart-5) 12%, transparent);
-  --kpi-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(0 0 0 / 0.32);
+  --kpi-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(167 139 250 / 0.15);
   --primary-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.3);
 }

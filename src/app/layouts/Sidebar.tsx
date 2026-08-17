@@ -20,10 +20,8 @@ export function Sidebar() {
           alt={t("app.name")}
           className="size-10 shrink-0 rounded-xl object-contain ring-2 ring-primary/20"
         />
-        <div className="hidden min-w-0 group-hover:block lg:block">
-          <span className="block truncate text-sm font-bold text-foreground">
-            {t("app.name")}
-          </span>
+        <div className="hidden min-w-0 opacity-0 transition-opacity duration-200 group-hover:block group-hover:opacity-100 lg:block lg:opacity-100">
+          <span className="block truncate text-sm font-bold text-foreground">{t("app.name")}</span>
           <span className="block truncate text-[11px] text-muted-foreground">
             {t("app.tagline")}
           </span>
@@ -33,7 +31,7 @@ export function Sidebar() {
       <nav className="flex-1 space-y-4 overflow-y-auto overscroll-none p-3">
         {NAV_SECTIONS.map((section) => (
           <div key={section.id} className="border-b border-border/50 pb-3 last:border-b-0">
-            <p className="hidden px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 group-hover:block lg:block">
+            <p className="hidden px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 opacity-0 transition-opacity duration-200 group-hover:block group-hover:opacity-100 lg:block lg:opacity-100">
               {t(section.labelKey)}
             </p>
             <div className="space-y-1">
@@ -63,7 +61,7 @@ export function Sidebar() {
                         </span>
                       )}
                       <item.icon className="size-4 shrink-0" />
-                      <span className="hidden truncate group-hover:inline lg:inline">
+                      <span className="hidden truncate opacity-0 transition-opacity duration-200 group-hover:inline group-hover:opacity-100 lg:inline lg:opacity-100">
                         {t(item.labelKey)}
                       </span>
                     </>
@@ -80,7 +78,7 @@ export function Sidebar() {
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success">
             <ShieldCheck className="size-4" />
           </div>
-          <div className="hidden min-w-0 text-[11px] leading-tight group-hover:block lg:block">
+          <div className="hidden min-w-0 text-[11px] leading-tight opacity-0 transition-opacity duration-200 group-hover:block group-hover:opacity-100 lg:block lg:opacity-100">
             <p className="truncate font-medium text-foreground">{t("app.name")}</p>
             <p className="truncate text-muted-foreground">
               {t("app.localData")} · v{APP_VERSION}

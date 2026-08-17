@@ -20,12 +20,7 @@ interface DataTableProps<T> {
   className?: string;
 }
 
-function DataTableInner<T>({
-  columns,
-  rows,
-  getRowKey,
-  className,
-}: DataTableProps<T>) {
+function DataTableInner<T>({ columns, rows, getRowKey, className }: DataTableProps<T>) {
   return (
     <div className={cn("group/table overflow-x-auto", className)}>
       <table className="w-full text-sm">
@@ -34,7 +29,10 @@ function DataTableInner<T>({
             {columns.map((col, i) => (
               <th
                 key={i}
-                className={cn("px-4 py-3 text-start align-middle font-semibold", col.headerClassName)}
+                className={cn(
+                  "px-4 py-3 text-start align-middle font-semibold",
+                  col.headerClassName,
+                )}
               >
                 {col.header}
               </th>
@@ -43,7 +41,10 @@ function DataTableInner<T>({
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={getRowKey(row, i)} className="border-b transition-colors last:border-0 even:bg-muted/20 hover:bg-muted/40">
+            <tr
+              key={getRowKey(row, i)}
+              className="border-b transition-colors last:border-0 even:bg-muted/20 hover:bg-muted/40"
+            >
               {columns.map((col, i) => (
                 <td key={i} className={cn("px-4 py-3 align-middle", col.className)}>
                   {col.render(row)}

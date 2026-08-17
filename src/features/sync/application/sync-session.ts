@@ -45,9 +45,7 @@ export async function disconnectAccount(): Promise<void> {
 }
 
 /** The Google session for a DriveClient: token fetch + refresh persistence. */
-export async function buildDriveSession(
-  fetchImpl: typeof fetch = fetch,
-): Promise<SyncDeps> {
+export async function buildDriveSession(fetchImpl: typeof fetch = fetch): Promise<SyncDeps> {
   const clientId = await getSyncMeta(SYNC_META_KEYS.clientId);
   const refreshToken = await getSyncMeta(SYNC_META_KEYS.refreshToken);
   if (clientId === null || refreshToken === null) {

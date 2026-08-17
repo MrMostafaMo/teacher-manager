@@ -61,17 +61,19 @@ export async function getMonthly(month: string): Promise<StudentMonthlyRow[]> {
     attendanceRepository.monthlyStats(month),
   ]);
   const byId = new Map(stats.map((s) => [s.studentId, s]));
-  return students.filter((s) => enrolledBy(s, monthEndDate)).map((s) => {
-    const stat = byId.get(s.id);
-    return {
-      studentId: s.id,
-      name: s.name,
-      present: stat?.present ?? 0,
-      absent: stat?.absent ?? 0,
-      late: stat?.late ?? 0,
-      excused: stat?.excused ?? 0,
-    };
-  });
+  return students
+    .filter((s) => enrolledBy(s, monthEndDate))
+    .map((s) => {
+      const stat = byId.get(s.id);
+      return {
+        studentId: s.id,
+        name: s.name,
+        present: stat?.present ?? 0,
+        absent: stat?.absent ?? 0,
+        late: stat?.late ?? 0,
+        excused: stat?.excused ?? 0,
+      };
+    });
 }
 
 export async function saveDaily(input: {
@@ -86,9 +88,9 @@ export async function saveDaily(input: {
     throw new Error(`cannot record attendance for a future date: ${parsed.date}`);
   }
 
-  for (const entry of parsed.entries) {
-    await attendanceRepository.upsert(entry.studentId, parsed.date, entry.status);
-  }
+  await attendanceRepository.batchUpsert(
+    parsed.entries.map((e) => ({ studentId: e.studentId, date: parsed.date, status: e.status })),
+  );
 
   const counts: Record<AttendanceStatus, number> = { present: 0, absent: 0, late: 0, excused: 0 };
   for (const entry of parsed.entries) counts[entry.status] += 1;

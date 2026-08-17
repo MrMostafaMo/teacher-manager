@@ -26,21 +26,11 @@ export function HomeworkSubmissionsSection({
     <>
       {!empty && (
         <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={busy}
-            onClick={() => onSetAll("submitted")}
-          >
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => onSetAll("submitted")}>
             <CheckCircle2 />
             {t("homework.markAllSubmitted")}
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={busy}
-            onClick={() => onSetAll("late")}
-          >
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => onSetAll("late")}>
             <Clock3 />
             {t("homework.markAllLate")}
           </Button>

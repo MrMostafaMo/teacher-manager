@@ -3,7 +3,9 @@ export type NotificationType =
   | "payment_overdue"
   | "exception"
   | "weak_skill"
-  | "low_attendance";
+  | "low_attendance"
+  | "exam_upcoming"
+  | "student_birthday";
 
 export interface NotificationItem {
   type: NotificationType;
@@ -22,5 +24,7 @@ export interface NotificationItem {
     count?: number;
     rate?: number;
     absent?: number;
+    examDate?: string;
+    gradeLevel?: string | null;
   };
 }

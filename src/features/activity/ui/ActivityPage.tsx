@@ -116,11 +116,7 @@ export default function ActivityPage() {
           </p>
           <Card>
             <CardContent className="p-0">
-              <DataTable<ActivityLogRow>
-                columns={columns}
-                rows={filtered}
-                getRowKey={getRowKey}
-              />
+              <DataTable<ActivityLogRow> columns={columns} rows={filtered} getRowKey={getRowKey} />
             </CardContent>
           </Card>
         </>

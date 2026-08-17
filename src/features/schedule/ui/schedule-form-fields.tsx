@@ -57,7 +57,12 @@ export function ScheduleFormFields({ form, errors, groups, setField }: ScheduleF
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="session-start" label={t("schedule.fields.startTime")} required error={errors.startTime}>
+        <Field
+          id="session-start"
+          label={t("schedule.fields.startTime")}
+          required
+          error={errors.startTime}
+        >
           <TimePicker
             ariaLabel={t("schedule.fields.startTime")}
             className="w-full"
@@ -65,7 +70,12 @@ export function ScheduleFormFields({ form, errors, groups, setField }: ScheduleF
             onChange={(v) => setField("startTime", v)}
           />
         </Field>
-        <Field id="session-end" label={t("schedule.fields.endTime")} required error={errors.endTime}>
+        <Field
+          id="session-end"
+          label={t("schedule.fields.endTime")}
+          required
+          error={errors.endTime}
+        >
           <TimePicker
             ariaLabel={t("schedule.fields.endTime")}
             className="w-full"

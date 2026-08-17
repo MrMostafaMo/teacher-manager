@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DATA_CHANGED_EVENT } from "@/shared/GlobalDialogs";
 import { notifySystem } from "@/lib/notify-system";
+import { useNotificationSettings } from "@/lib/notification-settings-store";
 import { notificationText } from "./notification-text";
 import { useNotificationsStore } from "./notifications-store";
 
@@ -10,13 +11,15 @@ import { useNotificationsStore } from "./notifications-store";
 export function NotificationSync() {
   const { t } = useTranslation();
   const refresh = useNotificationsStore((s) => s.refresh);
+  const osBanners = useNotificationSettings((s) => s.osBanners);
+  const enabled = useNotificationSettings((s) => s.enabled);
 
   useEffect(() => {
     let mounted = true;
     async function sync() {
       try {
         const fresh = await refresh();
-        if (!mounted) return;
+        if (!mounted || !enabled || !osBanners) return;
         for (const item of fresh) {
           await notifySystem(
             t("notifications.title"),
@@ -33,7 +36,7 @@ export function NotificationSync() {
       mounted = false;
       window.removeEventListener(DATA_CHANGED_EVENT, sync);
     };
-  }, [refresh, t]);
+  }, [refresh, t, osBanners, enabled]);
 
   return null;
 }

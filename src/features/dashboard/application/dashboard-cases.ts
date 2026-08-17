@@ -34,24 +34,39 @@ export type { DashboardData };
 export async function getDashboardData(month = currentMonth()): Promise<DashboardData> {
   const prevMonth = shiftMonth(month, -1);
   const trendMonths = lastMonths(6, month);
-  const [students, monthly, dues, homeworks, exams, skills, trend, schedule, exceptions, expensesMonth, prevMonthly, prevExpenses, financePayments, financeExpenses, weakPoints] =
-    await Promise.all([
-      listStudents({ status: "all" }),
-      getMonthly(month),
-      monthlyDues(month),
-      listHomeworks(),
-      listExams(),
-      listSkills(),
-      attendanceRepository.monthlyTrend(6, month),
-      listSchedule(),
-      listScheduleExceptions(),
-      monthlyExpenseTotal(month),
-      getMonthly(prevMonth),
-      monthlyExpenseTotal(prevMonth),
-      Promise.all(trendMonths.map((m) => paymentRepository.byPeriod(m))),
-      Promise.all(trendMonths.map((m) => expenseRepository.byMonth(m))),
-      listAllWeakPoints(),
-    ]);
+  const [
+    students,
+    monthly,
+    dues,
+    homeworks,
+    exams,
+    skills,
+    trend,
+    schedule,
+    exceptions,
+    expensesMonth,
+    prevMonthly,
+    prevExpenses,
+    financePayments,
+    financeExpenses,
+    weakPoints,
+  ] = await Promise.all([
+    listStudents({ status: "all" }),
+    getMonthly(month),
+    monthlyDues(month),
+    listHomeworks(),
+    listExams(),
+    listSkills(),
+    attendanceRepository.monthlyTrend(6, month),
+    listSchedule(),
+    listScheduleExceptions(),
+    monthlyExpenseTotal(month),
+    getMonthly(prevMonth),
+    monthlyExpenseTotal(prevMonth),
+    Promise.all(trendMonths.map((m) => paymentRepository.byPeriod(m))),
+    Promise.all(trendMonths.map((m) => expenseRepository.byMonth(m))),
+    listAllWeakPoints(),
+  ]);
 
   const totalStudents = students.length;
   const activeStudents = students.filter((s) => s.status === "active").length;
@@ -63,7 +78,8 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
   const attended = monthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
   const attendanceRate = marked > 0 ? Math.round((attended / marked) * 100) : 0;
 
-  const sumPaid = (payments: Array<{ amount: number }>) => payments.reduce((a, p) => a + p.amount, 0);
+  const sumPaid = (payments: Array<{ amount: number }>) =>
+    payments.reduce((a, p) => a + p.amount, 0);
   const collected = sumPaid(financePayments[financePayments.length - 1]);
   const outstanding = dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
 
@@ -83,7 +99,7 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
   const totalHwStudents = monthHw.reduce((a, h) => a + h.submitted + h.pending + h.late, 0);
   const homeworkCompletion =
     totalHwStudents > 0
-      ? Math.round(monthHw.reduce((a, h) => a + h.submitted + h.late, 0) / totalHwStudents * 100)
+      ? Math.round((monthHw.reduce((a, h) => a + h.submitted + h.late, 0) / totalHwStudents) * 100)
       : 0;
   const homeworkSubmitted = monthHw.reduce((a, h) => a + h.submitted, 0);
   const homeworkPending = monthHw.reduce((a, h) => a + h.pending, 0);
@@ -102,7 +118,10 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     }));
 
   const graded = monthExams.filter((e) => e.average !== null);
-  const scoreSum = graded.reduce((a, e) => a + ((e.average ?? 0) / e.maxScore) * 100 * e.resultCount, 0);
+  const scoreSum = graded.reduce(
+    (a, e) => a + ((e.average ?? 0) / e.maxScore) * 100 * e.resultCount,
+    0,
+  );
   const scoreCount = graded.reduce((a, e) => a + e.resultCount, 0);
   const examAverage = scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 10) / 10 : null;
   const weakSkills = skills

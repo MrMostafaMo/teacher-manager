@@ -12,7 +12,12 @@ export interface EnrolledStudent {
 
 export async function allEnrolledStudents(): Promise<EnrolledStudent[]> {
   return (await db
-    .select({ id: students.id, name: students.name, planId: students.planId, enrolledOn: students.enrolledOn })
+    .select({
+      id: students.id,
+      name: students.name,
+      planId: students.planId,
+      enrolledOn: students.enrolledOn,
+    })
     .from(students)
     .orderBy(students.name)) as EnrolledStudent[];
 }

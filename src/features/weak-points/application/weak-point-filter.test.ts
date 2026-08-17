@@ -2,8 +2,19 @@ import { describe, expect, it } from "vitest";
 import { filterWeakPoints, type WeakPointStatusFilter } from "./weak-point-filter";
 import type { StudentWeakPoint } from "./weak-point-cases";
 
-function row(id: string, studentId: string, description: string, resolved: boolean): StudentWeakPoint {
-  return { id, studentId, description, recordedOn: 1_700_000_000_000, resolved } as StudentWeakPoint;
+function row(
+  id: string,
+  studentId: string,
+  description: string,
+  resolved: boolean,
+): StudentWeakPoint {
+  return {
+    id,
+    studentId,
+    description,
+    recordedOn: 1_700_000_000_000,
+    resolved,
+  } as StudentWeakPoint;
 }
 
 const rows = [

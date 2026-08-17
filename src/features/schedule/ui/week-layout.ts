@@ -28,12 +28,28 @@ const MIN_SPAN = 10 * 60;
  */
 export const PALETTE = [
   { bg: "bg-blue-500/10 dark:bg-blue-500/20", border: "border-blue-500/40", bar: "bg-blue-500" },
-  { bg: "bg-emerald-500/10 dark:bg-emerald-500/20", border: "border-emerald-500/40", bar: "bg-emerald-500" },
-  { bg: "bg-amber-500/10 dark:bg-amber-500/20", border: "border-amber-500/40", bar: "bg-amber-500" },
-  { bg: "bg-violet-500/10 dark:bg-violet-500/20", border: "border-violet-500/40", bar: "bg-violet-500" },
+  {
+    bg: "bg-emerald-500/10 dark:bg-emerald-500/20",
+    border: "border-emerald-500/40",
+    bar: "bg-emerald-500",
+  },
+  {
+    bg: "bg-amber-500/10 dark:bg-amber-500/20",
+    border: "border-amber-500/40",
+    bar: "bg-amber-500",
+  },
+  {
+    bg: "bg-violet-500/10 dark:bg-violet-500/20",
+    border: "border-violet-500/40",
+    bar: "bg-violet-500",
+  },
   { bg: "bg-rose-500/10 dark:bg-rose-500/20", border: "border-rose-500/40", bar: "bg-rose-500" },
   { bg: "bg-sky-500/10 dark:bg-sky-500/20", border: "border-sky-500/40", bar: "bg-sky-500" },
-  { bg: "bg-orange-500/10 dark:bg-orange-500/20", border: "border-orange-500/40", bar: "bg-orange-500" },
+  {
+    bg: "bg-orange-500/10 dark:bg-orange-500/20",
+    border: "border-orange-500/40",
+    bar: "bg-orange-500",
+  },
   { bg: "bg-teal-500/10 dark:bg-teal-500/20", border: "border-teal-500/40", bar: "bg-teal-500" },
 ] as const;
 
@@ -100,7 +116,9 @@ export function weekDates(now: Date, weekStartsOn: number, offset = 0): Date[] {
   });
 }
 
-export const gridTemplate = { gridTemplateColumns: `${GUTTER_W} repeat(7, minmax(0, 1fr))` } as const;
+export const gridTemplate = {
+  gridTemplateColumns: `${GUTTER_W} repeat(7, minmax(0, 1fr))`,
+} as const;
 
 export interface PlacedSession<T extends SessionWithGroup = SessionWithGroup> {
   session: T;

@@ -19,7 +19,10 @@ const RosterRow = memo(function RosterRow({
   status?: AttendanceStatus;
   onChange: (studentId: string, status: AttendanceStatus) => void;
 }) {
-  const handleChange = useCallback((s: AttendanceStatus) => onChange(student.id, s), [onChange, student.id]);
+  const handleChange = useCallback(
+    (s: AttendanceStatus) => onChange(student.id, s),
+    [onChange, student.id],
+  );
   return (
     <tr className="border-b last:border-0 hover:bg-muted/50">
       <td className="px-4 py-2.5">
@@ -53,9 +56,7 @@ export const RosterTable = memo(function RosterTable({
             <th className="px-4 py-2.5 text-start font-medium">
               {t("attendance.columns.student")}
             </th>
-            <th className="px-4 py-2.5 text-start font-medium">
-              {t("attendance.columns.status")}
-            </th>
+            <th className="px-4 py-2.5 text-start font-medium">{t("attendance.columns.status")}</th>
           </tr>
         </thead>
         <tbody>

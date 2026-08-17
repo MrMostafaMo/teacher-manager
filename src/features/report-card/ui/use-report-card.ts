@@ -15,23 +15,27 @@ export function useReportCard(data: StudentProfileData | null) {
     if (!data) return;
     setBusy(true);
     try {
-      const pdf = buildReportCardPdfData(buildReportCardData(data), {
-        title: t("reportCard.title"),
-        footer: t("reportCard.footer"),
-        group: t("reportCard.group"),
-        enrolled: t("reportCard.enrolled"),
-        attendance: t("reportCard.attendance"),
-        homework: t("reportCard.homework"),
-        exams: t("reportCard.exams"),
-        weakSkills: t("reportCard.weakSkills"),
-        notes: t("reportCard.notes"),
-        none: t("reportCard.none"),
-        present: t("attendance.statusPresent"),
-        absent: t("attendance.statusAbsent"),
-        late: t("attendance.statusLate"),
-        excused: t("attendance.statusExcused"),
-        rate: t("reportCard.rate"),
-      }, document.documentElement.dir === "rtl");
+      const pdf = buildReportCardPdfData(
+        buildReportCardData(data),
+        {
+          title: t("reportCard.title"),
+          footer: t("reportCard.footer"),
+          group: t("reportCard.group"),
+          enrolled: t("reportCard.enrolled"),
+          attendance: t("reportCard.attendance"),
+          homework: t("reportCard.homework"),
+          exams: t("reportCard.exams"),
+          weakSkills: t("reportCard.weakSkills"),
+          notes: t("reportCard.notes"),
+          none: t("reportCard.none"),
+          present: t("attendance.statusPresent"),
+          absent: t("attendance.statusAbsent"),
+          late: t("attendance.statusLate"),
+          excused: t("attendance.statusExcused"),
+          rate: t("reportCard.rate"),
+        },
+        document.documentElement.dir === "rtl",
+      );
       await exportReportCardPdf(pdf);
       toast(t("reportCard.saved"));
     } catch (e) {

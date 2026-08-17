@@ -40,14 +40,24 @@ export function AttendanceHomeworkCharts({
             </ResponsiveContainer>
           </LazyChart>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            {(
-              [
-                { key: "present", fill: ATTENDANCE_COLORS.present, label: t("attendance.statusPresent") },
-                { key: "late", fill: ATTENDANCE_COLORS.late, label: t("attendance.statusLate") },
-                { key: "absent", fill: ATTENDANCE_COLORS.absent, label: t("attendance.statusAbsent") },
-                { key: "excused", fill: ATTENDANCE_COLORS.excused, label: t("attendance.statusExcused") },
-              ]
-            ).map((item) => (
+            {[
+              {
+                key: "present",
+                fill: ATTENDANCE_COLORS.present,
+                label: t("attendance.statusPresent"),
+              },
+              { key: "late", fill: ATTENDANCE_COLORS.late, label: t("attendance.statusLate") },
+              {
+                key: "absent",
+                fill: ATTENDANCE_COLORS.absent,
+                label: t("attendance.statusAbsent"),
+              },
+              {
+                key: "excused",
+                fill: ATTENDANCE_COLORS.excused,
+                label: t("attendance.statusExcused"),
+              },
+            ].map((item) => (
               <span key={item.key} className="flex items-center gap-1.5">
                 <span className="size-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
                 {item.label}
@@ -75,7 +85,9 @@ export function AttendanceHomeworkCharts({
                     <span className="size-2.5 rounded-full" style={{ backgroundColor: s.fill }} />
                     {t(HOMEWORK_STATUS_KEYS[s.key as keyof typeof HOMEWORK_STATUS_KEYS])}
                   </span>
-                  <span className="tabular-nums text-muted-foreground">{formatNumber(s.value)}</span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {formatNumber(s.value)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -102,11 +114,17 @@ export function FinanceCharts({ financeChart }: { financeChart: FinancePoint[] }
           </LazyChart>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full" style={{ backgroundColor: ATTENDANCE_COLORS.present }} />
+              <span
+                className="size-2.5 rounded-full"
+                style={{ backgroundColor: ATTENDANCE_COLORS.present }}
+              />
               {t("dashboard.charts.collected")}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full" style={{ backgroundColor: ATTENDANCE_COLORS.absent }} />
+              <span
+                className="size-2.5 rounded-full"
+                style={{ backgroundColor: ATTENDANCE_COLORS.absent }}
+              />
               {t("dashboard.charts.expenses")}
             </span>
           </div>

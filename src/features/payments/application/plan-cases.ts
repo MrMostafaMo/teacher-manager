@@ -1,8 +1,5 @@
 import { planInputSchema, type PlanInput } from "@/features/payments/domain";
-import {
-  planRepository,
-  type PlanWithCount,
-} from "@/features/payments/infrastructure/plan-repo";
+import { planRepository, type PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import { logActivity } from "@/lib/activity-log";
 import { plans, students, type Plan } from "@/lib/db/schema";

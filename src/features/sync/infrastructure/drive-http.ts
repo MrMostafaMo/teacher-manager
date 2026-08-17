@@ -67,10 +67,7 @@ export async function bearerFetch(
 /** Multipart body for metadata + text uploads (uploadType=multipart). */
 export function multipart(metadata: object, text: string): FormData {
   const form = new FormData();
-  form.append(
-    "metadata",
-    new Blob([JSON.stringify(metadata)], { type: "application/json" }),
-  );
+  form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
   form.append("file", new Blob([text], { type: "application/json" }));
   return form;
 }

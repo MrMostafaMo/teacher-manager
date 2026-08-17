@@ -15,13 +15,7 @@ const PALETTE = [
   "bg-(--chart-5)/10 text-(--chart-5)",
 ];
 
-export function Avatar({
-  name,
-  className,
-}: {
-  name: string;
-  className?: string;
-}) {
+export function Avatar({ name, className }: { name: string; className?: string }) {
   let hash = 0;
   for (const ch of name) hash = (hash * 31 + (ch.codePointAt(0) ?? 0)) >>> 0;
   const tone = PALETTE[hash % PALETTE.length];

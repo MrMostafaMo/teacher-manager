@@ -52,6 +52,7 @@ export default function WeekGrid({
 
   const effectiveByDay = useMemo(
     () => applyExceptions(byDay, exceptions, dates),
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     [byDay, exceptions, dates],
   );
   const conflicts = useMemo(() => conflictIds(effectiveByDay), [effectiveByDay]);
@@ -80,7 +81,12 @@ export default function WeekGrid({
 
       <div className="overflow-x-auto">
         <div className="min-w-[880px] overflow-hidden rounded-xl border bg-card">
-          <WeekHeader daysOrder={daysOrder} dates={dates} today={today} isCurrentWeek={isCurrentWeek} />
+          <WeekHeader
+            daysOrder={daysOrder}
+            dates={dates}
+            today={today}
+            isCurrentWeek={isCurrentWeek}
+          />
 
           {/* Time gutter + day columns */}
           <div className="grid" style={gridTemplate}>

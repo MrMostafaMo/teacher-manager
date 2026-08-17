@@ -39,7 +39,8 @@ export const sync = {
     notConnected: "Sign in to Google first.",
     conflict: "Another device changed the sync file — retrying failed.",
     network: "Network error — check your connection.",
-    versionMismatch: "Device versions differ — update the app to the latest version on all devices.",
+    versionMismatch:
+      "Device versions differ — update the app to the latest version on all devices.",
     invalidRemote: "The sync file on Drive is unreadable.",
     unknown: "Something went wrong during sync.",
   },
@@ -47,14 +48,17 @@ export const sync = {
     title: "Google sync",
     hint: "Sign in with your Google account to sync data across devices and keep cloud backups.",
     clientIdPlaceholder: "OAuth Client ID (1234-abc.apps.googleusercontent.com)",
-    helpLink: "Create an OAuth client ID of type “Desktop app” in Google Cloud Console, then paste it here.",
-    clientIdDisabledHint: "Paste a valid desktop OAuth Client ID above to enable sign-in — you only need to do this once.",
+    helpLink:
+      "Create an OAuth client ID of type “Desktop app” in Google Cloud Console, then paste it here.",
+    clientIdDisabledHint:
+      "Paste a valid desktop OAuth Client ID above to enable sign-in — you only need to do this once.",
     guide: {
       title: "How to get a Client ID (one-time setup)",
       step1: "Open Google Cloud Console and create or pick a project.",
       step2: "Go to APIs & Services → OAuth consent screen, fill in an app name, and save.",
       step3: "Go to Credentials → Create credentials → OAuth client ID → Desktop app → Create.",
-      step4: "Copy the Client ID (…apps.googleusercontent.com) and paste it above. The redirect is handled automatically.",
+      step4:
+        "Copy the Client ID (…apps.googleusercontent.com) and paste it above. The redirect is handled automatically.",
     },
     invalidClientId: "That does not look like a valid desktop OAuth Client ID.",
     connect: "Sign in with Google",
@@ -70,7 +74,8 @@ export const sync = {
     cloudBackup: "Cloud backup",
     backupDone: "Backup uploaded to Drive.",
     cloudRestore: "Cloud restore",
-    restoreConfirm: "Replace the local data with the newest cloud backup? Current data will be snapshotted and restored on failure.",
+    restoreConfirm:
+      "Replace the local data with the newest cloud backup? Current data will be snapshotted and restored on failure.",
     restoreDone: "Restore complete — reloading…",
     noBackups: "No cloud backups found yet.",
     backupError: "Backup failed.",

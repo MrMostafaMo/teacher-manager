@@ -35,8 +35,7 @@ export const useToastStore = create<ToastStore>((set) => ({
       set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
     }, toast.duration ?? 3500);
   },
-  dismiss: (id) =>
-    set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+  dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));
 
 export function toast(message: string, variant: ToastVariant = "success", description?: string) {

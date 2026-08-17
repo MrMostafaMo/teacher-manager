@@ -37,9 +37,7 @@ export function createRepository<T extends RepositoryTable>(table: T): Repositor
     return row as Row | undefined;
   }
 
-  async function list(
-    options: { limit?: number; newestFirst?: boolean } = {},
-  ): Promise<Row[]> {
+  async function list(options: { limit?: number; newestFirst?: boolean } = {}): Promise<Row[]> {
     const order = options.newestFirst ? desc(table.createdAt) : asc(table.createdAt);
     const base = db.select().from(table).orderBy(order);
     const query = options.limit !== undefined ? base.limit(options.limit) : base;
@@ -52,13 +50,9 @@ export function createRepository<T extends RepositoryTable>(table: T): Repositor
     return row?.n ?? 0;
   }
 
-  async function insert(
-    values: Omit<Insert, "createdAt" | "updatedAt">,
-  ): Promise<Row> {
+  async function insert(values: Omit<Insert, "createdAt" | "updatedAt">): Promise<Row> {
     const ts = Date.now();
-    await db
-      .insert(table)
-      .values({ ...values, createdAt: ts, updatedAt: ts } as Insert);
+    await db.insert(table).values({ ...values, createdAt: ts, updatedAt: ts } as Insert);
     const row = await findById((values as { id: string }).id);
     if (!row) throw new Error(`insert failed: row ${(values as { id: string }).id} not found`);
     return row;

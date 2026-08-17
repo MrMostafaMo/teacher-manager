@@ -29,7 +29,16 @@ describe("notifications-store", () => {
 
   it("refresh updates items and unread count and returns fresh items", async () => {
     vi.mocked(listActiveNotifications).mockResolvedValue([
-      { id: "a", type: "weak_skill", key: "weak:k1", details: { name: "F", count: 2 }, read: false, dismissed: false, createdAt: 1, updatedAt: 1 },
+      {
+        id: "a",
+        type: "weak_skill",
+        key: "weak:k1",
+        details: { name: "F", count: 2 },
+        read: false,
+        dismissed: false,
+        createdAt: 1,
+        updatedAt: 1,
+      },
     ]);
     vi.mocked(unreadCount).mockResolvedValue(1);
     vi.mocked(refreshNotifications).mockResolvedValue([]);

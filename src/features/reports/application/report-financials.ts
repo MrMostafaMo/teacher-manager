@@ -34,8 +34,10 @@ export async function examsReport(t: ReportTranslations): Promise<ReportData> {
       .innerJoin(students, eq(studentGroups.studentId, students.id)),
     db.select().from(students),
   ]);
-  const groupName = new Map((groupsRows as typeof studyGroups.$inferSelect[]).map((g) => [g.id, g.name]));
-  const resultsByExam = new Map<string, typeof examResults.$inferSelect[]>();
+  const groupName = new Map(
+    (groupsRows as (typeof studyGroups.$inferSelect)[]).map((g) => [g.id, g.name]),
+  );
+  const resultsByExam = new Map<string, (typeof examResults.$inferSelect)[]>();
   for (const r of results) {
     resultsByExam.set(r.examId, [...(resultsByExam.get(r.examId) ?? []), r]);
   }
@@ -51,14 +53,20 @@ export async function examsReport(t: ReportTranslations): Promise<ReportData> {
   for (const e of examsRows as Exam[]) {
     const refDate = effectiveDate(e.date, e.createdAt);
     const eligibleIds = new Set(
-      (membersOf.get(e.groupId) ?? []).filter((m) => enrolledBy(m, refDate)).map((m) => m.studentId),
+      (membersOf.get(e.groupId) ?? [])
+        .filter((m) => enrolledBy(m, refDate))
+        .map((m) => m.studentId),
     );
     const rs = (resultsByExam.get(e.id) ?? []).filter((r) => eligibleIds.has(r.studentId));
     const scores = rs.map((r) => r.score);
-    const avg = scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : null;
+    const avg = scores.length
+      ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
+      : null;
     const total = eligibleIds.size;
     const passMark = Math.ceil(e.maxScore / 2);
-    const pass = scores.length ? Math.round((scores.filter((s) => s >= passMark).length / scores.length) * 100) : null;
+    const pass = scores.length
+      ? Math.round((scores.filter((s) => s >= passMark).length / scores.length) * 100)
+      : null;
     rows.push([
       e.title,
       groupName.get(e.groupId) ?? "—",
@@ -75,16 +83,21 @@ export async function examsReport(t: ReportTranslations): Promise<ReportData> {
   return {
     key: "exams",
     title: t.title,
-    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4], t.headers[5], t.headers[6]],
+    headers: [
+      t.headers[0],
+      t.headers[1],
+      t.headers[2],
+      t.headers[3],
+      t.headers[4],
+      t.headers[5],
+      t.headers[6],
+    ],
     rows,
   };
 }
 
 export async function expensesReport(t: ReportTranslations): Promise<ReportData> {
-  const rows = (await db
-    .select()
-    .from(expenses)
-    .orderBy(desc(expenses.spentAt))) as Expense[];
+  const rows = (await db.select().from(expenses).orderBy(desc(expenses.spentAt))) as Expense[];
   return {
     key: "expenses",
     title: t.title,

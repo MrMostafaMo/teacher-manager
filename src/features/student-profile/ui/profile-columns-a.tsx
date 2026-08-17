@@ -50,7 +50,9 @@ export function usePaymentColumns(): DataTableColumn<PaymentHistoryRow>[] {
     {
       header: t("profile.columns.method"),
       render: ({ payment }) => (
-        <Badge variant="secondary">{t(PAYMENT_METHOD_LABEL[payment.method] ?? "payments.cash")}</Badge>
+        <Badge variant="secondary">
+          {t(PAYMENT_METHOD_LABEL[payment.method] ?? "payments.cash")}
+        </Badge>
       ),
     },
   ];
@@ -82,7 +84,9 @@ export function useHomeworkColumns(): DataTableColumn<ProfileHomework>[] {
           pending: h.status === "pending" ? 1 : 0,
         });
         return (
-          <Badge className={overdue ? "bg-destructive/10 text-destructive" : SUBMISSION_BADGE[h.status]}>
+          <Badge
+            className={overdue ? "bg-destructive/10 text-destructive" : SUBMISSION_BADGE[h.status]}
+          >
             {overdue ? t("homework.statusOverdue") : t(SUBMISSION_LABEL[h.status])}
           </Badge>
         );

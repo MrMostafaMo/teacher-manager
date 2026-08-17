@@ -102,7 +102,9 @@ export async function getSessionAttendance(
 const sessionAttendanceInputSchema = z.object({
   sessionId: z.string().min(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  entries: z.array(z.object({ studentId: z.string().min(1), status: attendanceStatusSchema })).max(1000),
+  entries: z
+    .array(z.object({ studentId: z.string().min(1), status: attendanceStatusSchema }))
+    .max(1000),
 });
 
 export async function saveSessionAttendance(input: {

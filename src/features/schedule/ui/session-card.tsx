@@ -74,7 +74,11 @@ export function SessionCard({
                   )}
                   title={ex.dates.join(", ")}
                 >
-                  {ex.type === "cancelled" ? <Ban className="size-2.5" /> : <ArrowRightLeft className="size-2.5" />}
+                  {ex.type === "cancelled" ? (
+                    <Ban className="size-2.5" />
+                  ) : (
+                    <ArrowRightLeft className="size-2.5" />
+                  )}
                   {t(`schedule.exceptions.${ex.type}`)}
                   {ex.count > 1 && ` ×${ex.count}`}
                 </span>
@@ -83,10 +87,20 @@ export function SessionCard({
           )}
         </div>
         <div className="flex shrink-0 gap-0.5">
-          <Button variant="ghost" size="icon-sm" aria-label={t("schedule.attend")} onClick={onAttend}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("schedule.attend")}
+            onClick={onAttend}
+          >
             <CalendarCheck />
           </Button>
-          <Button variant="ghost" size="icon-sm" aria-label={t("schedule.edit")} onClick={() => onEdit(session)}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("schedule.edit")}
+            onClick={() => onEdit(session)}
+          >
             <Pencil />
           </Button>
           <ConfirmDeleteButton

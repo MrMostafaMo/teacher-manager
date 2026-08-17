@@ -53,11 +53,7 @@ export async function generateChallenge(verifier: string): Promise<string> {
 }
 
 /** Google consent URL for a desktop-app (loopback) client. */
-export function buildAuthUrl(
-  clientId: string,
-  challenge: string,
-  state: string,
-): string {
+export function buildAuthUrl(clientId: string, challenge: string, state: string): string {
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: REDIRECT_URI,

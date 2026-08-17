@@ -9,6 +9,7 @@ export interface GroupFormState {
   name: string;
   subject: string;
   startsOn: string;
+  maxStudents: string;
   status: "active" | "inactive";
   notes: string;
 }
@@ -55,15 +56,29 @@ export function GroupFormFields({
         </Field>
       </div>
 
-      <Field id="group-starts-on" label={t("groups.fields.startsOn")}>
-        <DatePicker
-          value={form.startsOn}
-          onChange={(v) => onChange({ startsOn: v })}
-          ariaLabel={t("groups.fields.startsOn")}
-          className="w-full"
-        />
-        <p className="text-xs text-muted-foreground">{t("groups.startsOnHint")}</p>
-      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="group-starts-on" label={t("groups.fields.startsOn")}>
+          <DatePicker
+            value={form.startsOn}
+            onChange={(v) => onChange({ startsOn: v })}
+            ariaLabel={t("groups.fields.startsOn")}
+            className="w-full"
+          />
+        </Field>
+        <Field
+          id="group-max-students"
+          label={t("groups.fields.maxStudents")}
+          error={errors.maxStudents}
+        >
+          <Input
+            id="group-max-students"
+            type="number"
+            min={1}
+            value={form.maxStudents}
+            onChange={(e) => onChange({ maxStudents: e.target.value })}
+          />
+        </Field>
+      </div>
 
       <Field id="group-notes" label={t("groups.fields.notes")} error={errors.notes}>
         <Textarea

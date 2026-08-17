@@ -51,8 +51,7 @@ export function ShortcutsDialog({ open, onClose }: Props) {
   const findDuplicate = useShortcutsStore((s) => s.findDuplicate);
   const [dups, setDups] = useState<Record<string, string>>({});
 
-  const isMac =
-    typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
+  const isMac = typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
 
   const grouped = useMemo(() => {
     const map: Record<string, typeof DEFAULT_SHORTCUTS> = {};
@@ -70,19 +69,15 @@ export function ShortcutsDialog({ open, onClose }: Props) {
       return;
     }
     setDups((d) => {
-      const { [id]: _, ...rest } = d;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to exclude `id`
+      const { [id]: _removed, ...rest } = d;
       return rest;
     });
     setShortcut(id, combo);
   }
 
   return (
-    <Modal
-      open={open}
-      title={t("shortcuts.manage")}
-      onClose={onClose}
-      className="max-w-2xl"
-    >
+    <Modal open={open} title={t("shortcuts.manage")} onClose={onClose} className="max-w-2xl">
       <div className="space-y-3">
         <div className="flex justify-end">
           <Button
@@ -102,10 +97,7 @@ export function ShortcutsDialog({ open, onClose }: Props) {
             </h4>
             <div className="grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2">
               {(grouped[group] ?? []).map((def) => (
-                <div
-                  key={def.id}
-                  className="flex items-center justify-between gap-2 py-0.5"
-                >
+                <div key={def.id} className="flex items-center justify-between gap-2 py-0.5">
                   <span className="truncate text-xs text-muted-foreground">
                     {t(LABEL_KEYS[def.id] ?? def.id)}
                   </span>

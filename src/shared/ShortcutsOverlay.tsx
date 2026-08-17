@@ -39,8 +39,7 @@ export function ShortcutsOverlay() {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
   const shortcuts = useShortcutsStore((s) => s.shortcuts);
-  const isMac =
-    typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
+  const isMac = typeof navigator !== "undefined" && /Mac/.test(navigator.userAgent);
 
   useEffect(() => {
     const onToggle = () => setOpen((o) => !o);
@@ -63,8 +62,8 @@ export function ShortcutsOverlay() {
   if (!open) return null;
 
   return (
-      <Modal open={open} onClose={() => setOpen(false)} title={t("shortcuts.title")}>
-        <div className="space-y-4 p-5">
+    <Modal open={open} onClose={() => setOpen(false)} title={t("shortcuts.title")}>
+      <div className="space-y-4 p-5">
         {GROUP_ORDER.map((group) => (
           <section key={group}>
             <h3 className="mb-2 text-xs font-medium uppercase text-muted-foreground">
@@ -72,10 +71,7 @@ export function ShortcutsOverlay() {
             </h3>
             <div className="space-y-1">
               {(grouped[group] ?? []).map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between text-sm"
-                >
+                <div key={item.label} className="flex items-center justify-between text-sm">
                   <span>{item.label}</span>
                   <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
                     {item.combo}

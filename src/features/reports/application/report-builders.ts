@@ -32,7 +32,9 @@ export async function studentsReport(t: ReportTranslations): Promise<ReportData>
     db.select().from(studentGroups),
     planRepository.list(),
   ]);
-  const groupName = new Map((groups as typeof studyGroups.$inferSelect[]).map((g) => [g.id, g.name]));
+  const groupName = new Map(
+    (groups as (typeof studyGroups.$inferSelect)[]).map((g) => [g.id, g.name]),
+  );
   const planById = new Map(allPlans.map((p) => [p.id, p.name]));
   const studentGroupsMap = new Map<string, string[]>();
   for (const m of memberships) {
@@ -42,21 +44,25 @@ export async function studentsReport(t: ReportTranslations): Promise<ReportData>
   return {
     key: "students",
     title: t.title,
-    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4], t.headers[5]],
+    headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4], t.headers[5], t.headers[6]],
     rows: (rows as Student[]).map((s) => [
       s.name,
       s.phone ?? "—",
       s.guardianName ?? "—",
       s.planId ? (planById.get(s.planId) ?? "—") : "—",
       (studentGroupsMap.get(s.id) ?? []).join("، "),
+      s.gradeLevel ?? "—",
       t.status(s.status),
     ]),
   };
 }
 
 export async function attendanceReport(t: ReportTranslations): Promise<ReportData> {
-  const rows = (await db.select().from(attendance)) as typeof attendance.$inferSelect[];
-  const perStudent = new Map<string, { present: number; absent: number; late: number; excused: number }>();
+  const rows = (await db.select().from(attendance)) as (typeof attendance.$inferSelect)[];
+  const perStudent = new Map<
+    string,
+    { present: number; absent: number; late: number; excused: number }
+  >();
   for (const r of rows) {
     const cur = perStudent.get(r.studentId) ?? { present: 0, absent: 0, late: 0, excused: 0 };
     if (r.status === "present") cur.present++;
@@ -71,7 +77,14 @@ export async function attendanceReport(t: ReportTranslations): Promise<ReportDat
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4], t.headers[5]],
     rows: todayEnrolled(await allEnrolledStudents()).map((s) => {
       const c = perStudent.get(s.id) ?? { present: 0, absent: 0, late: 0, excused: 0 };
-      return [s.name, c.present, c.absent, c.late, c.excused, c.present + c.absent + c.late + c.excused];
+      return [
+        s.name,
+        c.present,
+        c.absent,
+        c.late,
+        c.excused,
+        c.present + c.absent + c.late + c.excused,
+      ];
     }),
   };
 }

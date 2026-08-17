@@ -1,11 +1,17 @@
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
-import { attendanceRepository, type StudentMonthlyStat } from "@/features/attendance/infrastructure/attendance-repo";
+import {
+  attendanceRepository,
+  type StudentMonthlyStat,
+} from "@/features/attendance/infrastructure/attendance-repo";
 import { planRepository, type PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import { homeworkRepository } from "@/features/homework/infrastructure/homework-repo";
 import { examRepository } from "@/features/exams/infrastructure/exam-repo";
 import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
-import { listPaymentHistory, type PaymentHistoryRow } from "@/features/payments/application/payment-cases";
+import {
+  listPaymentHistory,
+  type PaymentHistoryRow,
+} from "@/features/payments/application/payment-cases";
 import { getStudentSkills, type StudentSkillRow } from "@/features/skills/application/skill-cases";
 import {
   listStudentWeakPoints,

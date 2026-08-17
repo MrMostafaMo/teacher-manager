@@ -23,15 +23,9 @@ export function TableRowsSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?
     <div className="overflow-x-auto">
       <div className="w-full text-sm">
         {Array.from({ length: rows }).map((_, r) => (
-          <div
-            key={r}
-            className="flex items-center gap-6 border-b px-4 py-2.5 last:border-0"
-          >
+          <div key={r} className="flex items-center gap-6 border-b px-4 py-2.5 last:border-0">
             {Array.from({ length: cols }).map((_, c) => (
-              <Skeleton
-                key={c}
-                className={c === 0 ? "h-4 max-w-48 flex-1" : "h-4 flex-1"}
-              />
+              <Skeleton key={c} className={c === 0 ? "h-4 max-w-48 flex-1" : "h-4 flex-1"} />
             ))}
           </div>
         ))}

@@ -7,7 +7,10 @@ import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { DataTable } from "@/shared/DataTable";
-import { buildReportData, type ReportTranslations } from "@/features/reports/application/report-cases";
+import {
+  buildReportData,
+  type ReportTranslations,
+} from "@/features/reports/application/report-cases";
 import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
 import { formatDate } from "@/lib/utils/format";
@@ -22,6 +25,8 @@ const REPORT_KEYS: ReportKey[] = [
   "finances",
   "skills",
   "weakPoints",
+  "homework",
+  "sessionAttendance",
 ];
 
 export default function ReportsPage() {
@@ -37,7 +42,8 @@ export default function ReportsPage() {
   const translations = useCallback(
     (): ReportTranslations => ({
       title: t(`reports.types.${key}.title`),
-      headers: (t(`reports.types.${key}.headers`, { returnObjects: true }) as unknown as string[]) ?? [],
+      headers:
+        (t(`reports.types.${key}.headers`, { returnObjects: true }) as unknown as string[]) ?? [],
       status: (s) => (s === "active" ? t("students.statusActive") : t("students.statusInactive")),
       category: (c) => t(`expenses.categories.${c}`),
       weakStatus: (s) => t(`weakPoints.${s}`),
@@ -120,11 +126,7 @@ export default function ReportsPage() {
           ) : !data || data.rows.length === 0 ? (
             <EmptyState icon={BarChart3} title={t("reports.empty")} />
           ) : (
-            <DataTable
-              columns={columns}
-              rows={data.rows}
-              getRowKey={getRowKey}
-            />
+            <DataTable columns={columns} rows={data.rows} getRowKey={getRowKey} />
           )}
         </CardContent>
       </Card>

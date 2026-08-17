@@ -1,0 +1,1 @@
+ALTER TABLE study_groups ADD COLUMN max_students INTEGER;

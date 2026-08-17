@@ -12,9 +12,7 @@ describe("buildWhatsAppLink", () => {
     const link = buildWhatsAppLink("0100123", "مرحبًا {name}!");
     expect(link).toContain("?text=");
     expect(link).toContain("name");
-    expect(decodeURIComponent(link ?? "")).toBe(
-      "https://wa.me/0100123?text=مرحبًا {name}!",
-    );
+    expect(decodeURIComponent(link ?? "")).toBe("https://wa.me/0100123?text=مرحبًا {name}!");
   });
 
   it("returns null when no digits remain", () => {

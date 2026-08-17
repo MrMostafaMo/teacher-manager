@@ -11,7 +11,13 @@ interface SearchInputProps {
 }
 
 /** Text filter input with a leading search icon, shared across list pages. */
-export function SearchInput({ value, onChange, placeholder, ariaLabel, className }: SearchInputProps) {
+export function SearchInput({
+  value,
+  onChange,
+  placeholder,
+  ariaLabel,
+  className,
+}: SearchInputProps) {
   return (
     <div className={cn("relative min-w-52 flex-1", className)}>
       <Search

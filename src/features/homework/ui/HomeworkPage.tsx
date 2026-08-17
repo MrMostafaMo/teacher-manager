@@ -70,7 +70,12 @@ export default function HomeworkPage() {
         const undoId = await deleteHomework(id);
         setRows((r) => r.filter((h) => h.id !== id));
         if (undoId !== null && row) {
-          notifyUndo(undoId, t("undo.deleted"), `${t("undo.homework")}: ${row.title}`, t("undo.undo"));
+          notifyUndo(
+            undoId,
+            t("undo.deleted"),
+            `${t("undo.homework")}: ${row.title}`,
+            t("undo.undo"),
+          );
         }
       } catch (e) {
         console.error("Failed to delete homework", e);
@@ -113,7 +118,11 @@ export default function HomeworkPage() {
       ) : groups.length === 0 ? (
         <Card>
           <CardContent className="p-0">
-            <EmptyState icon={BookOpen} title={t("homework.empty")} description={t("homework.emptyHint")} />
+            <EmptyState
+              icon={BookOpen}
+              title={t("homework.empty")}
+              description={t("homework.emptyHint")}
+            />
           </CardContent>
         </Card>
       ) : (

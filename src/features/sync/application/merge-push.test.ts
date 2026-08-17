@@ -17,7 +17,10 @@ function payload(rows: Array<[string, number]> = []): SyncPayload {
   };
 }
 
-function local(rows: Array<[string, number]> = [], tombstones: Array<{ rowId: string; deletedAt: number }> = []) {
+function local(
+  rows: Array<[string, number]> = [],
+  tombstones: Array<{ rowId: string; deletedAt: number }> = [],
+) {
   return {
     rows: rows.map(([id, updatedAt]) => ({ tableName: "students", id, row: row(id, updatedAt) })),
     tombstones: tombstones.map((t) => ({ tableName: "students", ...t })),
@@ -58,7 +61,9 @@ describe("mergePush", () => {
     expect(result.changed).toBe(true);
     expect(result.pushedTombstones).toBe(1);
     expect(result.payload.rows.students).toHaveLength(0);
-    expect(result.payload.tombstones).toEqual([{ tableName: "students", rowId: "s1", deletedAt: 200 }]);
+    expect(result.payload.tombstones).toEqual([
+      { tableName: "students", rowId: "s1", deletedAt: 200 },
+    ]);
   });
 
   it("keeps a tombstone only when it outranks the remote row", () => {
@@ -89,7 +94,13 @@ describe("mergePush", () => {
   it("dedups repeated tombstones for the same row", () => {
     const result = mergePush(
       payload(),
-      local([], [{ rowId: "s1", deletedAt: 200 }, { rowId: "s1", deletedAt: 150 }]),
+      local(
+        [],
+        [
+          { rowId: "s1", deletedAt: 200 },
+          { rowId: "s1", deletedAt: 150 },
+        ],
+      ),
     );
     expect(result.pushedTombstones).toBe(1);
     expect(result.payload.tombstones).toHaveLength(1);

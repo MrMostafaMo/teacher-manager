@@ -25,7 +25,10 @@ export function TopDebtorsCard({ debtors }: { debtors: DashboardData["topDebtors
                   <Avatar name={d.name} className="size-7 text-[10px]" />
                   <span className="truncate text-sm font-medium">{d.name}</span>
                 </span>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-destructive" dir="ltr">
+                <span
+                  className="shrink-0 text-sm font-semibold tabular-nums text-destructive"
+                  dir="ltr"
+                >
                   {formatMoney(d.remaining)}
                 </span>
               </div>

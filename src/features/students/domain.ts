@@ -14,6 +14,9 @@ export const studentInputSchema = z.object({
   planId: optionalId,
   notes: optionalText(2000),
   enrolledOn: optionalDate,
+  birthDate: optionalDate,
+  gradeLevel: optionalText(50),
+  photoUrl: optionalText(500),
 });
 
 export type StudentInput = z.infer<typeof studentInputSchema>;

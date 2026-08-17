@@ -24,10 +24,7 @@ describe("PresetPicker", () => {
   it("marks the active preset as checked", () => {
     useThemeStore.setState({ preset: "warm" });
     render(<PresetPicker />);
-    expect(screen.getByRole("radio", { name: /warm/i })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
+    expect(screen.getByRole("radio", { name: /warm/i })).toHaveAttribute("aria-checked", "true");
   });
 
   it("switches the store preset on click", async () => {

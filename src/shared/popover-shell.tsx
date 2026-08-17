@@ -2,7 +2,12 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { cn } from "@/lib/utils";
 
 const MARGIN = 8;
-const POPOVER_WIDTHS: Record<string, number> = { "w-56": 224, "w-64": 256, "w-72": 288, "w-80": 320 };
+const POPOVER_WIDTHS: Record<string, number> = {
+  "w-56": 224,
+  "w-64": 256,
+  "w-72": 288,
+  "w-80": 320,
+};
 
 export function PopoverShell({
   open,
@@ -18,7 +23,12 @@ export function PopoverShell({
   width?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; maxHeight: number } | null>(null);
+  const [pos, setPos] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
 
   const update = useCallback(() => {
     const wrapper = ref.current;

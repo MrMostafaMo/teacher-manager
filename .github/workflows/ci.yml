@@ -26,5 +26,11 @@ jobs:
       - name: run tests
         run: pnpm test
 
+      - name: version sync check
+        run: pnpm version:check
+
+      - name: lint
+        run: pnpm lint
+
       - name: typecheck + build
         run: pnpm build

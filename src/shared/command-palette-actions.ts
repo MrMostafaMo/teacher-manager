@@ -31,5 +31,10 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { id: "add-homework", labelKey: "homework.add", icon: NotebookPen, dialog: "homework" },
   { id: "add-exam", labelKey: "exams.add", icon: ClipboardList, dialog: "exam" },
   { id: "add-skill", labelKey: "skills.add", icon: Target, dialog: "skill" },
-  { id: "mark-attendance", labelKey: "dashboard.quick.attendance", icon: CalendarCheck, to: "/attendance" },
+  {
+    id: "mark-attendance",
+    labelKey: "dashboard.quick.attendance",
+    icon: CalendarCheck,
+    to: "/attendance",
+  },
 ];

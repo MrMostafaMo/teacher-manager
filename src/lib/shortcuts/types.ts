@@ -1,7 +1,4 @@
-export type ShortcutActionId =
-  | `nav:${string}`
-  | `dialog:${string}`
-  | `action:${string}`;
+export type ShortcutActionId = `nav:${string}` | `dialog:${string}` | `action:${string}`;
 
 export interface ShortcutDefinition {
   id: ShortcutActionId;

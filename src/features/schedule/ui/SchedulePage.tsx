@@ -27,7 +27,9 @@ export default function SchedulePage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<GroupSession | null>(null);
   const [attendanceSession, setAttendanceSession] = useState<SessionWithGroup | null>(null);
-  const [occurrence, setOccurrence] = useState<{ session: SessionWithGroup; date: string } | null>(null);
+  const [occurrence, setOccurrence] = useState<{ session: SessionWithGroup; date: string } | null>(
+    null,
+  );
   const { armed: deletingId, request, clear } = useConfirmDelete();
   const { byDay, conflicts, byGroup } = useScheduleView(sessions);
   const { isCollapsed, toggle } = useCollapsedSections();
@@ -48,7 +50,12 @@ export default function SchedulePage() {
       void reload();
       if (undoId !== null) {
         const groupName = groups.find((g) => g.id === session.groupId)?.name;
-        notifyUndo(undoId, t("undo.deleted"), `${t("undo.session")}: ${groupName ?? ""} ${session.startTime}`, t("undo.undo"));
+        notifyUndo(
+          undoId,
+          t("undo.deleted"),
+          `${t("undo.session")}: ${groupName ?? ""} ${session.startTime}`,
+          t("undo.undo"),
+        );
       }
     } catch (error) {
       console.error("Failed to delete session", error);
@@ -63,7 +70,13 @@ export default function SchedulePage() {
         title={t("nav.schedule")}
         description={t("schedule.subtitle")}
         actions={
-          <ScheduleHeaderActions count={sessions.length} canAdd={groups.length > 0} view={view} onViewChange={setView} onCreate={() => openForm()} />
+          <ScheduleHeaderActions
+            count={sessions.length}
+            canAdd={groups.length > 0}
+            view={view}
+            onViewChange={setView}
+            onCreate={() => openForm()}
+          />
         }
       />
       {loading ? (
@@ -74,28 +87,64 @@ export default function SchedulePage() {
       ) : sessions.length === 0 ? (
         <Card>
           <CardContent className="p-0">
-            <EmptyState icon={CalendarDays} title={groups.length === 0 ? t("schedule.noGroups") : t("schedule.empty")} description={t("schedule.emptyHint")} />
+            <EmptyState
+              icon={CalendarDays}
+              title={groups.length === 0 ? t("schedule.noGroups") : t("schedule.empty")}
+              description={t("schedule.emptyHint")}
+            />
           </CardContent>
         </Card>
       ) : view === "day" ? (
         <WeekGrid
-          byDay={byDay} exceptions={exceptions} deletingId={deletingId}
-          onEdit={openForm} onDelete={(s) => void handleDelete(s)}
-          onAttend={(s) => setAttendanceSession(s)} onOccurrence={(s, date) => setOccurrence({ session: s, date })}
+          byDay={byDay}
+          exceptions={exceptions}
+          deletingId={deletingId}
+          onEdit={openForm}
+          onDelete={(s) => void handleDelete(s)}
+          onAttend={(s) => setAttendanceSession(s)}
+          onOccurrence={(s, date) => setOccurrence({ session: s, date })}
         />
       ) : (
         <ScheduleGroupsView
-          byGroup={byGroup} memberCounts={memberCounts} exceptions={exceptions} today={dateKey}
-          isCollapsed={isCollapsed} onToggle={toggle} conflicts={conflicts} deletingId={deletingId}
-          onEdit={openForm} onDelete={(s) => void handleDelete(s)} onAttend={(s) => setAttendanceSession(s)}
+          byGroup={byGroup}
+          memberCounts={memberCounts}
+          exceptions={exceptions}
+          today={dateKey}
+          isCollapsed={isCollapsed}
+          onToggle={toggle}
+          conflicts={conflicts}
+          deletingId={deletingId}
+          onEdit={openForm}
+          onDelete={(s) => void handleDelete(s)}
+          onAttend={(s) => setAttendanceSession(s)}
         />
       )}
-      <ScheduleFormDialog open={formOpen} session={editing} groups={groups} onClose={() => setFormOpen(false)} onSaved={() => void reload()} />
-      <SessionAttendanceDialog open={attendanceSession !== null} session={attendanceSession} onClose={() => setAttendanceSession(null)} onSaved={() => undefined} />
+      <ScheduleFormDialog
+        open={formOpen}
+        session={editing}
+        groups={groups}
+        onClose={() => setFormOpen(false)}
+        onSaved={() => void reload()}
+      />
+      <SessionAttendanceDialog
+        open={attendanceSession !== null}
+        session={attendanceSession}
+        onClose={() => setAttendanceSession(null)}
+        onSaved={() => undefined}
+      />
       <SessionOccurrenceDialog
-        open={occurrence !== null} session={occurrence?.session ?? null} date={occurrence?.date ?? ""}
-        exception={occurrence ? (exceptions.find((ex) => ex.sessionId === occurrence.session.id && ex.date === occurrence.date) ?? null) : null}
-        onClose={() => setOccurrence(null)} onSaved={() => void reload()}
+        open={occurrence !== null}
+        session={occurrence?.session ?? null}
+        date={occurrence?.date ?? ""}
+        exception={
+          occurrence
+            ? (exceptions.find(
+                (ex) => ex.sessionId === occurrence.session.id && ex.date === occurrence.date,
+              ) ?? null)
+            : null
+        }
+        onClose={() => setOccurrence(null)}
+        onSaved={() => void reload()}
       />
     </div>
   );

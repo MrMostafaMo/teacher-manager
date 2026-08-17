@@ -36,9 +36,7 @@ export function ToastItem({ toast, onDismiss }: ToastItemProps) {
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium leading-tight">{toast.message}</p>
         {toast.description ? (
-          <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-            {toast.description}
-          </p>
+          <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{toast.description}</p>
         ) : null}
         {toast.action ? (
           <ToastActionButton action={toast.action} onDone={() => onDismiss(toast.id)} />

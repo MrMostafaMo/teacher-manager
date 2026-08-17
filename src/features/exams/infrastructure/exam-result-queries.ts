@@ -131,9 +131,12 @@ export const examResultQueries = {
       .from(exams)
       .where(eq(exams.groupId, groupId))) as Array<{ id: string }>;
     if (examsOfGroup.length === 0) return;
-    await db
-      .delete(examResults)
-      .where(inArray(examResults.examId, examsOfGroup.map((e) => e.id)));
+    await db.delete(examResults).where(
+      inArray(
+        examResults.examId,
+        examsOfGroup.map((e) => e.id),
+      ),
+    );
     await db.delete(exams).where(eq(exams.groupId, groupId));
   },
 
@@ -144,13 +147,14 @@ export const examResultQueries = {
       .from(exams)
       .where(eq(exams.groupId, groupId))) as Array<{ id: string }>;
     if (examsOfGroup.length === 0) return;
-    await db
-      .delete(examResults)
-      .where(
-        and(
-          inArray(examResults.examId, examsOfGroup.map((e) => e.id)),
-          eq(examResults.studentId, studentId),
+    await db.delete(examResults).where(
+      and(
+        inArray(
+          examResults.examId,
+          examsOfGroup.map((e) => e.id),
         ),
-      );
+        eq(examResults.studentId, studentId),
+      ),
+    );
   },
 };

@@ -32,8 +32,12 @@ export const skillRepository = {
         .where(inArray(studentSkills.level, [1, 2]))
         .groupBy(studentSkills.skillId),
     ]);
-    const trackedCount = new Map((tracked as Array<{ skillId: string; n: number }>).map((r) => [r.skillId, r.n]));
-    const weakCount = new Map((weak as Array<{ skillId: string; n: number }>).map((r) => [r.skillId, r.n]));
+    const trackedCount = new Map(
+      (tracked as Array<{ skillId: string; n: number }>).map((r) => [r.skillId, r.n]),
+    );
+    const weakCount = new Map(
+      (weak as Array<{ skillId: string; n: number }>).map((r) => [r.skillId, r.n]),
+    );
     return (rows as Skill[]).map((s) => ({
       ...s,
       trackedCount: trackedCount.get(s.id) ?? 0,

@@ -73,7 +73,9 @@ export function WeakPointForm({
       if (error instanceof ZodError) {
         setErrors(
           mapZodErrors(error, (field) =>
-            field === "description" ? t("weakPoints.errors.descriptionRequired") : t("weakPoints.saveError"),
+            field === "description"
+              ? t("weakPoints.errors.descriptionRequired")
+              : t("weakPoints.saveError"),
           ),
         );
       } else {
@@ -84,7 +86,12 @@ export function WeakPointForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Field id="weak-point-description" label={t("weakPoints.description")} required error={errors.description}>
+      <Field
+        id="weak-point-description"
+        label={t("weakPoints.description")}
+        required
+        error={errors.description}
+      >
         <Input
           id="weak-point-description"
           value={form.description}

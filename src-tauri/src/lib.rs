@@ -100,6 +100,24 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0014_strong_stranger.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 16,
+            description: "drop legacy study_groups.schedule column",
+            sql: include_str!("../migrations/0015_drop_group_schedule.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 17,
+            description: "student birth_date, grade_level, photo_url; student_groups.joined_at",
+            sql: include_str!("../migrations/0016_student_schema_enhancement.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 18,
+            description: "study_groups.max_students capacity limit",
+            sql: include_str!("../migrations/0017_group_capacity.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

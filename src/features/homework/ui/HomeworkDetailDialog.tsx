@@ -22,7 +22,12 @@ interface HomeworkDetailDialogProps {
   onChanged: () => void;
 }
 
-export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: HomeworkDetailDialogProps) {
+export function HomeworkDetailDialog({
+  open,
+  homeworkId,
+  onClose,
+  onChanged,
+}: HomeworkDetailDialogProps) {
   const { t } = useTranslation();
   const [detail, setDetail] = useState<HomeworkDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +82,12 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={detail ? detail.title : t("homework.detail")} className="max-w-lg">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={detail ? detail.title : t("homework.detail")}
+      className="max-w-lg"
+    >
       {loading ? (
         <CardSkeleton lines={4} />
       ) : error ? (
@@ -85,9 +95,7 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
       ) : detail ? (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            {detail.groupName && (
-              <Badge variant="secondary">{detail.groupName}</Badge>
-            )}
+            {detail.groupName && <Badge variant="secondary">{detail.groupName}</Badge>}
             {detail.dueDate && (
               <Badge variant="outline" dir="ltr">
                 {formatDateString(detail.dueDate)}
@@ -98,7 +106,9 @@ export function HomeworkDetailDialog({ open, homeworkId, onClose, onChanged }: H
           <div>
             <div className="mb-1 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{t("homework.completion")}</span>
-              <span className="font-medium" dir="ltr">{detail.completion}%</span>
+              <span className="font-medium" dir="ltr">
+                {detail.completion}%
+              </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div

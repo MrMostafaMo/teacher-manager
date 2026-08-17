@@ -43,11 +43,10 @@ export class DriveClient {
     const file = await this.findFile(name);
     const metadata = { name, parents: [await this.folder()] };
     if (file === null) {
-      await bearerFetch(
-        this.deps,
-        `${UPLOAD_API}/files?uploadType=multipart&fields=id`,
-        { method: "POST", body: multipart(metadata, text) },
-      );
+      await bearerFetch(this.deps, `${UPLOAD_API}/files?uploadType=multipart&fields=id`, {
+        method: "POST",
+        body: multipart(metadata, text),
+      });
       return;
     }
     const headers: Record<string, string> = {};
@@ -61,11 +60,7 @@ export class DriveClient {
   }
 
   /** Upload arbitrary bytes (a backup .db file) into the backups subfolder. */
-  async uploadBytes(
-    fileName: string,
-    bytes: Uint8Array,
-    folderName: string,
-  ): Promise<void> {
+  async uploadBytes(fileName: string, bytes: Uint8Array, folderName: string): Promise<void> {
     const folder = await this.folderByName(folderName);
     const response = await bearerFetch(
       this.deps,
@@ -78,12 +73,10 @@ export class DriveClient {
     );
     const json = (await response.json()) as { id?: string };
     if (json.id !== undefined) {
-      await driveJson(
-        this.deps,
-        `${DRIVE_API}/files/${json.id}`,
-        "PATCH",
-        { name: fileName, parents: [folder.id] },
-      );
+      await driveJson(this.deps, `${DRIVE_API}/files/${json.id}`, "PATCH", {
+        name: fileName,
+        parents: [folder.id],
+      });
     }
   }
 

@@ -28,14 +28,20 @@ describe("mergePull", () => {
   });
 
   it("updates a local row when remote is newer", () => {
-    const local = { rows: [{ tableName: "students", id: "s1", row: row("s1", 100) }], tombstones: [] };
+    const local = {
+      rows: [{ tableName: "students", id: "s1", row: row("s1", 100) }],
+      tombstones: [],
+    };
     const result = mergePull(payload([{ id: "s1", updatedAt: 200 }]), local);
     expect(result.toApply).toHaveLength(1);
     expect(result.toApply[0].conflict).toBe(true);
   });
 
   it("skips a remote row when local is newer (local wins)", () => {
-    const local = { rows: [{ tableName: "students", id: "s1", row: row("s1", 300) }], tombstones: [] };
+    const local = {
+      rows: [{ tableName: "students", id: "s1", row: row("s1", 300) }],
+      tombstones: [],
+    };
     const result = mergePull(payload([{ id: "s1", updatedAt: 200 }]), local);
     expect(result.toApply).toHaveLength(0);
     expect(result.skipped).toBe(1);
@@ -50,7 +56,10 @@ describe("mergePull", () => {
   });
 
   it("deletes a local row outranked by a remote tombstone", () => {
-    const local = { rows: [{ tableName: "students", id: "s1", row: row("s1", 100) }], tombstones: [] };
+    const local = {
+      rows: [{ tableName: "students", id: "s1", row: row("s1", 100) }],
+      tombstones: [],
+    };
     const remote = payload([{ id: "s1", updatedAt: 100 }]);
     remote.tombstones = [{ tableName: "students", rowId: "s1", deletedAt: 200 }];
     const result = mergePull(remote, local);

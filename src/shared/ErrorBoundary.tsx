@@ -13,10 +13,7 @@ interface ErrorBoundaryState {
 }
 
 /** Last-resort guard: render errors must never blank the window. */
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -33,9 +30,7 @@ export class ErrorBoundary extends Component<
         <div className="flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center">
           <TriangleAlert className="size-10 text-destructive" />
           <h1 className="text-lg font-semibold">ERR-v3 {i18n.t("error.title")}</h1>
-          <p className="max-w-md text-sm text-muted-foreground">
-            {i18n.t("error.description")}
-          </p>
+          <p className="max-w-md text-sm text-muted-foreground">{i18n.t("error.description")}</p>
           {this.state.message && (
             <textarea
               readOnly
@@ -45,9 +40,7 @@ export class ErrorBoundary extends Component<
               rows={3}
             />
           )}
-          <Button onClick={() => window.location.reload()}>
-            {i18n.t("common.retry")}
-          </Button>
+          <Button onClick={() => window.location.reload()}>{i18n.t("common.retry")}</Button>
         </div>
       );
     }

@@ -44,10 +44,7 @@ export function SessionAttendanceDialog({
     setLoading(true);
     setError("");
     try {
-      const { students, rows } = await getSessionAttendance(
-        { id: sessionId, groupId },
-        date,
-      );
+      const { students, rows } = await getSessionAttendance({ id: sessionId, groupId }, date);
       const byId = Object.fromEntries(rows.map((r) => [r.studentId, r.status])) as Record<
         string,
         AttendanceStatus
@@ -105,7 +102,11 @@ export function SessionAttendanceDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title={session ? `${session.groupName} — ${formatTime(session.startTime, hour24)} – ${formatTime(session.endTime, hour24)}` : ""}
+      title={
+        session
+          ? `${session.groupName} — ${formatTime(session.startTime, hour24)} – ${formatTime(session.endTime, hour24)}`
+          : ""
+      }
     >
       <div className="space-y-4">
         <SessionAttendanceToolbar

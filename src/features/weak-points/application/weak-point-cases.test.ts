@@ -52,14 +52,8 @@ beforeEach(() => {
     ...row,
     ...v,
   }));
-  byStudent.mockImplementation(async () => [
-    row,
-    { ...row, id: "wp-2", resolved: 1 },
-  ]);
-  all.mockImplementation(async () => [
-    row,
-    { ...row, id: "wp-2", resolved: 1 },
-  ]);
+  byStudent.mockImplementation(async () => [row, { ...row, id: "wp-2", resolved: 1 }]);
+  all.mockImplementation(async () => [row, { ...row, id: "wp-2", resolved: 1 }]);
   remove.mockImplementation(async (id: string) => store.delete(id));
   store.set(row.id, { ...row });
 });

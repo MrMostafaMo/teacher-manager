@@ -13,7 +13,8 @@ import { StudentStatementDialog } from "@/features/student-profile/ui/StudentSta
 import { StudentTrendsSection } from "@/features/student-profile/ui/StudentTrendsSection";
 import { useReportCard } from "@/features/report-card/ui/use-report-card";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
-import { ProfileFactsCard, ProfileStatsGrid, useProfileSummary } from "./profile-overview";
+import { ProfileFactsCard, ProfileStatsGrid } from "./profile-overview";
+import { computeProfileSummary } from "../application/profile-summary";
 import { ProfileHeader } from "./profile-header";
 import { ProfilePageSkeleton } from "./profile-skeleton";
 import { ProfileSections, profileSectionDefaults } from "./profile-sections";
@@ -57,7 +58,7 @@ export default function StudentProfilePage() {
   }
 
   const { student, planName, groups, sessionAttendance } = data;
-  const { attendanceRate, homeworkRate, examAverage } = useProfileSummary(data);
+  const { attendanceRate, homeworkRate, examAverage } = computeProfileSummary(data);
 
   return (
     <div className="space-y-6">

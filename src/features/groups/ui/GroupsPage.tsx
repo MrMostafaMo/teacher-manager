@@ -7,10 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import {
-  deleteGroup,
-  listGroups,
-} from "@/features/groups/application/group-cases";
+import { deleteGroup, listGroups } from "@/features/groups/application/group-cases";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
@@ -72,7 +69,12 @@ export default function GroupsPage() {
         const undoId = await deleteGroup(group.id);
         void reload();
         if (undoId !== null) {
-          notifyUndo(undoId, t("undo.deleted"), `${t("undo.group")}: ${group.name}`, t("undo.undo"));
+          notifyUndo(
+            undoId,
+            t("undo.deleted"),
+            `${t("undo.group")}: ${group.name}`,
+            t("undo.undo"),
+          );
         }
       } catch (error) {
         console.error("Failed to delete group", error);
@@ -108,7 +110,11 @@ export default function GroupsPage() {
           {loading ? (
             <TableRowsSkeleton rows={4} cols={3} />
           ) : rows.length === 0 ? (
-            <EmptyState icon={Users2} title={t("groups.empty")} description={t("groups.emptyHint")} />
+            <EmptyState
+              icon={Users2}
+              title={t("groups.empty")}
+              description={t("groups.emptyHint")}
+            />
           ) : (
             <GroupsTable
               rows={rows}

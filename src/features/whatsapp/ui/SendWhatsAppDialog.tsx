@@ -58,10 +58,7 @@ export function SendWhatsAppDialog({ open, data, onClose }: Props) {
     source === "custom" ? customPhone : source === "student" ? studentPhone : guardianPhone;
   const canSend = selected !== undefined && phone.trim() !== "" && text.trim() !== "";
 
-  const preview = useMemo(
-    () => renderTemplate(text, buildTemplateVars(data)),
-    [text, data],
-  );
+  const preview = useMemo(() => renderTemplate(text, buildTemplateVars(data)), [text, data]);
 
   function insertVar(variable: string) {
     setText((s) => `${s}{${variable}}`);
@@ -95,11 +92,7 @@ export function SendWhatsAppDialog({ open, data, onClose }: Props) {
         ) : (
           <>
             <Field label={t("whatsapp.template")} id="wa-template">
-              <TemplateSelect
-                templates={templates}
-                value={selected.id}
-                onChange={setTemplateId}
-              />
+              <TemplateSelect templates={templates} value={selected.id} onChange={setTemplateId} />
             </Field>
 
             <PhonePicker
@@ -135,8 +128,16 @@ export function SendWhatsAppDialog({ open, data, onClose }: Props) {
               </p>
             </Field>
 
-            <Button className="w-full" onClick={() => void handleSend()} disabled={!canSend || busy}>
-              {busy ? <Send className="size-4 animate-pulse" /> : <MessageCircle className="size-4" />}
+            <Button
+              className="w-full"
+              onClick={() => void handleSend()}
+              disabled={!canSend || busy}
+            >
+              {busy ? (
+                <Send className="size-4 animate-pulse" />
+              ) : (
+                <MessageCircle className="size-4" />
+              )}
               {busy ? t("whatsapp.sending") : t("whatsapp.send")}
             </Button>
           </>

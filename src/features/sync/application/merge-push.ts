@@ -2,6 +2,7 @@ import type { SyncPayload, SyncRow, SyncTombstoneItem } from "../domain";
 import { SYNC_TABLE_NAMES } from "../domain";
 import { buildTombstoneIndex, keyOf, type LocalState } from "./merge-pull";
 import { tombstoneBeatsRow } from "./tombstones";
+import { updatedAt, differs } from "./sync-utils";
 
 /**
  * Pure merge of local state into the remote payload (last-write-wins per row).
@@ -19,10 +20,6 @@ export interface PushResult {
 }
 
 type Entity = { kind: "row"; row: SyncRow } | { kind: "tomb"; tomb: SyncTombstoneItem };
-
-function updatedAt(row: SyncRow): number {
-  return Number(row.updated_at ?? 0);
-}
 
 /** Fresh payload with empty per-table lists — deterministic output. */
 function blank(remote: SyncPayload): SyncPayload {
@@ -44,14 +41,22 @@ function resolve(
   remoteTomb: number | undefined,
 ): Entity | null {
   const candidates: Entity[] = [];
-  if (localRow !== undefined && !(localTomb !== undefined && tombstoneBeatsRow(localTomb, updatedAt(localRow)))) {
+  if (
+    localRow !== undefined &&
+    !(localTomb !== undefined && tombstoneBeatsRow(localTomb, updatedAt(localRow)))
+  ) {
     candidates.push({ kind: "row", row: localRow });
   }
-  if (remoteRow !== undefined && !(remoteTomb !== undefined && tombstoneBeatsRow(remoteTomb, updatedAt(remoteRow)))) {
+  if (
+    remoteRow !== undefined &&
+    !(remoteTomb !== undefined && tombstoneBeatsRow(remoteTomb, updatedAt(remoteRow)))
+  ) {
     candidates.push({ kind: "row", row: remoteRow });
   }
-  if (localTomb !== undefined) candidates.push({ kind: "tomb", tomb: { tableName: "", rowId: "", deletedAt: localTomb } });
-  if (remoteTomb !== undefined) candidates.push({ kind: "tomb", tomb: { tableName: "", rowId: "", deletedAt: remoteTomb } });
+  if (localTomb !== undefined)
+    candidates.push({ kind: "tomb", tomb: { tableName: "", rowId: "", deletedAt: localTomb } });
+  if (remoteTomb !== undefined)
+    candidates.push({ kind: "tomb", tomb: { tableName: "", rowId: "", deletedAt: remoteTomb } });
   if (candidates.length === 0) return null;
   return candidates.reduce((best, current) => {
     const ts = (e: Entity) => (e.kind === "row" ? updatedAt(e.row) : e.tomb.deletedAt);
@@ -122,8 +127,4 @@ function buildRowIndexByTable(remote: SyncPayload): Map<string, SyncRow> {
     }
   }
   return index;
-}
-
-function differs(a: SyncRow, b: SyncRow): boolean {
-  return JSON.stringify(a) !== JSON.stringify(b);
 }

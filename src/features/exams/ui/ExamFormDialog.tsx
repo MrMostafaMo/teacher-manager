@@ -19,7 +19,14 @@ interface ExamFormDialogProps {
   onSaved: () => void;
 }
 
-export function ExamFormDialog({ open, exam, groups, defaultGroupId, onClose, onSaved }: ExamFormDialogProps) {
+export function ExamFormDialog({
+  open,
+  exam,
+  groups,
+  defaultGroupId,
+  onClose,
+  onSaved,
+}: ExamFormDialogProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<ExamFormValues>({
     groupId: "",

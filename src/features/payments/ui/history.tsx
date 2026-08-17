@@ -84,7 +84,12 @@ export const HistoryView = memo(function HistoryView({
         setRows((r) => r.filter((p) => p.payment.id !== id));
         onChanged();
         if (undoId !== null && row) {
-          notifyUndo(undoId, t("undo.deleted"), `${t("undo.payment")}: ${row.studentName}`, t("undo.undo"));
+          notifyUndo(
+            undoId,
+            t("undo.deleted"),
+            `${t("undo.payment")}: ${row.studentName}`,
+            t("undo.undo"),
+          );
         }
       } catch (e) {
         console.error("Failed to delete payment", e);

@@ -22,11 +22,9 @@ function jsonResponse(status: number, body: unknown): Response {
 
 beforeEach(() => {
   fetchImpl.mockReset();
-  fetchImpl.mockImplementation(
-    async (_url: RequestInfo | URL, _init: RequestInit | undefined) => {
-      return new Response("{}", { status: 200 });
-    },
-  );
+  fetchImpl.mockImplementation(async (_url: RequestInfo | URL, _init: RequestInit | undefined) => {
+    return new Response("{}", { status: 200 });
+  });
 });
 
 describe("drive-http", () => {
@@ -38,7 +36,9 @@ describe("drive-http", () => {
 
   it("refreshes once on 401 and retries", async () => {
     fetchImpl.mockReset();
-    fetchImpl.mockResolvedValueOnce(jsonResponse(401, {})).mockResolvedValueOnce(jsonResponse(200, {}));
+    fetchImpl
+      .mockResolvedValueOnce(jsonResponse(401, {}))
+      .mockResolvedValueOnce(jsonResponse(200, {}));
     const response = await bearerFetch(deps(), "https://x", { method: "GET" });
     expect(response.status).toBe(200);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
@@ -111,16 +111,20 @@ describe("DriveClient", () => {
     });
     const client = new DriveClient(deps());
     await client.uploadBytes("backup.db", new Uint8Array([1, 2, 3]), "backups");
-    const patch = fetchImpl.mock.calls.find(
-      (call) => call[1]?.method === "PATCH",
-    )?.[1] as RequestInit | undefined;
+    const patch = fetchImpl.mock.calls.find((call) => call[1]?.method === "PATCH")?.[1] as
+      RequestInit | undefined;
     const body = patch?.body as string;
     expect(JSON.parse(body)).toEqual({ name: "backup.db", parents: ["folder"] });
   });
 
   it("lists backup files newest first", async () => {
     fetchImpl.mockImplementation(async () =>
-      jsonResponse(200, { files: [{ id: "f2", name: "b2" }, { id: "f1", name: "b1" }] }),
+      jsonResponse(200, {
+        files: [
+          { id: "f2", name: "b2" },
+          { id: "f1", name: "b1" },
+        ],
+      }),
     );
     const client = new DriveClient(deps());
     const files = await client.listFiles("backups");

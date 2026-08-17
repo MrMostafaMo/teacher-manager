@@ -1,17 +1,13 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { formatMoney, formatNumber } from "@/lib/utils/format";
-import type { AttendanceTrendPoint, ExamTrendPoint, HomeworkTrendPoint, PaymentTrendPoint } from "@/features/student-profile/application/student-trends";
+import type {
+  AttendanceTrendPoint,
+  ExamTrendPoint,
+  HomeworkTrendPoint,
+  PaymentTrendPoint,
+} from "@/features/student-profile/application/student-trends";
 
 const ATTENDANCE_COLORS = {
   present: "var(--chart-2)",
@@ -49,7 +45,11 @@ const pctTooltipContent = <TrendTooltip format={formatPct} />;
 const moneyTooltipContent = <TrendTooltip format={formatMoney} />;
 
 /** Monthly attendance bars. Re-renders only when `data` changes. */
-export const AttendanceBars = memo(function AttendanceBars({ data }: { data: AttendanceTrendPoint[] }) {
+export const AttendanceBars = memo(function AttendanceBars({
+  data,
+}: {
+  data: AttendanceTrendPoint[];
+}) {
   const { t } = useTranslation();
   return (
     <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
@@ -57,9 +57,24 @@ export const AttendanceBars = memo(function AttendanceBars({ data }: { data: Att
       <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
       <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
       <Tooltip content={attendanceTooltipContent} />
-      <Bar dataKey="present" stackId="a" fill={ATTENDANCE_COLORS.present} name={t("attendance.statusPresent")} />
-      <Bar dataKey="late" stackId="a" fill={ATTENDANCE_COLORS.late} name={t("attendance.statusLate")} />
-      <Bar dataKey="absent" stackId="a" fill={ATTENDANCE_COLORS.absent} name={t("attendance.statusAbsent")} />
+      <Bar
+        dataKey="present"
+        stackId="a"
+        fill={ATTENDANCE_COLORS.present}
+        name={t("attendance.statusPresent")}
+      />
+      <Bar
+        dataKey="late"
+        stackId="a"
+        fill={ATTENDANCE_COLORS.late}
+        name={t("attendance.statusLate")}
+      />
+      <Bar
+        dataKey="absent"
+        stackId="a"
+        fill={ATTENDANCE_COLORS.absent}
+        name={t("attendance.statusAbsent")}
+      />
       <Bar
         dataKey="excused"
         stackId="a"
@@ -78,7 +93,13 @@ export const ExamLine = memo(function ExamLine({ data }: { data: ExamTrendPoint[
     <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
       <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
       <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
-      <YAxis tickLine={false} axisLine={false} fontSize={12} domain={[0, 100]} allowDecimals={false} />
+      <YAxis
+        tickLine={false}
+        axisLine={false}
+        fontSize={12}
+        domain={[0, 100]}
+        allowDecimals={false}
+      />
       <Tooltip content={pctTooltipContent} />
       <Line
         type="monotone"
@@ -99,9 +120,20 @@ export const HomeworkBars = memo(function HomeworkBars({ data }: { data: Homewor
     <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
       <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
       <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
-      <YAxis tickLine={false} axisLine={false} fontSize={12} domain={[0, 100]} allowDecimals={false} />
+      <YAxis
+        tickLine={false}
+        axisLine={false}
+        fontSize={12}
+        domain={[0, 100]}
+        allowDecimals={false}
+      />
       <Tooltip content={pctTooltipContent} />
-      <Bar dataKey="rate" fill="var(--chart-5)" radius={[3, 3, 0, 0]} name={t("profile.trends.homeworkDone")} />
+      <Bar
+        dataKey="rate"
+        fill="var(--chart-5)"
+        radius={[3, 3, 0, 0]}
+        name={t("profile.trends.homeworkDone")}
+      />
     </BarChart>
   );
 });
@@ -115,7 +147,12 @@ export const PaymentBars = memo(function PaymentBars({ data }: { data: PaymentTr
       <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
       <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
       <Tooltip content={moneyTooltipContent} />
-      <Bar dataKey="amount" fill="var(--chart-2)" radius={[3, 3, 0, 0]} name={t("profile.trends.paymentsAmount")} />
+      <Bar
+        dataKey="amount"
+        fill="var(--chart-2)"
+        radius={[3, 3, 0, 0]}
+        name={t("profile.trends.paymentsAmount")}
+      />
     </BarChart>
   );
 });

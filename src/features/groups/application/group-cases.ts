@@ -1,8 +1,5 @@
 import { studyGroupInputSchema, type StudyGroupInput } from "@/features/groups/domain";
-import {
-  groupRepository,
-  type GroupWithCount,
-} from "@/features/groups/infrastructure/group-repo";
+import { groupRepository, type GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import { homeworkRepository } from "@/features/homework/infrastructure/homework-repo";
 import { examRepository } from "@/features/exams/infrastructure/exam-repo";
 import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";

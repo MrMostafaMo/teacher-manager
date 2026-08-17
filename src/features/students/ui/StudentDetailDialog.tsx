@@ -21,13 +21,20 @@ interface StudentDetailDialogProps {
   onDeleted: () => void;
 }
 
-export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: StudentDetailDialogProps) {
+export function StudentDetailDialog({
+  student,
+  onClose,
+  onEdit,
+  onDeleted,
+}: StudentDetailDialogProps) {
   const { t } = useTranslation();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [skillsOpen, setSkillsOpen] = useState(false);
-  const { planName, skillSummary, setSkillSummary, groups, groupId, setGroupId } =
-    useStudentDetail(student, skillsOpen);
+  const { planName, skillSummary, setSkillSummary, groups, groupId, setGroupId } = useStudentDetail(
+    student,
+    skillsOpen,
+  );
 
   useEffect(() => {
     setConfirming(false);
@@ -54,7 +61,12 @@ export function StudentDetailDialog({ student, onClose, onEdit, onDeleted }: Stu
       onDeleted();
       onClose();
       if (undoId !== null) {
-        notifyUndo(undoId, t("undo.deleted"), `${t("undo.student")}: ${student.name}`, t("undo.undo"));
+        notifyUndo(
+          undoId,
+          t("undo.deleted"),
+          `${t("undo.student")}: ${student.name}`,
+          t("undo.undo"),
+        );
       }
     } catch {
       setError(t("students.deleteError"));

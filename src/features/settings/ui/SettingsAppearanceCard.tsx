@@ -1,5 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Clock, Languages, MonitorCog, Moon, Palette, Settings2, Sun } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  Languages,
+  MonitorCog,
+  Moon,
+  Palette,
+  Settings2,
+  Sun,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LanguageSelector, ThemeSelector } from "@/shared/AppearanceControls";
 import { PresetPicker } from "@/shared/preset-picker";

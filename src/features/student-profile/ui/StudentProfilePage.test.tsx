@@ -18,6 +18,9 @@ const student: Student = {
   planId: null,
   status: "active",
   enrolledOn: "2026-08-01",
+  birthDate: null,
+  gradeLevel: null,
+  photoUrl: null,
   createdAt: 1,
   updatedAt: 1,
 };

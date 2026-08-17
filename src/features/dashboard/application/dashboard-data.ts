@@ -2,7 +2,13 @@ export interface DashboardData {
   totalStudents: number;
   activeStudents: number;
   attendanceRate: number;
-  attendanceTrend: Array<{ month: string; present: number; absent: number; late: number; excused: number }>;
+  attendanceTrend: Array<{
+    month: string;
+    present: number;
+    absent: number;
+    late: number;
+    excused: number;
+  }>;
   financeTrend: Array<{ month: string; collected: number; expenses: number }>;
   collected: number;
   expensesMonth: number;

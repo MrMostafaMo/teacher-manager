@@ -26,9 +26,7 @@ export function Header() {
           <Icon className="size-4.5" />
         </div>
         <div className="min-w-0">
-          <h1 className="truncate text-base font-semibold leading-tight">
-            {t(current.labelKey)}
-          </h1>
+          <h1 className="truncate text-base font-semibold leading-tight">{t(current.labelKey)}</h1>
           <p className="truncate text-xs leading-tight text-muted-foreground">
             {section ? t(section.labelKey) : ""}
           </p>

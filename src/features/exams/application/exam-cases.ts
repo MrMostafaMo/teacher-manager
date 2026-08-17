@@ -11,12 +11,7 @@ import { computeExamDetail, examEligibleIds } from "./exam-stats";
 import { examResults, exams } from "@/lib/db/schema";
 import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
 import { registerUndo } from "@/lib/undo-store";
-import {
-  logExamCreate,
-  logExamDelete,
-  logExamResult,
-  logExamUpdate,
-} from "./exam-logs";
+import { logExamCreate, logExamDelete, logExamResult, logExamUpdate } from "./exam-logs";
 
 /**
  * Exam use cases. Completion % and per-exam stats are computed in
@@ -46,8 +41,7 @@ export async function listExams(): Promise<ExamListItem[]> {
   const rows = await examRepository.list();
   return rows.map((r) => ({
     ...r,
-    completion:
-      r.memberCount > 0 ? Math.round((r.resultCount / r.memberCount) * 100) : 0,
+    completion: r.memberCount > 0 ? Math.round((r.resultCount / r.memberCount) * 100) : 0,
   }));
 }
 
@@ -78,10 +72,7 @@ export async function createExam(input: ExamInput): Promise<Exam> {
   return exam;
 }
 
-export async function updateExam(
-  id: string,
-  input: ExamInput,
-): Promise<Exam | undefined> {
+export async function updateExam(id: string, input: ExamInput): Promise<Exam | undefined> {
   const data = examInputSchema.parse(input);
   const existing = await examRepository.findById(id);
   const exam = await examRepository.update(id, {
@@ -108,9 +99,8 @@ export async function deleteExam(
 ): Promise<number | null> {
   const exam = await examRepository.findById(id);
   const rows = await captureRows(exams, [id]);
-  const results = options.undo === false
-    ? []
-    : await captureBy(examResults, examResults.examId, id);
+  const results =
+    options.undo === false ? [] : await captureBy(examResults, examResults.examId, id);
   await examRepository.clearForExam(id);
   const ok = await examRepository.remove(id);
   if (!ok) return null;

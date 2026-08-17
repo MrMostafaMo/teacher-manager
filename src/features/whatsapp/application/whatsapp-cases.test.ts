@@ -56,7 +56,10 @@ describe("whatsapp-cases", () => {
 
   it("creates a template with a fresh id", async () => {
     mockedList.mockResolvedValue(stored);
-    const created = await upsertTemplate({ name: "جديد", purpose: "exams", text: "نتيجة {examAverage}" }, t);
+    const created = await upsertTemplate(
+      { name: "جديد", purpose: "exams", text: "نتيجة {examAverage}" },
+      t,
+    );
     expect(created.id).toBeTruthy();
     expect(created.name).toBe("جديد");
     expect(mockedSave.mock.calls[0][0]).toHaveLength(2);
@@ -72,11 +75,16 @@ describe("whatsapp-cases", () => {
 
   it("rejects an empty template name", async () => {
     mockedList.mockResolvedValue(stored);
-    await expect(upsertTemplate({ name: "  ", purpose: "general", text: "نص" }, t)).rejects.toThrow();
+    await expect(
+      upsertTemplate({ name: "  ", purpose: "general", text: "نص" }, t),
+    ).rejects.toThrow();
   });
 
   it("deletes a template by id", async () => {
-    mockedList.mockResolvedValue([...stored, { id: "x", name: "زائد", purpose: "skills", text: "نص" }]);
+    mockedList.mockResolvedValue([
+      ...stored,
+      { id: "x", name: "زائد", purpose: "skills", text: "نص" },
+    ]);
     await deleteTemplate("x", t);
     const saved = mockedSave.mock.calls[0][0];
     expect(saved).toHaveLength(1);

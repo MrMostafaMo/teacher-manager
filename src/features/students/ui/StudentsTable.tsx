@@ -52,6 +52,11 @@ export const StudentsTable = memo(function StudentsTable({
         render: (s) => <span dir="ltr">{s.phone ?? "—"}</span>,
       },
       {
+        header: t("students.columns.gradeLevel"),
+        className: "text-muted-foreground",
+        render: (s) => s.gradeLevel ?? "—",
+      },
+      {
         header: t("students.columns.status"),
         render: (s) => <StatusBadge status={s.status} />,
       },

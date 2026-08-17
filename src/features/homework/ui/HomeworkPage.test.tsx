@@ -17,13 +17,63 @@ vi.mock("@/features/groups/application/group-cases", () => ({
 }));
 
 const groups: GroupWithCount[] = [
-  { id: "g1", name: "Group A", subject: null, schedule: null, startsOn: null, status: "active", notes: null, createdAt: 1, updatedAt: 1, memberCount: 2 },
-  { id: "g2", name: "Group B", subject: null, schedule: null, startsOn: null, status: "active", notes: null, createdAt: 1, updatedAt: 1, memberCount: 1 },
+  {
+    id: "g1",
+    name: "Group A",
+    subject: null,
+    startsOn: null,
+    maxStudents: null,
+    status: "active",
+    notes: null,
+    createdAt: 1,
+    updatedAt: 1,
+    memberCount: 2,
+  },
+  {
+    id: "g2",
+    name: "Group B",
+    subject: null,
+    startsOn: null,
+    maxStudents: null,
+    status: "active",
+    notes: null,
+    createdAt: 1,
+    updatedAt: 1,
+    memberCount: 1,
+  },
 ];
 
 const homeworkRows = [
-  { id: "h1", groupId: "g1", title: "Worksheet", description: null, dueDate: "2026-08-01", createdAt: 1, updatedAt: 1, groupName: "Group A", submitted: 1, pending: 2, late: 0, completion: 33, overdue: true },
-  { id: "h2", groupId: "g2", title: "Revision", description: null, dueDate: "2026-08-03", createdAt: 1, updatedAt: 1, groupName: "Group B", submitted: 0, pending: 3, late: 0, completion: 0, overdue: true },
+  {
+    id: "h1",
+    groupId: "g1",
+    title: "Worksheet",
+    description: null,
+    dueDate: "2026-08-01",
+    createdAt: 1,
+    updatedAt: 1,
+    groupName: "Group A",
+    submitted: 1,
+    pending: 2,
+    late: 0,
+    completion: 33,
+    overdue: true,
+  },
+  {
+    id: "h2",
+    groupId: "g2",
+    title: "Revision",
+    description: null,
+    dueDate: "2026-08-03",
+    createdAt: 1,
+    updatedAt: 1,
+    groupName: "Group B",
+    submitted: 0,
+    pending: 3,
+    late: 0,
+    completion: 0,
+    overdue: true,
+  },
 ];
 
 beforeAll(async () => {

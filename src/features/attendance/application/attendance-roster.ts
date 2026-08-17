@@ -8,7 +8,9 @@ import { enrolledBy } from "@/lib/utils/enrollment";
 import type { Student } from "@/lib/db/schema";
 
 /** Members of the groups with a session on `date`'s weekday + whether any exist. */
-export async function rosterForDate(date: string): Promise<{ students: Student[]; hasSessionsToday: boolean }> {
+export async function rosterForDate(
+  date: string,
+): Promise<{ students: Student[]; hasSessionsToday: boolean }> {
   const schedule = await listSchedule();
   const exceptions = await exceptionsForDates(
     schedule.map((s) => s.id),

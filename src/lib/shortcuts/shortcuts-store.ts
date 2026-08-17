@@ -30,8 +30,7 @@ export const useShortcutsStore = create<ShortcutsState>()(
     (set, get) => ({
       shortcuts: buildDefaults(),
 
-      setShortcut: (id, combo) =>
-        set((s) => ({ shortcuts: { ...s.shortcuts, [id]: combo } })),
+      setShortcut: (id, combo) => set((s) => ({ shortcuts: { ...s.shortcuts, [id]: combo } })),
 
       resetShortcut: (id) =>
         set((s) => ({
@@ -43,8 +42,7 @@ export const useShortcutsStore = create<ShortcutsState>()(
 
       resetShortcuts: () => set({ shortcuts: buildDefaults() }),
 
-      getDefault: (id) =>
-        DEFAULT_SHORTCUTS.find((d) => d.id === id)?.defaultCombo,
+      getDefault: (id) => DEFAULT_SHORTCUTS.find((d) => d.id === id)?.defaultCombo,
 
       findDuplicate: (selfId, combo) => {
         const map = get().shortcuts;

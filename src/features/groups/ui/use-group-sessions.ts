@@ -65,7 +65,13 @@ export function useGroupSessions(open: boolean, group: StudyGroup | null) {
     setDraftError("");
     setSessions((s) => [
       ...s,
-      { key: uuid(), dayOfWeek: draft.dayOfWeek, startTime: draft.startTime, endTime: draft.endTime, room: draft.room },
+      {
+        key: uuid(),
+        dayOfWeek: draft.dayOfWeek,
+        startTime: draft.startTime,
+        endTime: draft.endTime,
+        room: draft.room,
+      },
     ]);
     setDraft({ key: "", ...emptyDraft });
   }
@@ -81,5 +87,14 @@ export function useGroupSessions(open: boolean, group: StudyGroup | null) {
     setSessions((s) => s.filter((x) => x.key !== key));
   }
 
-  return { sessions, draft, draftError, removingKey, loadedIds, addSession, updateDraft, removeSession };
+  return {
+    sessions,
+    draft,
+    draftError,
+    removingKey,
+    loadedIds,
+    addSession,
+    updateDraft,
+    removeSession,
+  };
 }

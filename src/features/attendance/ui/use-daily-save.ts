@@ -34,9 +34,7 @@ export function useDailySave({
     if (isFuture) return;
     const entries = students
       .map((s) => ({ studentId: s.id, status: draft[s.id] }))
-      .filter(
-        (e): e is { studentId: string; status: AttendanceStatus } => e.status != null,
-      );
+      .filter((e): e is { studentId: string; status: AttendanceStatus } => e.status != null);
     if (entries.length === 0) return;
     setSaveError("");
     try {

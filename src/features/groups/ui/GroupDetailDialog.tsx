@@ -84,7 +84,12 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
       await reload();
       onChanged();
       if (undoId !== null && member) {
-        notifyUndo(undoId, t("undo.deleted"), `${t("undo.member")}: ${member.name}`, t("undo.undo"));
+        notifyUndo(
+          undoId,
+          t("undo.deleted"),
+          `${t("undo.member")}: ${member.name}`,
+          t("undo.undo"),
+        );
       }
     } catch {
       setError(t("groups.memberError"));
@@ -104,7 +109,9 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
       description={
         <>
           {group.subject ? `${group.subject} · ` : ""}
-          {group.startsOn ? `${t("groups.fields.startsOn")}: ${formatDateString(group.startsOn)} · ` : ""}
+          {group.startsOn
+            ? `${t("groups.fields.startsOn")}: ${formatDateString(group.startsOn)} · `
+            : ""}
           {sessions.length > 0
             ? sessions
                 .map(
@@ -112,13 +119,24 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
                     `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${formatTime(s.startTime, hour24)}–${formatTime(s.endTime, hour24)}`,
                 )
                 .join(" · ")
-            : (group.schedule ?? t("groups.noSchedule"))}
+            : t("groups.noSchedule")}
         </>
       }
     >
       <div className="space-y-4">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-2">
           <StatusBadge status={group.status} />
+          {group.maxStudents != null && (
+            <span
+              className={`text-xs font-medium rounded-lg px-2 py-0.5 ${
+                members.length >= group.maxStudents
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {members.length}/{group.maxStudents}
+            </span>
+          )}
         </div>
 
         {group.notes && (

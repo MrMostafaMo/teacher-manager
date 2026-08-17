@@ -49,7 +49,12 @@ describe("WeakPointsSection", () => {
   it("renders active and resolved weakness badges", () => {
     render(
       <ThemeProvider>
-        <WeakPointsSection weakPoints={rows} onManage={() => {}} collapsed={false} onToggle={() => {}} />
+        <WeakPointsSection
+          weakPoints={rows}
+          onManage={() => {}}
+          collapsed={false}
+          onToggle={() => {}}
+        />
       </ThemeProvider>,
     );
     expect(screen.getByText("long division")).toBeTruthy();
@@ -59,7 +64,12 @@ describe("WeakPointsSection", () => {
   it("shows the empty state when there are no weak points", () => {
     render(
       <ThemeProvider>
-        <WeakPointsSection weakPoints={[]} onManage={() => {}} collapsed={false} onToggle={() => {}} />
+        <WeakPointsSection
+          weakPoints={[]}
+          onManage={() => {}}
+          collapsed={false}
+          onToggle={() => {}}
+        />
       </ThemeProvider>,
     );
     expect(screen.getByText("No weak points recorded yet.")).toBeTruthy();

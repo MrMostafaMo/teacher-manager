@@ -29,7 +29,9 @@ export default function StudentsPage() {
   const [editing, setEditing] = useState<Student | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const { armed: deletingId, request, clear } = useConfirmDelete();
-  const [groupsByStudent, setGroupsByStudent] = useState<Map<string, Array<{ id: string; name: string }>>>(new Map());
+  const [groupsByStudent, setGroupsByStudent] = useState<
+    Map<string, Array<{ id: string; name: string }>>
+  >(new Map());
   const { isCollapsed, toggle } = useCollapsedSections();
   const reload = useCallback(async () => {
     setLoading(true);
@@ -78,7 +80,12 @@ export default function StudentsPage() {
         const undoId = await deleteStudent(student.id);
         void reload();
         if (undoId !== null) {
-          notifyUndo(undoId, t("undo.deleted"), `${t("undo.student")}: ${student.name}`, t("undo.undo"));
+          notifyUndo(
+            undoId,
+            t("undo.deleted"),
+            `${t("undo.student")}: ${student.name}`,
+            t("undo.undo"),
+          );
         }
       } catch (error) {
         console.error("Failed to delete student", error);

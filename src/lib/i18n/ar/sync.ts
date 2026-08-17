@@ -47,14 +47,17 @@ export const sync = {
     title: "مزامنة Google",
     hint: "سجّل الدخول بحساب Google لمزامنة البيانات بين الأجهزة والاحتفاظ بنسخ احتياطية سحابية.",
     clientIdPlaceholder: "معرّف عميل OAuth (1234-abc.apps.googleusercontent.com)",
-    helpLink: "أنشئ معرّف عميل OAuth من نوع «تطبيق سطح المكتب» في Google Cloud Console ثم الصقه هنا.",
-    clientIdDisabledHint: "الصق معرّف عميل OAuth صالحًا في الحقل أعلاه لتفعيل تسجيل الدخول — تحتاج لعمله مرة واحدة فقط.",
+    helpLink:
+      "أنشئ معرّف عميل OAuth من نوع «تطبيق سطح المكتب» في Google Cloud Console ثم الصقه هنا.",
+    clientIdDisabledHint:
+      "الصق معرّف عميل OAuth صالحًا في الحقل أعلاه لتفعيل تسجيل الدخول — تحتاج لعمله مرة واحدة فقط.",
     guide: {
       title: "كيف تحصل على معرّف العميل (إعداد لمرة واحدة)",
       step1: "افتح Google Cloud Console وأنشئ مشروعًا أو اختر مشروعًا موجودًا.",
       step2: "انتقل إلى APIs & Services ← OAuth consent screen، واملأ اسم التطبيق واحفظ.",
       step3: "انتقل إلى Credentials ← Create credentials ← OAuth client ID ← Desktop app ← Create.",
-      step4: "انسخ معرّف العميل (…apps.googleusercontent.com) والصقه أعلاه — إعادة التوجيه تعمل تلقائيًا.",
+      step4:
+        "انسخ معرّف العميل (…apps.googleusercontent.com) والصقه أعلاه — إعادة التوجيه تعمل تلقائيًا.",
     },
     invalidClientId: "هذا لا يبدو معرّف عميل OAuth صالحًا لتطبيق سطح المكتب.",
     connect: "تسجيل الدخول بـ Google",
@@ -70,7 +73,8 @@ export const sync = {
     cloudBackup: "نسخة احتياطية سحابية",
     backupDone: "تم رفع النسخة الاحتياطية إلى Drive.",
     cloudRestore: "استعادة سحابية",
-    restoreConfirm: "استبدال البيانات المحلية بأحدث نسخة احتياطية سحابية؟ سيتم حفظ نسخة من البيانات الحالية وتُستعاد عند الفشل.",
+    restoreConfirm:
+      "استبدال البيانات المحلية بأحدث نسخة احتياطية سحابية؟ سيتم حفظ نسخة من البيانات الحالية وتُستعاد عند الفشل.",
     restoreDone: "اكتملت الاستعادة — يتم إعادة التحميل…",
     noBackups: "لا توجد نسخ احتياطية سحابية بعد.",
     backupError: "فشل إنشاء النسخة الاحتياطية.",

@@ -13,6 +13,9 @@ export interface StudentFormState {
   groupId: string;
   notes: string;
   enrolledOn: string;
+  birthDate: string;
+  gradeLevel: string;
+  photoUrl: string;
 }
 
 export const emptyStudentForm: StudentFormState = {
@@ -25,6 +28,9 @@ export const emptyStudentForm: StudentFormState = {
   groupId: "",
   notes: "",
   enrolledOn: "",
+  birthDate: "",
+  gradeLevel: "",
+  photoUrl: "",
 };
 
 export function initialStudentForm(student: Student | null): StudentFormState {
@@ -38,10 +44,16 @@ export function initialStudentForm(student: Student | null): StudentFormState {
     groupId: "",
     notes: student?.notes ?? "",
     enrolledOn: student ? (student.enrolledOn ?? "") : dayjs().format("YYYY-MM-DD"),
+    birthDate: student?.birthDate ?? "",
+    gradeLevel: student?.gradeLevel ?? "",
+    photoUrl: student?.photoUrl ?? "",
   };
 }
 
-export function studentFormErrors(t: (key: string) => string, error: ZodError): Record<string, string> {
+export function studentFormErrors(
+  t: (key: string) => string,
+  error: ZodError,
+): Record<string, string> {
   return mapZodErrors(error, (field, issue) =>
     field === "name"
       ? issue.code === "too_small"

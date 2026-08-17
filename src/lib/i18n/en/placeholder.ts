@@ -1,4 +1,4 @@
 export const placeholder = {
-    phase: "Built in Phase {{phase}}",
-    back: "Back to dashboard",
+  phase: "Built in Phase {{phase}}",
+  back: "Back to dashboard",
 } as const;

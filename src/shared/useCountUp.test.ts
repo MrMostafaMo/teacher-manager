@@ -35,10 +35,9 @@ describe("useCountUp", () => {
   });
 
   it("resets when target changes", () => {
-    const { result, rerender } = renderHook(
-      ({ target }) => useCountUp(target, 100),
-      { initialProps: { target: 100 } },
-    );
+    const { result, rerender } = renderHook(({ target }) => useCountUp(target, 100), {
+      initialProps: { target: 100 },
+    });
     act(() => {
       time = 100;
       vi.advanceTimersByTime(100);

@@ -54,19 +54,32 @@ export function DatePicker({ value, onChange, ariaLabel, className }: PickerProp
       }
     >
       <div className="flex items-center justify-between pb-1">
-        <button type="button" aria-label={t("common.previous")} className={navBtn} onClick={() => setView((v) => v.subtract(1, "month"))}>
+        <button
+          type="button"
+          aria-label={t("common.previous")}
+          className={navBtn}
+          onClick={() => setView((v) => v.subtract(1, "month"))}
+        >
           <ChevronRight className="size-4 rtl:rotate-180" />
         </button>
         <div className="text-sm font-medium">
           {months[view.month()]} {view.year()}
         </div>
-        <button type="button" aria-label={t("common.next")} className={navBtn} onClick={() => setView((v) => v.add(1, "month"))}>
+        <button
+          type="button"
+          aria-label={t("common.next")}
+          className={navBtn}
+          onClick={() => setView((v) => v.add(1, "month"))}
+        >
           <ChevronLeft className="size-4 rtl:rotate-180" />
         </button>
       </div>
       <div className="grid grid-cols-7 gap-0.5">
         {weekdays.map((w: string) => (
-          <div key={w} className="flex size-8 items-center justify-center text-xs text-muted-foreground">
+          <div
+            key={w}
+            className="flex size-8 items-center justify-center text-xs text-muted-foreground"
+          >
             {w}
           </div>
         ))}

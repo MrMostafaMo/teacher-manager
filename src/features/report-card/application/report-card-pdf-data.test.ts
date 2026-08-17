@@ -47,19 +47,25 @@ describe("buildReportCardPdfData", () => {
 
   it("joins group names and falls back to none", () => {
     expect(buildReportCardPdfData(data({}), labels, true).groupValue).toBe("مجموعة أ");
-    expect(buildReportCardPdfData(data({ groupNames: [] }), labels, true).groupValue).toBe("لا يوجد");
+    expect(buildReportCardPdfData(data({ groupNames: [] }), labels, true).groupValue).toBe(
+      "لا يوجد",
+    );
   });
 
   it("formats enrolled date and falls back to none", () => {
     expect(buildReportCardPdfData(data({}), labels, true).enrolledValue).toBe("01-08-2026");
-    expect(buildReportCardPdfData(data({ enrolledOn: null }), labels, true).enrolledValue).toBe("لا يوجد");
+    expect(buildReportCardPdfData(data({ enrolledOn: null }), labels, true).enrolledValue).toBe(
+      "لا يوجد",
+    );
   });
 
   it("maps exam rows and weak-skills list", () => {
     const p = buildReportCardPdfData(data({}), labels, true);
     expect(p.examRows).toEqual([{ name: "منتصف الفصل", value: "18/20" }]);
     expect(p.weakSkillsValue).toBe("الإملاء");
-    expect(buildReportCardPdfData(data({ weakSkills: [] }), labels, true).weakSkillsValue).toBe("لا يوجد");
+    expect(buildReportCardPdfData(data({ weakSkills: [] }), labels, true).weakSkillsValue).toBe(
+      "لا يوجد",
+    );
   });
 
   it("falls back notes to none when empty", () => {

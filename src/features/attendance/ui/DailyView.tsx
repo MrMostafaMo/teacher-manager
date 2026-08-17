@@ -13,11 +13,19 @@ import { DailyToolbar } from "./daily-toolbar";
 import { DailyActions } from "./daily-actions";
 import { useDailySave } from "./use-daily-save";
 
-export function DailyView({ date, onDateChange }: { date: string; onDateChange: (d: string) => void }) {
+export function DailyView({
+  date,
+  onDateChange,
+}: {
+  date: string;
+  onDateChange: (d: string) => void;
+}) {
   const { t } = useTranslation();
   const [students, setStudents] = useState<Student[]>([]);
   const [draft, setDraft] = useState<Record<string, AttendanceStatus | undefined>>({});
-  const [savedStatuses, setSavedStatuses] = useState<Record<string, AttendanceStatus | undefined>>({});
+  const [savedStatuses, setSavedStatuses] = useState<Record<string, AttendanceStatus | undefined>>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [groups, setGroups] = useState<GroupWithCount[]>([]);
@@ -36,8 +44,14 @@ export function DailyView({ date, onDateChange }: { date: string; onDateChange: 
     setLoading(true);
     setError("");
     try {
-      const { students, rows, hasSessionsToday, defaults } = await getDaily(date, groupId || undefined);
-      const byId = Object.fromEntries(rows.map((r) => [r.studentId, r.status])) as Record<string, AttendanceStatus>;
+      const { students, rows, hasSessionsToday, defaults } = await getDaily(
+        date,
+        groupId || undefined,
+      );
+      const byId = Object.fromEntries(rows.map((r) => [r.studentId, r.status])) as Record<
+        string,
+        AttendanceStatus
+      >;
       setHasSessionsToday(hasSessionsToday);
       setStudents(students);
       setSavedStatuses(byId);
@@ -117,9 +131,7 @@ export function DailyView({ date, onDateChange }: { date: string; onDateChange: 
         <p className="text-xs text-warning">{t("attendance.draftHint")}</p>
       )}
 
-      {(error || saveError) && (
-        <p className="text-sm text-destructive">{error || saveError}</p>
-      )}
+      {(error || saveError) && <p className="text-sm text-destructive">{error || saveError}</p>}
 
       <SummaryCards
         total={students.length}

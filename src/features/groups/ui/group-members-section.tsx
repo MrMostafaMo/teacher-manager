@@ -50,7 +50,10 @@ export function GroupMembersSection({
         ) : (
           <ul className="space-y-1">
             {members.map((m) => (
-              <li key={m.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm">
+              <li
+                key={m.id}
+                className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-sm"
+              >
                 <span className="truncate">{m.name}</span>
                 <ConfirmDeleteButton
                   armed={removingId === m.id}

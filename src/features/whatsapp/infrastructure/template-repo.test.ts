@@ -48,7 +48,9 @@ describe("whatsappTemplateRepo", () => {
   });
 
   it("migrates the legacy Record<purpose, text> format", async () => {
-    mockedGet.mockResolvedValue(JSON.stringify({ general: "أهلاً {name}", homework: "واجب {name}" }));
+    mockedGet.mockResolvedValue(
+      JSON.stringify({ general: "أهلاً {name}", homework: "واجب {name}" }),
+    );
     const rows = await whatsappTemplateRepo.list();
     expect(rows).toHaveLength(2);
     expect(rows?.[0]).toMatchObject({ id: "general", name: "general", purpose: "general" });
@@ -62,9 +64,9 @@ describe("whatsappTemplateRepo", () => {
 
   it("persists the full array", async () => {
     await whatsappTemplateRepo.saveAll([template(), template({ id: "t2", name: "تقرير" })]);
-    expect(mockedSet).toHaveBeenCalledWith("wa_templates", JSON.stringify([
-      template(),
-      template({ id: "t2", name: "تقرير" }),
-    ]));
+    expect(mockedSet).toHaveBeenCalledWith(
+      "wa_templates",
+      JSON.stringify([template(), template({ id: "t2", name: "تقرير" })]),
+    );
   });
 });

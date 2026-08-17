@@ -10,6 +10,7 @@ import {
 } from "./report-builders";
 import { examsReport, expensesReport, financesReport } from "./report-financials";
 import { weakPointsReport } from "./report-weak-points";
+import { homeworkReport, sessionAttendanceReport } from "./report-academic";
 
 export type { ReportTranslations } from "./report-builders";
 
@@ -19,10 +20,7 @@ export type { ReportTranslations } from "./report-builders";
  * Queries live here (read-only aggregates) rather than a repository because
  * each report crosses tables.
  */
-export async function buildReportData(
-  key: ReportKey,
-  t: ReportTranslations,
-): Promise<ReportData> {
+export async function buildReportData(key: ReportKey, t: ReportTranslations): Promise<ReportData> {
   switch (key) {
     case "students":
       return studentsReport(t);
@@ -40,9 +38,11 @@ export async function buildReportData(
       return skillsReport(t);
     case "weakPoints":
       return weakPointsReport(t);
+    case "homework":
+      return homeworkReport(t);
+    case "sessionAttendance":
+      return sessionAttendanceReport(t);
     case "statement":
-      // The student statement is scoped to a single student; use
-      // buildStudentStatementReport(studentId, t) instead.
       throw new Error("statement report requires a student id");
   }
 }

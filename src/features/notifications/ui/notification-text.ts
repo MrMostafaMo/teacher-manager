@@ -32,5 +32,7 @@ export function notificationText(item: NotifyTextInput, t: TFunction): string {
     count: typeof d.count === "number" ? d.count : 0,
     name: typeof d.name === "string" ? d.name : "—",
     rate: typeof d.rate === "number" ? rateLabel(d.rate) : "—",
+    examDate: typeof d.examDate === "string" ? d.examDate : "—",
+    groupName: typeof d.groupName === "string" ? d.groupName : "—",
   });
 }

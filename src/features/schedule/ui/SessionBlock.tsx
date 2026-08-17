@@ -8,7 +8,14 @@ import { cn } from "@/lib/utils";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
-import { CHIP_H, HOUR_PX, minBlockHeight, paletteFor, toMin, type PlacedSession } from "./week-layout";
+import {
+  CHIP_H,
+  HOUR_PX,
+  minBlockHeight,
+  paletteFor,
+  toMin,
+  type PlacedSession,
+} from "./week-layout";
 import { ExceptionBadge } from "./exception-badge";
 import { BlockActions } from "./block-actions";
 
@@ -44,7 +51,8 @@ export function SessionBlock({
   const start = toMin(session.startTime);
   const end = toMin(session.endTime);
   const top = ((start - rangeStart) / 60) * HOUR_PX + 2;
-  const lines = 2 + (session.room ? 1 : 0) + (conflicted && !cancelled ? 1 : 0) + (exception ? 1 : 0);
+  const lines =
+    2 + (session.room ? 1 : 0) + (conflicted && !cancelled ? 1 : 0) + (exception ? 1 : 0);
   const height = Math.max(
     ((end - start) / 60) * HOUR_PX - 4,
     deleting ? CHIP_H : minBlockHeight(lines),
@@ -71,7 +79,10 @@ export function SessionBlock({
 
       <div className="min-w-0 ps-2 pe-1">
         <p
-          className={cn("truncate text-xs font-semibold leading-tight", cancelled && "line-through")}
+          className={cn(
+            "truncate text-xs font-semibold leading-tight",
+            cancelled && "line-through",
+          )}
         >
           {session.groupName}
         </p>

@@ -121,7 +121,9 @@ export function SyncSettingsCard() {
               />
             </div>
             {!CLIENT_ID_PATTERN.test((clientId ?? "").trim()) && (
-              <p className="text-xs text-muted-foreground">{t("sync.settings.clientIdDisabledHint")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("sync.settings.clientIdDisabledHint")}
+              </p>
             )}
             <ClientIdGuide />
           </div>
@@ -138,7 +140,10 @@ export function SyncSettingsCard() {
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => void handleAction("sync", runManualSync)} disabled={busy || action !== null}>
+              <Button
+                onClick={() => void handleAction("sync", runManualSync)}
+                disabled={busy || action !== null}
+              >
                 <RefreshCw className={busy ? "animate-spin" : ""} />
                 {t("sync.settings.syncNow")}
               </Button>
@@ -156,7 +161,9 @@ export function SyncSettingsCard() {
                 variant="outline"
                 onClick={() =>
                   void handleAction("restore", async () =>
-                    cloudRestoreDatabase(async () => window.confirm(t("sync.settings.restoreConfirm"))),
+                    cloudRestoreDatabase(async () =>
+                      window.confirm(t("sync.settings.restoreConfirm")),
+                    ),
                   )
                 }
                 disabled={busy || action !== null}

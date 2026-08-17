@@ -2,13 +2,20 @@ import type { ParsedCombo } from "./types";
 
 const MODIFIERS = ["ctrl", "shift", "alt", "meta"] as const;
 const MODIFIER_ORDER: Record<string, number> = {
-  ctrl: 0, shift: 1, alt: 2, meta: 3,
+  ctrl: 0,
+  shift: 1,
+  alt: 2,
+  meta: 3,
 };
 
 export function parseCombo(combo: string): ParsedCombo {
   const parts = combo.toLowerCase().split("+");
   const parsed: ParsedCombo = {
-    ctrl: false, shift: false, alt: false, meta: false, key: "",
+    ctrl: false,
+    shift: false,
+    alt: false,
+    meta: false,
+    key: "",
   };
   for (const part of parts) {
     if (MODIFIERS.includes(part as (typeof MODIFIERS)[number])) {
@@ -26,9 +33,7 @@ export function formatCombo(combo: ParsedCombo, isMac = false): string {
   if (combo.shift) mods.push("Shift");
   if (combo.alt) mods.push("Alt");
   if (combo.meta) mods.push(isMac ? "⌘" : "Meta");
-  const key = combo.key.length === 1
-    ? combo.key.toUpperCase()
-    : combo.key;
+  const key = combo.key.length === 1 ? combo.key.toUpperCase() : combo.key;
   if (isMac && mods.length === 1 && mods[0] === "⌘") {
     return `⌘${key}`;
   }
@@ -36,9 +41,9 @@ export function formatCombo(combo: ParsedCombo, isMac = false): string {
 }
 
 export function comboKey(combo: ParsedCombo): string {
-  const mods = MODIFIERS
-    .filter((m) => combo[m as keyof Pick<ParsedCombo, "ctrl" | "shift" | "alt" | "meta">])
-    .sort((a, b) => (MODIFIER_ORDER[a] ?? 0) - (MODIFIER_ORDER[b] ?? 0));
+  const mods = MODIFIERS.filter(
+    (m) => combo[m as keyof Pick<ParsedCombo, "ctrl" | "shift" | "alt" | "meta">],
+  ).sort((a, b) => (MODIFIER_ORDER[a] ?? 0) - (MODIFIER_ORDER[b] ?? 0));
   return [...mods, combo.key].join("+");
 }
 
@@ -54,8 +59,8 @@ export function matchCombo(combo: ParsedCombo, event: KeyboardEvent): boolean {
 
 export function isModifierOnly(combo: string): boolean {
   const parts = combo.toLowerCase().split("+").filter(Boolean);
-  return parts.length > 0 && parts.every((p) =>
-    MODIFIERS.includes(p as (typeof MODIFIERS)[number]),
+  return (
+    parts.length > 0 && parts.every((p) => MODIFIERS.includes(p as (typeof MODIFIERS)[number]))
   );
 }
 

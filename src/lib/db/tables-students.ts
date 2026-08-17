@@ -18,6 +18,12 @@ export const students = sqliteTable(
     planId: text("plan_id").references(() => plans.id, { onDelete: "set null" }),
     /** First date ("YYYY-MM-DD") the student attends; NULL = no bound (legacy). */
     enrolledOn: text("enrolled_on"),
+    /** Date of birth ("YYYY-MM-DD"), nullable. */
+    birthDate: text("birth_date"),
+    /** Free-text grade/level, nullable. */
+    gradeLevel: text("grade_level"),
+    /** Local file path to a student photo, nullable. */
+    photoUrl: text("photo_url"),
     ...timestamps,
   },
   (t) => [index("students_name").on(t.name)],
@@ -28,9 +34,10 @@ export const studyGroups = sqliteTable("study_groups", {
   id: id(),
   name: text("name").notNull(),
   subject: text("subject"),
-  schedule: text("schedule"),
   /** First date ("YYYY-MM-DD") the group's weekly sessions take effect; NULL = no bound. */
   startsOn: text("starts_on"),
+  /** Maximum number of students allowed; NULL = unlimited. */
+  maxStudents: integer("max_students"),
   status: text("status", activeStatus).notNull().default("active"),
   notes: text("notes"),
   ...timestamps,
@@ -47,6 +54,8 @@ export const studentGroups = sqliteTable(
     groupId: text("group_id")
       .notNull()
       .references(() => studyGroups.id, { onDelete: "cascade" }),
+    /** When the student was added to this group (unix-ms). */
+    joinedAt: integer("joined_at", { mode: "timestamp_ms" }),
     ...timestamps,
   },
   (t) => [

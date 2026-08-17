@@ -104,7 +104,11 @@ export default function ExamsPage() {
       ) : groups.length === 0 ? (
         <Card>
           <CardContent className="p-0">
-            <EmptyState icon={ClipboardList} title={t("exams.empty")} description={t("exams.emptyHint")} />
+            <EmptyState
+              icon={ClipboardList}
+              title={t("exams.empty")}
+              description={t("exams.emptyHint")}
+            />
           </CardContent>
         </Card>
       ) : (

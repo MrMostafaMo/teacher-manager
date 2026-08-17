@@ -53,8 +53,7 @@ export const DuesTable = memo(function DuesTable({ list }: { list: DuesRow[] }) 
         className: "text-end",
         headerClassName: "text-end",
         render: (r) => {
-          const status =
-            r.due === 0 ? "noPlan" : r.remaining <= 0 ? "paid" : "outstanding";
+          const status = r.due === 0 ? "noPlan" : r.remaining <= 0 ? "paid" : "outstanding";
           return (
             <div className="flex justify-end">
               <DuesBadge status={status} />
@@ -76,9 +75,7 @@ function DuesBadge({ status }: { status: "noPlan" | "paid" | "outstanding" }) {
   }
   if (status === "paid") {
     return (
-      <Badge className="border-success bg-success/15 text-success">
-        {t("payments.fullyPaid")}
-      </Badge>
+      <Badge className="border-success bg-success/15 text-success">{t("payments.fullyPaid")}</Badge>
     );
   }
   return <Badge variant="destructive">{t("payments.outstanding")}</Badge>;

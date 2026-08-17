@@ -9,7 +9,11 @@ import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useToastStore } from "@/lib/toast-store";
 import type { WhatsAppTemplate } from "../domain";
-import { deleteTemplate, listTemplates, resetTemplateDefaults } from "../application/whatsapp-cases";
+import {
+  deleteTemplate,
+  listTemplates,
+  resetTemplateDefaults,
+} from "../application/whatsapp-cases";
 import { TemplateFormDialog } from "./TemplateFormDialog";
 
 export function SettingsWhatsAppCard() {
@@ -48,11 +52,21 @@ export function SettingsWhatsAppCard() {
             {t("whatsapp.settings.title")}
           </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setAdding(true)} disabled={!templates}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAdding(true)}
+              disabled={!templates}
+            >
               <Plus className="size-4" />
               {t("whatsapp.settings.add")}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => void handleResetAll()} disabled={!templates}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => void handleResetAll()}
+              disabled={!templates}
+            >
               <RotateCcw className="size-4" />
               {t("whatsapp.settings.reset")}
             </Button>

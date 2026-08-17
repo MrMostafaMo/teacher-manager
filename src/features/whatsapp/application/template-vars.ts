@@ -17,9 +17,7 @@ export function buildTemplateVars(data: StudentProfileData): WhatsAppVars {
   const gradedExams = data.exams.filter((e) => e.score !== null);
   const homeworkDone = data.homeworks.filter((h) => h.status !== "pending").length;
   const weak = data.skills.filter((s) => s.weak).map((s) => s.name);
-  const strong = data.skills
-    .filter((s) => !s.weak && s.level !== null)
-    .map((s) => s.name);
+  const strong = data.skills.filter((s) => !s.weak && s.level !== null).map((s) => s.name);
 
   return {
     name: data.student.name,

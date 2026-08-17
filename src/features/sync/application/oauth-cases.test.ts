@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invoke = vi.hoisted(() => vi.fn(async () => undefined));
-const listen = vi.hoisted(
-  () => vi.fn(async (_event: string, _handler: (e: { payload: string }) => void) => () => {}),
+const listen = vi.hoisted(() =>
+  vi.fn(async (_event: string, _handler: (e: { payload: string }) => void) => () => {}),
 );
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke }));
@@ -34,7 +34,6 @@ beforeEach(() => {
   invoke.mockClear();
   listen.mockClear();
 });
-
 
 describe("oauth-cases helpers", () => {
   it("generates a 64-char verifier from the unreserved charset", () => {
@@ -72,9 +71,7 @@ describe("oauth-cases helpers", () => {
   });
 
   it("parses a callback URL with code + state", () => {
-    const payload = parseCallbackUrl(
-      "http://127.0.0.1:45467/oauth?code=abc&state=xyz&scope=email",
-    );
+    const payload = parseCallbackUrl("http://127.0.0.1:45467/oauth?code=abc&state=xyz&scope=email");
     expect(payload).toEqual({ code: "abc", state: "xyz" });
   });
 

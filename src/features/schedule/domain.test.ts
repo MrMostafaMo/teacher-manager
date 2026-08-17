@@ -3,16 +3,24 @@ import { cancelSessionSchema, moveSessionSchema } from "./domain";
 
 describe("cancelSessionSchema", () => {
   it("accepts a valid sessionId + date", () => {
-    expect(cancelSessionSchema.safeParse({ sessionId: "s1", date: "2026-08-13" }).success).toBe(true);
+    expect(cancelSessionSchema.safeParse({ sessionId: "s1", date: "2026-08-13" }).success).toBe(
+      true,
+    );
   });
 
   it("rejects a malformed date", () => {
-    expect(cancelSessionSchema.safeParse({ sessionId: "s1", date: "13/08/2026" }).success).toBe(false);
-    expect(cancelSessionSchema.safeParse({ sessionId: "s1", date: "2026-8-13" }).success).toBe(false);
+    expect(cancelSessionSchema.safeParse({ sessionId: "s1", date: "13/08/2026" }).success).toBe(
+      false,
+    );
+    expect(cancelSessionSchema.safeParse({ sessionId: "s1", date: "2026-8-13" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects an empty sessionId", () => {
-    expect(cancelSessionSchema.safeParse({ sessionId: "", date: "2026-08-13" }).success).toBe(false);
+    expect(cancelSessionSchema.safeParse({ sessionId: "", date: "2026-08-13" }).success).toBe(
+      false,
+    );
   });
 });
 

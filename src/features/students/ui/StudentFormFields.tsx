@@ -33,7 +33,11 @@ export function StudentFormFields({
         />
       </Field>
 
-      <Field id="student-enrolled-on" label={t("students.fields.enrolledOn")} error={errors.enrolledOn}>
+      <Field
+        id="student-enrolled-on"
+        label={t("students.fields.enrolledOn")}
+        error={errors.enrolledOn}
+      >
         <DatePicker
           value={form.enrolledOn}
           onChange={(v) => onChange("enrolledOn", v)}
@@ -41,6 +45,29 @@ export function StudentFormFields({
           className="w-full"
         />
       </Field>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="student-birth-date" label={t("students.fields.birthDate")} error={errors.birthDate}>
+          <DatePicker
+            value={form.birthDate}
+            onChange={(v) => onChange("birthDate", v)}
+            ariaLabel={t("students.fields.birthDate")}
+            className="w-full"
+          />
+        </Field>
+        <Field
+          id="student-grade-level"
+          label={t("students.fields.gradeLevel")}
+          error={errors.gradeLevel}
+        >
+          <Input
+            id="student-grade-level"
+            value={form.gradeLevel}
+            onChange={(e) => onChange("gradeLevel", e.target.value)}
+            aria-invalid={!!errors.gradeLevel}
+          />
+        </Field>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="student-phone" label={t("students.fields.phone")} error={errors.phone}>
@@ -65,7 +92,11 @@ export function StudentFormFields({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="student-guardian-name" label={t("students.fields.guardianName")} error={errors.guardianName}>
+        <Field
+          id="student-guardian-name"
+          label={t("students.fields.guardianName")}
+          error={errors.guardianName}
+        >
           <Input
             id="student-guardian-name"
             value={form.guardianName}
@@ -73,7 +104,11 @@ export function StudentFormFields({
             aria-invalid={!!errors.guardianName}
           />
         </Field>
-        <Field id="student-guardian-phone" label={t("students.fields.guardianPhone")} error={errors.guardianPhone}>
+        <Field
+          id="student-guardian-phone"
+          label={t("students.fields.guardianPhone")}
+          error={errors.guardianPhone}
+        >
           <Input
             id="student-guardian-phone"
             dir="ltr"

@@ -23,6 +23,7 @@ const emptyForm: GroupFormState = {
   name: "",
   subject: "",
   startsOn: "",
+  maxStudents: "",
   status: "active",
   notes: "",
 };
@@ -33,8 +34,16 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
-  const { sessions, draft, draftError, removingKey, loadedIds, addSession, updateDraft, removeSession } =
-    useGroupSessions(open, group);
+  const {
+    sessions,
+    draft,
+    draftError,
+    removingKey,
+    loadedIds,
+    addSession,
+    updateDraft,
+    removeSession,
+  } = useGroupSessions(open, group);
   // Set once the group row itself has been written — if a later step (session
   // sync) fails, we must not let a resubmit create a duplicate group.
   const groupPersisted = useRef(false);
@@ -45,6 +54,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
       name: group?.name ?? "",
       subject: group?.subject ?? "",
       startsOn: group?.startsOn ?? "",
+      maxStudents: group?.maxStudents != null ? String(group.maxStudents) : "",
       status: group?.status ?? "active",
       notes: group?.notes ?? "",
     });
@@ -71,7 +81,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     try {
       const input = {
         ...form,
-        schedule: group?.schedule ?? "",
+        maxStudents: form.maxStudents ? Number(form.maxStudents) : null,
       };
       studyGroupInputSchema.parse(input);
       const row = group ? await updateGroup(group.id, input) : await createGroup(input);

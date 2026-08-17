@@ -107,7 +107,12 @@ export function WeakPointsDialog({ open, studentId, onClose, onChanged }: WeakPo
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={t("profile.sections.weakPoints")} className="max-w-lg">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t("profile.sections.weakPoints")}
+      className="max-w-lg"
+    >
       {loading ? (
         <CardSkeleton lines={4} />
       ) : loadError ? (

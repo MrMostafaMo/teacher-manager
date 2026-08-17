@@ -3,10 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
 import { groupSessionInputSchema } from "@/features/schedule/domain";
-import {
-  createSession,
-  updateSession,
-} from "@/features/schedule/application/schedule-cases";
+import { createSession, updateSession } from "@/features/schedule/application/schedule-cases";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";

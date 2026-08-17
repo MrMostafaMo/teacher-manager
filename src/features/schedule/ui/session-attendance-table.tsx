@@ -17,7 +17,10 @@ const SessionRow = memo(function SessionRow({
   status?: AttendanceStatus;
   onChange: (studentId: string, status: AttendanceStatus) => void;
 }) {
-  const handleChange = useCallback((s: AttendanceStatus) => onChange(student.id, s), [onChange, student.id]);
+  const handleChange = useCallback(
+    (s: AttendanceStatus) => onChange(student.id, s),
+    [onChange, student.id],
+  );
   return (
     <tr className="border-b last:border-0 hover:bg-muted/50">
       <td className="px-2 py-2 font-medium">{student.name}</td>
@@ -91,9 +94,7 @@ export function SessionMemberTable({
             <th className="px-2 py-2.5 text-start font-medium">
               {t("attendance.columns.student")}
             </th>
-            <th className="px-2 py-2.5 text-start font-medium">
-              {t("attendance.columns.status")}
-            </th>
+            <th className="px-2 py-2.5 text-start font-medium">{t("attendance.columns.status")}</th>
           </tr>
         </thead>
         <tbody>

@@ -84,12 +84,7 @@ export function WeakPointEntryDialog({
           </Select>
         </Field>
       )}
-      <WeakPointForm
-        initial={formState}
-        onSave={handleSave}
-        saving={saving}
-        onClose={onClose}
-      />
+      <WeakPointForm initial={formState} onSave={handleSave} saving={saving} onClose={onClose} />
     </Modal>
   );
 }

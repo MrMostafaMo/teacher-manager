@@ -62,7 +62,9 @@ export const examRepository = {
     return (rows as Exam[]).map((e) => {
       const refDate = effectiveDate(e.date, e.createdAt);
       const eligibleIds = new Set(
-        (membersOf.get(e.groupId) ?? []).filter((m) => enrolledBy(m, refDate)).map((m) => m.studentId),
+        (membersOf.get(e.groupId) ?? [])
+          .filter((m) => enrolledBy(m, refDate))
+          .map((m) => m.studentId),
       );
       const scores = resultRows
         .filter((r) => r.examId === e.id && eligibleIds.has(r.studentId))

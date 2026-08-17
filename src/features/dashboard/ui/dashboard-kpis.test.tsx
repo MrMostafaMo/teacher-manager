@@ -2,7 +2,8 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { Users } from "lucide-react";
-import { KpiGrid, type KpiItem } from "./dashboard-kpis";
+import { KpiGrid } from "./dashboard-kpis";
+import type { KpiItem } from "./dashboard-kpi-data";
 import i18n from "@/lib/i18n";
 
 function kpi(key: string, overrides: Partial<KpiItem> = {}): KpiItem {
@@ -28,9 +29,18 @@ describe("KpiGrid", () => {
         />
       </MemoryRouter>,
     );
-    expect(screen.getByRole("link", { name: "Total students" })).toHaveAttribute("href", "/students");
-    expect(screen.getByRole("link", { name: "Collected (month)" })).toHaveAttribute("href", "/payments");
-    expect(screen.getByRole("link", { name: "Expenses (month)" })).toHaveAttribute("href", "/expenses");
+    expect(screen.getByRole("link", { name: "Total students" })).toHaveAttribute(
+      "href",
+      "/students",
+    );
+    expect(screen.getByRole("link", { name: "Collected (month)" })).toHaveAttribute(
+      "href",
+      "/payments",
+    );
+    expect(screen.getByRole("link", { name: "Expenses (month)" })).toHaveAttribute(
+      "href",
+      "/expenses",
+    );
   });
 
   it("renders KPIs without a route as plain cards", () => {

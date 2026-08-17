@@ -23,6 +23,9 @@ function student(id: string): Student {
     notes: null,
     planId: null,
     enrolledOn: null,
+    birthDate: null,
+    gradeLevel: null,
+    photoUrl: null,
     createdAt: 0,
     updatedAt: 0,
   };
@@ -90,7 +93,11 @@ describe("defaultStatuses", () => {
       { studentId: "b", groupId: "g2", groupName: "B" },
       { studentId: "c", groupId: "g3", groupName: "C" },
     ]);
-    const defaults = await defaultStatuses("2026-05-13", [student("a"), student("b"), student("c")]);
+    const defaults = await defaultStatuses("2026-05-13", [
+      student("a"),
+      student("b"),
+      student("c"),
+    ]);
     expect(defaults.a).toBeUndefined();
     expect(defaults.b).toBeUndefined();
     expect(defaults.c).toBe("present");

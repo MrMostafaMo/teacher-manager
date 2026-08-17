@@ -55,7 +55,13 @@ export function computeStatement(
   payments: Payment[],
   firstPeriod: string,
   endPeriod: string,
-): { months: StatementMonth[]; payments: StatementPayment[]; totalDue: number; totalPaid: number; totalBalance: number } {
+): {
+  months: StatementMonth[];
+  payments: StatementPayment[];
+  totalDue: number;
+  totalPaid: number;
+  totalBalance: number;
+} {
   const sorted = [...payments].sort((a, b) => a.paidAt - b.paidAt);
   const paidByPeriod = new Map<string, number>();
   for (const p of sorted) {
@@ -105,7 +111,11 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
   const plan = student.planId ? plans.find((p) => p.id === student.planId) : null;
   const duePerMonth = plan?.amount ?? 0;
 
-  const { firstPeriod, endPeriod } = statementPeriods(student, allPayments, dayjs().format("YYYY-MM"));
+  const { firstPeriod, endPeriod } = statementPeriods(
+    student,
+    allPayments,
+    dayjs().format("YYYY-MM"),
+  );
   const { months, payments, totalDue, totalPaid, totalBalance } = computeStatement(
     duePerMonth,
     allPayments,

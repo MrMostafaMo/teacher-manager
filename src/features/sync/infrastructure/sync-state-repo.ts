@@ -38,7 +38,10 @@ export async function setSyncMeta(key: string, value: string | number): Promise<
       .run();
     return;
   }
-  await db.insert(syncMeta).values({ key, value: String(value), createdAt: ts, updatedAt: ts }).run();
+  await db
+    .insert(syncMeta)
+    .values({ key, value: String(value), createdAt: ts, updatedAt: ts })
+    .run();
 }
 
 export async function deleteSyncMeta(key: string): Promise<void> {

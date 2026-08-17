@@ -55,7 +55,5 @@ export const MonthlySummaryTable = memo(function MonthlySummaryTable({
     [t, groupLabel],
   );
   const getRowKey = useCallback((r: StudentMonthlyRow) => r.studentId, []);
-  return (
-    <DataTable<StudentMonthlyRow> columns={columns} rows={list} getRowKey={getRowKey} />
-  );
+  return <DataTable<StudentMonthlyRow> columns={columns} rows={list} getRowKey={getRowKey} />;
 });

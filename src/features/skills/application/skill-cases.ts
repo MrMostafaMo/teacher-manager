@@ -1,5 +1,8 @@
 import type { Skill } from "@/lib/db/schema";
-import { skillRepository, type SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
+import {
+  skillRepository,
+  type SkillWithWeakCount,
+} from "@/features/skills/infrastructure/skill-repo";
 import {
   SKILL_LEVELS,
   skillInputSchema,
@@ -43,10 +46,7 @@ export async function createSkill(input: SkillInput): Promise<Skill> {
   return skill;
 }
 
-export async function updateSkill(
-  id: string,
-  input: SkillInput,
-): Promise<Skill | undefined> {
+export async function updateSkill(id: string, input: SkillInput): Promise<Skill | undefined> {
   const data = skillInputSchema.parse(input);
   const skill = await skillRepository.update(id, { name: data.name });
   if (skill) {
@@ -66,7 +66,8 @@ export async function deleteSkill(
 ): Promise<number | null> {
   const skill = await skillRepository.findById(id);
   const skillRows = await captureRows(skills, [id]);
-  const levelRows = options.undo === false ? [] : await captureBy(studentSkills, studentSkills.skillId, id);
+  const levelRows =
+    options.undo === false ? [] : await captureBy(studentSkills, studentSkills.skillId, id);
   await skillRepository.clearForSkill(id);
   const ok = await skillRepository.remove(id);
   if (!ok) return null;

@@ -5,11 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DashboardData } from "@/features/dashboard/application/dashboard-cases";
 import { formatDateString } from "@/lib/utils/format";
 
-export function OverdueHomeworksCard({
-  items,
-}: {
-  items: DashboardData["overdueHomeworks"];
-}) {
+export function OverdueHomeworksCard({ items }: { items: DashboardData["overdueHomeworks"] }) {
   const { t } = useTranslation();
   return (
     <Card>
