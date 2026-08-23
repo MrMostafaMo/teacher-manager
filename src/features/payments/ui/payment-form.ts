@@ -35,6 +35,8 @@ export function paymentFormErrors(
       ? t("payments.errors.amountInvalid")
       : field === "studentId"
         ? t("payments.errors.studentRequired")
-        : t("payments.errors.invalid"),
+        : field === "period"
+          ? t("payments.errors.periodInvalid")
+          : t("payments.errors.invalid"),
   );
 }

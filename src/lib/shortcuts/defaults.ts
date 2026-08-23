@@ -19,7 +19,7 @@ export const DEFAULT_SHORTCUTS: ShortcutDefinition[] = [
   { id: "dialog:payment", defaultCombo: "ctrl+shift+m", group: "create" },
   { id: "dialog:expense", defaultCombo: "ctrl+shift+e", group: "create" },
   { id: "dialog:group", defaultCombo: "ctrl+shift+g", group: "create" },
-  { id: "dialog:schedule", defaultCombo: "ctrl+shift+s", group: "create" },
+  { id: "dialog:schedule", defaultCombo: "ctrl+shift+l", group: "create" },
   { id: "dialog:homework", defaultCombo: "ctrl+shift+h", group: "create" },
   { id: "dialog:exam", defaultCombo: "ctrl+shift+t", group: "create" },
   { id: "dialog:skill", defaultCombo: "ctrl+shift+k", group: "create" },

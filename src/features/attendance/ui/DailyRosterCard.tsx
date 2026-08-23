@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import type { AttendanceStatus } from "@/features/attendance/domain";
 import type { Student } from "@/lib/db/schema";
+import { CalendarOff } from "lucide-react";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
+import { EmptyState } from "@/shared/EmptyState";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { RosterTable } from "./RosterTable";
 import { EmptyStudents } from "./EmptyStudents";
@@ -37,9 +39,7 @@ export function DailyRosterCard({
           hasSessionsToday ? (
             <EmptyStudents />
           ) : (
-            <p className="py-16 text-center text-sm text-muted-foreground">
-              {t("attendance.noSessionsToday")}
-            </p>
+            <EmptyState icon={CalendarOff} title={t("attendance.noSessionsToday")} />
           )
         ) : (
           <div className="space-y-4 p-4">

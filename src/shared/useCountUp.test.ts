@@ -9,6 +9,7 @@ describe("useCountUp", () => {
     time = 0;
     vi.useFakeTimers();
     vi.stubGlobal("performance", { now: () => time });
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: false }));
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -32,6 +33,17 @@ describe("useCountUp", () => {
   it("handles 0 target", () => {
     const { result } = renderHook(() => useCountUp(0));
     expect(result.current).toBe(0);
+  });
+
+  it("jumps straight to the target under reduced motion", () => {
+    vi.mocked(globalThis.matchMedia).mockReturnValue({ matches: true } as unknown as MediaQueryList);
+    const { result } = renderHook(() => useCountUp(100, 100));
+    expect(result.current).toBe(100);
+    act(() => {
+      time = 100;
+      vi.advanceTimersByTime(100);
+    });
+    expect(result.current).toBe(100);
   });
 
   it("resets when target changes", () => {

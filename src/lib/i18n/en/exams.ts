@@ -41,6 +41,7 @@ export const exams = {
   deleteError: "Could not delete the exam",
   loadError: "Could not load exams",
   saveError: "Could not save results",
+  scoreOutOfRange: "0 – {{max}} only",
   errors: {
     groupRequired: "Choose a group",
     titleRequired: "Title is required",

@@ -17,6 +17,9 @@ export const syncMeta = sqliteTable("sync_meta", {
  * migration v15). A tombstone beats a live row only when its `deletedAt` is
  * newer than the row's `updatedAt` — this keeps undo/restore from being
  * clobbered by an older delete.
+ *
+ * ponytail: append-only; re-pushed forever. GC after 30d + remote ack when
+ * sync volume matters; same for Drive backups/ folder.
  */
 export const syncTombstones = sqliteTable(
   "sync_tombstones",

@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 /** Placeholder grid for the dashboard's KPI cards while data loads. */
 export function KpiGridSkeleton({ count = 9 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
         <Card key={i}>
           <CardContent className="space-y-2 p-4">

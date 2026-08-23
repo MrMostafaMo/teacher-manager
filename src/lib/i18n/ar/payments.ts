@@ -57,6 +57,7 @@ export const payments: Messages["payments"] = {
   errors: {
     amountInvalid: "أدخل مبلغًا صحيحًا",
     studentRequired: "اختر طالبًا",
+    periodInvalid: "الفترة غير صحيحة (YYYY-MM)",
     invalid: "تحقق من القيم المدخلة",
   },
 };

@@ -92,11 +92,11 @@ export const skillRepository = {
 
   /** Every mastery row of a skill (used on skill delete). */
   async clearForSkill(skillId: string): Promise<void> {
-    await db.delete(studentSkills).where(eq(studentSkills.skillId, skillId));
+    await db.delete(studentSkills).where(eq(studentSkills.skillId, skillId)).run();
   },
 
   /** Every mastery row of a student (used on student delete). */
   async clearForStudent(studentId: string): Promise<void> {
-    await db.delete(studentSkills).where(eq(studentSkills.studentId, studentId));
+    await db.delete(studentSkills).where(eq(studentSkills.studentId, studentId)).run();
   },
 };

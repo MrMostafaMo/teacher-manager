@@ -77,7 +77,10 @@ export async function swapDatabaseFrom(
     queryFirst<{ v: number | null }>("SELECT MAX(version) AS v FROM _sqlx_migrations", []),
   ]);
   const liveVersion = live?.v ?? null;
-  if (backupVersion === null || backupVersion !== liveVersion) {
+  if (
+    backupVersion === null ||
+    (liveVersion !== null && backupVersion > liveVersion)
+  ) {
     return { status: "error", message: "restoreVersionMismatch" };
   }
   if (!(await confirm())) return { status: "cancelled" };

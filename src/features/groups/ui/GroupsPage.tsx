@@ -114,6 +114,12 @@ export default function GroupsPage() {
               icon={Users2}
               title={t("groups.empty")}
               description={t("groups.emptyHint")}
+              action={
+                <Button onClick={openCreate}>
+                  <Plus />
+                  {t("groups.add")}
+                </Button>
+              }
             />
           ) : (
             <GroupsTable

@@ -1,8 +1,12 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
+import { Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/shared/EmptyState";
 import { MonthPicker } from "@/shared/month-picker";
+import { useDialogStore } from "@/lib/dialog-store";
+import { Button } from "@/components/ui/button";
 import {
   getDashboardData,
   type DashboardData,
@@ -140,6 +144,8 @@ const DashboardContent = memo(function DashboardContent({
   );
 
   const kpis = useMemo(() => buildKpis(data), [data]);
+  const openDialog = useDialogStore((s) => s.openDialog);
+  const isEmpty = data.totalStudents === 0;
 
   return (
     <div className="space-y-6">
@@ -151,6 +157,14 @@ const DashboardContent = memo(function DashboardContent({
           ariaLabel={t("dashboard.selectMonth")}
         />
       </div>
+      {isEmpty ? (
+        <EmptyState
+          icon={Users}
+          title={t("dashboard.empty")}
+          description={t("dashboard.subtitle")}
+          action={<Button onClick={() => openDialog("group")}>{t("groups.add")}</Button>}
+        />
+      ) : null}
       <DashboardQuickActions newStudents={data.deltas.newStudents} />
       <KpiGrid kpis={kpis} />
       <TodaySessionsCard sessions={data.todaySessions} />

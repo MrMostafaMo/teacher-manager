@@ -59,6 +59,7 @@ export function SyncSettingsCard() {
   }
 
   async function handleDisconnect() {
+    if (!window.confirm(t("common.confirmMessage"))) return;
     await disconnectAccount();
     await refreshSyncUi();
     toast({ message: t("sync.settings.disconnected"), variant: "info" });

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { cycleTabFocus } from "./cycle-tab-focus";
 
 const MARGIN = 8;
 const POPOVER_WIDTHS: Record<string, number> = {
@@ -68,6 +69,32 @@ export function PopoverShell({
     return () => document.removeEventListener("mousedown", onDown);
   }, [open, onClose]);
 
+  // Keyboard support: Escape closes the popover (preventing the surrounding
+  // native dialog from closing too), Tab cycles within popover + trigger,
+  // and focus moves inside on open.
+  const prevActiveRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!open || !node) return;
+    prevActiveRef.current = node.ownerDocument.activeElement as HTMLElement | null;
+    function onKey(e: KeyboardEvent) {
+      const active = node?.ownerDocument.activeElement as HTMLElement | null;
+      if (e.key === "Escape" && node?.contains(active as Node)) {
+        e.stopPropagation();
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      cycleTabFocus(e, ref.current);
+    }
+    document.addEventListener("keydown", onKey, true);
+    node.querySelector<HTMLElement>("button, input, select")?.focus();
+    return () => {
+      document.removeEventListener("keydown", onKey, true);
+      prevActiveRef.current?.focus();
+    };
+  }, [open, onClose]);
+
   return (
     <div ref={ref} className="relative inline-flex">
       {trigger}
@@ -80,7 +107,7 @@ export function PopoverShell({
             maxHeight: pos.maxHeight,
           }}
           className={cn(
-            "fixed z-50 animate-in fade-in-0 zoom-in-95 overflow-y-auto rounded-xl border bg-popover p-2 text-popover-foreground shadow-(--popover-shadow)",
+            "fixed z-50 animate-in fade-in-0 zoom-in-95 overflow-y-auto overscroll-contain rounded-xl border bg-popover p-2 text-popover-foreground shadow-(--popover-shadow)",
             width,
           )}
         >

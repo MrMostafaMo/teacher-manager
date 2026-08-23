@@ -42,7 +42,7 @@ export function NotificationList({
               </span>
             </span>
           </button>
-          <div className="absolute end-1 top-1 flex gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
+          <div className="absolute end-1 top-1 flex gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
             {onMute && (
               <Button
                 variant="ghost"

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { useTranslation } from "react-i18next";
 import type { ZodError } from "zod";
 import { Undo2 } from "lucide-react";
@@ -94,7 +95,7 @@ export function SessionOccurrenceDialog({
       onSaved();
       onClose();
     } catch (error) {
-      setFatal(String(error));
+      setFatal(getErrorMessage(error));
     } finally {
       setSaving(false);
     }

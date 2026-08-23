@@ -11,6 +11,7 @@ import type { ShortcutActionId } from "@/lib/shortcuts/types";
 import { QUICK_ACTIONS } from "./command-palette-actions";
 import { CommandPaletteList, type CommandPaletteItem } from "./command-palette-list";
 import { useStudentSearch } from "./use-student-search";
+import { cycleTabFocus } from "./cycle-tab-focus";
 
 export function CommandPalette() {
   const { t } = useTranslation();
@@ -23,6 +24,7 @@ export function CommandPalette() {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const studentMatches = useStudentSearch(open, query);
 
@@ -93,6 +95,10 @@ export function CommandPalette() {
         setOpen(false);
         return;
       }
+      if (e.key === "Tab") {
+        cycleTabFocus(e, dialogRef.current);
+        return;
+      }
       // No results — arrow keys must not push activeIndex to NaN (% 0).
       if (items.length === 0) return;
       if (e.key === "ArrowDown") {
@@ -118,14 +124,20 @@ export function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[12vh] backdrop-blur-lg">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[12vh] backdrop-blur-lg"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setOpen(false);
+      }}
+    >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={t("common.commandPalette.title")}
         className="w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-200 ease-out overflow-hidden rounded-2xl border bg-background shadow-(--popover-shadow)"
       >
-        <div className="flex items-center gap-3 border-b px-5">
+        <div className="flex items-center gap-3 border-b px-5 focus-within:bg-muted/30">
           <Search className="size-5 shrink-0 text-muted-foreground" />
           <input
             ref={inputRef}
@@ -133,7 +145,12 @@ export function CommandPalette() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("common.commandPalette.placeholder")}
             aria-label={t("common.commandPalette.placeholder")}
-            className="h-12 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="command-palette-list"
+            aria-activedescendant={`command-palette-option-${activeIndex}`}
+            aria-autocomplete="list"
+            className="h-12 w-full rounded-md bg-transparent text-base outline-none focus-visible:ring-1 focus-visible:ring-ring/50 placeholder:text-muted-foreground"
           />
           <kbd className="hidden shrink-0 rounded border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
             ESC

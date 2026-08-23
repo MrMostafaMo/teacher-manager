@@ -43,7 +43,7 @@ export function Sidebar() {
                   title={t(item.labelKey)}
                   className={({ isActive }) =>
                     cn(
-                      "relative flex items-center justify-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all hover:shadow-[inset_0_0_0_1px_var(--primary/10)] group-hover:justify-start lg:justify-start",
+                      "relative flex items-center justify-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-[background-color,color,box-shadow,opacity,transform] hover:shadow-[inset_0_0_0_1px_var(--primary/10)] group-hover:justify-start lg:justify-start",
                       isActive
                         ? "bg-primary/15 font-semibold text-sidebar-accent-foreground"
                         : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
@@ -54,8 +54,8 @@ export function Sidebar() {
                     <>
                       {isActive && (
                         <span
-                          aria-hidden
-                          className="absolute inset-y-1.5 -inset-inline-start-1 flex items-center ps-0.5"
+                          aria-hidden="true"
+                          className="absolute inset-y-1.5 -start-1 flex items-center ps-0.5"
                         >
                           <span className="size-1.5 rounded-full bg-primary" />
                         </span>

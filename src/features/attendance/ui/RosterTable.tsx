@@ -49,10 +49,10 @@ export const RosterTable = memo(function RosterTable({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="overflow-x-auto">
+    <div tabIndex={0} role="region" aria-label="جدول الحضور" className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-xs text-muted-foreground">
+          <tr className="border-b bg-muted/40 text-xs text-muted-foreground align-middle">
             <th className="px-4 py-2.5 text-start font-medium">
               {t("attendance.columns.student")}
             </th>

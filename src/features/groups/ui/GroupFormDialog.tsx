@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
@@ -64,13 +65,12 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
   }, [open, group]);
 
   const mapErrors = (error: ZodError) =>
-    mapZodErrors(error, (field, issue) =>
-      field === "name"
-        ? issue.code === "too_small"
-          ? t("groups.errors.nameRequired")
-          : t("groups.errors.nameTooLong")
-        : t("groups.errors.tooLong"),
-    );
+    mapZodErrors(error, (field, issue) => {
+      if (field === "name")
+        return issue.code === "too_small" ? t("groups.errors.nameRequired") : t("groups.errors.nameTooLong");
+      if (field === "maxStudents") return t("groups.errors.maxStudentsInvalid");
+      return t("groups.errors.tooLong");
+    });
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -106,7 +106,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
       else {
-        setFatal(String(error));
+        setFatal(getErrorMessage(error));
         // The group already exists — closing prevents a retry from duplicating it.
         if (groupPersisted.current) {
           onSaved();

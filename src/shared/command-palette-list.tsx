@@ -27,49 +27,58 @@ export function CommandPaletteList({
 }: CommandPaletteListProps) {
   const { t } = useTranslation();
   return (
-    <div ref={listRef} className="max-h-80 overflow-y-auto p-2">
-      {items.length === 0 ? (
-        <p className="px-3 py-8 text-center text-sm text-muted-foreground">
-          {t("common.commandPalette.noResults")}
-        </p>
-      ) : (
-        <ul className="space-y-0.5">
+    <div
+      ref={listRef}
+      className="max-h-80 overflow-y-auto overscroll-contain p-2"
+    >
+      {items.length > 0 ? (
+        <div
+          id="command-palette-list"
+          role="listbox"
+          aria-label={t("common.commandPalette.title")}
+          className="space-y-0.5"
+        >
           {items.map((item, index) => {
             const Icon = item.icon;
             return (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  data-index={index}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm outline-none",
-                    index === activeIndex
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground hover:bg-muted/60",
-                  )}
-                  onMouseEnter={() => onActiveChange(index)}
-                  onClick={() => item.run()}
-                >
-                  <Icon className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="flex-1 font-medium">{item.label}</span>
-                  {item.shortcutCombo && (
-                    <kbd className="rounded border bg-muted px-1 py-0.5 font-mono text-[10px] text-muted-foreground">
-                      {item.shortcutCombo}
-                    </kbd>
-                  )}
-                  {item.hint && (
-                    <span className="text-[11px] font-medium text-muted-foreground">
-                      {item.hint}
-                    </span>
-                  )}
-                  {index === activeIndex && (
-                    <CornerDownLeft className="size-3.5 text-muted-foreground" />
-                  )}
-                </button>
-              </li>
+              <button
+                key={item.id}
+                type="button"
+                role="option"
+                tabIndex={-1}
+                id={`command-palette-option-${index}`}
+                aria-selected={index === activeIndex}
+                data-index={index}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm outline-none",
+                  index === activeIndex
+                    ? "bg-primary/10 text-primary"
+                    : "text-foreground hover:bg-muted/60",
+                )}
+                onMouseEnter={() => onActiveChange(index)}
+                onClick={() => item.run()}
+              >
+                <Icon className="size-4 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1 truncate font-medium">{item.label}</span>
+                {item.shortcutCombo && (
+                  <kbd className="rounded border bg-muted px-1 py-0.5 font-mono text-[10px] text-muted-foreground">
+                    {item.shortcutCombo}
+                  </kbd>
+                )}
+                {item.hint && (
+                  <span className="text-[11px] font-medium text-muted-foreground">{item.hint}</span>
+                )}
+                {index === activeIndex && (
+                  <CornerDownLeft className="size-3.5 text-muted-foreground" />
+                )}
+              </button>
             );
           })}
-        </ul>
+        </div>
+      ) : (
+        <p className="px-3 py-8 text-center text-sm text-muted-foreground">
+          {t("common.commandPalette.noResults")}
+        </p>
       )}
       <div className="flex items-center justify-between px-3 pb-1 pt-2 text-[10px] text-muted-foreground">
         <span className="inline-flex items-center gap-1">

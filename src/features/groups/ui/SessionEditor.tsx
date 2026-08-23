@@ -46,7 +46,7 @@ export function SessionEditor({
   const hour24 = useTimeStore((s) => s.hour24);
   return (
     <div className="space-y-1.5">
-      <Label htmlFor="group-schedule">{t("groups.fields.schedule")}</Label>
+      <Label >{t("groups.fields.schedule")}</Label>
       <div className="space-y-2">
         {sessions.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("groups.sessionsEmpty")}</p>

@@ -45,24 +45,37 @@ export function ExpenseCategoryChart({ rows }: { rows: Expense[] }) {
       <CardHeader>
         <CardTitle className="text-sm font-medium">{t("expenses.byCategory")}</CardTitle>
       </CardHeader>
-      <CardContent className="h-56" dir="ltr">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={45}
-              outerRadius={70}
-              paddingAngle={2}
-            >
-              {data.map((s, i) => (
-                <Cell key={s.key} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip content={<CategoryTooltip />} />
-          </PieChart>
-        </ResponsiveContainer>
+      <CardContent className="space-y-3" dir="ltr">
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={45}
+                outerRadius={70}
+                paddingAngle={2}
+              >
+                {data.map((s, i) => (
+                  <Cell key={s.key} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CategoryTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
+          {data.map((s, i) => (
+            <li key={s.key} className="flex items-center gap-1.5">
+              <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} />
+              <span className="text-muted-foreground">{s.name}</span>
+              <span className="font-medium tabular-nums" dir="ltr">
+                {formatMoney(s.value)}
+              </span>
+            </li>
+          ))}
+        </ul>
       </CardContent>
     </Card>
   );

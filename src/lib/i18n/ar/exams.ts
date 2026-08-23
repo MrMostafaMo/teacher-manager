@@ -43,6 +43,7 @@ export const exams: Messages["exams"] = {
   deleteError: "تعذّر حذف الاختبار",
   loadError: "تعذّر تحميل الاختبارات",
   saveError: "تعذّر حفظ النتائج",
+  scoreOutOfRange: "من ٠ إلى {{max}} فقط",
   errors: {
     groupRequired: "اختر فرقة",
     titleRequired: "العنوان مطلوب",

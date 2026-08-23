@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart3 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { DataTable } from "@/shared/DataTable";
+import { Segmented } from "@/shared/Segmented";
 import {
   buildReportData,
   type ReportTranslations,
@@ -103,18 +103,13 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="flex flex-wrap gap-2">
-        {REPORT_KEYS.map((k) => (
-          <Button
-            key={k}
-            variant={k === key ? "default" : "outline"}
-            size="sm"
-            onClick={() => setKey(k)}
-          >
-            {t(`reports.types.${k}.label`)}
-          </Button>
-        ))}
-      </div>
+      <Segmented
+        value={key}
+        onChange={(v) => setKey(v as ReportKey)}
+        ariaLabel={t("nav.reports")}
+        options={REPORT_KEYS.map((k) => ({ value: k, label: t(`reports.types.${k}.label`) }))}
+        className="w-full overflow-x-auto"
+      />
 
       {error && <p className="text-sm text-destructive">{error}</p>}
       {saved && <p className="text-sm text-success">{t("reports.saved")}</p>}

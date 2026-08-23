@@ -6,6 +6,12 @@
 :root[data-theme="midnight"] {
   --background: oklch(0.985 0.006 255);
   --card: oklch(1 0 0);
+  --popover: oklch(1 0 0);
+  --muted: oklch(0.965 0.007 255);
+  --muted-foreground: oklch(0.52 0.02 255);
+  --secondary: oklch(0.962 0.008 255);
+  --border: oklch(0.914 0.005 255);
+  --input: oklch(0.914 0.005 255);
   --primary: oklch(0.5 0.13 255);
   --primary-strong: oklch(0.43 0.13 255);
   --primary-foreground: oklch(0.985 0 0);
@@ -33,6 +39,12 @@
 .dark[data-theme="midnight"] {
   --background: oklch(0.16 0.014 255);
   --card: oklch(0.215 0.016 255);
+  --popover: oklch(0.215 0.016 255);
+  --muted: oklch(0.26 0.011 255);
+  --muted-foreground: oklch(0.7 0.01 255);
+  --secondary: oklch(0.26 0.011 255);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
   --primary: oklch(0.68 0.1 240);
   --primary-strong: oklch(0.64 0.11 240);
   --primary-foreground: oklch(0.25 0.05 245);

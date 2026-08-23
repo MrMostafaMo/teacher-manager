@@ -24,6 +24,12 @@ export const optionalDate = z
   .optional()
   .transform((v) => (v ? v : undefined));
 
+/** Optional phone; blank → undefined, otherwise digits / + / spaces / - / (). */
+export const optionalPhone = z
+  .union([z.literal(""), z.string().trim().pipe(z.string().max(20).regex(/^\+?[0-9\s\-()]+$/))])
+  .optional()
+  .transform((v) => (v ? v : undefined));
+
 /** Money amounts are integers (EGP), entered via number inputs. */
 export const amountSchema = z.number().int().positive().max(100_000_000);
 

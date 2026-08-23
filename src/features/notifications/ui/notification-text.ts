@@ -11,6 +11,12 @@ function rateLabel(rate: number): string {
   return `${pct}%`;
 }
 
+function formatPeriod(period: string): string {
+  const [y, m] = period.split("-");
+  if (y && m && /^\d{4}$/.test(y) && /^\d{2}$/.test(m)) return `${m}-${y}`;
+  return period;
+}
+
 /** Localized, interpolated text for a notification row (and its banner). */
 export function notificationText(item: NotifyTextInput, t: TFunction): string {
   const d = item.details;
@@ -26,7 +32,7 @@ export function notificationText(item: NotifyTextInput, t: TFunction): string {
     title: typeof d.title === "string" ? d.title : "—",
     pending: typeof d.pending === "number" ? d.pending : 0,
     remaining: typeof d.remaining === "number" ? d.remaining : 0,
-    period: typeof d.period === "string" ? d.period : "—",
+    period: typeof d.period === "string" ? formatPeriod(d.period) : "—",
     kind,
     date: typeof d.date === "string" ? d.date : "—",
     count: typeof d.count === "number" ? d.count : 0,

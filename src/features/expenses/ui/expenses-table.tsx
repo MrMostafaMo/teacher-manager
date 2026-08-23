@@ -44,7 +44,14 @@ export function ExpensesTable({
       {
         header: t("expenses.note"),
         className: "max-w-48 truncate text-muted-foreground",
-        render: (r) => r.note ?? "—",
+        render: (r) =>
+          r.note ? (
+            <span title={r.note} className="truncate">
+              {r.note}
+            </span>
+          ) : (
+            "—"
+          ),
       },
       {
         header: "",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Cloud, CloudOff, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils/format";
 import { useSyncStore } from "./sync-store";
 import { SyncReportDialog } from "./SyncReportDialog";
 
@@ -27,7 +28,11 @@ export function SyncStatusBadge() {
         onClick={() => setOpen(true)}
         disabled={!connected && !busy}
         aria-label={label}
-        title={lastSyncAt !== null ? t("sync.status.lastSync") : undefined}
+        title={
+          lastSyncAt !== null
+            ? `${t("sync.status.lastSync")}: ${formatDate(lastSyncAt, "DD-MM-YYYY HH:mm")}`
+            : undefined
+        }
       >
         {busy ? (
           <LoaderCircle className="size-3.5 animate-spin" />

@@ -60,8 +60,11 @@ export function NotificationDropdown() {
         >
           <Bell className="size-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -end-0.5 flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-white">
-              {unreadCount}
+            <span className="absolute -top-0.5 -end-0.5 flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+              <span aria-hidden="true">{unreadCount}</span>
+              <span className="sr-only">
+                {unreadCount} {t("notifications.unread")}
+              </span>
             </span>
           )}
         </Button>

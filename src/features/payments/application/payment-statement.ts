@@ -100,6 +100,10 @@ export function computeStatement(
  * amount and crediting that month's payments, plus a chronological payment
  * ledger with the running balance. A negative running/total means the student
  * is paid ahead (advance/credit).
+ *
+ * ponytail: charges today's plan price for every past month. If a plan price
+ * changes, history is rewritten. Snapshot dueAmount at payment time or add
+ * plan_amount_history when this matters.
  */
 export async function studentStatement(studentId: string): Promise<StudentStatement> {
   const [student, plans, allPayments] = await Promise.all([

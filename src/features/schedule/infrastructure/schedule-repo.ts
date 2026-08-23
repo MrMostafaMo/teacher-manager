@@ -24,10 +24,10 @@ export const scheduleRepository = {
       .where(eq(groupSessions.groupId, groupId))) as Array<{ id: string }>;
     if (sessions.length > 0) {
       const sessionIds = sessions.map((s) => s.id);
-      await db.delete(sessionAttendance).where(inArray(sessionAttendance.sessionId, sessionIds));
-      await db.delete(sessionExceptions).where(inArray(sessionExceptions.sessionId, sessionIds));
+      await db.delete(sessionAttendance).where(inArray(sessionAttendance.sessionId, sessionIds)).run();
+      await db.delete(sessionExceptions).where(inArray(sessionExceptions.sessionId, sessionIds)).run();
     }
-    await db.delete(groupSessions).where(eq(groupSessions.groupId, groupId));
+    await db.delete(groupSessions).where(eq(groupSessions.groupId, groupId)).run();
   },
 
   /** A student's session-attendance rows joined with their session + group. */
@@ -68,13 +68,13 @@ export const scheduleRepository = {
 
   /** Delete a session's attendance rows (used when the session is deleted). */
   async clearForSession(sessionId: string): Promise<void> {
-    await db.delete(sessionAttendance).where(eq(sessionAttendance.sessionId, sessionId));
-    await db.delete(sessionExceptions).where(eq(sessionExceptions.sessionId, sessionId));
+    await db.delete(sessionAttendance).where(eq(sessionAttendance.sessionId, sessionId)).run();
+    await db.delete(sessionExceptions).where(eq(sessionExceptions.sessionId, sessionId)).run();
   },
 
   /** Delete a student's session-attendance rows (used when the student is deleted). */
   async clearAttendanceForStudent(studentId: string): Promise<void> {
-    await db.delete(sessionAttendance).where(eq(sessionAttendance.studentId, studentId));
+    await db.delete(sessionAttendance).where(eq(sessionAttendance.studentId, studentId)).run();
   },
 
   /** Delete a student's rows on a group's session sheets (used on member removal). */

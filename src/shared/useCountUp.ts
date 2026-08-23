@@ -7,6 +7,7 @@ function easeOutCubic(t: number): number {
 /**
  * Animates a number from 0 to `target` using requestAnimationFrame.
  * Returns the current animated value. Resets when `target` changes.
+ * Jumps straight to `target` when the user prefers reduced motion.
  */
 export function useCountUp(target: number, duration = 800): number {
   const [count, setCount] = useState(0);
@@ -23,11 +24,20 @@ export function useCountUp(target: number, duration = 800): number {
       setCount(0);
       return;
     }
+    if (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setCount(target);
+      return;
+    }
     startRef.current = performance.now();
+    const isFloat = !Number.isInteger(target);
     const animate = (now: number) => {
       const elapsed = now - startRef.current;
       const progress = Math.min(elapsed / duration, 1);
-      setCount(Math.round(easeOutCubic(progress) * target));
+      const raw = easeOutCubic(progress) * target;
+      setCount(isFloat ? Number(raw.toFixed(1)) : Math.round(raw));
       if (progress < 1) rafRef.current = requestAnimationFrame(animate);
     };
     rafRef.current = requestAnimationFrame(animate);

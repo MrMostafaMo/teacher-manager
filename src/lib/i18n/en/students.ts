@@ -48,6 +48,9 @@ export const students = {
   errors: {
     nameRequired: "Name is required",
     nameTooLong: "Name is too long",
+    enrolledOnInvalid: "Enter a valid enrollment date (YYYY-MM-DD)",
+    birthDateInvalid: "Enter a valid birth date (YYYY-MM-DD)",
+    phoneInvalid: "Enter a valid phone number",
     tooLong: "Too long",
   },
   deleteError: "Could not delete the student",

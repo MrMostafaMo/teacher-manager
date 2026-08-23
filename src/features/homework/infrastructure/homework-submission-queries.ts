@@ -107,8 +107,8 @@ export const homeworkSubmissionQueries = {
         homeworkSubmissions.homeworkId,
         hw.map((h) => h.id),
       ),
-    );
-    await db.delete(homeworks).where(eq(homeworks.groupId, groupId));
+    ).run();
+    await db.delete(homeworks).where(eq(homeworks.groupId, groupId)).run();
   },
 
   /** One student's submissions for a group's homeworks (used on membership removal). */
@@ -126,11 +126,11 @@ export const homeworkSubmissionQueries = {
         ),
         eq(homeworkSubmissions.studentId, studentId),
       ),
-    );
+    ).run();
   },
 
   async clearForHomework(homeworkId: string): Promise<void> {
-    await db.delete(homeworkSubmissions).where(eq(homeworkSubmissions.homeworkId, homeworkId));
+    await db.delete(homeworkSubmissions).where(eq(homeworkSubmissions.homeworkId, homeworkId)).run();
   },
 
   /** Drop submissions from students no longer in the group or not yet enrolled (used when the group changes). */
@@ -154,6 +154,6 @@ export const homeworkSubmissionQueries = {
 
   /** Every submission of a student (used on student delete). */
   async clearForStudent(studentId: string): Promise<void> {
-    await db.delete(homeworkSubmissions).where(eq(homeworkSubmissions.studentId, studentId));
+    await db.delete(homeworkSubmissions).where(eq(homeworkSubmissions.studentId, studentId)).run();
   },
 };

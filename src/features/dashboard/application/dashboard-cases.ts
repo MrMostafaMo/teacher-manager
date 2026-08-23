@@ -118,12 +118,15 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     }));
 
   const graded = monthExams.filter((e) => e.average !== null);
-  const scoreSum = graded.reduce(
-    (a, e) => a + ((e.average ?? 0) / e.maxScore) * 100 * e.resultCount,
-    0,
-  );
+  const scoreSum = graded.reduce((a, e) => {
+    const pct = e.maxScore > 0 ? ((e.average ?? 0) / e.maxScore) * 100 : 0;
+    return a + Math.min(100, pct) * e.resultCount;
+  }, 0);
   const scoreCount = graded.reduce((a, e) => a + e.resultCount, 0);
-  const examAverage = scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 10) / 10 : null;
+  // Legacy/synced rows can carry scores above maxScore (pre-validation data) —
+  // clamp per-exam at 100% like student-trends/profile-summary do.
+  const examAverage =
+    scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 10) / 10 : null;
   const weakSkills = skills
     .filter((s) => s.weakCount > 0)
     .map((s) => ({ name: s.name, count: s.weakCount }))

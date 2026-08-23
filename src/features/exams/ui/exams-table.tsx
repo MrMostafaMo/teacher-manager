@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { PencilLine, Users } from "lucide-react";
+import { Pencil, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
@@ -70,7 +70,7 @@ export const ExamsTable = memo(function ExamsTable({
               <span className="sr-only">{t("exams.detail")}</span>
             </Button>
             <Button variant="ghost" size="icon-sm" onClick={() => onEdit(e)}>
-              <PencilLine />
+              <Pencil />
               <span className="sr-only">{t("exams.edit")}</span>
             </Button>
             <ConfirmDeleteButton

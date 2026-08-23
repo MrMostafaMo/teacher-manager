@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Users } from "lucide-react";
+import { Pencil, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
@@ -67,7 +67,7 @@ export const HomeworkTable = memo(function HomeworkTable({
               <span className="sr-only">{t("homework.detail")}</span>
             </Button>
             <Button variant="ghost" size="icon-sm" onClick={() => onEdit(h)}>
-              <CalendarDays />
+              <Pencil />
               <span className="sr-only">{t("homework.edit")}</span>
             </Button>
             <ConfirmDeleteButton

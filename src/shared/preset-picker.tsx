@@ -42,8 +42,8 @@ export function PresetPicker() {
             )}
           >
             <span
-              aria-hidden
-              className={cn("size-3.5 rounded-full ring-1 ring-black/10", option.swatch)}
+              aria-hidden="true"
+              className={cn("size-3.5 rounded-full ring-1 ring-foreground/10", option.swatch)}
             />
             {t(option.labelKey)}
             {active && <Check className="size-3" />}

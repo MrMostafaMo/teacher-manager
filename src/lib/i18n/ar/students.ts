@@ -50,6 +50,9 @@ export const students: Messages["students"] = {
   errors: {
     nameRequired: "الاسم مطلوب",
     nameTooLong: "الاسم طويل جدًا",
+    enrolledOnInvalid: "تاريخ التسجيل غير صحيح (YYYY-MM-DD)",
+    birthDateInvalid: "تاريخ الميلاد غير صحيح (YYYY-MM-DD)",
+    phoneInvalid: "رقم الهاتف غير صحيح",
     tooLong: "النص طويل جدًا",
   },
   deleteError: "تعذّر حذف الطالب",

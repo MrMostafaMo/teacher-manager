@@ -54,11 +54,12 @@ export function studentFormErrors(
   t: (key: string) => string,
   error: ZodError,
 ): Record<string, string> {
-  return mapZodErrors(error, (field, issue) =>
-    field === "name"
-      ? issue.code === "too_small"
-        ? t("students.errors.nameRequired")
-        : t("students.errors.nameTooLong")
-      : t("students.errors.tooLong"),
-  );
+  return mapZodErrors(error, (field, issue) => {
+    if (field === "name")
+      return issue.code === "too_small" ? t("students.errors.nameRequired") : t("students.errors.nameTooLong");
+    if (field === "enrolledOn") return t("students.errors.enrolledOnInvalid");
+    if (field === "birthDate") return t("students.errors.birthDateInvalid");
+    if (field === "phone" || field === "guardianPhone") return t("students.errors.phoneInvalid");
+    return t("students.errors.tooLong");
+  });
 }

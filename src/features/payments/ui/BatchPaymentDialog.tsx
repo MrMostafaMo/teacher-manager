@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 import { Check, SquareCheck, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +9,15 @@ import { listPlans } from "@/features/payments/application/plan-cases";
 import { listStudents } from "@/features/students/application/student-cases";
 import { recordBatchPayments } from "@/features/payments/application/batch-cases";
 import { Avatar } from "@/shared/Avatar";
+import { Field } from "@/shared/Field";
 import { Modal } from "@/shared/Modal";
 import { useSaveFeedback } from "@/shared/useSaveFeedback";
 import { formatMoney } from "@/lib/utils/format";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 import type { PaymentMethod, BatchRow } from "./batch-form";
 import { buildBatchRows } from "./batch-form";
+
+const periodSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 
 const METHODS = ["cash", "card", "transfer"] as const;
 
@@ -27,11 +32,15 @@ export function BatchPaymentDialog({ open, defaultPeriod, onClose, onSaved }: Pr
   const { t } = useTranslation();
   const [rows, setRows] = useState<BatchRow[]>([]);
   const [period, setPeriod] = useState(defaultPeriod);
+  const [periodError, setPeriodError] = useState("");
+  const [saveError, setSaveError] = useState("");
   const { saving, saved, run } = useSaveFeedback();
 
   useEffect(() => {
     if (!open) return;
     setPeriod(defaultPeriod);
+    setPeriodError("");
+    setSaveError("");
     Promise.all([listStudents({ status: "active" }), listPlans()])
       .then(([students, plans]) => setRows(buildBatchRows(students, plans)))
       .catch(() => setRows([]));
@@ -51,16 +60,26 @@ export function BatchPaymentDialog({ open, defaultPeriod, onClose, onSaved }: Pr
   }
 
   async function handleSave() {
+    if (!periodSchema.safeParse(period).success) {
+      setPeriodError(t("payments.errors.periodInvalid"));
+      return;
+    }
+    setPeriodError("");
     const checked = rows.filter((r) => r.checked && r.amount > 0);
     if (checked.length === 0) return;
-    await run(async () => {
-      await recordBatchPayments(
-        checked.map((r) => ({ studentId: r.studentId, planId: r.planId, amount: r.amount, method: r.method })),
-        period,
-      );
-      onSaved();
-      onClose();
-    });
+    setSaveError("");
+    try {
+      await run(async () => {
+        await recordBatchPayments(
+          checked.map((r) => ({ studentId: r.studentId, planId: r.planId, amount: r.amount, method: r.method })),
+          period,
+        );
+        onSaved();
+        onClose();
+      });
+    } catch (error) {
+      setSaveError(getErrorMessage(error));
+    }
   }
 
   const allChecked = rows.length > 0 && rows.every((r) => r.checked);
@@ -68,21 +87,25 @@ export function BatchPaymentDialog({ open, defaultPeriod, onClose, onSaved }: Pr
 
   return (
     <Modal open={open} onClose={onClose} title={t("payments.batchRecord")} className="max-w-3xl">
-      <div className="mb-3 flex items-center gap-3">
-        <label className="text-sm font-medium">{t("payments.period")}</label>
+      <Field id="batch-period" label={t("payments.period")} error={periodError} className="mb-3 max-w-52">
         <Input
+          id="batch-period"
           type="month"
           value={period}
-          onChange={(e) => setPeriod(e.target.value)}
+          onChange={(e) => {
+            setPeriod(e.target.value);
+            if (periodError) setPeriodError("");
+          }}
           className="w-40"
           dir="ltr"
+          aria-invalid={!!periodError}
         />
-      </div>
+      </Field>
 
-      <div className="overflow-x-auto">
+      <div tabIndex={0} role="region" aria-label="جدول الدفعات" className="overflow-x-auto overscroll-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b text-left text-muted-foreground">
+            <tr className="border-b text-start text-muted-foreground">
               <th className="pb-2 pr-2">
                 <button type="button" onClick={toggleAll} className="cursor-pointer" aria-label={t("payments.batch.selectAll")}>
                   {allChecked ? <Check className="size-4" /> : <SquareCheck className="size-4" />}
@@ -102,25 +125,34 @@ export function BatchPaymentDialog({ open, defaultPeriod, onClose, onSaved }: Pr
                     type="checkbox"
                     checked={r.checked}
                     onChange={() => toggle(i)}
+                    aria-label={`${t("payments.batch.selectStudent")}: ${r.name}`}
                     className="size-4 cursor-pointer accent-primary"
                   />
                 </td>
-                <td className="flex items-center gap-2 py-2 pr-4">
-                  <Avatar name={r.name} className="size-7 text-xs" />
-                  {r.name}
+                <td className="py-2 pr-4">
+                  <div className="flex items-center gap-2">
+                    <Avatar name={r.name} className="size-7 text-xs" />
+                    {r.name}
+                  </div>
                 </td>
                 <td className="py-2 pr-4">
                   <Input
                     type="number"
                     min={0}
                     dir="ltr"
+                    aria-label={`${t("payments.batch.amount")}: ${r.name}`}
                     value={r.amount || ""}
                     onChange={(e) => updateField(i, "amount", Number(e.target.value) || 0)}
                     className="h-8 w-24"
                   />
                 </td>
                 <td className="py-2 pr-4">
-                  <Select value={r.method} onChange={(e) => updateField(i, "method", e.target.value as PaymentMethod)} className="h-8 w-32">
+                  <Select
+                    value={r.method}
+                    aria-label={`${t("payments.batch.method")}: ${r.name}`}
+                    onChange={(e) => updateField(i, "method", e.target.value as PaymentMethod)}
+                    className="h-8 w-32"
+                  >
                     {METHODS.map((m) => (
                       <option key={m} value={m}>{methodLabel(m)}</option>
                     ))}
@@ -135,6 +167,7 @@ export function BatchPaymentDialog({ open, defaultPeriod, onClose, onSaved }: Pr
         </table>
       </div>
 
+      {saveError && <p className="text-sm text-destructive">{saveError}</p>}
       {rows.length === 0 && <p className="py-8 text-center text-muted-foreground">{t("payments.batch.noneWithPlan")}</p>}
       <div className="mt-4 flex items-center justify-between">
         <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>{t("payments.cancel")}</Button>

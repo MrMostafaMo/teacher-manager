@@ -44,6 +44,7 @@ export default function PaymentsPage() {
                 label: t(`payments.tab${v === "dues" ? "Dues" : "History"}`),
               }))}
               ariaLabel={t("payments.viewLabel")}
+              className="w-full overflow-x-auto sm:w-auto"
             />
             <Button
               onClick={() => {
@@ -52,15 +53,15 @@ export default function PaymentsPage() {
               }}
             >
               <Plus />
-              {t("payments.record")}
+              <span className="hidden sm:inline">{t("payments.record")}</span>
             </Button>
             <Button variant="outline" onClick={() => setPlansOpen(true)}>
               <CreditCard />
-              {t("payments.managePlans")}
+              <span className="hidden sm:inline">{t("payments.managePlans")}</span>
             </Button>
             <Button variant="outline" onClick={() => setBatchOpen(true)}>
               <ListChecks />
-              {t("payments.batchRecord")}
+              <span className="hidden sm:inline">{t("payments.batchRecord")}</span>
             </Button>
           </>
         }

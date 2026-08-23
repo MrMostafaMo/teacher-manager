@@ -7,16 +7,22 @@ import { useCountUp } from "@/shared/useCountUp";
 import { KPI_COLOR, KPI_TINT, type KpiItem } from "./dashboard-kpi-data";
 
 function AnimatedValue({ value }: { value: string | number }) {
-  const numeric =
-    typeof value === "number" ? value : parseInt(String(value).replace(/[^0-9-]/g, ""), 10);
+  const str = String(value);
+  const match = str.match(/-?[\d,]+(\.\d+)?/);
+  const numeric = match ? parseFloat(match[0].replace(/,/g, "")) : NaN;
   const animated = useCountUp(Number.isFinite(numeric) ? numeric : 0, 800);
-  if (!Number.isFinite(numeric)) return <>{value}</>;
-  const prefix = String(value).match(/^[^0-9-]*/)?.[0] ?? "";
-  const suffix = String(value).match(/[^0-9]*$/)?.[0] ?? "";
+  if (!Number.isFinite(numeric) || !match) return <>{value}</>;
+  const prefix = str.slice(0, match.index);
+  const suffix = str.slice((match.index ?? 0) + match[0].length);
+  const decimals = match[0].includes(".") ? match[0].split(".")[1].length : 0;
+  const display = animated.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
   return (
     <>
       {prefix}
-      {animated}
+      {display}
       {suffix}
     </>
   );
@@ -76,7 +82,7 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
               backgroundImage: `linear-gradient(135deg, ${KPI_TINT[key]}, transparent)`,
             }}
             className={cn(
-              "animate-in fade-in slide-in-from-bottom-2 fill-mode-both transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
+              "animate-in fade-in slide-in-from-bottom-2 fill-mode-both transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
               to && "hover:ring-primary/30",
             )}
           >

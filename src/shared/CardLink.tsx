@@ -18,7 +18,7 @@ export function CardLink({
   return (
     <Card
       className={cn(
-        "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/30",
+        "transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/30",
         className,
       )}
     >

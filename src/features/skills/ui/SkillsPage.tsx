@@ -101,6 +101,12 @@ export default function SkillsPage() {
             <EmptyState
               icon={Target}
               title={t("skills.empty")}
+              action={
+                <Button onClick={() => setFormOpen(true)}>
+                  <Plus />
+                  {t("skills.add")}
+                </Button>
+              }
               description={t("skills.emptyHint")}
             />
           ) : (

@@ -28,7 +28,8 @@ let connecting: Promise<Database> | null = null;
 function connect(): Promise<Database> {
   if (sqlite) return Promise.resolve(sqlite);
   connecting ??= Database.load(DB_URI)
-    .then((db) => {
+    .then(async (db) => {
+      await db.execute("PRAGMA foreign_keys=ON", []);
       sqlite = db;
       return db;
     })

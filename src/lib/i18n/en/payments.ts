@@ -55,6 +55,7 @@ export const payments = {
   errors: {
     amountInvalid: "Enter a valid amount",
     studentRequired: "Choose a student",
+    periodInvalid: "Enter a valid period (YYYY-MM)",
     invalid: "Please check the entered values",
   },
 } as const;

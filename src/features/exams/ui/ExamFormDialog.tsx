@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ export function ExamFormDialog({
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
-      else setFatal(String(error));
+      else setFatal(getErrorMessage(error));
     } finally {
       setSaving(false);
     }

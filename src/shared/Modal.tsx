@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { cycleTabFocus } from "./cycle-tab-focus";
 
 /**
  * Minimal modal on the native <dialog> element: no portal, no dependencies,
@@ -24,21 +25,42 @@ export function Modal({ open, title, description, onClose, children, className }
   const { t } = useTranslation();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const descId = useId();
+  const prevActiveRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    else if (!open && dialog.open) dialog.close();
+    if (open && !dialog.open) {
+      prevActiveRef.current = dialog.ownerDocument.activeElement as HTMLElement | null;
+      dialog.showModal();
+      // Focus first focusable inside the modal
+      dialog.querySelector<HTMLElement>("input, select, textarea, button:not([disabled])")?.focus();
+    } else if (!open && dialog.open) {
+      dialog.close();
+      prevActiveRef.current?.focus();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const dialog = ref.current;
+    if (!dialog) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Tab") cycleTabFocus(e, dialog);
+    }
+    dialog.addEventListener("keydown", onKeyDown);
+    return () => dialog.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
   return (
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      aria-describedby={description ? descId : undefined}
       onClose={onClose}
-      onClick={(e) => {
-        if (e.target === ref.current) onClose();
+      onCancel={(e) => {
+        e.preventDefault();
       }}
       className={cn(
         "m-auto w-full max-w-md overflow-hidden rounded-2xl bg-background text-foreground shadow-(--popover-shadow) ring-1 ring-foreground/10 backdrop:bg-black/40 backdrop:backdrop-blur-sm animate-in fade-in-0 zoom-in-95 duration-200 backdrop:animate-in backdrop:fade-in-0 backdrop:duration-200",
@@ -51,14 +73,16 @@ export function Modal({ open, title, description, onClose, children, className }
             {title}
           </h3>
           {description ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+            <p id={descId} className="mt-0.5 text-xs text-muted-foreground">
+              {description}
+            </p>
           ) : null}
         </div>
         <Button variant="ghost" size="icon-sm" aria-label={t("common.close")} onClick={onClose}>
           <X />
         </Button>
       </div>
-      <div className="max-h-[calc(90dvh-3.5rem)] overflow-y-auto p-4 sm:p-5">{children}</div>
+      <div className="max-h-[calc(90dvh-3.5rem)] overflow-y-auto overscroll-contain p-4 sm:p-5">{children}</div>
     </dialog>
   );
 }

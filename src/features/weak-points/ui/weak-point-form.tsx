@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
 import dayjs from "dayjs";
@@ -79,7 +80,7 @@ export function WeakPointForm({
           ),
         );
       } else {
-        setFatal(String(error));
+        setFatal(getErrorMessage(error));
       }
     }
   }

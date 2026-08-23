@@ -25,18 +25,18 @@ export const notificationRepository = {
   },
 
   markRead: async (id: string): Promise<void> => {
-    await db.update(notifications).set({ read: true }).where(eq(notifications.id, id));
+    await db.update(notifications).set({ read: true }).where(eq(notifications.id, id)).run();
   },
 
   markAllRead: async (): Promise<void> => {
-    await db.update(notifications).set({ read: true });
+    await db.update(notifications).set({ read: true }).run();
   },
 
   dismiss: async (id: string): Promise<void> => {
-    await db.update(notifications).set({ dismissed: true }).where(eq(notifications.id, id));
+    await db.update(notifications).set({ dismissed: true }).where(eq(notifications.id, id)).run();
   },
 
   dismissAll: async (): Promise<void> => {
-    await db.update(notifications).set({ dismissed: true });
+    await db.update(notifications).set({ dismissed: true }).run();
   },
 };

@@ -27,8 +27,19 @@ export const StatusPicker = memo(function StatusPicker({
   onChange: (s: AttendanceStatus) => void;
 }) {
   const { t } = useTranslation();
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const buttons = Array.from(
+      (e.currentTarget as HTMLDivElement).querySelectorAll<HTMLButtonElement>("button"),
+    );
+    const idx = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    if (idx === -1) return;
+    const next = e.key === "ArrowRight" ? (idx + 1) % buttons.length : (idx - 1 + buttons.length) % buttons.length;
+    buttons[next].focus();
+  }
   return (
-    <div className="flex gap-1">
+    <div role="group" aria-label={t("attendance.columns.status")} className="flex gap-1" onKeyDown={onKeyDown}>
       {ATTENDANCE_STATUSES.map((status) => (
         <button
           key={status}

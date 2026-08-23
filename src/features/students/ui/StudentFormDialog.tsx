@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
@@ -101,7 +102,7 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
     } catch (error) {
       if (error instanceof ZodError) setErrors(studentFormErrors(t, error));
       else {
-        setFatal(String(error));
+        setFatal(getErrorMessage(error));
         // The student already exists — closing prevents a retry duplicating them.
         if (studentCreated.current) {
           onSaved();

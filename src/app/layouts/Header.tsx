@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
 import { CalendarDays, Search } from "lucide-react";
@@ -12,6 +13,12 @@ export function Header() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const setPaletteOpen = useCommandStore((s) => s.setOpen);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
   const current =
     NAV_ITEMS.find((item) => item.to !== "/" && pathname.startsWith(item.to)) ??
     NAV_ITEMS.find((item) => item.to === pathname) ??
@@ -22,7 +29,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:px-5">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-[transform] duration-300">
           <Icon className="size-4.5" />
         </div>
         <div className="min-w-0">
@@ -51,8 +58,8 @@ export function Header() {
         </Button>
         <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1 text-xs font-medium tabular-nums text-muted-foreground">
           <CalendarDays className="size-3.5" />
-          <span className="hidden lg:inline">{formatDate(Date.now(), "dddd")}</span>
-          <span dir="ltr">{formatDate(Date.now(), "DD-MM-YYYY")}</span>
+          <span className="hidden lg:inline">{formatDate(now, "dddd")}</span>
+          <span dir="ltr">{formatDate(now, "DD-MM-YYYY")}</span>
         </span>
       </div>
     </header>

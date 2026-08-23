@@ -42,12 +42,12 @@ export function ProfileHeader({
       <PageHeader
         title={student.name}
         description={
-          student.enrolledOn
-            ? `${t("students.registered")} ${formatDateString(student.enrolledOn)}`
-            : undefined
+          student.enrolledOn ? (
+            <span dir="ltr">{`${t("students.registered")} ${formatDateString(student.enrolledOn)}`}</span>
+          ) : undefined
         }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button size="sm" variant="outline" onClick={onEdit}>
               <Pencil className="size-4" />
               {t("students.edit")}

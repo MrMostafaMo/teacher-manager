@@ -120,7 +120,7 @@ export const attendanceRepository = {
    * Every attendance row of a student (used on student delete).
    */
   async clearForStudent(studentId: string): Promise<void> {
-    await db.delete(attendance).where(eq(attendance.studentId, studentId));
+    await db.delete(attendance).where(eq(attendance.studentId, studentId)).run();
   },
 
   /**

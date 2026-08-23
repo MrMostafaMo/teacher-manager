@@ -108,12 +108,12 @@ export const groupRepository = {
 
   /** Delete every membership of a group (SQLite FKs are off — no cascade). */
   async clearMembers(groupId: string): Promise<void> {
-    await db.delete(studentGroups).where(eq(studentGroups.groupId, groupId));
+    await db.delete(studentGroups).where(eq(studentGroups.groupId, groupId)).run();
   },
 
   /** Every membership of a student (used on student delete). */
   async clearForStudent(studentId: string): Promise<void> {
-    await db.delete(studentGroups).where(eq(studentGroups.studentId, studentId));
+    await db.delete(studentGroups).where(eq(studentGroups.studentId, studentId)).run();
   },
 
   /** Every membership joined with its group name (for payments grouping). */

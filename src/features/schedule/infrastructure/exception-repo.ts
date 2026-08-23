@@ -31,7 +31,7 @@ export const exceptionRepository = {
   /** Delete every exception for the given session ids. */
   clearForSessions: async (sessionIds: string[]): Promise<void> => {
     if (sessionIds.length === 0) return;
-    await db.delete(sessionExceptions).where(inArray(sessionExceptions.sessionId, sessionIds));
+    await db.delete(sessionExceptions).where(inArray(sessionExceptions.sessionId, sessionIds)).run();
   },
 
   /** Delete the exception for one (session, date) pair (upsert helper). */

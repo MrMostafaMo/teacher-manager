@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession, SessionException } from "@/lib/db/schema";
 import { formatDate, formatTime } from "@/lib/utils/format";
@@ -46,7 +46,11 @@ export default function WeekGrid({
   const [weekOffset, setWeekOffset] = useState(0);
   const isCurrentWeek = weekOffset === 0;
 
-  const now = new Date();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
   const today = now.getDay();
   const dates = weekDates(now, weekStartsOn, weekOffset);
 
@@ -79,7 +83,7 @@ export default function WeekGrid({
         onToday={() => setWeekOffset(0)}
       />
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overscroll-contain [scrollbar-width:thin]">
         <div className="min-w-[880px] overflow-hidden rounded-xl border bg-card">
           <WeekHeader
             daysOrder={daysOrder}

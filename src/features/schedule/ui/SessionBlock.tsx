@@ -60,8 +60,11 @@ export function SessionBlock({
 
   return (
     <div
+      tabIndex={0}
+      role="group"
+      aria-label={`${session.groupName} ${formatTime(session.startTime, hour24)}–${formatTime(session.endTime, hour24)}`}
       className={cn(
-        "group absolute overflow-hidden rounded-lg border p-1.5 transition-shadow hover:shadow-md",
+        "group absolute overflow-hidden rounded-lg border p-1.5 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         pal.bg,
         pal.border,
         conflicted && "ring-1 ring-destructive/60",

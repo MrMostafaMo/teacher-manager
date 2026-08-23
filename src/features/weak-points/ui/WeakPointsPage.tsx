@@ -47,14 +47,18 @@ export default function WeakPointsPage() {
     () => buildSectionsByGroup(filtered, (r) => groupsByStudent.get(r.studentId) ?? []),
     [filtered, groupsByStudent],
   );
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   function handleToggleResolved(row: StudentWeakPoint) {
+    if (togglingId) return;
+    setTogglingId(row.id);
     void updateWeakPoint(row.id, {
       description: row.description,
       recordedOn: row.recordedOn,
       resolved: !row.resolved,
     })
       .then(reload)
-      .catch(() => toast(t("weakPoints.saveError"), "error"));
+      .catch(() => toast(t("weakPoints.saveError"), "error"))
+      .finally(() => setTogglingId(null));
   }
   function handleDelete(id: string) {
     const row = rows.find((r) => r.id === id);
@@ -70,7 +74,10 @@ export default function WeakPointsPage() {
         }
         reload();
       })
-      .catch(() => toast(t("weakPoints.deleteError"), "error"));
+      .catch(() => {
+        clear();
+        toast(t("weakPoints.deleteError"), "error");
+      });
   }
 
   return (

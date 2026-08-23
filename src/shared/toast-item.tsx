@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import type { Toast } from "@/lib/toast-store";
+import { useToastStore, type Toast } from "@/lib/toast-store";
 import { CHIP_TONES, ICONS, ICON_TONES } from "./toast-tokens";
 import { ToastActionButton } from "./toast-action";
 import { ToastCountdown } from "./toast-countdown";
@@ -11,14 +12,32 @@ interface ToastItemProps {
   onDismiss: (id: number) => void;
 }
 
-/** One toast card: tinted icon chip, text, optional action pill + countdown. */
+/** One toast card: tinted icon chip, text, optional action pill + countdown.
+ * Hovering/focusing pauses the auto-dismiss so slow readers keep the undo. */
 export function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const { t } = useTranslation();
   const Icon = ICONS[toast.variant];
+  const [paused, setPaused] = useState(false);
+  const timed = toast.duration !== undefined;
+
+  const pause = () => {
+    if (!timed) return;
+    setPaused(true);
+    useToastStore.getState().pause(toast.id);
+  };
+  const resume = () => {
+    if (!timed) return;
+    setPaused(false);
+    useToastStore.getState().resume(toast.id);
+  };
 
   return (
     <div
       role="status"
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onFocus={pause}
+      onBlur={resume}
       className="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border bg-background px-4 py-3 shadow-(--popover-shadow) animate-in fade-in-0 slide-in-from-top-full duration-300 ease-out"
     >
       <span
@@ -50,7 +69,7 @@ export function ToastItem({ toast, onDismiss }: ToastItemProps) {
       >
         <X className="size-3.5" />
       </button>
-      {toast.duration !== undefined ? <ToastCountdown duration={toast.duration} /> : null}
+      {timed ? <ToastCountdown duration={toast.duration!} paused={paused} /> : null}
     </div>
   );
 }

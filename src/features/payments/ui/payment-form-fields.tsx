@@ -73,7 +73,7 @@ export function PaymentFormFields({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="payment-period" label={t("payments.period")}>
+        <Field id="payment-period" label={t("payments.period")} required error={errors.period}>
           <MonthPicker
             value={form.period}
             onChange={(v) => setField("period", v)}

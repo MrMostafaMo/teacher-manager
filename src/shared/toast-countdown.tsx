@@ -1,13 +1,15 @@
 interface ToastCountdownProps {
   duration: number;
+  paused: boolean;
 }
 
 /**
  * CSS-only countdown bar showing how long the toast stays actionable.
  * `animationDuration` is set inline from the toast's own duration — no timers,
- * and the global reduced-motion override collapses the animation.
+ * and the global reduced-motion override collapses the animation. Pausing the
+ * toast (hover/focus) pauses the bar with it via animationPlayState.
  */
-export function ToastCountdown({ duration }: ToastCountdownProps) {
+export function ToastCountdown({ duration, paused }: ToastCountdownProps) {
   return (
     <span
       aria-hidden="true"
@@ -16,7 +18,10 @@ export function ToastCountdown({ duration }: ToastCountdownProps) {
       <span
         data-testid="toast-countdown"
         className="block h-full bg-primary animate-toast-countdown"
-        style={{ animationDuration: `${duration}ms` }}
+        style={{
+          animationDuration: `${duration}ms`,
+          animationPlayState: paused ? "paused" : "running",
+        }}
       />
     </span>
   );

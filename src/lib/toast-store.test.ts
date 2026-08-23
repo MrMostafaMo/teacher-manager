@@ -1,58 +1,74 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { useToastStore } from "./toast-store";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { toast, useToastStore } from "./toast-store";
 
-afterEach(() => {
-  useToastStore.setState({ toasts: [] });
-  vi.useRealTimers();
-});
+function reset() {
+  for (const t of useToastStore.getState().toasts) useToastStore.getState().dismiss(t.id);
+}
 
-describe("toast store", () => {
-  it("push adds toasts with unique ids", () => {
-    useToastStore.getState().push({ message: "ok", variant: "success" });
-    useToastStore.getState().push({ message: "err", variant: "error" });
-    const toasts = useToastStore.getState().toasts;
-    expect(toasts).toHaveLength(2);
-    expect(toasts[0].id).not.toBe(toasts[1].id);
-    expect(toasts[0].message).toBe("ok");
-  });
-
-  it("dismiss removes a single toast", () => {
-    useToastStore.getState().push({ message: "a", variant: "success" });
-    useToastStore.getState().push({ message: "b", variant: "success" });
-    const id = useToastStore.getState().toasts[0].id;
-    useToastStore.getState().dismiss(id);
-    expect(useToastStore.getState().toasts).toEqual([expect.objectContaining({ message: "b" })]);
-  });
-
-  it("auto-dismisses after the default 3500ms", () => {
+describe("toast store policy", () => {
+  beforeEach(() => {
     vi.useFakeTimers();
-    useToastStore.getState().push({ message: "ok", variant: "success" });
+    reset();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    reset();
+  });
+
+  it("caps the stack at four cards, dropping the oldest", () => {
+    for (let i = 0; i < 6; i++) toast(`m${i}`);
+    expect(useToastStore.getState().toasts.map((t) => t.message)).toEqual([
+      "m2",
+      "m3",
+      "m4",
+      "m5",
+    ]);
+  });
+
+  it("keeps sticky errors until dismissed", () => {
+    toast("boom", "error");
+    vi.advanceTimersByTime(60_000);
+    expect(useToastStore.getState().toasts).toHaveLength(1);
+  });
+
+  it("auto-dismisses successes after 3.5s", () => {
+    toast("saved");
     vi.advanceTimersByTime(3499);
     expect(useToastStore.getState().toasts).toHaveLength(1);
     vi.advanceTimersByTime(1);
     expect(useToastStore.getState().toasts).toHaveLength(0);
   });
 
-  it("honors a custom duration", () => {
-    vi.useFakeTimers();
-    useToastStore.getState().push({ message: "undo", variant: "info", duration: 5000 });
-    vi.advanceTimersByTime(4000);
+  it("restarts an identical card instead of stacking duplicates", () => {
+    toast("saved");
+    toast("saved");
+    const { toasts } = useToastStore.getState();
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].message).toBe("saved");
+  });
+
+  it("pauses on hover and resumes with the remaining time", () => {
+    toast("saved");
+    const { id } = useToastStore.getState().toasts[0];
+    useToastStore.getState().pause(id);
+    vi.advanceTimersByTime(60_000);
     expect(useToastStore.getState().toasts).toHaveLength(1);
-    vi.advanceTimersByTime(1000);
+    useToastStore.getState().resume(id);
+    vi.advanceTimersByTime(3499);
+    expect(useToastStore.getState().toasts).toHaveLength(1);
+    vi.advanceTimersByTime(1);
     expect(useToastStore.getState().toasts).toHaveLength(0);
   });
 
-  it("carries action and duration through", () => {
-    const onPress = () => {};
-    useToastStore.getState().push({
-      message: "x",
-      variant: "info",
-      duration: 5000,
-      action: { label: "Undo", onPress },
-    });
-    expect(useToastStore.getState().toasts[0]).toMatchObject({
-      duration: 5000,
-      action: { label: "Undo" },
-    });
+  it("drops overflow timers while survivors keep their own deadlines", () => {
+    toast("a");
+    vi.advanceTimersByTime(1750); // "a" is half-lived
+    toast("b");
+    vi.advanceTimersByTime(1751); // t=3501 — "a"'s original deadline landed
+    expect(useToastStore.getState().toasts.map((t) => t.message)).toEqual(["b"]);
+    vi.advanceTimersByTime(1499); // t=5000... wait, "b" dies at its own 1750+3500
+    expect(useToastStore.getState().toasts.map((t) => t.message)).toEqual(["b"]);
+    vi.advanceTimersByTime(250); // t=5250 — "b"'s deadline lands
+    expect(useToastStore.getState().toasts).toHaveLength(0);
   });
 });

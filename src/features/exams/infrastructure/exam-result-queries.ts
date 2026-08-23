@@ -97,7 +97,7 @@ export const examResultQueries = {
   },
 
   async clearForExam(examId: string): Promise<void> {
-    await db.delete(examResults).where(eq(examResults.examId, examId));
+    await db.delete(examResults).where(eq(examResults.examId, examId)).run();
   },
 
   /** Drop results from students no longer in the group or not yet enrolled (used when the group changes). */
@@ -121,7 +121,7 @@ export const examResultQueries = {
 
   /** Every result of a student (used on student delete). */
   async clearForStudent(studentId: string): Promise<void> {
-    await db.delete(examResults).where(eq(examResults.studentId, studentId));
+    await db.delete(examResults).where(eq(examResults.studentId, studentId)).run();
   },
 
   /** Every result + exam of a group (used on group delete). */
@@ -136,8 +136,8 @@ export const examResultQueries = {
         examResults.examId,
         examsOfGroup.map((e) => e.id),
       ),
-    );
-    await db.delete(exams).where(eq(exams.groupId, groupId));
+    ).run();
+    await db.delete(exams).where(eq(exams.groupId, groupId)).run();
   },
 
   /** One student's results for a group's exams (used on membership removal). */
@@ -155,6 +155,6 @@ export const examResultQueries = {
         ),
         eq(examResults.studentId, studentId),
       ),
-    );
+    ).run();
   },
 };

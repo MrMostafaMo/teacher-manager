@@ -13,7 +13,7 @@ interface BlockActionsProps {
 export function BlockActions({ onOccurrence, onAttend, onEdit, onDelete }: BlockActionsProps) {
   const { t } = useTranslation();
   return (
-    <div className="absolute end-1 top-1 z-10 flex flex-col gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+    <div className="absolute end-1 top-1 z-10 flex flex-col gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
       <Button
         variant="ghost"
         size="icon-xs"

@@ -73,6 +73,7 @@ export async function deleteGroup(
   const snapshot = options.undo === false ? null : await captureGroup(id);
   await groupRepository.clearMembers(id);
   // FKs are off — clear this group's homework + submissions or they orphan.
+  // ponytail: multiple deletes with no transaction; partial failure orphans rows.
   await homeworkRepository.clearForGroup(id);
   await examRepository.clearForGroup(id);
   await scheduleRepository.clearForGroup(id);

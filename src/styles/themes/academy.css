@@ -6,6 +6,12 @@
 :root[data-theme="academy"] {
   --background: oklch(0.985 0.006 300);
   --card: oklch(1 0 0);
+  --popover: oklch(1 0 0);
+  --muted: oklch(0.965 0.007 300);
+  --muted-foreground: oklch(0.52 0.02 300);
+  --secondary: oklch(0.962 0.008 300);
+  --border: oklch(0.914 0.005 300);
+  --input: oklch(0.914 0.005 300);
   --primary: oklch(0.56 0.21 300);
   --primary-strong: oklch(0.49 0.21 300);
   --primary-foreground: oklch(0.985 0 0);
@@ -32,6 +38,12 @@
 .dark[data-theme="academy"] {
   --background: oklch(0.16 0.014 295);
   --card: oklch(0.215 0.018 295);
+  --popover: oklch(0.215 0.018 295);
+  --muted: oklch(0.26 0.011 295);
+  --muted-foreground: oklch(0.7 0.01 295);
+  --secondary: oklch(0.26 0.011 295);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
   --primary: oklch(0.71 0.16 300);
   --primary-strong: oklch(0.65 0.16 300);
   --primary-foreground: oklch(0.26 0.06 300);

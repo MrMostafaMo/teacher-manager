@@ -82,6 +82,8 @@ export async function deleteStudent(
 
   // FKs are off — clear every child row or they orphan (attendance,
   // payments, memberships, submissions, results, skill levels).
+  // ponytail: 7 deletes + remove with no transaction; partial failure orphans rows.
+  // Wrap in a single DB transaction when sqlite-proxy exposes it.
   await Promise.all([
     skillRepository.clearForStudent(id),
     attendanceRepository.clearForStudent(id),

@@ -52,6 +52,7 @@ export const groups: Messages["groups"] = {
   errors: {
     nameRequired: "الاسم مطلوب",
     nameTooLong: "الاسم طويل جدًا",
+    maxStudentsInvalid: "أدخل عددًا صحيحًا للحد الأقصى للطلاب",
     tooLong: "النص طويل جدًا",
   },
   loadError: "تعذّر تحميل الفرقة",

@@ -50,6 +50,7 @@ export const groups = {
   errors: {
     nameRequired: "Name is required",
     nameTooLong: "Name is too long",
+    maxStudentsInvalid: "Enter a valid max students number",
     tooLong: "Too long",
   },
   loadError: "Could not load the group",

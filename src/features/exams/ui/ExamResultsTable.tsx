@@ -21,6 +21,8 @@ export function ExamResultsTable({ students, edits, maxScore, onChange }: ExamRe
           {students.map(({ student, score }) => {
             const edit = edits[student.id];
             const dirty = edit.score !== (score === null ? "" : String(score));
+            const numScore = Number(edit.score);
+            const outOfRange = edit.score !== "" && (Number.isNaN(numScore) || numScore < 0 || numScore > maxScore);
             return (
               <tr key={student.id} className="border-b last:border-0">
                 <td className="px-3 py-2 font-medium">{student.name}</td>
@@ -32,10 +34,16 @@ export function ExamResultsTable({ students, edits, maxScore, onChange }: ExamRe
                     dir="ltr"
                     placeholder="—"
                     aria-label={t("exams.scoreFor", { name: student.name })}
-                    className={cn("h-8 text-center", dirty && "border-success")}
+                    aria-invalid={outOfRange || undefined}
+                    className={cn("h-8 text-center", dirty && "border-success", outOfRange && "border-destructive focus-visible:ring-destructive/50")}
                     value={edit.score}
                     onChange={(e) => onChange(student.id, "score", e.target.value)}
                   />
+                  {outOfRange && (
+                    <p className="mt-1 text-[10px] leading-none text-destructive">
+                      {t("exams.scoreOutOfRange", { max: maxScore })}
+                    </p>
+                  )}
                 </td>
                 <td className="w-32 px-2 py-2">
                   <Input

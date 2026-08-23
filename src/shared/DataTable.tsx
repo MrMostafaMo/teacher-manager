@@ -20,15 +20,22 @@ interface DataTableProps<T> {
   className?: string;
 }
 
+// ponytail: add scope="col" and aria-busy/aria-live for skeleton state when a11y audit demands it.
 function DataTableInner<T>({ columns, rows, getRowKey, className }: DataTableProps<T>) {
   return (
-    <div className={cn("group/table overflow-x-auto", className)}>
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="جدول"
+      className={cn("group/table overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]", className)}
+    >
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/60 text-xs text-muted-foreground">
             {columns.map((col, i) => (
               <th
                 key={i}
+                scope="col"
                 className={cn(
                   "px-4 py-3 text-start align-middle font-semibold",
                   col.headerClassName,

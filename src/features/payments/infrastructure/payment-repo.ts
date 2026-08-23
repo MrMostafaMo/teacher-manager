@@ -30,6 +30,6 @@ export const paymentRepository = {
 
   /** Every payment of a student (used on student delete). */
   async clearForStudent(studentId: string): Promise<void> {
-    await db.delete(payments).where(eq(payments.studentId, studentId));
+    await db.delete(payments).where(eq(payments.studentId, studentId)).run();
   },
 };

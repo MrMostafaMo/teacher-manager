@@ -8,16 +8,22 @@ import { listStudents } from "@/features/students/application/student-cases";
  */
 export function useStudentSearch(open: boolean, query: string, limit = 5) {
   const [all, setAll] = useState<Student[]>([]);
+  const [debounced, setDebounced] = useState(query);
 
   useEffect(() => {
-    if (!open) return;
+    const id = window.setTimeout(() => setDebounced(query), 150);
+    return () => window.clearTimeout(id);
+  }, [query]);
+
+  useEffect(() => {
+    if (!open || !debounced.trim()) return;
     listStudents({ status: "all" })
       .then(setAll)
       .catch(() => setAll([]));
-  }, [open]);
+  }, [open, debounced]);
 
-  if (!query.trim()) return [];
-  const q = query.trim().toLowerCase();
+  if (!debounced.trim()) return [];
+  const q = debounced.trim().toLowerCase();
   return all
     .filter((s) => s.name.toLowerCase().includes(q))
     .slice(0, limit);

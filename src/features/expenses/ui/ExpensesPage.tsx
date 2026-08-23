@@ -116,7 +116,16 @@ export default function ExpensesPage() {
       ) : rows.length === 0 ? (
         <Card>
           <CardContent className="p-0">
-            <EmptyState icon={Receipt} title={t("expenses.empty")} />
+            <EmptyState
+              icon={Receipt}
+              title={t("expenses.empty")}
+              action={
+                <Button onClick={() => setRecordOpen(true)}>
+                  <Plus />
+                  {t("expenses.record")}
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (

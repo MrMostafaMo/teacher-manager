@@ -17,7 +17,7 @@ export async function setMeta(key: string, value: string): Promise<void> {
   if (existing === null) {
     await db.insert(appMeta).values({ key, value, createdAt: ts, updatedAt: ts });
   } else {
-    await db.update(appMeta).set({ value, updatedAt: ts }).where(eq(appMeta.key, key));
+    await db.update(appMeta).set({ value, updatedAt: ts }).where(eq(appMeta.key, key)).run();
   }
 }
 

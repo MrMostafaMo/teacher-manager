@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { nameSchema, optionalDate, optionalId, optionalText } from "@/lib/validation";
+import { nameSchema, optionalDate, optionalId, optionalPhone, optionalText } from "@/lib/validation";
 
 /**
  * Student entity + input schema. Framework-free by design (no React/i18n):
@@ -7,9 +7,9 @@ import { nameSchema, optionalDate, optionalId, optionalText } from "@/lib/valida
  */
 export const studentInputSchema = z.object({
   name: nameSchema,
-  phone: optionalText(20),
+  phone: optionalPhone,
   guardianName: optionalText(100),
-  guardianPhone: optionalText(20),
+  guardianPhone: optionalPhone,
   status: z.enum(["active", "inactive"]),
   planId: optionalId,
   notes: optionalText(2000),

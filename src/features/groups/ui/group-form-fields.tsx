@@ -65,17 +65,14 @@ export function GroupFormFields({
             className="w-full"
           />
         </Field>
-        <Field
-          id="group-max-students"
-          label={t("groups.fields.maxStudents")}
-          error={errors.maxStudents}
-        >
+        <Field id="group-max-students" label={t("groups.fields.maxStudents")} error={errors.maxStudents}>
           <Input
             id="group-max-students"
             type="number"
             min={1}
             value={form.maxStudents}
             onChange={(e) => onChange({ maxStudents: e.target.value })}
+            aria-invalid={!!errors.maxStudents}
           />
         </Field>
       </div>

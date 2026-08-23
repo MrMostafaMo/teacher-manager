@@ -1,3 +1,4 @@
+// ponytail: full table scans with no limit/where; add month/period filter + pagination when reports stall at 1-2k students.
 import { db } from "@/lib/db/client";
 import {
   attendance,

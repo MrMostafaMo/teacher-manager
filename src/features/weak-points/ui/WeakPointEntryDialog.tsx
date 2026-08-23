@@ -35,22 +35,27 @@ export function WeakPointEntryDialog({
 }: WeakPointEntryDialogProps) {
   const { t } = useTranslation();
   const [studentId, setStudentId] = useState("");
+  const [studentError, setStudentError] = useState("");
   const [formState, setFormState] = useState<WeakPointFormState>(emptyWeakPointForm());
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
+    setStudentError("");
     setFormState(editing ? weakPointFormFromRow(editing) : emptyWeakPointForm());
     setStudentId(editing ? editing.studentId : (students[0]?.id ?? ""));
   }, [open, editing, students]);
 
   async function handleSave(input: WeakPointInput) {
+    if (!editing && !studentId) {
+      setStudentError(t("validation.required"));
+      return;
+    }
     setSaving(true);
     try {
       if (editing) {
         await updateWeakPoint(editing.id, { ...input, resolved: editing.resolved });
       } else {
-        if (!studentId) return;
         await addWeakPoint(studentId, input);
       }
       toast(t("weakPoints.saved"));
@@ -69,13 +74,17 @@ export function WeakPointEntryDialog({
       className="max-w-md"
     >
       {!editing && (
-        <Field id="weak-point-student" label={t("weakPoints.student")} required>
+        <Field id="weak-point-student" label={t("weakPoints.student")} required error={studentError}>
           <Select
             id="weak-point-student"
             value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
+            onChange={(e) => {
+              setStudentId(e.target.value);
+              if (e.target.value) setStudentError("");
+            }}
             aria-label={t("weakPoints.student")}
           >
+            <option value="">{t("common.select")}</option>
             {students.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}

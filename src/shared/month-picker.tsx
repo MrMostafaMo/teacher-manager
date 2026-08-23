@@ -9,7 +9,15 @@ import { navBtn, triggerClass, type PickerProps } from "./picker-shared";
 
 dayjs.extend(localeData);
 
-export function MonthPicker({ value, onChange, ariaLabel, className }: PickerProps) {
+export function MonthPicker({
+  value,
+  onChange,
+  ariaLabel,
+  className,
+  id,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
+}: PickerProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [year, setYear] = useState(() => dayjs().year());
@@ -30,11 +38,14 @@ export function MonthPicker({ value, onChange, ariaLabel, className }: PickerPro
       trigger={
         <button
           type="button"
+          id={id}
           aria-label={ariaLabel}
           aria-haspopup="dialog"
           aria-expanded={open}
+          aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
           onClick={() => setOpen((v) => !v)}
-          className={cn(triggerClass, className)}
+          className={cn(triggerClass, className, ariaInvalid && "border-destructive focus-visible:border-destructive")}
         >
           <CalendarRange className="size-3.5 shrink-0 text-muted-foreground" />
           <span className={cn(value ? "" : "text-muted-foreground")}>

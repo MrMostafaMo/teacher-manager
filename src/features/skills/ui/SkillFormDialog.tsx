@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { useTranslation } from "react-i18next";
 import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { skillInputSchema } from "@/features/skills/domain";
+import { Field } from "@/shared/Field";
 import { createSkill, updateSkill } from "@/features/skills/application/skill-cases";
 import type { Skill } from "@/lib/db/schema";
 import { Modal } from "@/shared/Modal";
@@ -47,7 +48,7 @@ export function SkillFormDialog({ open, skill, onClose, onSaved }: SkillFormDial
       if (error instanceof ZodError) {
         setErrors({ name: t("skills.errors.nameRequired") });
       } else {
-        setFatal(String(error));
+        setFatal(getErrorMessage(error));
       }
     } finally {
       setSaving(false);
@@ -57,18 +58,13 @@ export function SkillFormDialog({ open, skill, onClose, onSaved }: SkillFormDial
   return (
     <Modal open={open} onClose={onClose} title={skill ? t("skills.edit") : t("skills.add")}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="skill-name">
-            {t("skills.fields.name")} <span className="text-destructive">*</span>
-          </Label>
+        <Field id="skill-name" label={t("skills.fields.name")} required error={errors.name}>
           <Input
             id="skill-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-invalid={!!errors.name}
           />
-          {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-        </div>
+        </Field>
 
         {fatal && <p className="text-sm text-destructive">{fatal}</p>}
 

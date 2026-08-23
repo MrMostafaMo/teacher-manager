@@ -37,7 +37,7 @@ export function StudentSkillsTable({ rows, edits, onChange }: StudentSkillsTable
                     value={edit.level}
                     onChange={(e) => onChange(r.skillId, "level", e.target.value)}
                     aria-label={t("skills.levelFor", { name: r.name })}
-                    className={cn("text-center", dirty && "border-success")}
+                    className={cn("text-center", dirty && "border-success bg-success/10 ring-1 ring-success/30")}
                   >
                     <option value="">—</option>
                     {SKILL_LEVELS.map((l) => (
