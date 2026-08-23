@@ -1,4 +1,4 @@
-// @ts-ignore jsdom has no bundled types in this repo
+// @ts-expect-error jsdom has no bundled types in this repo
 import { JSDOM } from "jsdom";
 import { describe, expect, it } from "vitest";
 import { cycleTabFocus } from "./cycle-tab-focus";
