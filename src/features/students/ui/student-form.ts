@@ -16,6 +16,9 @@ export interface StudentFormState {
   birthDate: string;
   gradeLevel: string;
   photoUrl: string;
+  isExempt: boolean;
+  exemptReason: "" | "relative" | "scholarship" | "other";
+  exemptNote: string;
 }
 
 export const emptyStudentForm: StudentFormState = {
@@ -31,6 +34,9 @@ export const emptyStudentForm: StudentFormState = {
   birthDate: "",
   gradeLevel: "",
   photoUrl: "",
+  isExempt: false,
+  exemptReason: "",
+  exemptNote: "",
 };
 
 export function initialStudentForm(student: Student | null): StudentFormState {
@@ -47,6 +53,9 @@ export function initialStudentForm(student: Student | null): StudentFormState {
     birthDate: student?.birthDate ?? "",
     gradeLevel: student?.gradeLevel ?? "",
     photoUrl: student?.photoUrl ?? "",
+    isExempt: (student as unknown as { isExempt?: boolean })?.isExempt ?? false,
+    exemptReason: ((student as unknown as { exemptReason?: string | null })?.exemptReason as StudentFormState["exemptReason"]) ?? "",
+    exemptNote: (student as unknown as { exemptNote?: string | null })?.exemptNote ?? "",
   };
 }
 

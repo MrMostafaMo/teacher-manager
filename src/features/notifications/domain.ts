@@ -5,7 +5,9 @@ export type NotificationType =
   | "weak_skill"
   | "low_attendance"
   | "exam_upcoming"
-  | "student_birthday";
+  | "student_birthday"
+  | "session_warning"
+  | "session_due";
 
 export interface NotificationItem {
   type: NotificationType;
@@ -26,5 +28,7 @@ export interface NotificationItem {
     absent?: number;
     examDate?: string;
     gradeLevel?: string | null;
+    required?: number;
+    remainingSessions?: number;
   };
 }

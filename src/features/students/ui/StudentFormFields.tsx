@@ -158,6 +158,42 @@ export function StudentFormFields({
           placeholder={t("students.notesPlaceholder")}
         />
       </Field>
+
+      <Field id="student-exempt" label={t("students.fields.isExempt")}>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            id="student-exempt"
+            type="checkbox"
+            checked={form.isExempt}
+            onChange={(e) => onChange("isExempt", e.target.checked as unknown as StudentFormState["isExempt"])}
+          />
+          {t("students.fields.isExemptHint")}
+        </label>
+      </Field>
+      {form.isExempt && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field id="student-exempt-reason" label={t("students.fields.exemptReason")} error={errors.exemptReason}>
+            <Select
+              id="student-exempt-reason"
+              value={form.exemptReason}
+              onChange={(e) => onChange("exemptReason", e.target.value as StudentFormState["exemptReason"])}
+            >
+              <option value="">{t("students.exemptSelect")}</option>
+              <option value="relative">{t("students.exemptReasons.relative")}</option>
+              <option value="scholarship">{t("students.exemptReasons.scholarship")}</option>
+              <option value="other">{t("students.exemptReasons.other")}</option>
+            </Select>
+          </Field>
+          <Field id="student-exempt-note" label={t("students.fields.exemptNote")} error={errors.exemptNote}>
+            <Input
+              id="student-exempt-note"
+              value={form.exemptNote}
+              onChange={(e) => onChange("exemptNote", e.target.value)}
+              placeholder={t("students.exemptNotePlaceholder")}
+            />
+          </Field>
+        </div>
+      )}
     </>
   );
 }

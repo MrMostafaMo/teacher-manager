@@ -32,10 +32,13 @@ function student(overrides: Partial<Student> = {}): Student {
     birthDate: null,
     gradeLevel: null,
     photoUrl: null,
+    isExempt: false,
+    exemptReason: null,
+    exemptNote: null,
     createdAt: 1,
     updatedAt: 1,
     ...overrides,
-  };
+  } as Student;
 }
 
 describe("statementPeriods", () => {

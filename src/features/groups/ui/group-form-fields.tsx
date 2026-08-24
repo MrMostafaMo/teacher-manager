@@ -10,6 +10,8 @@ export interface GroupFormState {
   subject: string;
   startsOn: string;
   maxStudents: string;
+  sessionsPerCycle: string;
+  warningAt: string;
   status: "active" | "inactive";
   notes: string;
 }
@@ -73,6 +75,33 @@ export function GroupFormFields({
             value={form.maxStudents}
             onChange={(e) => onChange({ maxStudents: e.target.value })}
             aria-invalid={!!errors.maxStudents}
+          />
+        </Field>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="group-sessions" label={t("groups.fields.sessionsPerCycle")} error={errors.sessionsPerCycle}>
+          <Input
+            id="group-sessions"
+            type="number"
+            min={1}
+            max={30}
+            value={form.sessionsPerCycle}
+            onChange={(e) => onChange({ sessionsPerCycle: e.target.value })}
+            placeholder={t("groups.sessionInherit")}
+            aria-invalid={!!errors.sessionsPerCycle}
+          />
+        </Field>
+        <Field id="group-warning" label={t("groups.fields.warningAt")} error={errors.warningAt}>
+          <Input
+            id="group-warning"
+            type="number"
+            min={1}
+            max={30}
+            value={form.warningAt}
+            onChange={(e) => onChange({ warningAt: e.target.value })}
+            placeholder={t("groups.warningInherit")}
+            aria-invalid={!!errors.warningAt}
           />
         </Field>
       </div>

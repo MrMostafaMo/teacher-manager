@@ -21,6 +21,8 @@ const ALL_TYPES_FALSE: Record<NotificationType, boolean> = {
   low_attendance: false,
   exam_upcoming: false,
   student_birthday: false,
+  session_warning: false,
+  session_due: false,
 };
 
 export const useNotificationSettings = create<NotificationSettingsState>()(

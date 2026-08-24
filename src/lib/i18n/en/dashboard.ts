@@ -57,4 +57,11 @@ export const dashboard = {
     empty: "No active weaknesses.",
     count: "{{count}} active",
   },
+  sessions: {
+    title: "Sessions due",
+    empty: "No students near their limit.",
+    warning: "Soon",
+    due: "Due",
+    viewAll: "View all",
+  },
 } as const;

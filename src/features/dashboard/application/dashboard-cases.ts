@@ -8,6 +8,7 @@ import { listSkills } from "@/features/skills/application/skill-cases";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import { listScheduleExceptions } from "@/features/schedule/application/schedule-exception-cases";
 import { listAllWeakPoints } from "@/features/weak-points/application/weak-point-cases";
+import { sessionDues } from "@/features/payments/application/session-dues-cases";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { expenseRepository } from "@/features/expenses/infrastructure/expense-repo";
@@ -50,6 +51,7 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     financePayments,
     financeExpenses,
     weakPoints,
+    sessionDuesRows,
   ] = await Promise.all([
     listStudents({ status: "all" }),
     getMonthly(month),
@@ -66,6 +68,7 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     Promise.all(trendMonths.map((m) => paymentRepository.byPeriod(m))),
     Promise.all(trendMonths.map((m) => expenseRepository.byMonth(m))),
     listAllWeakPoints(),
+    sessionDues(),
   ]);
 
   const totalStudents = students.length;
@@ -151,6 +154,15 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     net: collected - expensesMonth,
     outstanding,
     topDebtors,
+    sessionDues: sessionDuesRows
+      .filter((r) => r.status !== "ok")
+      .slice(0, 5)
+      .map((r) => ({
+        student: { id: r.student.id, name: r.student.name },
+        count: r.count,
+        remainingSessions: r.remainingSessions,
+        status: r.status,
+      })),
     deltas: {
       collected: percentDelta(collected, prevCollected),
       expenses: percentDelta(expensesMonth, prevExpenses),

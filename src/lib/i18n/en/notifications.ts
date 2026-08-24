@@ -21,6 +21,8 @@ export const notifications = {
       lowAttendance: "Low attendance",
       exam: "Upcoming exams",
       birthday: "Student birthdays",
+      sessionWarning: "Sessions warning",
+      sessionDue: "Sessions due",
     },
   },
   types: {
@@ -31,5 +33,7 @@ export const notifications = {
     low_attendance: "{{name}} attendance is {{rate}} this month",
     exam_upcoming: "Exam «{{title}}» on {{examDate}} ({{groupName}})",
     student_birthday: "🎂 {{name}} has a birthday today",
+    session_warning: "{{name}} nearing due: {{count}}/{{required}} sessions",
+    session_due: "{{name}} session due: {{count}}/{{required}} sessions",
   },
 } as const;

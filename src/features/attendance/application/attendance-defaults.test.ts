@@ -26,9 +26,12 @@ function student(id: string): Student {
     birthDate: null,
     gradeLevel: null,
     photoUrl: null,
+    isExempt: false,
+    exemptReason: null,
+    exemptNote: null,
     createdAt: 0,
     updatedAt: 0,
-  };
+  } as Student;
 }
 
 function session(overrides: Partial<SessionWithGroup> = {}): SessionWithGroup {

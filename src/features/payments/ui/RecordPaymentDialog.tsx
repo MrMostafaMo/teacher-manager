@@ -21,6 +21,8 @@ interface RecordPaymentDialogProps {
   open: boolean;
   defaultPeriod: string;
   payment?: Payment | null;
+  presetStudentId?: string;
+  presetAmount?: number;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -29,6 +31,8 @@ export function RecordPaymentDialog({
   open,
   defaultPeriod,
   payment,
+  presetStudentId,
+  presetAmount,
   onClose,
   onSaved,
 }: RecordPaymentDialogProps) {
@@ -42,7 +46,10 @@ export function RecordPaymentDialog({
 
   useEffect(() => {
     if (!open) return;
-    setForm(payment ? paymentFormFromPayment(payment) : emptyPaymentForm(defaultPeriod));
+    const base = payment ? paymentFormFromPayment(payment) : emptyPaymentForm(defaultPeriod);
+    if (presetStudentId) base.studentId = presetStudentId;
+    if (presetAmount != null) base.amount = String(presetAmount);
+    setForm(base);
     setErrors({});
     setFatal("");
     void listStudents({ status: "active" })
@@ -51,7 +58,7 @@ export function RecordPaymentDialog({
     void listPlans()
       .then(setPlans)
       .catch(() => setPlans([]));
-  }, [open, defaultPeriod, payment]);
+  }, [open, defaultPeriod, payment, presetStudentId, presetAmount]);
 
   function setField<K extends keyof PaymentFormState>(key: K, value: PaymentFormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));

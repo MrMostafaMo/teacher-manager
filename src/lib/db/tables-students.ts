@@ -24,6 +24,12 @@ export const students = sqliteTable(
     gradeLevel: text("grade_level"),
     /** Local file path to a student photo, nullable. */
     photoUrl: text("photo_url"),
+    /** Exempt from all payment dues (relatives, scholarships, etc.). */
+    isExempt: integer("is_exempt", { mode: "boolean" }).notNull().default(false),
+    exemptReason: text("exempt_reason", {
+      enum: ["relative", "scholarship", "other"] as const,
+    }),
+    exemptNote: text("exempt_note"),
     ...timestamps,
   },
   (t) => [index("students_name").on(t.name)],
@@ -38,6 +44,10 @@ export const studyGroups = sqliteTable("study_groups", {
   startsOn: text("starts_on"),
   /** Maximum number of students allowed; NULL = unlimited. */
   maxStudents: integer("max_students"),
+  /** Sessions per billing cycle for this group; NULL = inherit global default. */
+  sessionsPerCycle: integer("sessions_per_cycle"),
+  /** Warning threshold for this group; NULL = sessionsPerCycle - 2. */
+  warningAt: integer("warning_at"),
   status: text("status", activeStatus).notNull().default("active"),
   notes: text("notes"),
   ...timestamps,

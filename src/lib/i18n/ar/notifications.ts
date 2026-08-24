@@ -23,6 +23,8 @@ export const notifications: Messages["notifications"] = {
       lowAttendance: "حضور منخفض",
       exam: "امتحانات قادمة",
       birthday: "أعياد ميلاد",
+      sessionWarning: "اقتراب الحصص",
+      sessionDue: "استحقاق الحصص",
     },
   },
   types: {
@@ -33,5 +35,7 @@ export const notifications: Messages["notifications"] = {
     low_attendance: "نسبة حضور {{name}} {{rate}} هذا الشهر",
     exam_upcoming: "امتحان «{{title}}» بتاريخ {{examDate}} ({{groupName}})",
     student_birthday: "🎂 عيد ميلاد {{name}} اليوم!",
+    session_warning: "{{name}} اقترب اشتراكه ({{count}}/{{required}} حصص)",
+    session_due: "{{name}} مستحق التحصيل ({{count}}/{{required}} حصص)",
   },
 };

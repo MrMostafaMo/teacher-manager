@@ -59,4 +59,11 @@ export const dashboard: Messages["dashboard"] = {
     empty: "لا توجد نقاط ضعف نشطة.",
     count: "{{count}} نشطة",
   },
+  sessions: {
+    title: "متابعة الاشتراكات",
+    empty: "لا يوجد طلاب اقترب اشتراكهم.",
+    warning: "اقترب",
+    due: "مستحق",
+    viewAll: "عرض الكل",
+  },
 };

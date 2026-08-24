@@ -18,6 +18,8 @@ const ROUTE_BY_TYPE: Record<string, string> = {
   low_attendance: "/attendance",
   exam_upcoming: "/exams",
   student_birthday: "/students",
+  session_warning: "/payments",
+  session_due: "/payments",
 };
 
 /** Header bell: unread badge + popover with mark-read/dismiss actions. */

@@ -19,6 +19,9 @@ vi.mock("@/features/homework/application/homework-cases", () => ({
 vi.mock("@/features/payments/application/payment-cases", () => ({
   monthlyDues: vi.fn(async () => []),
 }));
+vi.mock("@/features/payments/application/session-dues-cases", () => ({
+  sessionDues: vi.fn(async () => []),
+}));
 vi.mock("@/features/schedule/application/schedule-exception-cases", () => ({
   listScheduleExceptions: vi.fn(async () => []),
 }));

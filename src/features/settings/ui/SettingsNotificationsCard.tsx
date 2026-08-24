@@ -24,6 +24,8 @@ const TYPE_ICON: Record<NotificationType, typeof Bell> = {
   low_attendance: GraduationCap,
   exam_upcoming: Megaphone,
   student_birthday: Cake,
+  session_warning: Wallet,
+  session_due: Wallet,
 };
 
 const TYPE_KEY: Record<NotificationType, string> = {
@@ -34,6 +36,8 @@ const TYPE_KEY: Record<NotificationType, string> = {
   low_attendance: "lowAttendance",
   exam_upcoming: "exam",
   student_birthday: "birthday",
+  session_warning: "sessionWarning",
+  session_due: "sessionDue",
 };
 
 function Toggle({
@@ -65,6 +69,8 @@ const ALL_TYPES: NotificationType[] = [
   "low_attendance",
   "exam_upcoming",
   "student_birthday",
+  "session_warning",
+  "session_due",
 ];
 
 export function SettingsNotificationsCard() {

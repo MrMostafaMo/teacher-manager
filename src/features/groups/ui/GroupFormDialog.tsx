@@ -25,6 +25,8 @@ const emptyForm: GroupFormState = {
   subject: "",
   startsOn: "",
   maxStudents: "",
+  sessionsPerCycle: "",
+  warningAt: "",
   status: "active",
   notes: "",
 };
@@ -56,6 +58,8 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
       subject: group?.subject ?? "",
       startsOn: group?.startsOn ?? "",
       maxStudents: group?.maxStudents != null ? String(group.maxStudents) : "",
+      sessionsPerCycle: (group as unknown as { sessionsPerCycle?: number | null })?.sessionsPerCycle != null ? String((group as unknown as { sessionsPerCycle: number }).sessionsPerCycle) : "",
+      warningAt: (group as unknown as { warningAt?: number | null })?.warningAt != null ? String((group as unknown as { warningAt: number }).warningAt) : "",
       status: group?.status ?? "active",
       notes: group?.notes ?? "",
     });
@@ -69,6 +73,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
       if (field === "name")
         return issue.code === "too_small" ? t("groups.errors.nameRequired") : t("groups.errors.nameTooLong");
       if (field === "maxStudents") return t("groups.errors.maxStudentsInvalid");
+      if (field === "sessionsPerCycle" || field === "warningAt") return t("groups.errors.sessionsInvalid");
       return t("groups.errors.tooLong");
     });
 
@@ -82,6 +87,8 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
       const input = {
         ...form,
         maxStudents: form.maxStudents ? Number(form.maxStudents) : null,
+        sessionsPerCycle: form.sessionsPerCycle ? Number(form.sessionsPerCycle) : null,
+        warningAt: form.warningAt ? Number(form.warningAt) : null,
       };
       studyGroupInputSchema.parse(input);
       const row = group ? await updateGroup(group.id, input) : await createGroup(input);

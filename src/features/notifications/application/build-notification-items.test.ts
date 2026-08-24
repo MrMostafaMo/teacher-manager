@@ -42,9 +42,12 @@ function due(overrides: Partial<DuesRow> = {}): DuesRow {
       birthDate: null,
       gradeLevel: null,
       photoUrl: null,
+      isExempt: false,
+      exemptReason: null,
+      exemptNote: null,
       createdAt: 0,
       updatedAt: 0,
-    },
+    } as unknown as DuesRow["student"],
     plan: null,
     due: 300,
     paid: 100,
@@ -90,7 +93,16 @@ function monthly(overrides: Partial<StudentMonthlyRow> = {}): StudentMonthlyRow 
   };
 }
 function empty(): NotificationSourceData {
-  return { homeworks: [], exams: [], dues: [], exceptions: [], skills: [], monthly: [], students: [] };
+  return {
+    homeworks: [],
+    exams: [],
+    dues: [],
+    exceptions: [],
+    skills: [],
+    monthly: [],
+    students: [],
+    sessionDues: [],
+  };
 }
 
 describe("buildNotificationItems", () => {

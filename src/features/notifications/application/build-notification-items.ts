@@ -5,6 +5,7 @@ import type { DuesRow } from "@/features/payments/application/payment-cases";
 import type { StudentMonthlyRow } from "@/features/attendance/application/attendance-cases";
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
 import type { SessionException, Student } from "@/lib/db/schema";
+import type { SessionDuesRow } from "@/features/payments/application/session-dues";
 import type { NotificationItem } from "@/features/notifications/domain";
 
 export interface NotificationSourceData {
@@ -15,6 +16,7 @@ export interface NotificationSourceData {
   skills: SkillWithWeakCount[];
   monthly: StudentMonthlyRow[];
   students: Student[];
+  sessionDues: SessionDuesRow[];
 }
 
 /** Low-attendance threshold: rate strictly below this notifies. */
@@ -76,6 +78,32 @@ function birthdayItem(s: Student, today: string): NotificationItem {
   };
 }
 
+function sessionWarningItem(r: SessionDuesRow): NotificationItem {
+  return {
+    type: "session_warning",
+    key: `session:warning:${r.student.id}`,
+    details: {
+      name: r.student.name,
+      count: r.count,
+      required: r.remainingSessions + r.count,
+      remainingSessions: r.remainingSessions,
+    },
+  };
+}
+
+function sessionDueItem(r: SessionDuesRow): NotificationItem {
+  return {
+    type: "session_due",
+    key: `session:due:${r.student.id}`,
+    details: {
+      name: r.student.name,
+      count: r.count,
+      required: r.remainingSessions + r.count,
+      remainingSessions: r.remainingSessions,
+    },
+  };
+}
+
 function attendanceRate(r: StudentMonthlyRow): number {
   const marked = r.present + r.absent + r.late + r.excused;
   if (marked === 0) return 1;
@@ -104,6 +132,10 @@ export function buildNotificationItems(
   const mmdd = today.slice(5);
   for (const s of data.students) if (s.birthDate && s.birthDate.slice(5) === mmdd) {
     items.push(birthdayItem(s, today));
+  }
+  for (const r of data.sessionDues) {
+    if (r.status === "warning") items.push(sessionWarningItem(r));
+    else if (r.status === "due") items.push(sessionDueItem(r));
   }
   return items;
 }

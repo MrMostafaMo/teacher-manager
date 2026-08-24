@@ -36,6 +36,8 @@ export function notificationText(item: NotifyTextInput, t: TFunction): string {
     kind,
     date: typeof d.date === "string" ? d.date : "—",
     count: typeof d.count === "number" ? d.count : 0,
+    required: typeof d.required === "number" ? d.required : 0,
+    remainingSessions: typeof d.remainingSessions === "number" ? d.remainingSessions : 0,
     name: typeof d.name === "string" ? d.name : "—",
     rate: typeof d.rate === "number" ? rateLabel(d.rate) : "—",
     examDate: typeof d.examDate === "string" ? d.examDate : "—",

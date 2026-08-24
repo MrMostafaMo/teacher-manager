@@ -46,4 +46,10 @@ export interface DashboardData {
     room: string | null;
     finished: boolean;
   }>;
+  sessionDues: Array<{
+    student: { id: string; name: string };
+    count: number;
+    remainingSessions: number;
+    status: "ok" | "warning" | "due";
+  }>;
 }

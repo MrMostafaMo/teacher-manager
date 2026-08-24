@@ -35,4 +35,11 @@ export const settings = {
   invalidBackup: "The selected file is not a valid database backup.",
   restoreVersionMismatch:
     "The backup was created by a different app version and cannot be restored. Pick a backup that matches the current version.",
+  session: {
+    title: "Session billing",
+    sessionsPerCycle: "Sessions per cycle",
+    warningAt: "Warn at",
+    hint: "Price per session = plan amount ÷ sessions. Counter resets after each payment (all statuses count).",
+    validation: "Warning must be less than sessions per cycle (1–30).",
+  },
 } as const;

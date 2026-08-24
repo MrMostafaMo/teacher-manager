@@ -79,7 +79,9 @@ export async function monthlyDues(period: string): Promise<DuesRow[]> {
     groupRepository.memberships(),
   ]);
   // A student is billed from their enrollment month onward — never before it.
-  const students = activeStudents.filter((s) => enrolledBy(s, monthEnd(period)));
+  const students = activeStudents.filter(
+    (s) => !((s as unknown as { isExempt?: boolean }).isExempt) && enrolledBy(s, monthEnd(period)),
+  );
   const planById = new Map(plans.map((p) => [p.id, p]));
   const groupsByStudent = new Map<string, Array<{ id: string; name: string }>>();
   for (const m of memberships) {

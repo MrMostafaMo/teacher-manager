@@ -11,10 +11,11 @@ import { BatchPaymentDialog } from "./BatchPaymentDialog";
 import { PlansDialog } from "./PlansDialog";
 import { DuesView } from "./dues";
 import { HistoryView } from "./history";
+import { SessionDuesView } from "./session-dues-view";
 
 export default function PaymentsPage() {
   const { t } = useTranslation();
-  const [view, setView] = useState<"dues" | "history">("dues");
+  const [view, setView] = useState<"dues" | "history" | "sessions">("dues");
   const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
   const [recordOpen, setRecordOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -39,9 +40,9 @@ export default function PaymentsPage() {
             <Segmented
               value={view}
               onChange={setView}
-              options={(["dues", "history"] as const).map((v) => ({
+              options={(["dues", "sessions", "history"] as const).map((v) => ({
                 value: v,
-                label: t(`payments.tab${v === "dues" ? "Dues" : "History"}`),
+                label: t(`payments.tab${v === "dues" ? "Dues" : v === "sessions" ? "Sessions" : "History"}`),
               }))}
               ariaLabel={t("payments.viewLabel")}
               className="w-full overflow-x-auto sm:w-auto"
@@ -69,6 +70,8 @@ export default function PaymentsPage() {
 
       {view === "dues" ? (
         <DuesView month={month} onMonthChange={setMonth} reloadKey={reloadKey} />
+      ) : view === "sessions" ? (
+        <SessionDuesView reloadKey={reloadKey} />
       ) : (
         <HistoryView reloadKey={reloadKey} onChanged={bump} onEdit={handleEdit} />
       )}

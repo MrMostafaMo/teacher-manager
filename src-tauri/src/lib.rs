@@ -118,6 +118,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0017_group_capacity.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 19,
+            description: "per-group sessions per cycle + student exemption",
+            sql: include_str!("../migrations/0018_smoky_puma.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

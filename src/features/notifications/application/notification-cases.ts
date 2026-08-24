@@ -3,6 +3,7 @@ import { getMonthly } from "@/features/attendance/application/attendance-cases";
 import { listExams } from "@/features/exams/application/exam-cases";
 import { listHomeworks } from "@/features/homework/application/homework-cases";
 import { monthlyDues } from "@/features/payments/application/payment-cases";
+import { sessionDues } from "@/features/payments/application/session-dues-cases";
 import { listScheduleExceptions } from "@/features/schedule/application/schedule-exception-cases";
 import { listSkills } from "@/features/skills/application/skill-cases";
 import { listStudents } from "@/features/students/application/student-cases";
@@ -20,17 +21,19 @@ export const ACTIVE_NOTIFICATION_LIMIT = 100;
 export async function refreshNotifications(): Promise<NotificationItem[]> {
   const month = dayjs().format("YYYY-MM");
   const today = dayjs().format("YYYY-MM-DD");
-  const [homeworks, exams, dues, exceptions, skills, monthly, students] = await Promise.all([
-    listHomeworks(),
-    listExams(),
-    monthlyDues(month),
-    listScheduleExceptions(),
-    listSkills(),
-    getMonthly(month),
-    listStudents({ status: "all" }),
-  ]);
+  const [homeworks, exams, dues, exceptions, skills, monthly, students, sessionDuesRows] =
+    await Promise.all([
+      listHomeworks(),
+      listExams(),
+      monthlyDues(month),
+      listScheduleExceptions(),
+      listSkills(),
+      getMonthly(month),
+      listStudents({ status: "all" }),
+      sessionDues(),
+    ]);
   const desired = buildNotificationItems(
-    { homeworks, exams, dues, exceptions, skills, monthly, students },
+    { homeworks, exams, dues, exceptions, skills, monthly, students, sessionDues: sessionDuesRows },
     month,
     today,
   );

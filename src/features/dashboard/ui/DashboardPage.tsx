@@ -29,6 +29,7 @@ import {
   TopDebtorsCard,
   WeakPointsCard,
   WeakSkillsCard,
+  SessionDuesCard,
 } from "./DashboardSectionCards";
 import { AttendanceHomeworkCharts, FinanceCharts } from "./DashboardChartsSection";
 
@@ -168,6 +169,7 @@ const DashboardContent = memo(function DashboardContent({
       <DashboardQuickActions newStudents={data.deltas.newStudents} />
       <KpiGrid kpis={kpis} />
       <TodaySessionsCard sessions={data.todaySessions} />
+      <SessionDuesCard rows={data.sessionDues as never} />
       <OverdueHomeworksCard items={data.overdueHomeworks} />
       <TopDebtorsCard debtors={data.topDebtors} />
       <WeakPointsCard items={data.topWeakPoints} />

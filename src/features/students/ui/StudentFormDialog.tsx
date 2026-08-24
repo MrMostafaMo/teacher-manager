@@ -85,15 +85,15 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
     setErrors({});
     setFatal("");
     try {
-      studentInputSchema.parse(form);
+      const parsed = studentInputSchema.parse(form);
       if (student) {
-        await updateStudent(student.id, form);
+        await updateStudent(student.id, parsed);
         const wantsGroup = form.groupId || null;
         if (loadedGroupId !== wantsGroup) {
           await setStudentGroup(student.id, wantsGroup);
         }
       } else {
-        const row = await createStudent(form);
+        const row = await createStudent(parsed);
         studentCreated.current = true;
         if (form.groupId) await setStudentGroup(row.id, form.groupId);
       }

@@ -21,9 +21,12 @@ const student: Student = {
   birthDate: null,
   gradeLevel: null,
   photoUrl: null,
+  isExempt: false,
+  exemptReason: null,
+  exemptNote: null,
   createdAt: 1,
   updatedAt: 1,
-};
+} as Student;
 
 function buildData(): StudentProfileData {
   return {
