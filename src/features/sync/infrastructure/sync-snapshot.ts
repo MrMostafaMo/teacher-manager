@@ -110,7 +110,8 @@ async function upsertRow(table: IdTable | undefined, op: PullOp): Promise<void> 
         const col = extractMissingColumn(error);
         if (col && col in rowToSet) {
           console.warn(`sync upsert: stripping unknown column ${col} for ${op.key.tableName}`);
-          const { [col]: _, ...rest } = rowToSet;
+          const { [col]: _omit, ...rest } = rowToSet;
+          void _omit;
           rowToSet = rest as SyncRow;
           continue;
         }
@@ -129,7 +130,8 @@ async function upsertRow(table: IdTable | undefined, op: PullOp): Promise<void> 
       const col = extractMissingColumn(error);
       if (col && col in rowToInsert) {
         console.warn(`sync upsert: stripping unknown column ${col} for ${op.key.tableName}`);
-        const { [col]: _, ...rest } = rowToInsert;
+        const { [col]: _omit2, ...rest } = rowToInsert;
+        void _omit2;
         rowToInsert = rest as SyncRow;
         continue;
       }
