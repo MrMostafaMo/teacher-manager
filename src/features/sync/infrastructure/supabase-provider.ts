@@ -125,7 +125,20 @@ export class SupabaseProvider implements SyncProvider {
       body: JSON.stringify({ prefix, limit: 100, sortBy: { column: "created_at", order: "desc" } }),
     });
     const json = (await res.json()) as Array<{ name: string; id?: string }>;
-    return json.map((f) => ({ id: `${prefix}/${f.name}`, name: f.name }));
+    const scoped = json.map((f) => ({ id: `${prefix}/${f.name}`, name: f.name }));
+    if (scoped.length > 0 || prefix === folderName) return scoped;
+    // Fallback to legacy shared folder (pre-scoped backups)
+    try {
+      const legacyRes = await supabaseFetch(deps, url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prefix: folderName, limit: 100, sortBy: { column: "created_at", order: "desc" } }),
+      });
+      const legacy = (await legacyRes.json()) as Array<{ name: string; id?: string }>;
+      return legacy.map((f) => ({ id: `${folderName}/${f.name}`, name: f.name }));
+    } catch {
+      return scoped;
+    }
   }
 
   async downloadBytes(fileId: string): Promise<Uint8Array> {

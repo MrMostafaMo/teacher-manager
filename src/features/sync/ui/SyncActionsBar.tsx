@@ -42,9 +42,15 @@ export function SyncActionsBar() {
       const { status, message } = res as { status: string; message?: string };
       if (status === "ok" || status === "done") toast({ message: t(`sync.settings.${key}Done`), variant: "success" });
       else if (status === "notFound") toast({ message: t("sync.settings.noBackups"), variant: "info" });
-      else toast({ message: t(`sync.settings.${message ?? "backupError"}`), variant: "error" });
-    } catch {
-      toast({ message: t("sync.settings.operationError"), variant: "error" });
+      else if (status === "cancelled") return;
+      else {
+        const keyOrMsg = message ?? "backupError";
+        const fullKey = keyOrMsg.includes(".") ? keyOrMsg : `sync.settings.${keyOrMsg}`;
+        toast({ message: t(fullKey), variant: "error" });
+      }
+    } catch (e) {
+      const raw = e instanceof Error ? e.message : "";
+      toast({ message: raw ? `${t("sync.settings.operationError")} — ${raw}` : t("sync.settings.operationError"), variant: "error" });
     } finally {
       setAction(null);
     }

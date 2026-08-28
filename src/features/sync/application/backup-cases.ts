@@ -21,7 +21,9 @@ export async function cloudBackupDatabase(deviceName: string): Promise<CloudBack
     return { status: "ok" };
   } catch (error) {
     console.error("cloud backup failed", error);
-    return { status: "error", message: "backupError" };
+    const msg = error instanceof Error ? error.message : "";
+    if (msg.includes("unauthorized") || msg.includes("401") || msg.includes("403")) return { status: "error", message: "sync.errors.notConnected" };
+    return { status: "error", message: "sync.settings.backupError" };
   } finally {
     await remove(temp).catch(() => undefined);
   }

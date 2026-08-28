@@ -30,8 +30,11 @@ export function SupabaseSyncSection() {
       else await supabaseSignIn(loginEmail.trim(), password);
       await refreshSyncUi();
       toast({ message: t("auth.login.connected"), variant: "success" });
-    } catch {
-      toast({ message: t("auth.login.error"), variant: "error" });
+    } catch (e) {
+      const raw = e instanceof Error ? e.message : String(e ?? "");
+      const isConfig = raw.includes("supabase not configured") || raw.includes("not configured");
+      const msg = isConfig ? t("auth.login.needConfig") : `${t("auth.login.error")} — ${raw}`;
+      toast({ message: msg, variant: "error" });
     } finally {
       setBusy(false);
     }
