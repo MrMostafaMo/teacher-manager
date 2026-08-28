@@ -1,0 +1,1 @@
+ALTER TABLE students ADD COLUMN session_offset INTEGER DEFAULT 0 NOT NULL;

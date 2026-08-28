@@ -12,6 +12,7 @@ import {
 import { liveDbSize } from "@/features/settings/infrastructure/backup-service";
 import { SettingsAboutCard } from "./SettingsAboutCard";
 import { SettingsAppearanceCard } from "./SettingsAppearanceCard";
+import { SettingsTeacherCard } from "@/features/teacher-profile/ui/SettingsTeacherCard";
 import { SettingsSessionCard } from "./SettingsSessionCard";
 import { SettingsShortcutsCard } from "./SettingsShortcutsCard";
 import { SettingsNotificationsCard } from "./SettingsNotificationsCard";
@@ -87,6 +88,7 @@ export default function SettingsPage() {
       {saved && <p className="text-sm text-success">{saved}</p>}
 
       <SettingsAboutCard />
+      <SettingsTeacherCard />
       <SettingsAppearanceCard />
       <SettingsSessionCard />
       <SettingsNotificationsCard />

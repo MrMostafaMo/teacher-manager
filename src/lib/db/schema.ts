@@ -14,5 +14,6 @@ export * from "./tables-skills";
 export * from "./tables-activity";
 export { notifications } from "./tables-notifications";
 export * from "./tables-weak-points";
+export * from "./tables-teacher-profile";
 export * from "./tables-sync";
 export type { NotificationRow } from "./tables-notifications";

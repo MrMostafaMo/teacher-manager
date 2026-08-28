@@ -2,6 +2,8 @@ import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router";
 import { ShieldCheck } from "lucide-react";
 import { APP_VERSION, NAV_ITEMS, NAV_SECTIONS } from "@/app/navigation";
+import { Avatar } from "@/shared/Avatar";
+import { useTeacherProfile } from "@/features/teacher-profile/application/use-teacher-profile";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,6 +13,7 @@ import { cn } from "@/lib/utils";
  */
 export function Sidebar() {
   const { t } = useTranslation();
+  const { name } = useTeacherProfile();
 
   return (
     <aside className="group z-30 flex w-16 shrink-0 flex-col border-e bg-gradient-to-b from-sidebar to-sidebar/95 transition-[width] duration-200 ease-out hover:w-64 focus-within:w-64 lg:w-64">
@@ -75,13 +78,17 @@ export function Sidebar() {
 
       <div className="shrink-0 border-t p-2 lg:p-3">
         <div className="flex items-center justify-center gap-2.5 rounded-xl bg-muted/60 px-1 py-2.5 group-hover:justify-start lg:justify-start lg:px-3">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success">
-            <ShieldCheck className="size-4" />
-          </div>
+          {name ? (
+            <Avatar name={name} className="size-7 text-xs" />
+          ) : (
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success">
+              <ShieldCheck className="size-4" />
+            </div>
+          )}
           <div className="hidden min-w-0 text-[11px] leading-tight opacity-0 transition-opacity duration-200 group-hover:block group-hover:opacity-100 lg:block lg:opacity-100">
-            <p className="truncate font-medium text-foreground">{t("app.name")}</p>
+            <p className="truncate font-medium text-foreground">{name ? t("teacher.display", { name }) : t("app.name")}</p>
             <p className="truncate text-muted-foreground">
-              {t("app.localData")} · v{APP_VERSION}
+              {name ? `v${APP_VERSION}` : `${t("app.localData")} · v${APP_VERSION}`}
             </p>
           </div>
         </div>

@@ -5,6 +5,10 @@ import { RouteErrorPage } from "@/app/RouteErrorPage";
 // Static specifiers keep Vite's code splitting working per feature.
 export const router = createBrowserRouter([
   {
+    path: "/login",
+    lazy: async () => ({ Component: (await import("@/features/auth/ui/LoginPage")).default }),
+  },
+  {
     path: "/",
     element: <AppLayout />,
     errorElement: <RouteErrorPage />,

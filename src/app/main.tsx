@@ -14,6 +14,13 @@ import "@/styles/globals.css";
 applyLanguage(readInitialLanguage());
 applyTheme(readInitialTheme(), readInitialPreset());
 
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("[unhandledrejection]", event.reason);
+});
+window.addEventListener("error", (event) => {
+  console.error("[window error]", event.error ?? event.message);
+});
+
 void bootstrapDatabase();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

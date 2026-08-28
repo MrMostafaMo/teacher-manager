@@ -28,6 +28,14 @@ export type { StatementMonth, StatementPayment, StudentStatement };
 export async function recordPayment(input: PaymentInput): Promise<Payment> {
   const parsed = paymentInputSchema.parse(input);
   const row = await paymentRepository.insert({ id: uuid(), ...parsed, paidAt: Date.now() });
+  // ponytail: manual session count resets with a new payment (cycle closed).
+  try {
+    const s = await studentRepository.findById(parsed.studentId);
+    const off = Number((s as unknown as { sessionOffset?: number })?.sessionOffset ?? 0) || 0;
+    if (off !== 0) await studentRepository.update(parsed.studentId, { sessionOffset: 0 } as unknown as Record<string, unknown>);
+  } catch {
+    /* ignore reset failure */
+  }
   await logActivity({
     action: "payment.create",
     entityType: "payment",

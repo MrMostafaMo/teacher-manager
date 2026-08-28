@@ -32,15 +32,25 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <h1 className="text-lg font-semibold">ERR-v3 {i18n.t("error.title")}</h1>
           <p className="max-w-md text-sm text-muted-foreground">{i18n.t("error.description")}</p>
           {this.state.message && (
-            <textarea
-              readOnly
-              value={this.state.message}
-              aria-label="error-detail"
-              className="w-72 resize-none rounded border bg-muted px-3 py-2 font-mono text-xs"
-              rows={3}
-            />
+            <>
+              <textarea
+                readOnly
+                value={this.state.message}
+                aria-label="error-detail"
+                className="w-72 resize-none rounded border bg-muted px-3 py-2 font-mono text-xs"
+                rows={3}
+              />
+              <Button variant="outline" size="sm" onClick={() => void navigator.clipboard.writeText(this.state.message ?? "")}>
+                نسخ التفاصيل
+              </Button>
+            </>
           )}
-          <Button onClick={() => window.location.reload()}>{i18n.t("common.retry")}</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => this.setState({ hasError: false, message: undefined })}>
+              حاول مرة أخرى
+            </Button>
+            <Button onClick={() => window.location.reload()}>{i18n.t("common.retry")}</Button>
+          </div>
         </div>
       );
     }

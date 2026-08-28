@@ -15,6 +15,7 @@ import { DataTable } from "@/shared/DataTable";
 import { EmptyState } from "@/shared/EmptyState";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { sessionColumns } from "./session-columns";
+import { useSessionAdjust } from "./use-session-adjust";
 import dayjs from "dayjs";
 
 export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { reloadKey: number }) {
@@ -24,7 +25,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
   const [rows, setRows] = useState<SessionDuesRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(true);
   const [recordRow, setRecordRow] = useState<SessionDuesRow | null>(null);
   const [open, setOpen] = useState(false);
   const [groupSettings, setGroupSettings] = useState<Map<string, { sessionsPerCycle: number | null; warningAt: number | null }>>(new Map());
@@ -69,13 +70,20 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
     return { sections: [...byGroup.values()].sort((a,b)=> compareGroupsByName(a,b)), ungrouped: ungroupedRows };
   }, [filtered]);
 
+  const adjust = useSessionAdjust(load);
   const cols = useMemo(
     () =>
-      sessionColumns(t, (r) => {
-        setRecordRow(r);
-        setOpen(true);
-      }),
-    [t],
+      sessionColumns(
+        t,
+        (r) => {
+          setRecordRow(r);
+          setOpen(true);
+        },
+        (r) => adjust.add(r.student.id),
+        (r) => adjust.remove(r.student.id),
+        adjust.busyId,
+      ),
+    [t, adjust],
   );
   const { isCollapsed, toggle } = useCollapsedSections();
 
@@ -155,7 +163,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
           setOpen(false);
           setRecordRow(null);
           load();
-          window.dispatchEvent(new CustomEvent("tm:data-changed"));
+          // ponytail: local only — global dispatch would remount PaymentsPage and reset view to "dues"
         }}
       />
     </div>

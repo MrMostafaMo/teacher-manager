@@ -30,6 +30,8 @@ export const students = sqliteTable(
       enum: ["relative", "scholarship", "other"] as const,
     }),
     exemptNote: text("exempt_note"),
+    /** Manual adjustment to session count (extra sessions counted toward the cycle). */
+    sessionOffset: integer("session_offset").notNull().default(0),
     ...timestamps,
   },
   (t) => [index("students_name").on(t.name)],

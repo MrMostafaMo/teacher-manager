@@ -52,7 +52,10 @@ export function createRepository<T extends RepositoryTable>(table: T): Repositor
 
   async function insert(values: Omit<Insert, "createdAt" | "updatedAt">): Promise<Row> {
     const ts = Date.now();
-    await db.insert(table).values({ ...values, createdAt: ts, updatedAt: ts } as Insert);
+    await db
+      .insert(table)
+      .values({ ...values, createdAt: ts, updatedAt: ts } as Insert)
+      .run();
     const row = await findById((values as { id: string }).id);
     if (!row) throw new Error(`insert failed: row ${(values as { id: string }).id} not found`);
     return row;
@@ -65,7 +68,8 @@ export function createRepository<T extends RepositoryTable>(table: T): Repositor
     await db
       .update(table)
       .set({ ...values, updatedAt: Date.now() } as Partial<Insert>)
-      .where(eq(table.id, id));
+      .where(eq(table.id, id))
+      .run();
     return findById(id);
   }
 

@@ -19,10 +19,12 @@ export interface SyncReport {
   pushedTombstones: number;
   conflictTotal: number;
   error: string | null;
+  localVersion?: number;
+  remoteVersion?: number;
 }
 
-export function emptyReport(at: number, error: string | null = null): SyncReport {
-  return { at, tables: {}, pushedTombstones: 0, conflictTotal: 0, error };
+export function emptyReport(at: number, error: string | null = null, localVersion?: number, remoteVersion?: number): SyncReport {
+  return { at, tables: {}, pushedTombstones: 0, conflictTotal: 0, error, localVersion, remoteVersion };
 }
 
 /** Aggregate a pull + push round into one per-table report. */

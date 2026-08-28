@@ -2,6 +2,8 @@ import type { Messages } from "@/lib/i18n/en";
 
 export const dashboard: Messages["dashboard"] = {
   welcome: "أهلاً بك، أيها المعلم",
+  welcomeWithName: "أهلاً بك، {{name}}",
+  welcomeFallback: "أيها المعلم",
   subtitle: "لمحة عن مركزك — الطلاب والحضور والمدفوعات والواجبات.",
   loadError: "تعذّر تحميل لوحة التحكم",
   empty: "لا توجد بيانات بعد.",

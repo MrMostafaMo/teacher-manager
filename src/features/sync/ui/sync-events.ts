@@ -1,37 +1,38 @@
 import { useEffect } from "react";
 import { DATA_CHANGED_EVENT } from "@/lib/undo-store";
-import { isSyncBusy, syncNow } from "../application/sync-cases";
+import { isSyncBusy } from "../application/sync-cases";
+import { anyProviderConfigured, syncAll } from "../application/sync-orchestrator";
 import type { SyncReport } from "../application/sync-report";
 import { SYNC_META_KEYS, getSyncMeta } from "../infrastructure/sync-state-repo";
 import { useSyncStore } from "./sync-store";
-
-/**
- * App-glue for sync triggers: a debounced auto-push after any data change, a
- * pull on launch, and a periodic safety net. Mounted once in AppLayout.
- * Auto syncs are silent; only manual syncs surface toasts/reports.
- */
 
 const AUTO_SYNC_DEBOUNCE_MS = 10_000;
 const PERIODIC_INTERVAL_MS = 15 * 60_000;
 
 let debounceTimer: number | null = null;
 
-/** Remote rows were pulled in — remount pages so they re-fetch. */
 function notifyAppliedChanges(report: SyncReport): void {
-  const changed = Object.values(report.tables).some(
-    (counts) => counts.applied > 0 || counts.deleted > 0,
-  );
+  const changed = Object.values(report.tables).some((c) => c.applied > 0 || c.deleted > 0);
   if (changed) window.dispatchEvent(new Event(DATA_CHANGED_EVENT));
 }
 
 async function runAutoSync(): Promise<void> {
-  if (isSyncBusy()) return;
-  const report = await syncNow("auto");
+  if (isSyncBusy() || useSyncStore.getState().busy) return;
+  if (typeof navigator !== "undefined" && !navigator.onLine) return;
+  if (!(await anyProviderConfigured())) return;
   const store = useSyncStore.getState();
-  store.setLastReport(report);
-  if (report.error === null) {
-    store.setLastSyncAt(report.at);
-    notifyAppliedChanges(report);
+  store.setBusy(true);
+  try {
+    const report = await syncAll("auto");
+    store.setLastReport(report);
+    if (report.error === null) {
+      store.setLastSyncAt(report.at);
+      notifyAppliedChanges(report);
+    } else {
+      store.setError(report.error);
+    }
+  } finally {
+    store.setBusy(false);
   }
 }
 
@@ -43,13 +44,11 @@ function scheduleAutoSync(): void {
   }, AUTO_SYNC_DEBOUNCE_MS);
 }
 
-/** Manual "Sync now": runs immediately, surfaces the report in the UI and
- * returns it so callers can toast the outcome. */
 export async function runManualSync(): Promise<SyncReport> {
   const store = useSyncStore.getState();
   store.setBusy(true);
   try {
-    const report = await syncNow("manual");
+    const report = await syncAll("manual");
     store.setLastReport(report);
     store.setError(report.error);
     if (report.error === null) {
@@ -64,6 +63,7 @@ export async function runManualSync(): Promise<SyncReport> {
 
 export function SyncManager(): null {
   useEffect(() => {
+    void refreshSyncUi();
     window.addEventListener(DATA_CHANGED_EVENT, scheduleAutoSync);
     const periodic = window.setInterval(() => void runAutoSync(), PERIODIC_INTERVAL_MS);
     void runAutoSync();
@@ -76,15 +76,16 @@ export function SyncManager(): null {
   return null;
 }
 
-/** Reflect sync_meta (client id, email, last sync) into the store. */
 export async function refreshSyncUi(): Promise<void> {
-  const [clientId, email, lastSyncAt] = await Promise.all([
-    getSyncMeta(SYNC_META_KEYS.clientId),
-    getSyncMeta(SYNC_META_KEYS.accountEmail),
-    getSyncMeta(SYNC_META_KEYS.lastSyncAt),
-  ]);
-  const store = useSyncStore.getState();
-  store.setClientId(clientId);
-  store.setAccount(email);
-  store.setLastSyncAt(lastSyncAt === null ? null : Number(lastSyncAt));
+  try {
+    const [supabaseEmail, lastSyncAt] = await Promise.all([
+      getSyncMeta(SYNC_META_KEYS.supabaseEmail),
+      getSyncMeta(SYNC_META_KEYS.lastSyncAt),
+    ]);
+    const store = useSyncStore.getState();
+    store.setSupabaseAccount(supabaseEmail);
+    store.setLastSyncAt(lastSyncAt === null ? null : Number(lastSyncAt));
+  } catch (error) {
+    console.error("[sync] refreshSyncUi failed", error);
+  }
 }

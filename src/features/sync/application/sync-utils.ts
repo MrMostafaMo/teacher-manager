@@ -7,5 +7,13 @@ export function updatedAt(row: SyncRow): number {
 
 /** True when a row changed between local and remote (content differs). */
 export function differs(a: SyncRow, b: SyncRow): boolean {
-  return JSON.stringify(a) !== JSON.stringify(b);
+  const ka = Object.keys(a).sort();
+  const kb = Object.keys(b).sort();
+  if (ka.length !== kb.length) return true;
+  for (let i = 0; i < ka.length; i++) {
+    const k = ka[i];
+    if (k !== kb[i]) return true;
+    if (a[k] !== b[k]) return true;
+  }
+  return false;
 }

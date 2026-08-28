@@ -1,31 +1,16 @@
-/**
- * Sync orchestration: pull (merge into local), push (merge up to Drive),
- * with If-Match optimistic locking and up to 3 attempts on conflict.
- */
-
 import { queryFirst } from "@/lib/db/client";
 import { uuid } from "@/lib/utils/uuid";
 import { mergePull, type LocalState } from "./merge-pull";
 import { mergePush } from "./merge-push";
 import { buildReport, emptyReport, type SyncReport } from "./sync-report";
-import { buildDriveSession } from "./sync-session";
+import { SupabaseError } from "../infrastructure/supabase-http";
+import type { SyncProvider } from "../domain/sync-provider";
+import { SupabaseProvider } from "../infrastructure/supabase-provider";
 import type { SyncPayload } from "../domain";
 import { SYNC_TABLE_NAMES } from "../domain";
-import { DriveClient, DriveError } from "../infrastructure/drive-client";
-import {
-  applyPullResult,
-  buildLocalSnapshot,
-  parsePayload,
-  serializePayload,
-} from "../infrastructure/sync-snapshot";
-import {
-  SYNC_META_KEYS,
-  getSyncMeta,
-  listLocalTombstones,
-  setSyncMeta,
-} from "../infrastructure/sync-state-repo";
+import { applyPullResult, buildLocalSnapshot, parsePayload, serializePayload } from "../infrastructure/sync-snapshot";
+import { SYNC_META_KEYS, getSyncMeta, listLocalTombstones, setSyncMeta } from "../infrastructure/sync-state-repo";
 
-const PAYLOAD_FILE = "sync-data.json";
 const MAX_ATTEMPTS = 3;
 
 let busy = false;
@@ -35,10 +20,7 @@ export function isSyncBusy(): boolean {
 }
 
 async function localSchemaVersion(): Promise<number> {
-  const row = await queryFirst<{ v: number | null }>(
-    "SELECT MAX(version) AS v FROM _sqlx_migrations",
-    [],
-  );
+  const row = await queryFirst<{ v: number | null }>("SELECT MAX(version) AS v FROM _sqlx_migrations", []);
   return row?.v ?? 0;
 }
 
@@ -50,16 +32,15 @@ export async function deviceName(): Promise<string> {
   return `device-${id.slice(0, 8)}`;
 }
 
-/** Pull-merge-push with optimistic locking; returns the outcome report. */
 export async function syncNow(reason?: string): Promise<SyncReport> {
   void reason;
   if (busy) return emptyReport(Date.now(), "sync.errors.busy");
   busy = true;
   try {
     const schemaVersion = await localSchemaVersion();
-    const session = await buildDriveSession();
-    const client = new DriveClient(session);
-    return runRound(client, schemaVersion);
+    const provider = new SupabaseProvider();
+    if (!(await provider.isConfigured())) return emptyReport(Date.now(), "sync.errors.notConnected");
+    return runRound(provider, schemaVersion);
   } catch (error) {
     return emptyReport(Date.now(), errorKey(error));
   } finally {
@@ -67,8 +48,13 @@ export async function syncNow(reason?: string): Promise<SyncReport> {
   }
 }
 
-function errorKey(error: unknown): string {
-  if (!(error instanceof DriveError)) return "sync.errors.unknown";
+export function errorKey(error: unknown): string {
+  if (error instanceof TypeError && String(error.message).toLowerCase().includes("fetch")) return "sync.errors.network";
+  if (error instanceof TypeError && String(error.message).includes("Failed to fetch")) return "sync.errors.network";
+  if (!(error instanceof SupabaseError)) {
+    console.error("[sync] unknown error", error);
+    return "sync.errors.unknown";
+  }
   switch (error.kind) {
     case "unauthorized":
       return "sync.errors.notConnected";
@@ -77,15 +63,17 @@ function errorKey(error: unknown): string {
     case "network":
       return "sync.errors.network";
     default:
+      console.error("[sync] Supabase other", error);
       return "sync.errors.unknown";
   }
 }
 
-async function runRound(client: DriveClient, schemaVersion: number): Promise<SyncReport> {
+export async function runRound(provider: SyncProvider, schemaVersion: number): Promise<SyncReport> {
   const device = await deviceName();
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const remote = await client.download(PAYLOAD_FILE);
+    const remote = await provider.download();
     let remotePayload: SyncPayload | null = null;
+    let versionSkew: { local: number; remote: number } | null = null;
     if (remote !== null) {
       try {
         remotePayload = parsePayload(remote.text);
@@ -93,34 +81,43 @@ async function runRound(client: DriveClient, schemaVersion: number): Promise<Syn
         return emptyReport(Date.now(), "sync.errors.invalidRemote");
       }
       if (remotePayload.schemaVersion !== schemaVersion) {
-        return emptyReport(Date.now(), "sync.errors.versionMismatch");
+        versionSkew = { local: schemaVersion, remote: remotePayload.schemaVersion };
+        console.warn(`[sync] version skew local v${schemaVersion} ↔ remote v${remotePayload.schemaVersion}, syncing compatible subset`);
       }
     }
-
     const base: SyncPayload = remotePayload ?? emptyPayload(device, schemaVersion);
-    const before: LocalState = {
-      rows: await buildLocalSnapshot(),
-      tombstones: await listLocalTombstones(),
-    };
+    const before: LocalState = { rows: await buildLocalSnapshot(), tombstones: await listLocalTombstones() };
     const pull = remotePayload !== null ? mergePull(remotePayload, before) : null;
     if (pull !== null) await applyPullResult(pull);
-
-    const after: LocalState = {
-      rows: await buildLocalSnapshot(),
-      tombstones: await listLocalTombstones(),
-    };
+    const after: LocalState = { rows: await buildLocalSnapshot(), tombstones: await listLocalTombstones() };
     const push = mergePush(base, after);
-
-    if (!push.changed) {
+    const maxVersion = Math.max(schemaVersion, remotePayload?.schemaVersion ?? schemaVersion);
+    if (push.payload.schemaVersion !== maxVersion) push.payload.schemaVersion = maxVersion;
+    const needsVersionBump = versionSkew !== null && versionSkew.local > versionSkew.remote;
+    if (!push.changed && !needsVersionBump) {
       await persistState(push.payload.revision);
-      return buildReport(Date.now(), pull, push);
+      const report = buildReport(Date.now(), pull, push);
+      if (versionSkew) {
+        report.localVersion = versionSkew.local;
+        report.remoteVersion = versionSkew.remote;
+      }
+      return report;
+    }
+    if (needsVersionBump && !push.changed) {
+      push.payload.revision += 1;
+      push.payload.pushedAt = Date.now();
     }
     try {
-      await client.upload(PAYLOAD_FILE, serializePayload(push.payload), remote?.etag ?? null);
+      await provider.upload(serializePayload(push.payload), remote?.etag ?? null);
       await persistState(push.payload.revision);
-      return buildReport(Date.now(), pull, push);
+      const report = buildReport(Date.now(), pull, push);
+      if (versionSkew) {
+        report.localVersion = versionSkew.local;
+        report.remoteVersion = versionSkew.remote;
+      }
+      return report;
     } catch (error) {
-      const isConflict = error instanceof DriveError && error.kind === "conflict";
+      const isConflict = error instanceof SupabaseError && error.kind === "conflict";
       if (isConflict && attempt < MAX_ATTEMPTS - 1) continue;
       throw error;
     }
@@ -134,12 +131,5 @@ async function persistState(revision: number): Promise<void> {
 }
 
 function emptyPayload(device: string, schemaVersion: number): SyncPayload {
-  return {
-    revision: 0,
-    device,
-    pushedAt: 0,
-    schemaVersion,
-    rows: Object.fromEntries(SYNC_TABLE_NAMES.map((name) => [name, []])),
-    tombstones: [],
-  };
+  return { revision: 0, device, pushedAt: 0, schemaVersion, rows: Object.fromEntries(SYNC_TABLE_NAMES.map((name) => [name, []])), tombstones: [] };
 }

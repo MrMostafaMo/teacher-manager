@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/shared/PageHeader";
 import { useDialogStore } from "@/lib/dialog-store";
 import { formatNumber } from "@/lib/utils/format";
+import { useTeacherProfile } from "@/features/teacher-profile/application/use-teacher-profile";
 
 export function DashboardQuickActions({ newStudents }: { newStudents: number }) {
   const { t } = useTranslation();
   const openDialog = useDialogStore((s) => s.openDialog);
+  const { name } = useTeacherProfile();
+  const title = name ? t("dashboard.welcomeWithName", { name }) : t("dashboard.welcome");
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
-      <PageHeader title={t("dashboard.welcome")} description={t("dashboard.subtitle")} />
+      <PageHeader title={title} description={t("dashboard.subtitle")} />
       <div className="flex flex-wrap items-center gap-2">
         <span className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/10 px-3 py-1.5 text-xs text-muted-foreground">
           <UserPlus className="size-3.5 text-primary" />

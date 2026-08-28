@@ -1,7 +1,5 @@
 use tauri_plugin_sql::{Migration, MigrationKind};
 
-mod oauth;
-
 /// SQL migrations embedded into the binary. drizzle-kit generates these files
 /// (see `drizzle/`), `scripts/sync-migrations.mjs` copies them into
 /// `src-tauri/migrations/`, and the SQL plugin applies pending migrations
@@ -124,6 +122,18 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0018_smoky_puma.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 20,
+            description: "teacher profile singleton",
+            sql: include_str!("../migrations/0019_teacher_profile.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 21,
+            description: "student session_offset for manual session adjustments",
+            sql: include_str!("../migrations/0020_session_offset.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -139,7 +149,6 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![oauth::start_oauth_server])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

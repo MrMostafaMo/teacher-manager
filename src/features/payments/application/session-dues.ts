@@ -76,7 +76,10 @@ export function buildSessionDues(
     const payments = paymentsByStudent.get(student.id) ?? [];
     const attendances = attendanceByStudent.get(student.id) ?? [];
     const plan = student.planId ? (plansById.get(student.planId) ?? null) : null;
-    const count = countSince(payments, attendances);
+    // ponytail: manual offset per student (extra sessions counted toward the cycle).
+    const offset = Number((student as unknown as { sessionOffset?: number }).sessionOffset ?? 0) || 0;
+    const base = countSince(payments, attendances);
+    const count = Math.max(0, base + offset);
     const status = statusForCount(count, sessionsPerCycle, warningAt);
     const price = pricePerSession(plan, sessionsPerCycle);
     const remainingSessions = Math.max(0, sessionsPerCycle - count);

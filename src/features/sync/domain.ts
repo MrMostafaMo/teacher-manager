@@ -13,6 +13,7 @@ import {
   studyGroups,
 } from "@/lib/db/tables-students";
 import { weakPoints } from "@/lib/db/tables-weak-points";
+import { teacherProfile } from "@/lib/db/tables-teacher-profile";
 
 /**
  * Tables that participate in two-way sync. Local noise (activity_logs,
@@ -37,6 +38,7 @@ export const SYNC_TABLES = [
   skills,
   studentSkills,
   weakPoints,
+  teacherProfile,
 ] as const;
 
 export const SYNC_TABLE_NAMES: readonly string[] = [
@@ -57,6 +59,7 @@ export const SYNC_TABLE_NAMES: readonly string[] = [
   "skills",
   "student_skills",
   "weak_points",
+  "teacher_profile",
 ] as const;
 
 /** A row serialized for transport — every column is text/integer/null. */

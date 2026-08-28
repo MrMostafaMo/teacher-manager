@@ -1,5 +1,7 @@
 export const dashboard = {
   welcome: "Welcome back, teacher",
+  welcomeWithName: "Welcome back, {{name}}",
+  welcomeFallback: "teacher",
   subtitle: "An overview of your center — students, attendance, payments and homework.",
   loadError: "Failed to load dashboard",
   empty: "No data yet.",

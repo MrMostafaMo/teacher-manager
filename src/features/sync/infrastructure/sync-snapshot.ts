@@ -33,11 +33,20 @@ export async function buildLocalSnapshot(): Promise<RowRef[]> {
   const rows: RowRef[] = [];
   for (const table of SYNC_TABLES) {
     const tableName = tableNameOf(table);
-    const all = await db.select().from(table);
-    for (const row of all) {
-      const id = String((row as { id?: unknown }).id ?? "");
-      if (!id) continue;
-      rows.push({ tableName, id, row: toSyncRow(row as Record<string, unknown>) });
+    try {
+      const all = await db.select().from(table);
+      for (const row of all) {
+        const id = String((row as { id?: unknown }).id ?? "");
+        if (!id) continue;
+        rows.push({ tableName, id, row: toSyncRow(row as Record<string, unknown>) });
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "";
+      if (msg.includes("no such table")) {
+        console.warn(`sync snapshot: missing table ${tableName}, skipping (needs migration)`);
+        continue;
+      }
+      throw error;
     }
   }
   return rows;
@@ -60,32 +69,84 @@ export async function applyPullResult(result: PullResult): Promise<void> {
   for (const key of result.toDelete) {
     const table = byName.get(key.tableName) as IdTable | undefined;
     if (table === undefined) continue;
-    await db.delete(table).where(eq(table.id, key.rowId)).run();
-    // The DELETE trigger just recorded this sync-applied delete — drop it so
-    // user-initiated deletes stay distinguishable.
+    try {
+      await db.delete(table).where(eq(table.id, key.rowId)).run();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "";
+      if (msg.includes("no such table")) {
+        console.warn(`sync delete: missing table ${key.tableName}, skipping`);
+        continue;
+      }
+      throw error;
+    }
     await clearTombstone(key.tableName, key.rowId);
   }
 }
 
 async function upsertRow(table: IdTable | undefined, op: PullOp): Promise<void> {
   if (table === undefined) return;
-  const existing = await db.select().from(table).where(eq(table.id, op.key.rowId)).get();
+  let existing: unknown;
+  try {
+    existing = await db.select().from(table).where(eq(table.id, op.key.rowId)).get();
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "";
+    if (msg.includes("no such table")) {
+      console.warn(`sync upsert: missing table ${op.key.tableName}, skipping`);
+      return;
+    }
+    throw error;
+  }
   if (existing !== undefined) {
-    await db
-      .update(table)
-      .set(op.row as never)
-      .where(eq(table.id, op.key.rowId))
-      .run();
+    let rowToSet: SyncRow = op.row;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      try {
+        await db
+          .update(table)
+          .set(rowToSet as never)
+          .where(eq(table.id, op.key.rowId))
+          .run();
+        return;
+      } catch (error) {
+        const col = extractMissingColumn(error);
+        if (col && col in rowToSet) {
+          console.warn(`sync upsert: stripping unknown column ${col} for ${op.key.tableName}`);
+          const { [col]: _, ...rest } = rowToSet;
+          rowToSet = rest as SyncRow;
+          continue;
+        }
+        throw error;
+      }
+    }
     return;
   }
-  try {
-    await db
-      .insert(table)
-      .values(op.row as never)
-      .run();
-  } catch (error) {
-    // Unique-key clash (e.g. attendance student+date from another device):
-    // keep the local row; the report flags it via the skipped count.
-    console.error("sync upsert failed", error);
+  let rowToInsert: SyncRow = op.row;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      await db.insert(table).values(rowToInsert as never).run();
+      return;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "";
+      const col = extractMissingColumn(error);
+      if (col && col in rowToInsert) {
+        console.warn(`sync upsert: stripping unknown column ${col} for ${op.key.tableName}`);
+        const { [col]: _, ...rest } = rowToInsert;
+        rowToInsert = rest as SyncRow;
+        continue;
+      }
+      if (msg.includes("UNIQUE constraint failed")) {
+        console.error("sync upsert failed", error);
+        return;
+      }
+      throw error;
+    }
   }
+}
+
+function extractMissingColumn(error: unknown): string | null {
+  const msg = error instanceof Error ? error.message : "";
+  const m1 = msg.match(/no such column:\s*"?(\w+)"?/i);
+  if (m1) return m1[1];
+  const m2 = msg.match(/has no column named\s+"?(\w+)"?/i);
+  if (m2) return m2[1];
+  return null;
 }

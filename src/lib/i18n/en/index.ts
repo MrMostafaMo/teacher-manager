@@ -27,6 +27,8 @@ import { undo } from "./undo";
 import { error } from "./error";
 import { sync } from "./sync";
 import { shortcuts } from "./shortcuts";
+import { auth } from "./auth";
+import { teacher } from "./teacher";
 
 export const en = {
   app,
@@ -58,6 +60,8 @@ export const en = {
   error,
   sync,
   shortcuts,
+  auth,
+  teacher,
 } as const;
 
 /** Locale shape — every leaf widened to `string` so translations can differ. */

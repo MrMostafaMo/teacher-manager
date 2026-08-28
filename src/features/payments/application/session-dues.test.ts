@@ -7,7 +7,7 @@ import {
 } from "./session-dues";
 import type { Payment, Plan, Student } from "@/lib/db/schema";
 
-function mkStudent(id: string, name: string, planId: string | null = null): Student {
+function mkStudent(id: string, name: string, planId: string | null = null, offset = 0): Student {
   return {
     id,
     name,
@@ -21,9 +21,10 @@ function mkStudent(id: string, name: string, planId: string | null = null): Stud
     birthDate: null,
     gradeLevel: null,
     photoUrl: null,
+    sessionOffset: offset,
     createdAt: 0,
     updatedAt: 0,
-  } as Student;
+  } as unknown as Student;
 }
 
 function mkPlan(id: string, amount: number): Plan {
@@ -121,5 +122,22 @@ describe("buildSessionDues", () => {
     const s = mkStudent("s1", "NoPlan", null);
     const rows = buildSessionDues([s], new Map(), new Map([["s1", [{ date: "2026-08-01" }]]]), new Map(), new Map(), 8, 6);
     expect(rows[0].pricePerSession).toBeNull();
+  });
+  it("applies sessionOffset to count", () => {
+    const s = mkStudent("s1", "Offset", null, 2);
+    const rows = buildSessionDues([s], new Map(), new Map([["s1", [{ date: "2026-08-01" }]]]), new Map(), new Map(), 8, 6);
+    expect(rows[0].count).toBe(3);
+    expect(rows[0].status).toBe("ok");
+  });
+  it("clamps negative offset to zero", () => {
+    const s = mkStudent("s1", "Neg", null, -5);
+    const rows = buildSessionDues([s], new Map(), new Map([["s1", [{ date: "2026-08-01" }]]]), new Map(), new Map(), 8, 6);
+    expect(rows[0].count).toBe(0);
+  });
+  it("offset can push to due", () => {
+    const s = mkStudent("s1", "DueViaOffset", null, 7);
+    const rows = buildSessionDues([s], new Map(), new Map([["s1", [{ date: "2026-08-01" }]]]), new Map(), new Map(), 8, 6);
+    expect(rows[0].count).toBe(8);
+    expect(rows[0].status).toBe("due");
   });
 });

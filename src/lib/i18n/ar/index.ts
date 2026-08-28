@@ -28,6 +28,8 @@ import { undo } from "./undo";
 import { error } from "./error";
 import { sync } from "./sync";
 import { shortcuts } from "./shortcuts";
+import { auth } from "./auth";
+import { teacher } from "./teacher";
 
 export const ar: Messages = {
   app,
@@ -59,4 +61,6 @@ export const ar: Messages = {
   error,
   sync,
   shortcuts,
+  auth,
+  teacher,
 };
