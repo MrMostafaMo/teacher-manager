@@ -4,12 +4,15 @@ import { Clock3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { useSessionSettings } from "@/lib/session-settings-store";
 
 export function SettingsSessionCard() {
   const { t } = useTranslation();
+  const billingMode = useSessionSettings((s) => s.billingMode);
   const sessionsPerCycle = useSessionSettings((s) => s.sessionsPerCycle);
   const warningAt = useSessionSettings((s) => s.warningAt);
+  const setBillingMode = useSessionSettings((s) => s.setBillingMode);
   const setSessionsPerCycle = useSessionSettings((s) => s.setSessionsPerCycle);
   const setWarningAt = useSessionSettings((s) => s.setWarningAt);
 
@@ -40,7 +43,21 @@ export function SettingsSessionCard() {
           <Clock3 className="size-4" />
           {t("settings.session.title")}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="ss-m">{t("settings.session.billingMode", "نظام المحاسبة")}</Label>
+            <Select
+              id="ss-m"
+              value={billingMode}
+              onChange={(e) => {
+                setBillingMode(e.target.value as "calendar" | "sessions");
+                window.dispatchEvent(new CustomEvent("tm:data-changed"));
+              }}
+            >
+              <option value="calendar">{t("settings.session.modeCalendar", "بالشهر (تقويم)")}</option>
+              <option value="sessions">{t("settings.session.modeSessions", "بعدد الحصص (دورات)")}</option>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="ss-s">{t("settings.session.sessionsPerCycle")}</Label>
             <Input id="ss-s" type="number" min={1} max={30} value={sVal} onChange={(e) => setSVal(e.target.value)} onBlur={apply} />

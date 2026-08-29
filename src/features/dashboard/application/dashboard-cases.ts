@@ -12,6 +12,7 @@ import { sessionDues } from "@/features/payments/application/session-dues-cases"
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { expenseRepository } from "@/features/expenses/infrastructure/expense-repo";
+import { useSessionSettings } from "@/lib/session-settings-store";
 import {
   countNewStudents,
   currentMonth,
@@ -81,10 +82,32 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
   const attended = monthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
   const attendanceRate = marked > 0 ? Math.round((attended / marked) * 100) : 0;
 
+  const { billingMode } = useSessionSettings.getState();
+
   const sumPaid = (payments: Array<{ amount: number }>) =>
     payments.reduce((a, p) => a + p.amount, 0);
   const collected = sumPaid(financePayments[financePayments.length - 1]);
-  const outstanding = dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
+
+  let outstanding = 0;
+  let topDebtors: Array<{ id: string; name: string; remaining: number }> = [];
+
+  if (billingMode === "sessions") {
+    outstanding = sessionDuesRows
+      .filter((r) => r.status === "due")
+      .reduce((a, r) => a + (r.remainingAmount ?? 0), 0);
+    topDebtors = sessionDuesRows
+      .filter((r) => r.status === "due" && (r.remainingAmount ?? 0) > 0)
+      .sort((a, b) => (b.remainingAmount ?? 0) - (a.remainingAmount ?? 0))
+      .slice(0, 5)
+      .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remainingAmount ?? 0 }));
+  } else {
+    outstanding = dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
+    topDebtors = dues
+      .filter((r) => r.remaining > 0)
+      .sort((a, b) => b.remaining - a.remaining)
+      .slice(0, 5)
+      .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remaining }));
+  }
 
   const prevMarked = prevMonthly.reduce((a, r) => a + r.present + r.absent + r.late + r.excused, 0);
   const prevAttended = prevMonthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
@@ -93,11 +116,6 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
   const prevNet = prevCollected - prevExpenses;
 
   const newStudents = countNewStudents(students, month);
-  const topDebtors = dues
-    .filter((r) => r.remaining > 0)
-    .sort((a, b) => b.remaining - a.remaining)
-    .slice(0, 5)
-    .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remaining }));
 
   const totalHwStudents = monthHw.reduce((a, h) => a + h.submitted + h.pending + h.late, 0);
   const homeworkCompletion =
@@ -155,14 +173,8 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     outstanding,
     topDebtors,
     sessionDues: sessionDuesRows
-      .filter((r) => r.status !== "ok")
-      .slice(0, 5)
-      .map((r) => ({
-        student: { id: r.student.id, name: r.student.name },
-        count: r.count,
-        remainingSessions: r.remainingSessions,
-        status: r.status,
-      })),
+      .filter((r) => r.status !== "ok").slice(0, 5)
+      .map((r) => ({ student: { id: r.student.id, name: r.student.name }, count: r.count, remainingSessions: r.remainingSessions, status: r.status })),
     deltas: {
       collected: percentDelta(collected, prevCollected),
       expenses: percentDelta(expensesMonth, prevExpenses),

@@ -105,33 +105,83 @@ export function computeStatement(
  * changes, history is rewritten. Snapshot dueAmount at payment time or add
  * plan_amount_history when this matters.
  */
+import { useSessionSettings } from "@/lib/session-settings-store";
+import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
+
 export async function studentStatement(studentId: string): Promise<StudentStatement> {
-  const [student, plans, allPayments] = await Promise.all([
+  const [student, plans, allPayments, allAttendances] = await Promise.all([
     studentRepository.findById(studentId),
     planRepository.list(),
     paymentRepository.byStudent(studentId),
+    attendanceRepository.byStudent(studentId),
   ]);
   if (!student) throw new Error(`student ${studentId} not found`);
   const plan = student.planId ? plans.find((p) => p.id === student.planId) : null;
   const duePerMonth = plan?.amount ?? 0;
 
-  const { firstPeriod, endPeriod } = statementPeriods(
-    student,
-    allPayments,
-    dayjs().format("YYYY-MM"),
-  );
-  const { months, payments, totalDue, totalPaid, totalBalance } = computeStatement(
-    duePerMonth,
-    allPayments,
-    firstPeriod,
-    endPeriod,
-  );
+  const { billingMode, sessionsPerCycle } = useSessionSettings.getState();
+
+  let months: StatementMonth[] = [];
+  let ledger: StatementPayment[] = [];
+  let totalDue = 0;
+  let totalPaid = 0;
+  let totalBalance = 0;
+
+  if (billingMode === "sessions") {
+    // Session billing: charge `duePerMonth` for every `sessionsPerCycle` attendances.
+    const sortedPayments = [...allPayments].sort((a, b) => a.paidAt - b.paidAt);
+    totalPaid = sortedPayments.reduce((a, p) => a + p.amount, 0);
+
+    let cumulative = 0;
+    ledger = sortedPayments.map((p) => {
+      cumulative += p.amount;
+      return { payment: p, cumulativePaid: cumulative };
+    });
+
+    const attendances = [...allAttendances].sort((a, b) => a.date.localeCompare(b.date));
+    let running = 0;
+    const totalCycles = Math.ceil(Math.max(1, attendances.length) / sessionsPerCycle);
+    totalDue = totalCycles * duePerMonth;
+    totalBalance = totalDue - totalPaid;
+
+    let paidRemaining = totalPaid;
+    for (let i = 1; i <= totalCycles; i++) {
+      const due = duePerMonth;
+      const paid = Math.min(paidRemaining, due);
+      paidRemaining -= paid;
+      running += due - paid;
+      months.push({
+        period: `دورة ${i}`,
+        due,
+        paid,
+        balance: due - paid,
+        running
+      });
+    }
+  } else {
+    const { firstPeriod, endPeriod } = statementPeriods(
+      student,
+      allPayments,
+      dayjs().format("YYYY-MM"),
+    );
+    const math = computeStatement(
+      duePerMonth,
+      allPayments,
+      firstPeriod,
+      endPeriod,
+    );
+    months = math.months;
+    ledger = math.payments;
+    totalDue = math.totalDue;
+    totalPaid = math.totalPaid;
+    totalBalance = math.totalBalance;
+  }
 
   return {
     student,
     planName: plan?.name ?? null,
     months,
-    payments,
+    payments: ledger,
     totalDue,
     totalPaid,
     totalBalance,

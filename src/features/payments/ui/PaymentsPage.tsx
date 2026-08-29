@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { CreditCard, ListChecks, Plus } from "lucide-react";
@@ -12,10 +12,22 @@ import { PlansDialog } from "./PlansDialog";
 import { DuesView } from "./dues";
 import { HistoryView } from "./history";
 import { SessionDuesView } from "./session-dues-view";
+import { useSessionSettings } from "@/lib/session-settings-store";
 
 export default function PaymentsPage() {
   const { t } = useTranslation();
-  const [view, setView] = useState<"dues" | "history" | "sessions">("dues");
+  const billingMode = useSessionSettings((s: any) => s.billingMode);
+  const [view, setView] = useState<"dues" | "history" | "sessions">(
+    billingMode === "sessions" ? "sessions" : "dues"
+  );
+  
+  // if billing mode changes while on dues, switch to sessions
+  useEffect(() => {
+    if (billingMode === "sessions" && view === "dues") {
+      setView("sessions");
+    }
+  }, [billingMode, view]);
+
   const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
   const [recordOpen, setRecordOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -30,6 +42,10 @@ export default function PaymentsPage() {
     setRecordOpen(true);
   }, []);
 
+  const tabs = billingMode === "sessions"
+    ? ["sessions", "history"] as const
+    : ["dues", "sessions", "history"] as const;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -39,8 +55,8 @@ export default function PaymentsPage() {
           <>
             <Segmented
               value={view}
-              onChange={setView}
-              options={(["dues", "sessions", "history"] as const).map((v) => ({
+              onChange={setView as any}
+              options={tabs.map((v) => ({
                 value: v,
                 label: t(`payments.tab${v === "dues" ? "Dues" : v === "sessions" ? "Sessions" : "History"}`),
               }))}
@@ -68,7 +84,7 @@ export default function PaymentsPage() {
         }
       />
 
-      {view === "dues" ? (
+      {view === "dues" && billingMode !== "sessions" ? (
         <DuesView month={month} onMonthChange={setMonth} reloadKey={reloadKey} />
       ) : view === "sessions" ? (
         <SessionDuesView reloadKey={reloadKey} />
