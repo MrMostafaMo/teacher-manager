@@ -74,8 +74,7 @@ export default function SettingsPage() {
         const msg = key.includes(".") ? key : `settings.${key}`;
         setError(t(msg as never));
       } else if (result.status === "cancelled") {
-        // ponytail: user closed picker or cancelled confirm — no error, just clear busy
-        console.log("Restore cancelled");
+        setError(t("settings.restoreCancelled"));
       }
     } catch (e) {
       console.error("Restore failed", e);

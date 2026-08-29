@@ -30,8 +30,9 @@ export async function liveDbSize(): Promise<number> {
  */
 export async function backupDatabase(dest: string): Promise<void> {
   try {
-    const escaped = dest.replace(/'/g, "''");
-    await db.run(sql.raw(`VACUUM INTO '${escaped}'`));
+    // Windows uses backslashes; SQLite prefers forward slashes inside VACUUM INTO
+    const normalized = dest.replace(/\\/g, "/").replace(/'/g, "''");
+    await db.run(sql.raw(`VACUUM INTO '${normalized}'`));
     return;
   } catch (error) {
     console.error("VACUUM INTO failed, falling back to checkpoint + copy", error);

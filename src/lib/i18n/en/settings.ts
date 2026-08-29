@@ -33,6 +33,7 @@ export const settings = {
   restoreConfirm:
     "This will replace all current data with the selected backup. A backup from an older app version may not match the current database. Continue?",
   invalidBackup: "The selected file is not a valid database backup.",
+  restoreCancelled: "Restore cancelled.",
   restoreVersionMismatch:
     "The backup was created by a different app version and cannot be restored. Pick a backup that matches the current version.",
   session: {
