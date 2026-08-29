@@ -70,11 +70,17 @@ export default function SettingsPage() {
         setSaved(t("settings.restoreDone"));
         window.setTimeout(() => window.location.reload(), 800);
       } else if (result.status === "error") {
-        setError(t(`settings.${result.message ?? "restoreError"}`));
+        const key = result.message ?? "restoreError";
+        const msg = key.includes(".") ? key : `settings.${key}`;
+        setError(t(msg as never));
+      } else if (result.status === "cancelled") {
+        // ponytail: user closed picker or cancelled confirm — no error, just clear busy
+        console.log("Restore cancelled");
       }
     } catch (e) {
       console.error("Restore failed", e);
-      setError(t("settings.restoreError"));
+      const raw = e instanceof Error ? e.message : String(e ?? "");
+      setError(raw ? `${t("settings.restoreError")} — ${raw}` : t("settings.restoreError"));
     } finally {
       setBusy(null);
     }

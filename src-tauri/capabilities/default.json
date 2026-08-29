@@ -29,6 +29,21 @@
     {
       "identifier": "fs:allow-copy-file",
       "allow": [
+        { "path": "$APPCONFIG/**" },
+        { "path": "$HOME/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-open",
+      "allow": [
+        { "path": "$HOME/**" },
+        { "path": "$APPCONFIG/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        { "path": "$HOME/**" },
         { "path": "$APPCONFIG/**" }
       ]
     },
@@ -41,8 +56,13 @@
     {
       "identifier": "fs:allow-stat",
       "allow": [
+        { "path": "$HOME/**" },
         { "path": "$APPCONFIG/**" }
       ]
+    },
+    {
+      "identifier": "dialog:allow-ask",
+      "allow": []
     }
   ]
 }
