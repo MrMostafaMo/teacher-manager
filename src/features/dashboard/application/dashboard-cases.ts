@@ -88,26 +88,23 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     payments.reduce((a, p) => a + p.amount, 0);
   const collected = sumPaid(financePayments[financePayments.length - 1]);
 
-  let outstanding = 0;
-  let topDebtors: Array<{ id: string; name: string; remaining: number }> = [];
-
-  if (billingMode === "sessions") {
-    outstanding = sessionDuesRows
-      .filter((r) => r.status === "due")
-      .reduce((a, r) => a + (r.remainingAmount ?? 0), 0);
-    topDebtors = sessionDuesRows
-      .filter((r) => r.status === "due" && (r.remainingAmount ?? 0) > 0)
-      .sort((a, b) => (b.remainingAmount ?? 0) - (a.remainingAmount ?? 0))
-      .slice(0, 5)
-      .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remainingAmount ?? 0 }));
-  } else {
-    outstanding = dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
-    topDebtors = dues
-      .filter((r) => r.remaining > 0)
-      .sort((a, b) => b.remaining - a.remaining)
-      .slice(0, 5)
-      .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remaining }));
-  }
+  const isSessionBilling = billingMode === "sessions";
+  const outstanding = isSessionBilling
+    ? sessionDuesRows
+        .filter((r) => r.status === "due")
+        .reduce((a, r) => a + (r.remainingAmount ?? 0), 0)
+    : dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
+  const topDebtors: Array<{ id: string; name: string; remaining: number }> = isSessionBilling
+    ? sessionDuesRows
+        .filter((r) => r.status === "due" && (r.remainingAmount ?? 0) > 0)
+        .sort((a, b) => (b.remainingAmount ?? 0) - (a.remainingAmount ?? 0))
+        .slice(0, 5)
+        .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remainingAmount ?? 0 }))
+    : dues
+        .filter((r) => r.remaining > 0)
+        .sort((a, b) => b.remaining - a.remaining)
+        .slice(0, 5)
+        .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remaining }));
 
   const prevMarked = prevMonthly.reduce((a, r) => a + r.present + r.absent + r.late + r.excused, 0);
   const prevAttended = prevMonthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);

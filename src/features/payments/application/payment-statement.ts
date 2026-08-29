@@ -121,11 +121,11 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
 
   const { billingMode, sessionsPerCycle } = useSessionSettings.getState();
 
-  let months: StatementMonth[] = [];
-  let ledger: StatementPayment[] = [];
-  let totalDue = 0;
-  let totalPaid = 0;
-  let totalBalance = 0;
+  let months: StatementMonth[];
+  let ledger: StatementPayment[];
+  let totalDue: number;
+  let totalPaid: number;
+  let totalBalance: number;
 
   if (billingMode === "sessions") {
     // Session billing: charge `duePerMonth` for every `sessionsPerCycle` attendances.
@@ -144,6 +144,7 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
     totalDue = totalCycles * duePerMonth;
     totalBalance = totalDue - totalPaid;
 
+    months = [];
     let paidRemaining = totalPaid;
     for (let i = 1; i <= totalCycles; i++) {
       const due = duePerMonth;
@@ -155,7 +156,7 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
         due,
         paid,
         balance: due - paid,
-        running
+        running,
       });
     }
   } else {
@@ -164,12 +165,7 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
       allPayments,
       dayjs().format("YYYY-MM"),
     );
-    const math = computeStatement(
-      duePerMonth,
-      allPayments,
-      firstPeriod,
-      endPeriod,
-    );
+    const math = computeStatement(duePerMonth, allPayments, firstPeriod, endPeriod);
     months = math.months;
     ledger = math.payments;
     totalDue = math.totalDue;
