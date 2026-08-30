@@ -37,7 +37,7 @@ export function useScheduleDnD(
           dayOfWeek: newDay,
           startTime: newStart,
           endTime: newEnd,
-          room: session.room,
+          room: session.room ?? undefined,
         });
         await reload();
         toast(t("schedule.saved", "Saved"), "success");
