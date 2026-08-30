@@ -4,6 +4,7 @@ import type { SessionWithException } from "@/features/schedule/application/sched
 import { cn } from "@/lib/utils";
 import { HOUR_PX, type PlacedSession } from "./week-layout";
 import { SessionBlock } from "./SessionBlock";
+import { useState } from "react";
 
 interface DayColumnProps {
   day: number;
@@ -22,6 +23,7 @@ interface DayColumnProps {
   onDelete: (s: GroupSession) => void;
   onAttend: (s: SessionWithGroup) => void;
   onOccurrence: (s: SessionWithGroup, date: string) => void;
+  onMoveSession?: (id: string, newDay: number, newStartMin: number) => void;
 }
 
 export function DayColumn({
@@ -41,15 +43,42 @@ export function DayColumn({
   onDelete,
   onAttend,
   onOccurrence,
+  onMoveSession,
 }: DayColumnProps) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
   return (
     <div
       key={day}
       className={cn(
-        "relative border-inline-start border-border/60",
+        "relative border-inline-start border-border/60 transition-colors",
         isCurrentWeek && day === today && "bg-muted/30",
+        isDragOver && "bg-muted/50"
       )}
       style={{ height: totalH }}
+      onDragOver={(e) => {
+        if (!onMoveSession) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        if (!onMoveSession) return;
+        e.preventDefault();
+        setIsDragOver(false);
+        const id = e.dataTransfer.getData("text/plain");
+        if (!id) return;
+        
+        const rect = e.currentTarget.getBoundingClientRect();
+        const offsetY = e.clientY - rect.top;
+        
+        // Calculate minutes based on Y offset and snap to 15 mins (0.25 hour)
+        const rawMin = (offsetY / HOUR_PX) * 60 + rangeStart;
+        const snappedMin = Math.round(rawMin / 15) * 15;
+        
+        onMoveSession(id, day, snappedMin);
+      }}
     >
       {hours.map((h) =>
         h > rangeStart ? (

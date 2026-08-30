@@ -19,6 +19,7 @@ import { ScheduleHeaderActions } from "./schedule-header-actions";
 import { SessionAttendanceDialog } from "./SessionAttendanceDialog";
 import { useScheduleData } from "./use-schedule-data";
 import { useScheduleView } from "./use-schedule-view";
+import { useScheduleDnD } from "./use-schedule-dnd";
 
 export default function SchedulePage() {
   const { t } = useTranslation();
@@ -33,6 +34,8 @@ export default function SchedulePage() {
   const { armed: deletingId, request, clear } = useConfirmDelete();
   const { byDay, conflicts, byGroup } = useScheduleView(sessions);
   const { isCollapsed, toggle } = useCollapsedSections();
+  const { moveSession } = useScheduleDnD(sessions, reload);
+
   const dateKey = (() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -103,6 +106,7 @@ export default function SchedulePage() {
           onDelete={(s) => void handleDelete(s)}
           onAttend={(s) => setAttendanceSession(s)}
           onOccurrence={(s, date) => setOccurrence({ session: s, date })}
+          onMoveSession={(id, day, startMin) => void moveSession(id, day, startMin)}
         />
       ) : (
         <ScheduleGroupsView

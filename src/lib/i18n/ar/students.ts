@@ -70,4 +70,10 @@ export const students: Messages["students"] = {
   },
   deleteError: "تعذّر حذف الطالب",
   classError: "تعذّر تغيير الفرقة",
+  idCard: {
+    print: "طباعة الكارنيه",
+    success: "تم تصدير الكارنيه بنجاح",
+    error: "حدث خطأ أثناء تصدير الكارنيه",
+    idLabel: "رقم الطالب:",
+  },
 };

@@ -28,6 +28,7 @@ interface WeekGridProps {
   onDelete: (s: GroupSession) => void;
   onAttend: (s: SessionWithGroup) => void;
   onOccurrence: (s: SessionWithGroup, date: string) => void;
+  onMoveSession?: (id: string, newDay: number, newStartMin: number) => void;
 }
 
 export default function WeekGrid({
@@ -38,6 +39,7 @@ export default function WeekGrid({
   onDelete,
   onAttend,
   onOccurrence,
+  onMoveSession,
 }: WeekGridProps) {
   const hour24 = useTimeStore((s) => s.hour24);
   const weekStartsOn = useWeekStore((s) => s.weekStartsOn);
@@ -125,6 +127,7 @@ export default function WeekGrid({
                 onDelete={onDelete}
                 onAttend={onAttend}
                 onOccurrence={onOccurrence}
+                onMoveSession={onMoveSession}
               />
             ))}
           </div>

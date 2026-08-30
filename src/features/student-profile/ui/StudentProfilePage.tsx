@@ -12,6 +12,7 @@ import { SendWhatsAppDialog } from "@/features/whatsapp/ui/SendWhatsAppDialog";
 import { StudentStatementDialog } from "@/features/student-profile/ui/StudentStatementDialog";
 import { StudentTrendsSection } from "@/features/student-profile/ui/StudentTrendsSection";
 import { useReportCard } from "@/features/report-card/ui/use-report-card";
+import { useIdCard } from "./use-id-card";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { ProfileFactsCard, ProfileStatsGrid } from "./profile-overview";
 import { computeProfileSummary } from "../application/profile-summary";
@@ -45,6 +46,7 @@ export default function StudentProfilePage() {
   }, [id, reloadKey, t]);
 
   const { busy: reportCardBusy, run: runReportCard } = useReportCard(data);
+  const { handleExportIdCard } = useIdCard();
 
   const { isCollapsed, toggle } = useCollapsedSections(
     data ? profileSectionDefaults(data) : undefined,
@@ -70,6 +72,7 @@ export default function StudentProfilePage() {
         onReportCard={runReportCard}
         reportCardBusy={reportCardBusy}
         onWhatsApp={() => setWhatsAppOpen(true)}
+        onIdCard={() => void handleExportIdCard(data)}
       />
 
       <ProfileFactsCard student={student} planName={planName} groups={groups} />

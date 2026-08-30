@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, FileText, MessageCircle, Pencil, ReceiptText } from "lucide-react";
+import { ArrowRight, FileText, MessageCircle, Pencil, ReceiptText, IdCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/shared/Avatar";
 import { PageHeader } from "@/shared/PageHeader";
@@ -16,6 +16,7 @@ interface ProfileHeaderProps {
   onStatement: () => void;
   onReportCard: () => void;
   onWhatsApp: () => void;
+  onIdCard: () => void;
   reportCardBusy?: boolean;
 }
 
@@ -26,6 +27,7 @@ export function ProfileHeader({
   onStatement,
   onReportCard,
   onWhatsApp,
+  onIdCard,
   reportCardBusy = false,
 }: ProfileHeaderProps) {
   const { t } = useTranslation();
@@ -51,6 +53,10 @@ export function ProfileHeader({
             <Button size="sm" variant="outline" onClick={onEdit}>
               <Pencil className="size-4" />
               {t("students.edit")}
+            </Button>
+            <Button size="sm" variant="outline" onClick={onIdCard}>
+              <IdCard className="size-4" />
+              {t("students.idCard.print")}
             </Button>
             <Button size="sm" variant="outline" onClick={onStatement}>
               <ReceiptText className="size-4" />

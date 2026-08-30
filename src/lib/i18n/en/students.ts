@@ -66,6 +66,12 @@ export const students = {
     phoneInvalid: "Enter a valid phone number",
     tooLong: "Too long",
   },
-  deleteError: "Could not delete the student",
-  classError: "Could not change the class",
+  deleteError: "Failed to delete student",
+  classError: "Failed to change class",
+  idCard: {
+    print: "Print ID Card",
+    success: "ID Card exported successfully",
+    error: "Failed to export ID Card",
+    idLabel: "Student ID:",
+  },
 } as const;

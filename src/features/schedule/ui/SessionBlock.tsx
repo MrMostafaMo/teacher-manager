@@ -65,6 +65,7 @@ export function SessionBlock({
       aria-label={`${session.groupName} ${formatTime(session.startTime, hour24)}–${formatTime(session.endTime, hour24)}`}
       className={cn(
         "group absolute overflow-hidden rounded-lg border p-1.5 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        !exception && !deleting && "cursor-grab active:cursor-grabbing",
         pal.bg,
         pal.border,
         conflicted && "ring-1 ring-destructive/60",
@@ -76,6 +77,15 @@ export function SessionBlock({
         height,
         insetInlineStart: `calc(${(col / cols) * 100}% + 1px)`,
         width: `calc(${(1 / cols) * 100}% - 2px)`,
+      }}
+      draggable={!exception && !deleting}
+      onDragStart={(e) => {
+        if (exception || deleting) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.setData("text/plain", session.id);
+        e.dataTransfer.effectAllowed = "move";
       }}
     >
       <div className={cn("absolute inset-y-1 start-0 w-1 rounded-full", pal.bar)} />
