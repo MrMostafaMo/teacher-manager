@@ -31,10 +31,10 @@ export async function sessionDues(): Promise<SessionDuesRow[]> {
     arr.push(p);
     paymentsByStudent.set(p.studentId, arr);
   }
-  const attendanceByStudent = new Map<string, Array<{ date: string }>>();
+  const attendanceByStudent = new Map<string, Array<{ date: string; createdAt: number }>>();
   for (const a of attendances) {
     const arr = attendanceByStudent.get(a.studentId) ?? [];
-    arr.push({ date: a.date });
+    arr.push({ date: a.date, createdAt: a.createdAt });
     attendanceByStudent.set(a.studentId, arr);
   }
   const groupsByStudent = new Map<string, Array<{ id: string; name: string }>>();

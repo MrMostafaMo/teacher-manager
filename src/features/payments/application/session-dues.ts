@@ -35,12 +35,16 @@ export function getLastPaidISO(payments: Payment[]): string | null {
 
 export function countSince(
   payments: Payment[],
-  attendances: Array<{ date: string }>,
+  attendances: Array<{ date: string; createdAt?: number }>,
 ): number {
-  const iso = getLastPaidISO(payments);
-  if (!iso) return attendances.length;
+  const last = lastPayment(payments);
+  if (!last) return attendances.length;
   let n = 0;
-  for (const a of attendances) if (a.date > iso) n++;
+  const iso = toISODate(last.paidAt);
+  for (const a of attendances) {
+    if (a.date > iso) n++;
+    else if (a.date === iso && a.createdAt != null && a.createdAt > last.paidAt) n++;
+  }
   return n;
 }
 

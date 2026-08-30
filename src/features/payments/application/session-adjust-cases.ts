@@ -20,7 +20,7 @@ export async function removeSession(studentId: string): Promise<void> {
   ]);
   const base = countSince(
     payments,
-    atts.map((a) => ({ date: a.date })),
+    atts.map((a) => ({ date: a.date, createdAt: a.createdAt })),
   );
   const effective = Math.max(0, base + offset);
   if (effective <= 0) return;
