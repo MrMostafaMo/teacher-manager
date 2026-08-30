@@ -1,5 +1,6 @@
 // ponytail: full table scans with no limit/where; add month/period filter + pagination when reports stall at 1-2k students.
 import { db } from "@/lib/db/client";
+import { like, eq } from "drizzle-orm";
 import {
   attendance,
   payments,
@@ -58,8 +59,10 @@ export async function studentsReport(t: ReportTranslations): Promise<ReportData>
   };
 }
 
-export async function attendanceReport(t: ReportTranslations): Promise<ReportData> {
-  const rows = (await db.select().from(attendance)) as (typeof attendance.$inferSelect)[];
+export async function attendanceReport(t: ReportTranslations, period?: string): Promise<ReportData> {
+  const query = db.select().from(attendance);
+  if (period) query.where(like(attendance.date, `${period}-%`));
+  const rows = (await query) as (typeof attendance.$inferSelect)[];
   const perStudent = new Map<
     string,
     { present: number; absent: number; late: number; excused: number }
@@ -90,9 +93,12 @@ export async function attendanceReport(t: ReportTranslations): Promise<ReportDat
   };
 }
 
-export async function paymentsReport(t: ReportTranslations): Promise<ReportData> {
+export async function paymentsReport(t: ReportTranslations, period?: string): Promise<ReportData> {
+  const query = db.select().from(payments);
+  if (period) query.where(eq(payments.period, period));
+
   const [allPayments, allPlans, allStudents] = await Promise.all([
-    db.select().from(payments),
+    query,
     planRepository.list(),
     allEnrolledStudents(),
   ]);

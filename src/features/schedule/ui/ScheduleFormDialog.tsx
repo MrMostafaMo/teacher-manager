@@ -9,6 +9,7 @@ import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";
 import { ScheduleFormFields, type ScheduleFormValues } from "./schedule-form-fields";
+import { toast } from "@/lib/toast-store";
 
 interface ScheduleFormDialogProps {
   open: boolean;
@@ -36,7 +37,6 @@ export function ScheduleFormDialog({
   const { t } = useTranslation();
   const [form, setForm] = useState<ScheduleFormValues>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -49,8 +49,7 @@ export function ScheduleFormDialog({
         room: session?.room ?? "",
       });
       setErrors({});
-      setFatal("");
-    }
+      }
   }, [open, session, groups]);
 
   function setField<K extends keyof ScheduleFormValues>(key: K, value: ScheduleFormValues[K]) {
@@ -70,7 +69,6 @@ export function ScheduleFormDialog({
     if (saving) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       groupSessionInputSchema.parse(form);
       if (session) await updateSession(session.id, form);
@@ -79,7 +77,7 @@ export function ScheduleFormDialog({
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
-      else setFatal(getErrorMessage(error));
+      else toast(getErrorMessage(error), "error");
     } finally {
       setSaving(false);
     }
@@ -90,7 +88,7 @@ export function ScheduleFormDialog({
       <form onSubmit={handleSubmit} className="space-y-4">
         <ScheduleFormFields form={form} errors={errors} groups={groups} setField={setField} />
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

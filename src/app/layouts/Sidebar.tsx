@@ -51,7 +51,7 @@ export function Sidebar() {
         </div>
         <button
           onClick={togglePinned}
-          aria-label="Toggle Sidebar"
+          aria-label={t("common.sidebar.toggle")}
           className={cn(
             "hidden shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground opacity-0 transition-opacity duration-200 group-hover:block group-hover:opacity-100",
             isPinned && "lg:block lg:opacity-100"

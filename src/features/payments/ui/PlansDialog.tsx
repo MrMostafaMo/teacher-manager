@@ -14,6 +14,7 @@ import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { notifyUndo } from "@/lib/undo-store";
 import { PlanFormDialog } from "./PlanFormDialog";
 import { usePlansColumns } from "./plans-columns";
+import { toast } from "@/lib/toast-store";
 
 interface PlansDialogProps {
   open: boolean;
@@ -28,18 +29,15 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Plan | null>(null);
   const { armed: deletingId, request, clear } = useConfirmDelete();
-  const [error, setError] = useState("");
-
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    setError("");
     clear();
     listPlans()
       .then(setRows)
       .catch((e) => {
         console.error("Failed to load plans", e);
-        setError(t("plans.loadError"));
+        toast(t("plans.loadError"), "error");
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -67,7 +65,7 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
         }
       } catch (e) {
         console.error("Failed to delete plan", e);
-        setError(t("plans.deleteError"));
+        toast(t("plans.deleteError"), "error");
       } finally {
         clear();
       }
@@ -89,7 +87,7 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
           </Button>
         </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        
 
         <Card>
           <CardContent className="p-0">
@@ -119,7 +117,7 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
               .then(setRows)
               .catch((e) => {
                 console.error("Failed to reload plans", e);
-                setError(t("plans.loadError"));
+                toast(t("plans.loadError"), "error");
               });
             onChanged();
           }}

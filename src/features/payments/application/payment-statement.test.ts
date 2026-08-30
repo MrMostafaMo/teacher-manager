@@ -67,7 +67,7 @@ describe("computeStatement", () => {
   ];
 
   it("builds per-month rows with running balance and a chronological ledger", () => {
-    const s = computeStatement(200, payments, "2026-01", "2026-03");
+    const s = computeStatement(() => 200, payments, "2026-01", "2026-03");
     expect(s.months.map((m) => m.period)).toEqual(["2026-01", "2026-02", "2026-03"]);
     expect(s.months[0]).toEqual({
       period: "2026-01",
@@ -92,7 +92,7 @@ describe("computeStatement", () => {
 
   it("yields a negative balance when the student is paid ahead", () => {
     const s = computeStatement(
-      100,
+      () => 100,
       [payment({ period: "2026-01", amount: 150 })],
       "2026-01",
       "2026-01",

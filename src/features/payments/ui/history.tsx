@@ -19,6 +19,7 @@ import { notifyUndo } from "@/lib/undo-store";
 import { groupPaymentHistory } from "./history-grouping";
 import { HistorySections } from "./history-sections";
 import { usePaymentReceipt } from "./use-payment-receipt";
+import { toast } from "@/lib/toast-store";
 
 export const HistoryView = memo(function HistoryView({
   reloadKey,
@@ -37,7 +38,6 @@ export const HistoryView = memo(function HistoryView({
   >(new Map());
   const [studentId, setStudentId] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const { armed: deletingId, request, clear } = useConfirmDelete();
   const { isCollapsed, toggle } = useCollapsedSections();
   const { busyId: receiptBusyId, run: runReceipt } = usePaymentReceipt();
@@ -64,12 +64,11 @@ export const HistoryView = memo(function HistoryView({
 
   useEffect(() => {
     setLoading(true);
-    setError("");
     listPaymentHistory({ studentId: studentId || undefined })
       .then(setRows)
       .catch((e) => {
         console.error("Failed to load payment history", e);
-        setError(t("payments.loadError"));
+        toast(t("payments.loadError"), "error");
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -93,7 +92,7 @@ export const HistoryView = memo(function HistoryView({
         }
       } catch (e) {
         console.error("Failed to delete payment", e);
-        setError(t("payments.deleteError"));
+        toast(t("payments.deleteError"), "error");
       } finally {
         clear();
       }
@@ -124,7 +123,7 @@ export const HistoryView = memo(function HistoryView({
         </Select>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
 
       {loading ? (
         <TableRowsSkeleton rows={5} cols={5} />

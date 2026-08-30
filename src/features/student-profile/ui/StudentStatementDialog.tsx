@@ -34,18 +34,16 @@ export function StudentStatementDialog({
   const rtl = i18n.language?.startsWith("ar") ?? false;
   const [data, setData] = useState<StudentStatement | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [exporting, setExporting] = useState<"excel" | "pdf" | null>(null);
 
   const load = useCallback(() => {
     if (!studentId) return;
     setLoading(true);
-    setError("");
     studentStatement(studentId)
       .then(setData)
       .catch((e) => {
         console.error("Failed to load student statement", e);
-        setError(t("profile.statement.loadError"));
+        toast(t("profile.statement.loadError"), "error");
       })
       .finally(() => setLoading(false));
   }, [studentId, t]);
@@ -72,7 +70,6 @@ export function StudentStatementDialog({
   async function handleExport(kind: "excel" | "pdf") {
     if (!data || !studentId || exporting) return;
     setExporting(kind);
-    setError("");
     try {
       const report = await buildStudentStatementReport(studentId, statementTranslations());
       const ok =
@@ -87,7 +84,7 @@ export function StudentStatementDialog({
       }
     } catch (e) {
       console.error("Export failed", e);
-      setError(t("reports.exportError"));
+      toast(t("reports.exportError"), "error");
     } finally {
       setExporting(null);
     }
@@ -107,15 +104,13 @@ export function StudentStatementDialog({
     >
       {loading ? (
         <CardSkeleton lines={4} />
-      ) : error ? (
-        <p className="text-sm text-destructive">{error}</p>
       ) : data ? (
         <div className="space-y-5">
           <StatementMonthlyTable data={data} />
           <StatementLedger payments={data.payments} />
 
           <div className="flex items-center justify-end gap-2">
-            {error && <span className="text-sm text-destructive">{error}</span>}
+            
             <Button
               variant="outline"
               onClick={() => void handleExport("excel")}

@@ -61,6 +61,7 @@ export function Modal({ open, title, description, onClose, children, className }
       onClose={onClose}
       onCancel={(e) => {
         e.preventDefault();
+        onClose();
       }}
       className={cn(
         "m-auto w-full max-w-md overflow-hidden rounded-2xl bg-background text-foreground shadow-(--popover-shadow) ring-1 ring-foreground/10 backdrop:bg-black/40 backdrop:backdrop-blur-sm animate-in fade-in-0 zoom-in-95 duration-200 backdrop:animate-in backdrop:fade-in-0 backdrop:duration-200",

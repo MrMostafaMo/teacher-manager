@@ -1,3 +1,5 @@
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
 import { studentInputSchema, type StudentInput } from "@/features/students/domain";
 import {
   studentRepository,
@@ -80,21 +82,18 @@ export async function deleteStudent(
   const resultRows = undoEnabled ? await captureBy(examResults, examResults.studentId, id) : [];
   const skillRows = undoEnabled ? await captureBy(studentSkills, studentSkills.studentId, id) : [];
 
-  // FKs are off — clear every child row or they orphan (attendance,
-  // payments, memberships, submissions, results, skill levels).
-  // ponytail: 7 deletes + remove with no transaction; partial failure orphans rows.
-  // Wrap in a single DB transaction when sqlite-proxy exposes it.
-  await Promise.all([
-    skillRepository.clearForStudent(id),
-    attendanceRepository.clearForStudent(id),
-    paymentRepository.clearForStudent(id),
-    groupRepository.clearForStudent(id),
-    homeworkRepository.clearForStudent(id),
-    examRepository.clearForStudent(id),
-    scheduleRepository.clearAttendanceForStudent(id),
+  // Execute all deletions in a single batch (which is wrapped in a BEGIN/COMMIT
+  // transaction via our proxy) to prevent partial failures from orphaning rows.
+  await db.batch([
+    db.delete(studentSkills).where(eq(studentSkills.studentId, id)),
+    db.delete(attendance).where(eq(attendance.studentId, id)),
+    db.delete(payments).where(eq(payments.studentId, id)),
+    db.delete(studentGroups).where(eq(studentGroups.studentId, id)),
+    db.delete(homeworkSubmissions).where(eq(homeworkSubmissions.studentId, id)),
+    db.delete(examResults).where(eq(examResults.studentId, id)),
+    db.delete(sessionAttendance).where(eq(sessionAttendance.studentId, id)),
+    db.delete(students).where(eq(students.id, id)),
   ]);
-  const removed = await studentRepository.remove(id);
-  if (!removed) throw new Error(`student ${id} not found`);
   await logActivity({ action: "student.delete", entityType: "student", entityId: id });
   if (!undoEnabled) return null;
   return registerUndo(async () => {

@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, like, and, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   examResults,
@@ -19,9 +19,12 @@ import { formatDateString } from "@/lib/utils/format";
 import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
 import type { ReportTranslations } from "./report-builders";
 
-export async function examsReport(t: ReportTranslations): Promise<ReportData> {
+export async function examsReport(t: ReportTranslations, period?: string): Promise<ReportData> {
+  const examsQuery = db.select().from(exams).orderBy(desc(exams.createdAt));
+  if (period) examsQuery.where(like(exams.date, `${period}-%`));
+
   const [examsRows, results, groupsRows, memberships, allStudents] = await Promise.all([
-    db.select().from(exams).orderBy(desc(exams.createdAt)),
+    examsQuery,
     db.select().from(examResults),
     db.select().from(studyGroups),
     db
@@ -96,8 +99,14 @@ export async function examsReport(t: ReportTranslations): Promise<ReportData> {
   };
 }
 
-export async function expensesReport(t: ReportTranslations): Promise<ReportData> {
-  const rows = (await db.select().from(expenses).orderBy(desc(expenses.spentAt))) as Expense[];
+export async function expensesReport(t: ReportTranslations, period?: string): Promise<ReportData> {
+  const query = db.select().from(expenses).orderBy(desc(expenses.spentAt));
+  if (period) {
+    const start = dayjs(`${period}-01`).startOf("month").valueOf();
+    const end = dayjs(`${period}-01`).endOf("month").valueOf();
+    query.where(and(gte(expenses.spentAt, start), lte(expenses.spentAt, end)));
+  }
+  const rows = (await query) as Expense[];
   return {
     key: "expenses",
     title: t.title,
@@ -112,11 +121,18 @@ export async function expensesReport(t: ReportTranslations): Promise<ReportData>
   };
 }
 
-export async function financesReport(t: ReportTranslations): Promise<ReportData> {
-  const [allPayments, allExpenses] = await Promise.all([
-    db.select().from(payments),
-    db.select().from(expenses),
-  ]);
+export async function financesReport(t: ReportTranslations, period?: string): Promise<ReportData> {
+  const pQuery = db.select().from(payments);
+  if (period) pQuery.where(eq(payments.period, period));
+
+  const eQuery = db.select().from(expenses);
+  if (period) {
+    const start = dayjs(`${period}-01`).startOf("month").valueOf();
+    const end = dayjs(`${period}-01`).endOf("month").valueOf();
+    eQuery.where(and(gte(expenses.spentAt, start), lte(expenses.spentAt, end)));
+  }
+
+  const [allPayments, allExpenses] = await Promise.all([pQuery, eQuery]);
   const byMonth = new Map<string, { collected: number; expenses: number }>();
   for (const p of allPayments as Payment[]) {
     if (!p.period) continue;

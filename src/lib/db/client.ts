@@ -69,7 +69,36 @@ const remote: AsyncRemoteCallback = async (sql, params, method) => {
   return { rows: rows.map((row) => Object.values(row)) };
 };
 
-export const db = drizzle(remote, { schema });
+/** Support for db.batch() which we use to simulate a transaction. */
+const batchRemote = async (
+  queries: { sql: string; params: any[]; method: "run" | "all" | "values" | "get" }[],
+) => {
+  const connection = await connect();
+  const results = [];
+  await connection.execute("BEGIN", []);
+  try {
+    for (const q of queries) {
+      if (q.method === "run") {
+        const r = await connection.execute(q.sql, q.params as unknown[]);
+        results.push({ rows: [{ lastInsertRowid: r.lastInsertId ?? 0, changes: r.rowsAffected }] });
+      } else {
+        const rows = await connection.select<Record<string, unknown>[]>(q.sql, q.params as unknown[]);
+        if (q.method === "get") {
+          results.push({ rows: (rows.length ? Object.values(rows[0]) : null) as unknown as unknown[] });
+        } else {
+          results.push({ rows: rows.map((row) => Object.values(row)) });
+        }
+      }
+    }
+    await connection.execute("COMMIT", []);
+  } catch (e) {
+    await connection.execute("ROLLBACK", []);
+    throw e;
+  }
+  return results;
+};
+
+export const db = drizzle(remote, batchRemote, { schema });
 
 /** Run one raw SELECT and return its first row (used by restore validation). */
 export async function queryFirst<T = Record<string, unknown>>(

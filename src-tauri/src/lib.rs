@@ -134,6 +134,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0020_session_offset.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 22,
+            description: "historical plan prices to avoid rewriting past statements",
+            sql: include_str!("../migrations/0021_plan_price_history.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

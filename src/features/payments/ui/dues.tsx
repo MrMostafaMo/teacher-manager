@@ -14,6 +14,7 @@ import { MonthPicker } from "@/shared/DatePicker";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { EmptyState } from "@/shared/EmptyState";
 import { DuesTable } from "./dues-table";
+import { toast } from "@/lib/toast-store";
 
 export const inputClass =
   "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring";
@@ -34,17 +35,15 @@ export const DuesView = memo(function DuesView({
   const { t } = useTranslation();
   const [rows, setRows] = useState<DuesRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const { isCollapsed, toggle } = useCollapsedSections();
 
   useEffect(() => {
     setLoading(true);
-    setError("");
     monthlyDues(month)
       .then(setRows)
       .catch((e) => {
         console.error("Failed to load monthly dues", e);
-        setError(t("payments.loadError"));
+        toast(t("payments.loadError"), "error");
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -91,7 +90,7 @@ export const DuesView = memo(function DuesView({
         </Badge>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
 
       {loading ? (
         <TableRowsSkeleton rows={5} cols={5} />

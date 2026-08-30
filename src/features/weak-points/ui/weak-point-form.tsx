@@ -9,6 +9,7 @@ import { DatePicker } from "@/shared/DatePicker";
 import { Field } from "@/shared/Field";
 import { weakPointInputSchema, type WeakPointInput } from "@/features/weak-points/domain";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
+import { toast } from "@/lib/toast-store";
 
 export interface WeakPointFormState {
   description: string;
@@ -49,13 +50,10 @@ export function WeakPointForm({
   const { t } = useTranslation();
   const [form, setForm] = useState<WeakPointFormState>(initial);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
-
   useEffect(() => {
     setForm(initial);
     setErrors({});
-    setFatal("");
-  }, [initial]);
+    }, [initial]);
 
   function setField<K extends keyof WeakPointFormState>(key: K, value: WeakPointFormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -65,7 +63,6 @@ export function WeakPointForm({
     e.preventDefault();
     if (saving) return;
     setErrors({});
-    setFatal("");
     try {
       const input = weakPointInputFromForm(form);
       weakPointInputSchema.parse(input);
@@ -80,7 +77,7 @@ export function WeakPointForm({
           ),
         );
       } else {
-        setFatal(getErrorMessage(error));
+        toast(getErrorMessage(error), "error");
       }
     }
   }
@@ -111,7 +108,7 @@ export function WeakPointForm({
         />
       </Field>
 
-      {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+      
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

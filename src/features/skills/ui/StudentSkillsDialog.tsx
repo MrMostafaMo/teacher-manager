@@ -34,12 +34,9 @@ export function StudentSkillsDialog({
   const [edits, setEdits] = useState<SkillEdits>({});
   const [loading, setLoading] = useState(true);
   const { saving, saved, run, clear } = useSaveFeedback();
-  const [error, setError] = useState("");
-
   const load = useCallback(() => {
     if (!studentId) return;
     setLoading(true);
-    setError("");
     clear();
     getStudentSkills(studentId)
       .then((rows) => {
@@ -52,7 +49,7 @@ export function StudentSkillsDialog({
       })
       .catch((e) => {
         console.error("Failed to load student skills", e);
-        setError(t("skills.loadError"));
+        toast(t("skills.loadError"), "error");
       })
       .finally(() => setLoading(false));
   }, [studentId, t, clear]);
@@ -80,7 +77,7 @@ export function StudentSkillsDialog({
       });
     } catch (e) {
       console.error("Failed to save student skills", e);
-      setError(t("skills.saveError"));
+      toast(t("skills.saveError"), "error");
     }
   }
 
@@ -95,8 +92,6 @@ export function StudentSkillsDialog({
     >
       {loading ? (
         <CardSkeleton lines={4} />
-      ) : error ? (
-        <p className="text-sm text-destructive">{error}</p>
       ) : rows.length === 0 ? (
         <div className="space-y-4">
           <p className="py-8 text-center text-sm text-muted-foreground">{t("skills.noSkills")}</p>

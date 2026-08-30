@@ -18,6 +18,7 @@ import {
   initialHomeworkForm,
   type HomeworkFormState,
 } from "./homework-form-utils";
+import { toast } from "@/lib/toast-store";
 
 interface HomeworkFormDialogProps {
   open: boolean;
@@ -40,15 +41,13 @@ export function HomeworkFormDialog({
   const { t } = useTranslation();
   const [form, setForm] = useState<HomeworkFormState>(emptyHomeworkForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       setForm(initialHomeworkForm(homework, groups, defaultGroupId));
       setErrors({});
-      setFatal("");
-    }
+      }
   }, [open, homework, groups, defaultGroupId]);
 
   function setField<K extends keyof HomeworkFormState>(key: K, value: HomeworkFormState[K]) {
@@ -71,7 +70,6 @@ export function HomeworkFormDialog({
     if (saving) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       homeworkInputSchema.parse(form);
       if (homework) await updateHomework(homework.id, form);
@@ -80,7 +78,7 @@ export function HomeworkFormDialog({
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
-      else setFatal(getErrorMessage(error));
+      else toast(getErrorMessage(error), "error");
     } finally {
       setSaving(false);
     }
@@ -142,7 +140,7 @@ export function HomeworkFormDialog({
           />
         </Field>
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

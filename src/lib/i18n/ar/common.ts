@@ -26,6 +26,9 @@ export const common: Messages["common"] = {
   dismiss: "إغلاق",
   confirmMessage: "هل أنت متأكد؟",
   search: "بحث",
+  sidebar: {
+    toggle: "تبديل الشريط الجانبي",
+  },
   commandPalette: {
     title: "قائمة الأوامر",
     placeholder: "ابحث في الصفحات والإجراءات والطلاب…",

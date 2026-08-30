@@ -14,6 +14,7 @@ import type { HomeworkDetail } from "@/features/homework/application/homework-ca
 import { Modal } from "@/shared/Modal";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { HomeworkSubmissionsSection } from "./homework-submissions-section";
+import { toast } from "@/lib/toast-store";
 
 interface HomeworkDetailDialogProps {
   open: boolean;
@@ -31,18 +32,16 @@ export function HomeworkDetailDialog({
   const { t } = useTranslation();
   const [detail, setDetail] = useState<HomeworkDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
     if (!homeworkId) return;
     setLoading(true);
-    setError("");
     getHomeworkDetail(homeworkId)
       .then(setDetail)
       .catch((e) => {
         console.error("Failed to load homework", e);
-        setError(t("homework.loadError"));
+        toast(t("homework.loadError"), "error");
       })
       .finally(() => setLoading(false));
   }, [homeworkId, t]);
@@ -60,7 +59,7 @@ export function HomeworkDetailDialog({
       load();
     } catch (e) {
       console.error("Failed to set submission status", e);
-      setError(t("homework.loadError"));
+      toast(t("homework.loadError"), "error");
     } finally {
       setBusy(false);
     }
@@ -75,7 +74,7 @@ export function HomeworkDetailDialog({
       load();
     } catch (e) {
       console.error("Failed to set all submission statuses", e);
-      setError(t("homework.loadError"));
+      toast(t("homework.loadError"), "error");
     } finally {
       setBusy(false);
     }
@@ -90,8 +89,6 @@ export function HomeworkDetailDialog({
     >
       {loading ? (
         <CardSkeleton lines={4} />
-      ) : error ? (
-        <p className="text-sm text-destructive">{error}</p>
       ) : detail ? (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-sm">

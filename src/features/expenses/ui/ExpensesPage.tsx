@@ -17,6 +17,7 @@ import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { notifyUndo } from "@/lib/undo-store";
 import { ExpensesTable } from "./expenses-table";
 import { ExpenseCategoryChart } from "./expense-category-chart";
+import { toast } from "@/lib/toast-store";
 
 const inputClass =
   "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring";
@@ -26,7 +27,6 @@ export default function ExpensesPage() {
   const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
   const [rows, setRows] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [recordOpen, setRecordOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const { armed: deletingId, request, clear } = useConfirmDelete();
@@ -36,12 +36,11 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     setLoading(true);
-    setError("");
     listExpenses(month)
       .then(setRows)
       .catch((e) => {
         console.error("Failed to load expenses", e);
-        setError(t("expenses.loadError"));
+        toast(t("expenses.loadError"), "error");
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -65,7 +64,7 @@ export default function ExpensesPage() {
         }
       } catch (e) {
         console.error("Failed to delete expense", e);
-        setError(t("expenses.deleteError"));
+        toast(t("expenses.deleteError"), "error");
       }
     },
     [request, clear, bump, rows, t],
@@ -107,7 +106,7 @@ export default function ExpensesPage() {
         </Badge>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
 
       {!loading && rows.length > 0 && <ExpenseCategoryChart rows={rows} />}
 

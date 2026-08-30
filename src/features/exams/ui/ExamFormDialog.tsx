@@ -9,6 +9,7 @@ import type { Exam, StudyGroup } from "@/lib/db/schema";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";
 import { ExamFormFields, type ExamFormValues } from "./exam-form-fields";
+import { toast } from "@/lib/toast-store";
 
 interface ExamFormDialogProps {
   open: boolean;
@@ -36,7 +37,6 @@ export function ExamFormDialog({
     date: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -48,8 +48,7 @@ export function ExamFormDialog({
         date: exam?.date ?? "",
       });
       setErrors({});
-      setFatal("");
-    }
+      }
   }, [open, exam, groups, defaultGroupId]);
 
   function setField<K extends keyof ExamFormValues>(key: K, value: ExamFormValues[K]) {
@@ -74,7 +73,6 @@ export function ExamFormDialog({
     if (saving) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       examInputSchema.parse(form);
       if (exam) await updateExam(exam.id, form);
@@ -83,7 +81,7 @@ export function ExamFormDialog({
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
-      else setFatal(getErrorMessage(error));
+      else toast(getErrorMessage(error), "error");
     } finally {
       setSaving(false);
     }
@@ -94,7 +92,7 @@ export function ExamFormDialog({
       <form onSubmit={handleSubmit} className="space-y-4">
         <ExamFormFields form={form} errors={errors} groups={groups} setField={setField} />
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

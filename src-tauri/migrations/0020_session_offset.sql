@@ -1,1 +1,1 @@
-ALTER TABLE students ADD COLUMN session_offset INTEGER DEFAULT 0 NOT NULL;
+ALTER TABLE `students` ADD `session_offset` integer DEFAULT 0 NOT NULL;

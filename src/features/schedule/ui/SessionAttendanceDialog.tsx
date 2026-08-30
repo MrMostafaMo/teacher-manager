@@ -37,12 +37,10 @@ export function SessionAttendanceDialog({
   const [students, setStudents] = useState<Student[]>([]);
   const [draft, setDraft] = useState<Record<string, AttendanceStatus>>({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const { saving, saved, run, clear } = useSaveFeedback();
 
   async function load(sessionId: string, groupId: string, date: string) {
     setLoading(true);
-    setError("");
     try {
       const { students, rows } = await getSessionAttendance({ id: sessionId, groupId }, date);
       const byId = Object.fromEntries(rows.map((r) => [r.studentId, r.status])) as Record<
@@ -53,7 +51,7 @@ export function SessionAttendanceDialog({
       setDraft(Object.fromEntries(students.map((s) => [s.id, byId[s.id]])));
     } catch (e) {
       console.error("Failed to load session attendance", e);
-      setError(t("schedule.errors.loadAttendance"));
+      toast(t("schedule.errors.loadAttendance"), "error");
       setStudents([]);
     } finally {
       setLoading(false);
@@ -94,7 +92,7 @@ export function SessionAttendanceDialog({
       });
     } catch (e) {
       console.error("Failed to save session attendance", e);
-      setError(t("schedule.errors.saveAttendance"));
+      toast(t("schedule.errors.saveAttendance"), "error");
     }
   }
 
@@ -118,7 +116,7 @@ export function SessionAttendanceDialog({
           saved={saved}
         />
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        
 
         {students.length > 0 && <SessionStatusSummary students={students} draft={draft} />}
 

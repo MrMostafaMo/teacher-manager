@@ -21,6 +21,19 @@ export const plans = sqliteTable("plans", {
   ...timestamps,
 });
 
+/** Historical prices for plans to avoid retroactively altering past statements. */
+export const planPriceHistory = sqliteTable("plan_price_history", {
+  id: id(),
+  planId: text("plan_id")
+    .notNull()
+    .references(() => plans.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(),
+  /** The effective date as YYYY-MM-DD or unix ms. Let's use unix ms for consistency. */
+  effectiveFrom: integer("effective_from", { mode: "timestamp_ms" }).notNull(),
+  ...timestamps,
+});
+
 export type AppMeta = typeof appMeta.$inferSelect;
 export type AppMetaInsert = typeof appMeta.$inferInsert;
 export type Plan = typeof plans.$inferSelect;
+export type PlanPriceHistory = typeof planPriceHistory.$inferSelect;

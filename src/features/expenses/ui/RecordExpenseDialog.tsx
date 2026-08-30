@@ -19,6 +19,7 @@ import {
   expenseInputFromForm,
   type ExpenseFormState,
 } from "./expense-form-utils";
+import { toast } from "@/lib/toast-store";
 
 interface RecordExpenseDialogProps {
   open: boolean;
@@ -31,15 +32,13 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
   const { t } = useTranslation();
   const [form, setForm] = useState<ExpenseFormState>(emptyExpenseForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setForm(expense ? expenseFormFromExpense(expense) : emptyExpenseForm());
     setErrors({});
-    setFatal("");
-  }, [open, expense]);
+    }, [open, expense]);
 
   function setField<K extends keyof ExpenseFormState>(key: K, value: ExpenseFormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -59,7 +58,6 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
     if (saving) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       const input = expenseInputFromForm(form);
       expenseInputSchema.parse(input);
@@ -69,7 +67,7 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
-      else setFatal(getErrorMessage(error));
+      else toast(getErrorMessage(error), "error");
     } finally {
       setSaving(false);
     }
@@ -135,7 +133,7 @@ export function RecordExpenseDialog({ open, expense, onClose, onSaved }: RecordE
           />
         </Field>
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

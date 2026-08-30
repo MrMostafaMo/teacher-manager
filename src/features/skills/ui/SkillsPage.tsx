@@ -14,12 +14,12 @@ import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { notifyUndo } from "@/lib/undo-store";
 import { SkillFormDialog } from "./SkillFormDialog";
 import { useSkillsColumns } from "./skills-columns";
+import { toast } from "@/lib/toast-store";
 
 export default function SkillsPage() {
   const { t } = useTranslation();
   const [rows, setRows] = useState<SkillWithWeakCount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Skill | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -29,12 +29,11 @@ export default function SkillsPage() {
 
   useEffect(() => {
     setLoading(true);
-    setError("");
     listSkills()
       .then(setRows)
       .catch((e) => {
         console.error("Failed to load skills", e);
-        setError(t("skills.loadError"));
+        toast(t("skills.loadError"), "error");
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -57,7 +56,7 @@ export default function SkillsPage() {
         }
       } catch (e) {
         console.error("Failed to delete skill", e);
-        setError(t("skills.deleteError"));
+        toast(t("skills.deleteError"), "error");
       } finally {
         clear();
       }
@@ -91,7 +90,7 @@ export default function SkillsPage() {
         }
       />
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
 
       <Card>
         <CardContent className="p-0">

@@ -9,6 +9,7 @@ import { Field } from "@/shared/Field";
 import { createSkill, updateSkill } from "@/features/skills/application/skill-cases";
 import type { Skill } from "@/lib/db/schema";
 import { Modal } from "@/shared/Modal";
+import { toast } from "@/lib/toast-store";
 
 interface SkillFormDialogProps {
   open: boolean;
@@ -21,15 +22,13 @@ export function SkillFormDialog({ open, skill, onClose, onSaved }: SkillFormDial
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       setName(skill?.name ?? "");
       setErrors({});
-      setFatal("");
-    }
+      }
   }, [open, skill]);
 
   async function handleSubmit(e: FormEvent) {
@@ -37,7 +36,6 @@ export function SkillFormDialog({ open, skill, onClose, onSaved }: SkillFormDial
     if (saving) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       skillInputSchema.parse({ name });
       if (skill) await updateSkill(skill.id, { name });
@@ -48,7 +46,7 @@ export function SkillFormDialog({ open, skill, onClose, onSaved }: SkillFormDial
       if (error instanceof ZodError) {
         setErrors({ name: t("skills.errors.nameRequired") });
       } else {
-        setFatal(getErrorMessage(error));
+        toast(getErrorMessage(error), "error");
       }
     } finally {
       setSaving(false);
@@ -66,7 +64,7 @@ export function SkillFormDialog({ open, skill, onClose, onSaved }: SkillFormDial
           />
         </Field>
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

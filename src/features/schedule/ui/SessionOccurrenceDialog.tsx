@@ -16,6 +16,7 @@ import { formatDateString } from "@/lib/utils/format";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";
 import { OccurrenceFields } from "./occurrence-fields";
+import { toast } from "@/lib/toast-store";
 
 interface SessionOccurrenceDialogProps {
   open: boolean;
@@ -40,7 +41,6 @@ export function SessionOccurrenceDialog({
   const [endTime, setEndTime] = useState("");
   const [room, setRoom] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -50,8 +50,7 @@ export function SessionOccurrenceDialog({
       setEndTime(session.endTime);
       setRoom(session.room ?? "");
       setErrors({});
-      setFatal("");
-    }
+      }
   }, [open, session]);
 
   const mapMoveErrors = (error: ZodError) =>
@@ -66,7 +65,6 @@ export function SessionOccurrenceDialog({
     if (saving || !session) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       if (exception) {
         await restoreOccurrence(exception.id);
@@ -95,7 +93,7 @@ export function SessionOccurrenceDialog({
       onSaved();
       onClose();
     } catch (error) {
-      setFatal(getErrorMessage(error));
+      toast(getErrorMessage(error), "error");
     } finally {
       setSaving(false);
     }
@@ -124,7 +122,7 @@ export function SessionOccurrenceDialog({
           />
         )}
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

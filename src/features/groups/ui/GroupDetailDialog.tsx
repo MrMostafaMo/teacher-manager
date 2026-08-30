@@ -18,6 +18,7 @@ import { useTimeStore } from "@/lib/time-store";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { notifyUndo } from "@/lib/undo-store";
 import { GroupMembersSection } from "./group-members-section";
+import { toast } from "@/lib/toast-store";
 
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
@@ -33,7 +34,6 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
   const hour24 = useTimeStore((s) => s.hour24);
   const [detail, setDetail] = useState<GroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const { armed: removingId, request } = useConfirmDelete();
   const [busy, setBusy] = useState(false);
   const [sessions, setSessions] = useState<GroupSession[]>([]);
@@ -46,11 +46,10 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
 
   const reload = useCallback(async () => {
     setLoading(true);
-    setError("");
     try {
       setDetail(await getGroupDetail(group.id));
     } catch {
-      setError(t("groups.loadError"));
+      toast(t("groups.loadError"), "error");
     } finally {
       setLoading(false);
     }
@@ -68,7 +67,7 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
       await reload();
       onChanged();
     } catch {
-      setError(t("groups.memberError"));
+      toast(t("groups.memberError"), "error");
     } finally {
       setBusy(false);
     }
@@ -92,7 +91,7 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
         );
       }
     } catch {
-      setError(t("groups.memberError"));
+      toast(t("groups.memberError"), "error");
     } finally {
       setBusy(false);
     }
@@ -158,7 +157,7 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
           onRemove={(id) => void handleRemove(id)}
         />
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="ghost" onClick={onEdit}>

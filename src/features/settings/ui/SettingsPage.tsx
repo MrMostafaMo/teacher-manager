@@ -18,6 +18,7 @@ import { SettingsShortcutsCard } from "./SettingsShortcutsCard";
 import { SettingsNotificationsCard } from "./SettingsNotificationsCard";
 import { SettingsWhatsAppCard } from "@/features/whatsapp/ui/SettingsWhatsAppCard";
 import { SyncSettingsCard } from "@/features/sync/ui/SyncSettingsCard";
+import { toast } from "@/lib/toast-store";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -31,8 +32,6 @@ export default function SettingsPage() {
   const [dbSize, setDbSize] = useState<number | null>(null);
   const [busy, setBusy] = useState<"backup" | "restore" | null>(null);
   const [saved, setSaved] = useState("");
-  const [error, setError] = useState("");
-
   useEffect(() => {
     void liveDbPath().then(setDbPath);
   }, []);
@@ -46,14 +45,13 @@ export default function SettingsPage() {
   async function handleBackup() {
     if (busy) return;
     setBusy("backup");
-    setError("");
     setSaved("");
     try {
       const result = await createBackup();
       if (result.saved) setSaved(t("settings.backupDone"));
     } catch (e) {
       console.error("Backup failed", e);
-      setError(t("settings.backupError"));
+      toast(t("settings.backupError"), "error");
     } finally {
       setBusy(null);
     }
@@ -62,7 +60,6 @@ export default function SettingsPage() {
   async function handleRestore() {
     if (busy) return;
     setBusy("restore");
-    setError("");
     setSaved("");
     try {
       const result = await restoreFromBackup(t("settings.restoreConfirm"));
@@ -72,14 +69,14 @@ export default function SettingsPage() {
       } else if (result.status === "error") {
         const key = result.message ?? "restoreError";
         const msg = key.includes(".") ? key : `settings.${key}`;
-        setError(t(msg as never));
+        toast(t(msg as never), "error");
       } else if (result.status === "cancelled") {
-        setError(t("settings.restoreCancelled"));
+        toast(t("settings.restoreCancelled"), "error");
       }
     } catch (e) {
       console.error("Restore failed", e);
       const raw = e instanceof Error ? e.message : String(e ?? "");
-      setError(raw ? `${t("settings.restoreError")} — ${raw}` : t("settings.restoreError"));
+      toast(raw ? `${t("settings.restoreError")} — ${raw}` : t("settings.restoreError"), "error");
     } finally {
       setBusy(null);
     }
@@ -89,7 +86,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <PageHeader title={t("nav.settings")} description={t("settings.subtitle")} />
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
       {saved && <p className="text-sm text-success">{saved}</p>}
 
       <SettingsAboutCard />

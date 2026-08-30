@@ -19,13 +19,13 @@ import { computeProfileSummary } from "../application/profile-summary";
 import { ProfileHeader } from "./profile-header";
 import { ProfilePageSkeleton } from "./profile-skeleton";
 import { ProfileSections, profileSectionDefaults } from "./profile-sections";
+import { toast } from "@/lib/toast-store";
 
 export default function StudentProfilePage() {
   const { id = "" } = useParams();
   const { t } = useTranslation();
   const [data, setData] = useState<StudentProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [weakPointsOpen, setWeakPointsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -35,12 +35,11 @@ export default function StudentProfilePage() {
 
   useEffect(() => {
     setLoading(true);
-    setError("");
     getStudentProfile(id)
       .then(setData)
       .catch((e) => {
         console.error("Failed to load student profile", e);
-        setError(t("profile.loadError"));
+        toast(t("profile.loadError"), "error");
       })
       .finally(() => setLoading(false));
   }, [id, reloadKey, t]);
@@ -55,8 +54,8 @@ export default function StudentProfilePage() {
   if (loading) {
     return <ProfilePageSkeleton />;
   }
-  if (error || !data) {
-    return <p className="py-16 text-center text-destructive">{error || t("profile.notFound")}</p>;
+  if (!data) {
+    return <p className="py-16 text-center text-destructive">{t("profile.notFound")}</p>;
   }
 
   const { student, planName, groups, sessionAttendance } = data;

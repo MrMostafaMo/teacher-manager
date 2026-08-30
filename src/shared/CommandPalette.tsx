@@ -58,7 +58,7 @@ export function CommandPalette() {
       label: t(a.labelKey),
       hint: "+",
       icon: a.icon,
-      shortcutCombo: fmt(`dialog:${a.id}`) ?? fmt(`action:${a.id}`),
+      shortcutCombo: a.dialog ? fmt(`dialog:${a.dialog}`) : fmt(`action:${a.id}`),
       run: () => {
         setOpen(false);
         if (a.dialog) openDialog(a.dialog);

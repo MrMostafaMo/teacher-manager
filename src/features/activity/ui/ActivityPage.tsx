@@ -13,6 +13,7 @@ import { listRecentActivity, ACTION_KEYS, type ActivityLogRow } from "@/lib/acti
 import { useTimeStore } from "@/lib/time-store";
 import { ENTITY_ICONS, detailsParts } from "./activity-presentation";
 import { useActivityColumns } from "./activity-columns";
+import { toast } from "@/lib/toast-store";
 
 export default function ActivityPage() {
   const { t } = useTranslation();
@@ -20,7 +21,6 @@ export default function ActivityPage() {
   const [rows, setRows] = useState<ActivityLogRow[]>([]);
   const [names, setNames] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [entity, setEntity] = useState("all");
 
@@ -37,7 +37,7 @@ export default function ActivityPage() {
         setNames(new Map(students.map((s) => [s.id, s.name])));
       } catch (e) {
         console.error("Failed to load activity", e);
-        if (!cancelled) setError(t("activity.loadError"));
+        if (!cancelled) toast(t("activity.loadError"), "error");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -96,10 +96,6 @@ export default function ActivityPage() {
 
       {loading ? (
         <TableRowsSkeleton rows={8} cols={4} />
-      ) : error ? (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-destructive">{error}</CardContent>
-        </Card>
       ) : filtered.length === 0 ? (
         <Card>
           <CardContent className="p-0">

@@ -5,6 +5,7 @@ import {
   listAllWeakPoints,
   type StudentWeakPoint,
 } from "@/features/weak-points/application/weak-point-cases";
+import { toast } from "@/lib/toast-store";
 
 export interface WeakPointsPageData {
   rows: StudentWeakPoint[];
@@ -24,13 +25,11 @@ export function useWeakPointsPageData(loadErrorMsg: string): WeakPointsPageData 
     Map<string, Array<{ id: string; name: string }>>
   >(new Map());
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setError("");
     void (async () => {
       try {
         const [weakPoints, allStudents, memberships] = await Promise.all([
@@ -50,7 +49,7 @@ export function useWeakPointsPageData(loadErrorMsg: string): WeakPointsPageData 
         setGroupsByStudent(map);
       } catch (e) {
         console.error("Failed to load weak points", e);
-        if (!cancelled) setError(loadErrorMsg);
+        if (!cancelled) toast(loadErrorMsg, "error");
       } finally {
         if (!cancelled) setLoading(false);
       }

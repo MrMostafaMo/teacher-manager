@@ -15,6 +15,7 @@ import { notifyUndo } from "@/lib/undo-store";
 import { ExamFormDialog } from "./ExamFormDialog";
 import { ExamDetailDialog } from "./ExamDetailDialog";
 import { ExamGroupSections } from "./exam-sections";
+import { toast } from "@/lib/toast-store";
 
 export default function ExamsPage() {
   const { t } = useTranslation();
@@ -22,7 +23,6 @@ export default function ExamsPage() {
   const [groups, setGroups] = useState<StudyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupsLoading, setGroupsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Exam | null>(null);
   const [defaultGroupId, setDefaultGroupId] = useState<string | undefined>(undefined);
@@ -42,12 +42,11 @@ export default function ExamsPage() {
 
   useEffect(() => {
     setLoading(true);
-    setError("");
     listExams()
       .then(setRows)
       .catch((e) => {
         console.error("Failed to load exams", e);
-        setError(t("exams.loadError"));
+        toast(t("exams.loadError"), "error");
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -65,7 +64,7 @@ export default function ExamsPage() {
         }
       } catch (e) {
         console.error("Failed to delete exam", e);
-        setError(t("exams.deleteError"));
+        toast(t("exams.deleteError"), "error");
       } finally {
         clear();
       }
@@ -97,7 +96,7 @@ export default function ExamsPage() {
         }
       />
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
 
       {loading || groupsLoading ? (
         <TableRowsSkeleton rows={5} cols={4} />

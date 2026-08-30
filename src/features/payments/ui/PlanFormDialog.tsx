@@ -11,6 +11,7 @@ import type { Plan } from "@/lib/db/schema";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";
 import { Field } from "@/shared/Field";
+import { toast } from "@/lib/toast-store";
 
 interface PlanFormDialogProps {
   open: boolean;
@@ -31,7 +32,6 @@ export function PlanFormDialog({ open, plan, onClose, onSaved }: PlanFormDialogP
   const { t } = useTranslation();
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -42,8 +42,7 @@ export function PlanFormDialog({ open, plan, onClose, onSaved }: PlanFormDialogP
         billingInterval: plan?.billingInterval ?? "monthly",
       });
       setErrors({});
-      setFatal("");
-    }
+      }
   }, [open, plan]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -64,7 +63,6 @@ export function PlanFormDialog({ open, plan, onClose, onSaved }: PlanFormDialogP
     if (saving) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       const input = {
         name: form.name,
@@ -78,7 +76,7 @@ export function PlanFormDialog({ open, plan, onClose, onSaved }: PlanFormDialogP
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
-      else setFatal(getErrorMessage(error));
+      else toast(getErrorMessage(error), "error");
     } finally {
       setSaving(false);
     }
@@ -123,7 +121,7 @@ export function PlanFormDialog({ open, plan, onClose, onSaved }: PlanFormDialogP
           </Field>
         </div>
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

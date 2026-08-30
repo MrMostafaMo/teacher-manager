@@ -18,15 +18,16 @@ interface DataTableProps<T> {
   /** Stable unique key per row. */
   getRowKey: (row: T, index: number) => string;
   className?: string;
+  ariaLabel?: string;
 }
 
 // ponytail: add scope="col" and aria-busy/aria-live for skeleton state when a11y audit demands it.
-function DataTableInner<T>({ columns, rows, getRowKey, className }: DataTableProps<T>) {
+function DataTableInner<T>({ columns, rows, getRowKey, className, ariaLabel }: DataTableProps<T>) {
   return (
     <div
       tabIndex={0}
       role="region"
-      aria-label="جدول"
+      aria-label={ariaLabel ?? "data-table"}
       className={cn("group/table overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]", className)}
     >
       <table className="w-full text-sm">

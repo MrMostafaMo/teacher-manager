@@ -1,10 +1,24 @@
+import { eq, inArray } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import {
+  studyGroups,
+  studentGroups,
+  attendance,
+  homeworks,
+  homeworkSubmissions,
+  exams,
+  examResults,
+  groupSessions,
+  sessionExceptions,
+  type Student,
+  type StudyGroup,
+} from "@/lib/db/schema";
 import { studyGroupInputSchema, type StudyGroupInput } from "@/features/groups/domain";
 import { groupRepository, type GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import { homeworkRepository } from "@/features/homework/infrastructure/homework-repo";
 import { examRepository } from "@/features/exams/infrastructure/exam-repo";
 import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
 import { logActivity } from "@/lib/activity-log";
-import type { Student, StudyGroup } from "@/lib/db/schema";
 import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
 import { captureGroup, captureMember, restoreGroup, restoreMember } from "./group-snapshot";
@@ -71,14 +85,23 @@ export async function deleteGroup(
   options: { undo?: boolean } = {},
 ): Promise<number | null> {
   const snapshot = options.undo === false ? null : await captureGroup(id);
-  await groupRepository.clearMembers(id);
-  // FKs are off — clear this group's homework + submissions or they orphan.
-  // ponytail: multiple deletes with no transaction; partial failure orphans rows.
-  await homeworkRepository.clearForGroup(id);
-  await examRepository.clearForGroup(id);
-  await scheduleRepository.clearForGroup(id);
-  const removed = await groupRepository.remove(id);
-  if (!removed) throw new Error(`group ${id} not found`);
+
+  const hwIds = db.select({ id: homeworks.id }).from(homeworks).where(eq(homeworks.groupId, id));
+  const exIds = db.select({ id: exams.id }).from(exams).where(eq(exams.groupId, id));
+  const sessIds = db.select({ id: groupSessions.id }).from(groupSessions).where(eq(groupSessions.groupId, id));
+
+  await db.batch([
+    db.delete(studentGroups).where(eq(studentGroups.groupId, id)),
+    db.delete(attendance).where(eq(attendance.groupId, id)),
+    db.delete(homeworkSubmissions).where(inArray(homeworkSubmissions.homeworkId, hwIds)),
+    db.delete(homeworks).where(eq(homeworks.groupId, id)),
+    db.delete(examResults).where(inArray(examResults.examId, exIds)),
+    db.delete(exams).where(eq(exams.groupId, id)),
+    db.delete(sessionExceptions).where(inArray(sessionExceptions.sessionId, sessIds)),
+    db.delete(groupSessions).where(eq(groupSessions.groupId, id)),
+    db.delete(studyGroups).where(eq(studyGroups.id, id)),
+  ]);
+
   await logActivity({ action: "group.delete", entityType: "group", entityId: id });
   if (!snapshot) return null;
   return registerUndo(() => restoreGroup(snapshot));

@@ -6,7 +6,9 @@ import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { DataTable } from "@/shared/DataTable";
+import { MonthPicker } from "@/shared/month-picker";
 import { Segmented } from "@/shared/Segmented";
+import dayjs from "dayjs";
 import {
   buildReportData,
   type ReportTranslations,
@@ -15,6 +17,7 @@ import { exportReportExcel, exportReportPdf } from "@/features/reports/applicati
 import type { ReportData, ReportKey } from "@/features/reports/domain";
 import { formatDate } from "@/lib/utils/format";
 import { ReportExportActions, useReportColumns } from "./report-actions";
+import { toast } from "@/lib/toast-store";
 
 const REPORT_KEYS: ReportKey[] = [
   "students",
@@ -35,9 +38,10 @@ export default function ReportsPage() {
   const [key, setKey] = useState<ReportKey>("students");
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [exporting, setExporting] = useState<"excel" | "pdf" | null>(null);
   const [saved, setSaved] = useState<"excel" | "pdf" | null>(null);
+
+  const [period, setPeriod] = useState(dayjs().format("YYYY-MM"));
 
   const translations = useCallback(
     (): ReportTranslations => ({
@@ -53,21 +57,20 @@ export default function ReportsPage() {
 
   useEffect(() => {
     setLoading(true);
-    setError("");
-    buildReportData(key, translations())
+    const periodArg = ["students", "skills", "weakPoints"].includes(key) ? undefined : period;
+    buildReportData(key, translations(), periodArg)
       .then(setData)
       .catch((e) => {
         console.error("Failed to build report", e);
-        setError(t("reports.loadError"));
+        toast(t("reports.loadError"), "error");
         setData(null);
       })
       .finally(() => setLoading(false));
-  }, [key, t, translations]);
+  }, [key, period, t, translations]);
 
   async function handleExport(kind: "excel" | "pdf") {
     if (!data || exporting) return;
     setExporting(kind);
-    setError("");
     setSaved(null);
     try {
       const ok =
@@ -80,7 +83,7 @@ export default function ReportsPage() {
       if (ok) setSaved(kind);
     } catch (e) {
       console.error("Export failed", e);
-      setError(t("reports.exportError"));
+      toast(t("reports.exportError"), "error");
     } finally {
       setExporting(null);
     }
@@ -103,15 +106,20 @@ export default function ReportsPage() {
         }
       />
 
-      <Segmented
-        value={key}
-        onChange={(v) => setKey(v as ReportKey)}
-        ariaLabel={t("nav.reports")}
-        options={REPORT_KEYS.map((k) => ({ value: k, label: t(`reports.types.${k}.label`) }))}
-        className="w-full overflow-x-auto"
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Segmented
+          value={key}
+          onChange={(v) => setKey(v as ReportKey)}
+          ariaLabel={t("nav.reports")}
+          options={REPORT_KEYS.map((k) => ({ value: k, label: t(`reports.types.${k}.label`) }))}
+          className="overflow-x-auto"
+        />
+        {!["students", "skills", "weakPoints"].includes(key) && (
+          <MonthPicker value={period} onChange={setPeriod} />
+        )}
+      </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
       {saved && <p className="text-sm text-success">{t("reports.saved")}</p>}
 
       <Card>

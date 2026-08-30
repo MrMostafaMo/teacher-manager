@@ -21,6 +21,7 @@ import {
   type StudentFormState,
 } from "./student-form";
 import { StudentFormFields } from "./StudentFormFields";
+import { toast } from "@/lib/toast-store";
 
 interface StudentFormDialogProps {
   open: boolean;
@@ -33,7 +34,6 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
   const { t } = useTranslation();
   const [form, setForm] = useState<StudentFormState>(emptyStudentForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [groups, setGroups] = useState<GroupWithCount[]>([]);
@@ -49,7 +49,6 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
     if (open) {
       setForm(initialStudentForm(student));
       setErrors({});
-      setFatal("");
       setSaving(false);
       setLoadedGroupId(null);
       setMembershipReady(!student);
@@ -83,7 +82,6 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
     if (saving || (student && !membershipReady)) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       const parsed = studentInputSchema.parse(form);
       if (student) {
@@ -102,7 +100,7 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
     } catch (error) {
       if (error instanceof ZodError) setErrors(studentFormErrors(t, error));
       else {
-        setFatal(getErrorMessage(error));
+        toast(getErrorMessage(error), "error");
         // The student already exists — closing prevents a retry duplicating them.
         if (studentCreated.current) {
           onSaved();
@@ -125,7 +123,7 @@ export function StudentFormDialog({ open, student, onClose, onSaved }: StudentFo
           onChange={setField}
         />
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

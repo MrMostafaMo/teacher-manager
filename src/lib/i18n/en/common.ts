@@ -24,6 +24,9 @@ export const common = {
   dismiss: "Dismiss",
   confirmMessage: "Are you sure?",
   search: "Search",
+  sidebar: {
+    toggle: "Toggle Sidebar",
+  },
   commandPalette: {
     title: "Command palette",
     placeholder: "Search pages, actions and students…",

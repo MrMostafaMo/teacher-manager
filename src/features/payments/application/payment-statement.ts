@@ -45,23 +45,13 @@ export function statementPeriods(
   return { firstPeriod, endPeriod };
 }
 
-/**
- * Pure statement math: one row per month from `firstPeriod` to `endPeriod`,
- * charging `duePerMonth` and crediting each month's payments, plus the
- * chronological ledger. A negative running/total means paid ahead (credit).
- */
+/** Statement math: one row per month from `firstPeriod` to `endPeriod`, charging `duePerMonth` and crediting payments. */
 export function computeStatement(
-  duePerMonth: number,
+  getPrice: (period: string) => number,
   payments: Payment[],
   firstPeriod: string,
   endPeriod: string,
-): {
-  months: StatementMonth[];
-  payments: StatementPayment[];
-  totalDue: number;
-  totalPaid: number;
-  totalBalance: number;
-} {
+): { months: StatementMonth[]; payments: StatementPayment[]; totalDue: number; totalPaid: number; totalBalance: number } {
   const sorted = [...payments].sort((a, b) => a.paidAt - b.paidAt);
   const paidByPeriod = new Map<string, number>();
   for (const p of sorted) {
@@ -71,12 +61,8 @@ export function computeStatement(
 
   const months: StatementMonth[] = [];
   let running = 0;
-  for (
-    let cur = firstPeriod;
-    cur <= endPeriod;
-    cur = dayjs(`${cur}-01`).add(1, "month").format("YYYY-MM")
-  ) {
-    const due = duePerMonth;
+  for (let cur = firstPeriod; cur <= endPeriod; cur = dayjs(`${cur}-01`).add(1, "month").format("YYYY-MM")) {
+    const due = getPrice(cur);
     const paid = paidByPeriod.get(cur) ?? 0;
     running += due - paid;
     months.push({ period: cur, due, paid, balance: due - paid, running });
@@ -107,6 +93,9 @@ export function computeStatement(
  */
 import { useSessionSettings } from "@/lib/session-settings-store";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
+import { db } from "@/lib/db/client";
+import { planPriceHistory } from "@/lib/db/schema";
+import { eq, asc } from "drizzle-orm";
 
 export async function studentStatement(studentId: string): Promise<StudentStatement> {
   const [student, plans, allPayments, allAttendances] = await Promise.all([
@@ -117,7 +106,25 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
   ]);
   if (!student) throw new Error(`student ${studentId} not found`);
   const plan = student.planId ? plans.find((p) => p.id === student.planId) : null;
-  const duePerMonth = plan?.amount ?? 0;
+  const historyRows = student.planId
+    ? await db
+        .select()
+        .from(planPriceHistory)
+        .where(eq(planPriceHistory.planId, student.planId))
+        .orderBy(asc(planPriceHistory.effectiveFrom))
+    : [];
+
+  const getPrice = (periodIso: string) => {
+    if (!plan) return 0;
+    const ms = dayjs(`${periodIso}-01`).valueOf();
+    let amount = plan.amount;
+    for (const h of historyRows) {
+      if (h.effectiveFrom <= ms) amount = h.amount;
+    }
+    return amount;
+  };
+
+  const duePerMonth = plan?.amount ?? 0; // fallback for session mode which isn't historically tracked yet
 
   const { billingMode, sessionsPerCycle } = useSessionSettings.getState();
 
@@ -165,7 +172,7 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
       allPayments,
       dayjs().format("YYYY-MM"),
     );
-    const math = computeStatement(duePerMonth, allPayments, firstPeriod, endPeriod);
+    const math = computeStatement(getPrice, allPayments, firstPeriod, endPeriod);
     months = math.months;
     ledger = math.payments;
     totalDue = math.totalDue;

@@ -71,7 +71,7 @@ export function DatePicker({
           className={navBtn}
           onClick={() => setView((v) => v.subtract(1, "month"))}
         >
-          <ChevronRight className="size-4 rtl:rotate-180" />
+          <ChevronLeft className="size-4 rtl:rotate-180" />
         </button>
         <div className="text-sm font-medium">
           {months[view.month()]} {view.year()}
@@ -82,7 +82,7 @@ export function DatePicker({
           className={navBtn}
           onClick={() => setView((v) => v.add(1, "month"))}
         >
-          <ChevronLeft className="size-4 rtl:rotate-180" />
+          <ChevronRight className="size-4 rtl:rotate-180" />
         </button>
       </div>
       <div role="grid" aria-label={t("common.selectDate")} className="grid grid-cols-7 gap-0.5">

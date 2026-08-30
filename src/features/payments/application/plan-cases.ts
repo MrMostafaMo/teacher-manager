@@ -2,7 +2,8 @@ import { planInputSchema, type PlanInput } from "@/features/payments/domain";
 import { planRepository, type PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import { logActivity } from "@/lib/activity-log";
-import { plans, students, type Plan } from "@/lib/db/schema";
+import { db } from "@/lib/db/client";
+import { plans, planPriceHistory, students, type Plan } from "@/lib/db/schema";
 import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
 import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
@@ -19,6 +20,14 @@ export function listPlans(): Promise<PlanWithCount[]> {
 export async function createPlan(input: PlanInput): Promise<Plan> {
   const parsed = planInputSchema.parse(input);
   const row = await planRepository.insert({ id: uuid(), ...parsed });
+  
+  await db.insert(planPriceHistory).values({
+    id: uuid(),
+    planId: row.id,
+    amount: row.amount,
+    effectiveFrom: Date.now(),
+  });
+
   await logActivity({
     action: "plan.create",
     entityType: "plan",
@@ -30,8 +39,21 @@ export async function createPlan(input: PlanInput): Promise<Plan> {
 
 export async function updatePlan(id: string, input: PlanInput): Promise<Plan> {
   const parsed = planInputSchema.parse(input);
+  
+  // Fetch current to see if amount changed
+  const current = await planRepository.findById(id);
   const row = await planRepository.update(id, parsed);
   if (!row) throw new Error(`plan ${id} not found`);
+
+  if (current && current.amount !== row.amount) {
+    await db.insert(planPriceHistory).values({
+      id: uuid(),
+      planId: row.id,
+      amount: row.amount,
+      effectiveFrom: Date.now(),
+    });
+  }
+
   await logActivity({
     action: "plan.update",
     entityType: "plan",

@@ -14,6 +14,7 @@ import { useMemberships, buildSections } from "./attendance-sections";
 import { SummaryCards } from "./SummaryCards";
 import { MonthlySummaryTable } from "./MonthlySummaryTable";
 import { EmptyStudents } from "./EmptyStudents";
+import { toast } from "@/lib/toast-store";
 
 const inputClass =
   "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
@@ -28,18 +29,16 @@ export function MonthlyView({
   const { t } = useTranslation();
   const [rows, setRows] = useState<StudentMonthlyRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const groupsByStudent = useMemberships();
   const { isCollapsed, toggle } = useCollapsedSections();
 
   useEffect(() => {
     setLoading(true);
-    setError("");
     getMonthly(month)
       .then(setRows)
       .catch((e) => {
         console.error("Failed to load monthly stats", e);
-        setError(t("attendance.errors.load"));
+        toast(t("attendance.errors.load"), "error");
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -83,7 +82,7 @@ export function MonthlyView({
         </div>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
 
       {!loading && rows.length > 0 && (
         <SummaryCards

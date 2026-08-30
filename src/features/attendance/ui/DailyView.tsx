@@ -12,6 +12,7 @@ import { DailyRosterCard } from "./DailyRosterCard";
 import { DailyToolbar } from "./daily-toolbar";
 import { DailyActions } from "./daily-actions";
 import { useDailySave } from "./use-daily-save";
+import { toast } from "@/lib/toast-store";
 
 export function DailyView({
   date,
@@ -27,7 +28,6 @@ export function DailyView({
     {},
   );
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [groups, setGroups] = useState<GroupWithCount[]>([]);
   const [groupId, setGroupId] = useState("");
   const [hasSessionsToday, setHasSessionsToday] = useState(true);
@@ -42,7 +42,6 @@ export function DailyView({
 
   async function load(date: string, groupId: string) {
     setLoading(true);
-    setError("");
     try {
       const { students, rows, hasSessionsToday, defaults } = await getDaily(
         date,
@@ -58,7 +57,7 @@ export function DailyView({
       setDraft(Object.fromEntries(students.map((s) => [s.id, byId[s.id] ?? defaults[s.id]])));
     } catch (e) {
       console.error("Failed to load attendance", e);
-      setError(t("attendance.errors.load"));
+      toast(t("attendance.errors.load"), "error");
       setStudents([]);
     } finally {
       setLoading(false);
@@ -131,7 +130,7 @@ export function DailyView({
         <p className="text-xs text-warning">{t("attendance.draftHint")}</p>
       )}
 
-      {(error || saveError) && <p className="text-sm text-destructive">{error || saveError}</p>}
+      {saveError && <p className="text-sm text-destructive">{saveError}</p>}
 
       <SummaryCards
         total={students.length}

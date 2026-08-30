@@ -13,6 +13,7 @@ import { notifyUndo } from "@/lib/undo-store";
 import { StatusBadge } from "./StatusBadge";
 import { useStudentDetail } from "./use-student-detail";
 import { StudentDetailBody } from "./student-detail-body";
+import { toast } from "@/lib/toast-store";
 
 interface StudentDetailDialogProps {
   student: Student;
@@ -29,7 +30,6 @@ export function StudentDetailDialog({
 }: StudentDetailDialogProps) {
   const { t } = useTranslation();
   const [confirming, setConfirming] = useState(false);
-  const [error, setError] = useState("");
   const [skillsOpen, setSkillsOpen] = useState(false);
   const { planName, skillSummary, setSkillSummary, groups, groupId, setGroupId } = useStudentDetail(
     student,
@@ -38,16 +38,14 @@ export function StudentDetailDialog({
 
   useEffect(() => {
     setConfirming(false);
-    setError("");
-  }, [student.id]);
+    }, [student.id]);
 
   async function handleClassChange(next: string) {
     setGroupId(next);
     try {
       await setStudentGroup(student.id, next || null);
-      setError("");
-    } catch {
-      setError(t("students.classError"));
+      } catch {
+      toast(t("students.classError"), "error");
     }
   }
 
@@ -69,7 +67,7 @@ export function StudentDetailDialog({
         );
       }
     } catch {
-      setError(t("students.deleteError"));
+      toast(t("students.deleteError"), "error");
     }
   }
 
@@ -95,7 +93,7 @@ export function StudentDetailDialog({
           onOpenSkills={() => setSkillsOpen(true)}
         />
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <ConfirmDeleteButton

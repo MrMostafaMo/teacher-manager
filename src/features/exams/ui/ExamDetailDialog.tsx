@@ -29,12 +29,9 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
   const [edits, setEdits] = useState<ExamEdits>({});
   const [loading, setLoading] = useState(true);
   const { saving, saved, run, clear } = useSaveFeedback();
-  const [error, setError] = useState("");
-
   const load = useCallback(() => {
     if (!examId) return;
     setLoading(true);
-    setError("");
     clear();
     getExamDetail(examId)
       .then((d) => {
@@ -50,7 +47,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
       })
       .catch((e) => {
         console.error("Failed to load exam", e);
-        setError(t("exams.loadError"));
+        toast(t("exams.loadError"), "error");
       })
       .finally(() => setLoading(false));
   }, [examId, t, clear]);
@@ -78,7 +75,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
       });
     } catch (e) {
       console.error("Failed to save exam results", e);
-      setError(t("exams.saveError"));
+      toast(t("exams.saveError"), "error");
     }
   }
 
@@ -93,8 +90,6 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
     >
       {loading ? (
         <CardSkeleton lines={4} />
-      ) : error ? (
-        <p className="text-sm text-destructive">{error}</p>
       ) : detail ? (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-sm">

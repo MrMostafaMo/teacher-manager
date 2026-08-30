@@ -12,6 +12,7 @@ import { Modal } from "@/shared/Modal";
 import { SessionEditor } from "./SessionEditor";
 import { useGroupSessions } from "./use-group-sessions";
 import { GroupFormFields, type GroupFormState } from "./group-form-fields";
+import { toast } from "@/lib/toast-store";
 
 interface GroupFormDialogProps {
   open: boolean;
@@ -35,7 +36,6 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
   const { t } = useTranslation();
   const [form, setForm] = useState<GroupFormState>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
   const {
     sessions,
@@ -64,7 +64,6 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
       notes: group?.notes ?? "",
     });
     setErrors({});
-    setFatal("");
     setSaving(false);
   }, [open, group]);
 
@@ -82,7 +81,6 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     if (saving) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       const input = {
         ...form,
@@ -113,7 +111,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     } catch (error) {
       if (error instanceof ZodError) setErrors(mapErrors(error));
       else {
-        setFatal(getErrorMessage(error));
+        toast(getErrorMessage(error), "error");
         // The group already exists — closing prevents a retry from duplicating it.
         if (groupPersisted.current) {
           onSaved();
@@ -144,7 +142,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
           onRemove={removeSession}
         />
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

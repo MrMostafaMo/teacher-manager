@@ -20,6 +20,7 @@ import { notifyUndo } from "@/lib/undo-store";
 import { HomeworkFormDialog } from "./HomeworkFormDialog";
 import { HomeworkDetailDialog } from "./HomeworkDetailDialog";
 import { HomeworksSection } from "./homework-sections";
+import { toast } from "@/lib/toast-store";
 
 export default function HomeworkPage() {
   const { t } = useTranslation();
@@ -27,7 +28,6 @@ export default function HomeworkPage() {
   const [groups, setGroups] = useState<StudyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupsLoading, setGroupsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Homework | null>(null);
   const [defaultGroupId, setDefaultGroupId] = useState<string | undefined>(undefined);
@@ -51,12 +51,11 @@ export default function HomeworkPage() {
 
   useEffect(() => {
     setLoading(true);
-    setError("");
     listHomeworks()
       .then(setRows)
       .catch((e) => {
         console.error("Failed to load homeworks", e);
-        setError(t("homework.loadError"));
+        toast(t("homework.loadError"), "error");
         setRows([]);
       })
       .finally(() => setLoading(false));
@@ -79,7 +78,7 @@ export default function HomeworkPage() {
         }
       } catch (e) {
         console.error("Failed to delete homework", e);
-        setError(t("homework.deleteError"));
+        toast(t("homework.deleteError"), "error");
       } finally {
         clear();
       }
@@ -111,7 +110,7 @@ export default function HomeworkPage() {
         }
       />
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
 
       {loading || groupsLoading ? (
         <TableRowsSkeleton rows={5} cols={4} />

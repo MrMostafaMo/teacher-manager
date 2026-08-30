@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center">
           <TriangleAlert className="size-10 text-destructive" />
-          <h1 className="text-lg font-semibold">ERR-v3 {i18n.t("error.title")}</h1>
+          <h1 className="text-lg font-semibold">{i18n.t("error.title")}</h1>
           <p className="max-w-md text-sm text-muted-foreground">{i18n.t("error.description")}</p>
           {this.state.message && (
             <>
@@ -41,13 +41,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 rows={3}
               />
               <Button variant="outline" size="sm" onClick={() => void navigator.clipboard.writeText(this.state.message ?? "")}>
-                نسخ التفاصيل
+                {i18n.t("error.copyDetails")}
               </Button>
             </>
           )}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => this.setState({ hasError: false, message: undefined })}>
-              حاول مرة أخرى
+              {i18n.t("error.tryAgain")}
             </Button>
             <Button onClick={() => window.location.reload()}>{i18n.t("common.retry")}</Button>
           </div>

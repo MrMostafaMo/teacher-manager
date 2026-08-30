@@ -63,7 +63,7 @@ export function MonthPicker({
           className={navBtn}
           onClick={() => setYear((y) => y - 1)}
         >
-          <ChevronRight className="size-4 rtl:rotate-180" />
+          <ChevronLeft className="size-4 rtl:rotate-180" />
         </button>
         <div className="text-sm font-medium">{year}</div>
         <button
@@ -72,7 +72,7 @@ export function MonthPicker({
           className={navBtn}
           onClick={() => setYear((y) => y + 1)}
         >
-          <ChevronLeft className="size-4 rtl:rotate-180" />
+          <ChevronRight className="size-4 rtl:rotate-180" />
         </button>
       </div>
       <div className="grid grid-cols-3 gap-1">

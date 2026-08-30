@@ -7,6 +7,9 @@ import type { GlobalDialogId } from "../dialog-store";
 
 const FOCUS_SELECTOR = "input,textarea,select,[contenteditable]";
 
+// Standard text-editing combos that must not be intercepted inside inputs.
+const EDITING_KEYS = new Set(["a", "c", "v", "x", "z"]);
+
 function isInTextInput(el: Element | null): boolean {
   return el?.matches(FOCUS_SELECTOR) ?? false;
 }
@@ -25,7 +28,7 @@ export function useShortcuts() {
         if (combo === "") continue;
         const parsedCombo = parseCombo(combo);
         if (!matchCombo(parsedCombo, e)) continue;
-        if (inInput && !hasModifier) continue;
+        if (inInput && (!hasModifier || ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && EDITING_KEYS.has(e.key.toLowerCase())))) continue;
         e.preventDefault();
         executeAction(id, navigate, openDialog);
         return;

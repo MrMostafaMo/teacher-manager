@@ -1,5 +1,5 @@
 import { db } from "@/lib/db/client";
-import { sql } from "drizzle-orm";
+import { sql, like } from "drizzle-orm";
 import { homeworks, homeworkSubmissions } from "@/lib/db/tables-homework";
 import { sessionAttendance } from "@/lib/db/tables-attendance";
 import { students, studyGroups, groupSessions } from "@/lib/db/tables-students";
@@ -7,8 +7,8 @@ import { eq, count } from "drizzle-orm";
 import type { ReportData } from "../domain";
 import type { ReportTranslations } from "./report-builders";
 
-export async function homeworkReport(t: ReportTranslations): Promise<ReportData> {
-  const rows = await db
+export async function homeworkReport(t: ReportTranslations, period?: string): Promise<ReportData> {
+  const query = db
     .select({
       studentId: homeworkSubmissions.studentId,
       studentName: students.name,
@@ -25,8 +25,10 @@ export async function homeworkReport(t: ReportTranslations): Promise<ReportData>
     })
     .from(homeworkSubmissions)
     .innerJoin(homeworks, eq(homeworkSubmissions.homeworkId, homeworks.id))
-    .innerJoin(students, eq(homeworkSubmissions.studentId, students.id))
-    .groupBy(homeworkSubmissions.studentId, students.name);
+    .innerJoin(students, eq(homeworkSubmissions.studentId, students.id));
+
+  if (period) query.where(like(homeworks.dueDate, `${period}-%`));
+  const rows = await query.groupBy(homeworkSubmissions.studentId, students.name);
 
   return {
     key: "homework",
@@ -39,8 +41,8 @@ export async function homeworkReport(t: ReportTranslations): Promise<ReportData>
   };
 }
 
-export async function sessionAttendanceReport(t: ReportTranslations): Promise<ReportData> {
-  const rows = await db
+export async function sessionAttendanceReport(t: ReportTranslations, period?: string): Promise<ReportData> {
+  const query = db
     .select({
       date: sessionAttendance.date,
       groupName: studyGroups.name,
@@ -60,9 +62,10 @@ export async function sessionAttendanceReport(t: ReportTranslations): Promise<Re
     })
     .from(sessionAttendance)
     .innerJoin(groupSessions, eq(sessionAttendance.sessionId, groupSessions.id))
-    .innerJoin(studyGroups, eq(groupSessions.groupId, studyGroups.id))
-    .groupBy(sessionAttendance.date, studyGroups.name)
-    .orderBy(sessionAttendance.date);
+    .innerJoin(studyGroups, eq(groupSessions.groupId, studyGroups.id));
+
+  if (period) query.where(like(sessionAttendance.date, `${period}-%`));
+  const rows = await query.groupBy(sessionAttendance.date, studyGroups.name).orderBy(sessionAttendance.date);
 
   return {
     key: "sessionAttendance",

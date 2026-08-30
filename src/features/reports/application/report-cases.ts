@@ -20,28 +20,32 @@ export type { ReportTranslations } from "./report-builders";
  * Queries live here (read-only aggregates) rather than a repository because
  * each report crosses tables.
  */
-export async function buildReportData(key: ReportKey, t: ReportTranslations): Promise<ReportData> {
+export async function buildReportData(
+  key: ReportKey,
+  t: ReportTranslations,
+  period?: string
+): Promise<ReportData> {
   switch (key) {
     case "students":
       return studentsReport(t);
     case "attendance":
-      return attendanceReport(t);
+      return attendanceReport(t, period);
     case "exams":
-      return examsReport(t);
+      return examsReport(t, period);
     case "payments":
-      return paymentsReport(t);
+      return paymentsReport(t, period);
     case "expenses":
-      return expensesReport(t);
+      return expensesReport(t, period);
     case "finances":
-      return financesReport(t);
+      return financesReport(t, period);
     case "skills":
       return skillsReport(t);
     case "weakPoints":
       return weakPointsReport(t);
     case "homework":
-      return homeworkReport(t);
+      return homeworkReport(t, period);
     case "sessionAttendance":
-      return sessionAttendanceReport(t);
+      return sessionAttendanceReport(t, period);
     case "statement":
       throw new Error("statement report requires a student id");
   }

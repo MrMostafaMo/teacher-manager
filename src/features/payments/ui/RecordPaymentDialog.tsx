@@ -16,6 +16,7 @@ import {
   type PaymentFormState,
 } from "./payment-form";
 import { PaymentFormFields } from "./payment-form-fields";
+import { toast } from "@/lib/toast-store";
 
 interface RecordPaymentDialogProps {
   open: boolean;
@@ -41,7 +42,6 @@ export function RecordPaymentDialog({
   const [plans, setPlans] = useState<Plan[]>([]);
   const [form, setForm] = useState<PaymentFormState>(emptyPaymentForm(defaultPeriod));
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [fatal, setFatal] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -51,7 +51,6 @@ export function RecordPaymentDialog({
     if (presetAmount != null) base.amount = String(presetAmount);
     setForm(base);
     setErrors({});
-    setFatal("");
     void listStudents({ status: "active" })
       .then(setStudents)
       .catch(() => setStudents([]));
@@ -85,7 +84,6 @@ export function RecordPaymentDialog({
     if (saving) return;
     setSaving(true);
     setErrors({});
-    setFatal("");
     try {
       const input = {
         studentId: form.studentId,
@@ -102,7 +100,7 @@ export function RecordPaymentDialog({
       onClose();
     } catch (error) {
       if (error instanceof ZodError) setErrors(paymentFormErrors(t, error));
-      else setFatal(getErrorMessage(error));
+      else toast(getErrorMessage(error), "error");
     } finally {
       setSaving(false);
     }
@@ -125,7 +123,7 @@ export function RecordPaymentDialog({
           setField={setField}
         />
 
-        {fatal && <p className="text-sm text-destructive">{fatal}</p>}
+        
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>

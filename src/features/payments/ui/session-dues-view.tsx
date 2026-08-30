@@ -1,3 +1,4 @@
+import { toast } from "@/lib/toast-store";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PiggyBank } from "lucide-react";
@@ -24,7 +25,6 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
   const warningAt = useSessionSettings((s) => s.warningAt);
   const [rows, setRows] = useState<SessionDuesRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showAll, setShowAll] = useState(true);
   const [recordRow, setRecordRow] = useState<SessionDuesRow | null>(null);
   const [open, setOpen] = useState(false);
@@ -32,7 +32,6 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
 
   const load = useCallback(() => {
     setLoading(true);
-    setError("");
     Promise.all([sessionDues(), groupRepository.list()])
       .then(([r, groups]) => {
         setRows(r);
@@ -42,7 +41,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
       })
       .catch((e) => {
         console.error(e);
-        setError(t("payments.loadError"));
+        toast(t("payments.loadError"), "error");
       })
       .finally(() => setLoading(false));
   }, [t]);
@@ -94,7 +93,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
           {showAll ? t("payments.sessions.showDueOnly") : t("payments.sessions.showAll")}
         </Button>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      
       {loading ? (
         <TableRowsSkeleton rows={5} cols={6} />
       ) : filtered.length === 0 ? (
