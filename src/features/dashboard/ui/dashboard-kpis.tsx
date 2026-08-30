@@ -46,6 +46,25 @@ function KpiDelta({ delta, invert }: { delta: number | null; invert?: boolean })
   );
 }
 
+function DecorativeSparkline({ delta }: { delta?: number | null }) {
+  if (delta === undefined || delta === null) return null;
+  
+  return (
+    <svg 
+      className="absolute bottom-0 left-0 right-0 h-16 w-full opacity-[0.04] pointer-events-none text-foreground dark:opacity-[0.08]" 
+      preserveAspectRatio="none" 
+      viewBox="0 0 100 100"
+      aria-hidden="true"
+    >
+      {delta >= 0 ? (
+        <path d="M0,100 C20,80 40,90 60,40 C80,-10 90,20 100,10 L100,100 Z" fill="currentColor" />
+      ) : (
+        <path d="M0,10 C20,20 40,-10 60,40 C80,90 90,80 100,100 L100,100 L0,100 Z" fill="currentColor" />
+      )}
+    </svg>
+  );
+}
+
 export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
   const { t } = useTranslation();
   return (
@@ -54,7 +73,7 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
         const { key, value, icon: Icon, delta, invert, to } = kpi;
         const accent = KPI_COLOR[key];
         const body = (
-          <CardContent className="flex items-start justify-between gap-2 p-4">
+          <CardContent className="relative z-10 flex h-full items-start justify-between gap-2 p-4">
             <div className="min-w-0 space-y-2">
               <span className="block truncate text-xs text-muted-foreground">
                 {t(`dashboard.kpis.${key}`)}
@@ -82,10 +101,11 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
               backgroundImage: `linear-gradient(135deg, ${KPI_TINT[key]}, transparent)`,
             }}
             className={cn(
-              "animate-in fade-in slide-in-from-bottom-2 fill-mode-both transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
+              "relative overflow-hidden animate-in fade-in slide-in-from-bottom-2 fill-mode-both transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
               to && "hover:ring-primary/30",
             )}
           >
+            <DecorativeSparkline delta={delta} />
             {to ? (
               <Link
                 to={to}

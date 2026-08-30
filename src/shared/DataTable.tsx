@@ -30,8 +30,8 @@ function DataTableInner<T>({ columns, rows, getRowKey, className }: DataTablePro
       className={cn("group/table overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]", className)}
     >
       <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/60 text-xs text-muted-foreground">
+        <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-md shadow-sm">
+          <tr className="border-b text-xs text-muted-foreground">
             {columns.map((col, i) => (
               <th
                 key={i}

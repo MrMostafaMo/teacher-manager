@@ -168,18 +168,28 @@ const DashboardContent = memo(function DashboardContent({
       ) : null}
       <DashboardQuickActions newStudents={data.deltas.newStudents} />
       <KpiGrid kpis={kpis} />
-      <TodaySessionsCard sessions={data.todaySessions} />
-      <SessionDuesCard rows={data.sessionDues as never} />
-      <OverdueHomeworksCard items={data.overdueHomeworks} />
-      <TopDebtorsCard debtors={data.topDebtors} />
-      <WeakPointsCard items={data.topWeakPoints} />
-      <AttendanceHomeworkCharts
-        attendanceChart={attendanceChart}
-        homeworkPie={homeworkPie}
-        homeworkCount={data.homeworkCount}
-      />
-      <FinanceCharts financeChart={financeChart} />
-      <WeakSkillsCard skills={data.weakSkills} totalStudents={data.totalStudents} />
+      
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        {/* Main Column (Charts & Wide Cards) */}
+        <div className="space-y-6 xl:col-span-2">
+          <TodaySessionsCard sessions={data.todaySessions} />
+          <AttendanceHomeworkCharts
+            attendanceChart={attendanceChart}
+            homeworkPie={homeworkPie}
+            homeworkCount={data.homeworkCount}
+          />
+          <FinanceCharts financeChart={financeChart} />
+          <WeakSkillsCard skills={data.weakSkills} totalStudents={data.totalStudents} />
+        </div>
+
+        {/* Sidebar Column (Lists & Alerts) */}
+        <div className="space-y-6">
+          <SessionDuesCard rows={data.sessionDues as never} />
+          <OverdueHomeworksCard items={data.overdueHomeworks} />
+          <TopDebtorsCard debtors={data.topDebtors} />
+          <WeakPointsCard items={data.topWeakPoints} />
+        </div>
+      </div>
     </div>
   );
 });

@@ -59,7 +59,7 @@ export function AppLayout() {
             key={`${pathname}:${dataVersion}`}
             className={
               animateEntrance
-                ? "mx-auto max-w-[1720px] animate-in fade-in-0 slide-in-from-bottom-2 duration-500 ease-out fill-mode-both"
+                ? "mx-auto max-w-[1720px] animate-in fade-in-0 zoom-in-[0.98] slide-in-from-bottom-2 duration-300 ease-out fill-mode-both"
                 : "mx-auto max-w-[1720px]"
             }
           >
