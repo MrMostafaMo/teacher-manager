@@ -142,5 +142,5 @@ function buildStatement(
   const payments = paymentRows.map((r) => r.payment);
   const todayIso = currentMonth();
   const { firstPeriod, endPeriod } = statementPeriods(student, payments, todayIso);
-  return computeStatement(duePerMonth, payments, firstPeriod, endPeriod);
+  return computeStatement(() => duePerMonth, payments, firstPeriod, endPeriod);
 }

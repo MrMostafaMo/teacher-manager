@@ -25,7 +25,9 @@ export async function createPlan(input: PlanInput): Promise<Plan> {
     id: uuid(),
     planId: row.id,
     amount: row.amount,
-    effectiveFrom: Date.now(),
+    effectiveFrom: new Date(),
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   });
 
   await logActivity({
@@ -50,7 +52,9 @@ export async function updatePlan(id: string, input: PlanInput): Promise<Plan> {
       id: uuid(),
       planId: row.id,
       amount: row.amount,
-      effectiveFrom: Date.now(),
+      effectiveFrom: new Date(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
   }
 

@@ -5,13 +5,7 @@ import {
   studentRepository,
   type StudentFilters,
 } from "@/features/students/infrastructure/student-repo";
-import { skillRepository } from "@/features/skills/infrastructure/skill-repo";
-import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
-import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
-import { groupRepository } from "@/features/groups/infrastructure/group-repo";
-import { homeworkRepository } from "@/features/homework/infrastructure/homework-repo";
-import { examRepository } from "@/features/exams/infrastructure/exam-repo";
-import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
+
 import { logActivity } from "@/lib/activity-log";
 import {
   attendance,

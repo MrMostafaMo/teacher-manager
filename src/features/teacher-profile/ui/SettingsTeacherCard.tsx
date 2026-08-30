@@ -8,13 +8,14 @@ import { Field } from "@/shared/Field";
 import { useToastStore } from "@/lib/toast-store";
 import { ZodError } from "zod";
 import { getTeacherProfile, upsertTeacherProfile } from "../application/teacher-profile-cases";
-import { toast } from "@/lib/toast-store";
 
 export function SettingsTeacherCard() {
   const { t } = useTranslation();
   const toast = useToastStore((s) => s.push);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     void getTeacherProfile().then((p) => setName(p?.name ?? ""));
   }, []);
@@ -22,10 +23,10 @@ export function SettingsTeacherCard() {
   async function handleSave() {
     const trimmed = name.trim();
     if (!trimmed) {
-      toast(t("teacher.settings.required"), "error");
+      setError(t("teacher.settings.required"));
       return;
     }
-    toast(null, "error");
+    setError(null);
     setSaving(true);
     try {
       await upsertTeacherProfile({ name: trimmed });
@@ -35,8 +36,8 @@ export function SettingsTeacherCard() {
       console.error("teacher save failed", error);
       if (error instanceof ZodError) {
         const issue = error.issues[0];
-        if (issue?.path[0] === "name") toast(issue.message, "error");
-        else toast(t("teacher.settings.required"), "error");
+        if (issue?.path[0] === "name") setError(issue.message);
+        else setError(t("teacher.settings.required"));
         return;
       }
       const msg = error instanceof Error ? error.message : "";

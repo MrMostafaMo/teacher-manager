@@ -39,16 +39,16 @@ describe('student-cases', () => {
   });
 
   it('createStudent should validate and insert a student', async () => {
-    vi.mocked(studentRepository.insert).mockResolvedValueOnce({ id: 's1', name: 'Test Student' } as any);
-    const result = await createStudent({ name: 'Test Student', status: 'active', enrolledOn: '2026-01-01' });
+    vi.mocked(studentRepository.insert).mockResolvedValueOnce({ id: 's1', name: 'Test' } as any);
+    const result = await createStudent({ name: 'Test', status: 'active', enrolledOn: '2026-01-01' } as any);
     expect(result.id).toBe('s1');
     expect(studentRepository.insert).toHaveBeenCalled();
   });
 
   it('updateStudent should update and return the student', async () => {
     vi.mocked(studentRepository.update).mockResolvedValueOnce({ id: 's1', name: 'Updated' } as any);
-    const result = await updateStudent('s1', { name: 'Updated', status: 'active', enrolledOn: '2026-01-01' });
-    expect(result.name).toBe('Updated');
+    const result = await updateStudent('s1', { name: 'Updated', status: 'active', enrolledOn: '2026-01-01' } as any);
+    expect(result!.name).toBe('Updated');
     expect(studentRepository.update).toHaveBeenCalledWith('s1', expect.any(Object));
   });
 

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { listStudents } from "@/features/students/application/student-cases";
+import { toast } from "@/lib/toast-store";
 import { listMemberships } from "@/features/groups/application/group-cases";
 import {
   listAllWeakPoints,
   type StudentWeakPoint,
 } from "@/features/weak-points/application/weak-point-cases";
-import { toast } from "@/lib/toast-store";
 
 export interface WeakPointsPageData {
   rows: StudentWeakPoint[];
@@ -13,7 +13,6 @@ export interface WeakPointsPageData {
   names: Map<string, string>;
   groupsByStudent: Map<string, Array<{ id: string; name: string }>>;
   loading: boolean;
-  error: string;
   reload: () => void;
 }
 
@@ -61,5 +60,5 @@ export function useWeakPointsPageData(loadErrorMsg: string): WeakPointsPageData 
 
   const names = useMemo(() => new Map(students.map((s) => [s.id, s.name])), [students]);
   const reload = () => setReloadKey((k) => k + 1);
-  return { rows, students, names, groupsByStudent, loading, error, reload };
+  return { rows, students, names, groupsByStudent, loading, reload };
 }

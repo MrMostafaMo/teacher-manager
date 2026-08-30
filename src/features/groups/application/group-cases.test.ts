@@ -46,15 +46,15 @@ describe('group-cases', () => {
 
   it('createGroup should validate and insert a group', async () => {
     vi.mocked(groupRepository.insert).mockResolvedValueOnce({ id: 'g1', name: 'Test Group' } as any);
-    const result = await createGroup({ name: 'Test Group', sessions: [], status: 'active' });
+    const result = await createGroup({ name: 'Test Group', status: 'active' });
     expect(result.id).toBe('g1');
     expect(groupRepository.insert).toHaveBeenCalled();
   });
 
   it('updateGroup should update and return the group', async () => {
     vi.mocked(groupRepository.update).mockResolvedValueOnce({ id: 'g1', name: 'Updated' } as any);
-    const result = await updateGroup('g1', { name: 'Updated', sessions: [], status: 'active' });
-    expect(result.name).toBe('Updated');
+    const result = await updateGroup('g1', { name: 'Updated', status: 'active' });
+    expect(result!.name).toBe('Updated');
     expect(groupRepository.update).toHaveBeenCalledWith('g1', expect.any(Object));
   });
 

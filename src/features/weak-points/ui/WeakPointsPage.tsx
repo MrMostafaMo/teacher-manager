@@ -29,7 +29,7 @@ import { WeakPointEntryDialog } from "./WeakPointEntryDialog";
 export default function WeakPointsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { rows, students, names, groupsByStudent, loading, error, reload } = useWeakPointsPageData(
+  const { rows, students, names, groupsByStudent, loading, reload } = useWeakPointsPageData(
     t("weakPoints.loadError"),
   );
   const [status, setStatus] = useState<WeakPointStatusFilter>("all");
@@ -108,11 +108,7 @@ export default function WeakPointsPage() {
       />
 
       {loading ? (
-        <TableRowsSkeleton rows={8} cols={5} />
-      ) : error ? (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-destructive">{error}</CardContent>
-        </Card>
+        <TableRowsSkeleton rows={8} cols={4} />
       ) : filtered.length === 0 ? (
         <Card>
           <CardContent className="p-0">

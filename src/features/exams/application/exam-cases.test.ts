@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createExam, updateExam, deleteExam } from './exam-cases';
 import { examRepository } from '@/features/exams/infrastructure/exam-repo';
-import { db } from '@/lib/db/client';
 
 vi.mock('@/features/exams/infrastructure/exam-repo', () => ({
   examRepository: {
@@ -52,12 +51,12 @@ describe('exam-cases', () => {
   it('updateExam should update and return the exam', async () => {
     vi.mocked(examRepository.update).mockResolvedValueOnce({ id: 'e1', title: 'Updated' } as any);
     const result = await updateExam('e1', { title: 'Updated', groupId: 'g1', date: '2026-01-01', maxScore: 100 });
-    expect(result.title).toBe('Updated');
+    expect(result!.title).toBe('Updated');
     expect(examRepository.update).toHaveBeenCalledWith('e1', expect.any(Object));
   });
 
   it('deleteExam should delete the exam', async () => {
-    vi.mocked(examRepository.remove).mockResolvedValueOnce(1);
+    vi.mocked(examRepository.remove).mockResolvedValueOnce(true as any);
     await deleteExam('e1', { undo: false });
     expect(examRepository.remove).toHaveBeenCalledWith('e1');
   });

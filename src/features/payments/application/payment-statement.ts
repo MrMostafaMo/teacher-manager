@@ -119,7 +119,7 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
     const ms = dayjs(`${periodIso}-01`).valueOf();
     let amount = plan.amount;
     for (const h of historyRows) {
-      if (h.effectiveFrom <= ms) amount = h.amount;
+      if (h.effectiveFrom.getTime() <= ms) amount = h.amount;
     }
     return amount;
   };
