@@ -5,7 +5,14 @@ export type SessionDuesStatus = "ok" | "warning" | "due";
 export interface SessionDuesRow {
   student: Student;
   plan: Plan | null;
+  /** الموضع داخل الدورة الحالية (0..S) — يُعرض كـ count */
   count: number;
+  /** العدّ الخام منذ آخر دفع (قبل الـmodulo) — للحسابات والفرز */
+  rawCount: number;
+  /** عدد الدورات المكتملة بلا دفع */
+  cyclesOverdue: number;
+  /** true عندما rawCount >= S (حتى لو display == 1 بعد اللف) */
+  isOverdue: boolean;
   status: SessionDuesStatus;
   remainingSessions: number;
   pricePerSession: number | null;
@@ -66,6 +73,25 @@ export function statusForCount(
   return "ok";
 }
 
+export function deriveCycle(
+  rawCount: number,
+  sessionsPerCycle: number,
+  warningAt: number,
+): { displayCount: number; remainingSessions: number; cyclesOverdue: number; isOverdue: boolean; status: SessionDuesStatus } {
+  const S = Number.isFinite(sessionsPerCycle) ? sessionsPerCycle : 8;
+  const W = Number.isFinite(warningAt) ? warningAt : S - 2;
+  const raw = Math.max(0, Number(rawCount) || 0);
+  if (S <= 0) return { displayCount: raw, remainingSessions: 0, cyclesOverdue: 0, isOverdue: false, status: "ok" };
+  const cyclesOverdue = Math.floor(raw / S);
+  const isOverdue = cyclesOverdue > 0;
+  const rem = raw % S;
+  const displayCount = raw === 0 ? 0 : rem === 0 ? S : rem;
+  const remainingSessions = raw === 0 ? S : rem === 0 ? 0 : S - rem;
+  const baseStatus = statusForCount(displayCount, S, W);
+  const status: SessionDuesStatus = isOverdue ? "due" : baseStatus;
+  return { displayCount, remainingSessions, cyclesOverdue, isOverdue, status };
+}
+
 export function buildSessionDues(
   students: Student[],
   paymentsByStudent: Map<string, Payment[]>,
@@ -83,19 +109,21 @@ export function buildSessionDues(
     // ponytail: manual offset per student (extra sessions counted toward the cycle).
     const offset = Number((student as unknown as { sessionOffset?: number }).sessionOffset ?? 0) || 0;
     const base = countSince(payments, attendances);
-    const count = Math.max(0, base + offset);
-    const status = statusForCount(count, sessionsPerCycle, warningAt);
+    const rawCount = Math.max(0, base + offset);
+    const derived = deriveCycle(rawCount, sessionsPerCycle, warningAt);
     const price = pricePerSession(plan, sessionsPerCycle);
-    const remainingSessions = Math.max(0, sessionsPerCycle - count);
     const last = lastPayment(payments);
     rows.push({
       student,
       plan,
-      count,
-      status,
-      remainingSessions,
+      count: derived.displayCount,
+      rawCount,
+      cyclesOverdue: derived.cyclesOverdue,
+      isOverdue: derived.isOverdue,
+      status: derived.status,
+      remainingSessions: derived.remainingSessions,
       pricePerSession: price,
-      remainingAmount: price != null ? remainingSessions * price : null,
+      remainingAmount: price != null ? derived.remainingSessions * price : null,
       fullCycleAmount: plan ? plan.amount : null,
       lastPaidISO: last ? toISODate(last.paidAt) : null,
       lastPaidAmount: last ? last.amount : null,
@@ -106,7 +134,8 @@ export function buildSessionDues(
     const order = { due: 0, warning: 1, ok: 2 } as const;
     const d = order[a.status] - order[b.status];
     if (d !== 0) return d;
-    if (b.count !== a.count) return b.count - a.count;
+    if ((b.cyclesOverdue ?? 0) !== (a.cyclesOverdue ?? 0)) return (b.cyclesOverdue ?? 0) - (a.cyclesOverdue ?? 0);
+    if ((b.rawCount ?? b.count) !== (a.rawCount ?? a.count)) return (b.rawCount ?? b.count) - (a.rawCount ?? a.count);
     return a.student.name.localeCompare(b.student.name);
   });
   return rows;

@@ -23,7 +23,8 @@ export function sessionColumns(
         const c = Number(r.count) || 0;
         const rem = Number(r.remainingSessions) || 0;
         const total = c + rem;
-        return `${c}/${Number.isFinite(total) ? total : c}`;
+        if (!Number.isFinite(total) || total <= 0) return <span dir="ltr">{`${c}/8`}</span>;
+        return <span dir="ltr">{`${c}/${total}`}</span>;
       },
     },
     {
@@ -47,7 +48,20 @@ export function sessionColumns(
               ? t("payments.sessions.warning")
               : t("payments.sessions.ok");
         const variant = r.status === "due" ? "destructive" : r.status === "warning" ? "secondary" : "outline";
-        return <Badge variant={variant as never}>{label}</Badge>;
+        const row = r as unknown as { isOverdue?: boolean; cyclesOverdue?: number };
+        const showUnpaid = Boolean(row.isOverdue);
+        return (
+          <span className="inline-flex items-center gap-1.5">
+            <Badge variant={variant as never}>{label}</Badge>
+            {showUnpaid && (
+              <Badge variant="outline" className="border-destructive/40 text-destructive">
+                {row.cyclesOverdue != null && row.cyclesOverdue > 1
+                  ? t("payments.sessions.unpaidCycles", { count: row.cyclesOverdue })
+                  : t("payments.sessions.unpaid")}
+              </Badge>
+            )}
+          </span>
+        );
       },
     },
     {
@@ -58,7 +72,8 @@ export function sessionColumns(
       header: t("payments.sessions.adjust"),
       render: (r) => {
         const busy = busyId === r.student.id;
-        const atZero = (Number(r.count) || 0) <= 0;
+        const raw = Number((r as unknown as { rawCount?: number }).rawCount ?? r.count) || 0;
+        const atZero = raw <= 0;
         if (!onAdd || !onRemove) return null;
         return (
           <div className="flex items-center gap-1">

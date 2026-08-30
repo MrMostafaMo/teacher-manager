@@ -46,6 +46,8 @@ export const payments: Messages["payments"] = {
     due: "مستحق",
     warning: "اقترب",
     ok: "عادي",
+    unpaid: "لم يدفع",
+    unpaidCycles: "×{{count}} دورات",
     recordFor: "تسجيل لـ {{name}}",
     reset: "تصفير",
     showAll: "عرض الكل",

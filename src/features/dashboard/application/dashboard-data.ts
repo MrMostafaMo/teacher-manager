@@ -51,5 +51,7 @@ export interface DashboardData {
     count: number;
     remainingSessions: number;
     status: "ok" | "warning" | "due";
+    isOverdue?: boolean;
+    cyclesOverdue?: number;
   }>;
 }

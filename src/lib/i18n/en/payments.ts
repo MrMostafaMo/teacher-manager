@@ -44,6 +44,8 @@ export const payments = {
     due: "Due",
     warning: "Soon",
     ok: "OK",
+    unpaid: "Unpaid",
+    unpaidCycles: "×{{count}} cycles",
     recordFor: "Record for {{name}}",
     reset: "Reset",
     showAll: "Show all",

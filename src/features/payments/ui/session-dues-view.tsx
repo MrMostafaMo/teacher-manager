@@ -7,7 +7,7 @@ import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { sessionDues, type SessionDuesRow } from "@/features/payments/application/session-dues-cases";
 import { useSessionSettings } from "@/lib/session-settings-store";
 import { compareGroupsByName } from "@/lib/utils/group-sort";
-import { statusForCount } from "@/features/payments/application/session-dues";
+import { deriveCycle } from "@/features/payments/application/session-dues";
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
@@ -116,12 +116,22 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
             const Wraw = rawW != null && Number.isFinite(Number(rawW)) ? Number(rawW) : (rawS != null && Number.isFinite(Number(rawS)) ? Number(rawS) - 2 : Number(warningAt) || 6);
             const W = Number.isFinite(Wraw) ? Wraw : S - 2;
             const effRows = sec.rows.map((r) => {
-              const count = Number(r.count) || 0;
+              const raw = Number((r as unknown as { rawCount?: number }).rawCount ?? r.count) || 0;
               const Snum = Number(S) || 8;
-              const st = statusForCount(count, Snum, Number(W) || Snum - 2);
-              const remaining = Math.max(0, Snum - count);
+              const Wnum = Number(W) || Snum - 2;
+              const d = deriveCycle(raw, Snum, Wnum);
               const price = r.pricePerSession != null && Number.isFinite(Snum) && Snum > 0 ? Math.round((r.fullCycleAmount ?? 0) / Snum) : r.pricePerSession;
-              return { ...r, count, status: st, remainingSessions: remaining, pricePerSession: price, remainingAmount: price != null ? remaining * price : null } as SessionDuesRow;
+              return {
+                ...r,
+                count: d.displayCount,
+                rawCount: raw,
+                cyclesOverdue: d.cyclesOverdue,
+                isOverdue: d.isOverdue,
+                status: d.status,
+                remainingSessions: d.remainingSessions,
+                pricePerSession: price,
+                remainingAmount: price != null ? d.remainingSessions * price : null,
+              } as SessionDuesRow;
             });
             const warn = effRows.filter((r) => r.status === "warning").length;
             const due = effRows.filter((r) => r.status === "due").length;

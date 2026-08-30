@@ -4,7 +4,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CardLink } from "@/shared/CardLink";
 import { Avatar } from "@/shared/Avatar";
-type CardRow = { student: { id: string; name: string }; count: number; remainingSessions: number; status: "ok" | "warning" | "due" };
+type CardRow = { student: { id: string; name: string }; count: number; remainingSessions: number; status: "ok" | "warning" | "due"; isOverdue?: boolean; cyclesOverdue?: number };
 
 export function SessionDuesCard({ rows }: { rows: CardRow[] }) {
   const { t } = useTranslation();
@@ -27,10 +27,17 @@ export function SessionDuesCard({ rows }: { rows: CardRow[] }) {
                   <span className="truncate text-sm font-medium">{r.student.name}</span>
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="text-sm tabular-nums">{r.count}/{r.count + r.remainingSessions}</span>
+                  <span className="text-sm tabular-nums" dir="ltr">{r.count}/{r.count + r.remainingSessions}</span>
                   <Badge variant={r.status === "due" ? "destructive" : "secondary"}>
                     {r.status === "due" ? t("dashboard.sessions.due") : t("dashboard.sessions.warning")}
                   </Badge>
+                  {r.isOverdue && (
+                    <Badge variant="outline" className="border-destructive/40 text-destructive text-[10px] px-1 py-0">
+                      {r.cyclesOverdue != null && r.cyclesOverdue > 1
+                        ? t("payments.sessions.unpaidCycles", { count: r.cyclesOverdue })
+                        : t("payments.sessions.unpaid")}
+                    </Badge>
+                  )}
                 </span>
               </div>
             ))}
