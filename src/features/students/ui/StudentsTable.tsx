@@ -13,18 +13,50 @@ import { StatusBadge } from "./StatusBadge";
 export const StudentsTable = memo(function StudentsTable({
   list,
   deletingId,
+  selectedIds,
   onOpen,
   onDelete,
+  onToggle,
+  onToggleAll,
 }: {
   list: Student[];
   deletingId: string | null;
+  selectedIds: Set<string>;
   onOpen: (student: Student) => void;
   onDelete: (student: Student) => void;
+  onToggle: (id: string, checked: boolean) => void;
+  onToggleAll: (checked: boolean) => void;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const allSelected = list.length > 0 && list.every((s) => selectedIds.has(s.id));
+  const someSelected = list.some((s) => selectedIds.has(s.id));
+
   const columns = useMemo<DataTableColumn<Student>[]>(
     () => [
+      {
+        header: (
+          <input
+            type="checkbox"
+            className="rounded border-input text-primary focus:ring-primary size-4"
+            checked={allSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = someSelected && !allSelected;
+            }}
+            onChange={(e) => onToggleAll(e.target.checked)}
+          />
+        ),
+        className: "w-8",
+        headerClassName: "w-8",
+        render: (s) => (
+          <input
+            type="checkbox"
+            className="rounded border-input text-primary focus:ring-primary size-4"
+            checked={selectedIds.has(s.id)}
+            onChange={(e) => onToggle(s.id, e.target.checked)}
+          />
+        ),
+      },
       {
         header: t("students.columns.name"),
         render: (s) => (
@@ -93,7 +125,7 @@ export const StudentsTable = memo(function StudentsTable({
         ),
       },
     ],
-    [t, navigate, deletingId, onOpen, onDelete],
+    [t, navigate, deletingId, onOpen, onDelete, selectedIds, allSelected, someSelected, onToggle, onToggleAll],
   );
   const getRowKey = useCallback((s: Student) => s.id, []);
   return <DataTable<Student> columns={columns} rows={list} getRowKey={getRowKey} />;

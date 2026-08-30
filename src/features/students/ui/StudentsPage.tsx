@@ -16,6 +16,7 @@ import { StudentFilters } from "./StudentFilters";
 import { StudentsDialogs } from "./students-dialogs";
 import { StudentsEmpty } from "./StudentsTable";
 import { StudentsSections } from "./student-sections";
+import { useStudentBulkSelection } from "./use-student-bulk";
 
 type StatusFilter = "all" | "active" | "inactive";
 
@@ -96,6 +97,9 @@ export default function StudentsPage() {
     [request, clear, reload, t],
   );
 
+  const { selectedIds, toggleSelection, toggleAllSelection, handleBulkDelete } =
+    useStudentBulkSelection(async () => void reload());
+
   const { sections, ungrouped } = useMemo(
     () => buildSectionsByGroup(rows, (s) => groupsByStudent.get(s.id) ?? []),
     [rows, groupsByStudent],
@@ -107,10 +111,20 @@ export default function StudentsPage() {
         title={t("nav.students")}
         description={t("students.subtitle")}
         actions={
-          <Button onClick={openCreate}>
-            <Plus />
-            {t("students.add")}
-          </Button>
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <Button
+                variant="destructive"
+                onClick={() => void handleBulkDelete(t("students.confirmBulkDelete", { count: selectedIds.size }))}
+              >
+                {t("students.bulkDelete")} ({selectedIds.size})
+              </Button>
+            )}
+            <Button onClick={openCreate}>
+              <Plus />
+              {t("students.add")}
+            </Button>
+          </div>
         }
       />
 
@@ -139,6 +153,9 @@ export default function StudentsPage() {
           onToggle={toggle}
           onOpen={openEdit}
           onDelete={handleRowDelete}
+          selectedIds={selectedIds}
+          onToggleSelection={toggleSelection}
+          onToggleAllSelection={toggleAllSelection}
         />
       )}
 

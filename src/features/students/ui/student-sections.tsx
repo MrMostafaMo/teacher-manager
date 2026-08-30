@@ -12,6 +12,9 @@ interface StudentsSectionsProps {
   onToggle: (id: string) => void;
   onOpen: (student: Student) => void;
   onDelete: (student: Student) => void;
+  selectedIds: Set<string>;
+  onToggleSelection: (id: string, checked: boolean) => void;
+  onToggleAllSelection: (list: Student[], checked: boolean) => void;
 }
 
 export function StudentsSections({
@@ -22,6 +25,9 @@ export function StudentsSections({
   onToggle,
   onOpen,
   onDelete,
+  selectedIds,
+  onToggleSelection,
+  onToggleAllSelection,
 }: StudentsSectionsProps) {
   const { t } = useTranslation();
   return (
@@ -39,8 +45,11 @@ export function StudentsSections({
             <StudentsTable
               list={sec.list}
               deletingId={deletingId}
+              selectedIds={selectedIds}
               onOpen={onOpen}
               onDelete={onDelete}
+              onToggle={onToggleSelection}
+              onToggleAll={(checked) => onToggleAllSelection(sec.list, checked)}
             />
           </CollapsibleSection>
         );
@@ -56,8 +65,11 @@ export function StudentsSections({
           <StudentsTable
             list={ungrouped}
             deletingId={deletingId}
+            selectedIds={selectedIds}
             onOpen={onOpen}
             onDelete={onDelete}
+            onToggle={onToggleSelection}
+            onToggleAll={(checked) => onToggleAllSelection(ungrouped, checked)}
           />
         </CollapsibleSection>
       )}

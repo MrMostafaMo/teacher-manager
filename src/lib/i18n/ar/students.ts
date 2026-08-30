@@ -26,6 +26,8 @@ export const students: Messages["students"] = {
   guardian: "ولي الأمر / الأهل",
   delete: "حذف الطالب",
   confirmDelete: "اضغط مرة أخرى للتأكيد",
+  bulkDelete: "حذف المحدد",
+  confirmBulkDelete: "هل أنت متأكد من حذف {{count}} طالب؟",
   fields: {
     name: "الاسم الكامل",
     phone: "الهاتف",

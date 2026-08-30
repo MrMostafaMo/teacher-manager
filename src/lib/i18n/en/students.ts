@@ -22,8 +22,10 @@ export const students = {
   profile: "Student profile",
   registered: "Registered:",
   guardian: "Guardian / parent",
-  delete: "Delete student",
+  delete: "Delete Student",
   confirmDelete: "Click again to confirm",
+  bulkDelete: "Delete Selected",
+  confirmBulkDelete: "Are you sure you want to delete {{count}} students?",
   fields: {
     name: "Full name",
     phone: "Phone",
