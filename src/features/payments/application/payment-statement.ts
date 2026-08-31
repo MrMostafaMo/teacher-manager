@@ -1,8 +1,12 @@
+import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
-import type { Payment, Student } from "@/lib/db/schema";
+import { db } from "@/lib/db/client";
+import { planPriceHistory, type Payment, type Student } from "@/lib/db/schema";
+import { useSessionSettings } from "@/lib/session-settings-store";
 import dayjs from "dayjs";
+import { asc, eq } from "drizzle-orm";
 
 export interface StatementMonth {
   /** Billed period as YYYY-MM. */
@@ -82,20 +86,11 @@ export function computeStatement(
 
 /**
  * Statement of account for one student: one row per month from the month they
- * enrolled (or first paid) through today, each charging the current plan
- * amount and crediting that month's payments, plus a chronological payment
- * ledger with the running balance. A negative running/total means the student
- * is paid ahead (advance/credit).
- *
- * ponytail: charges today's plan price for every past month. If a plan price
- * changes, history is rewritten. Snapshot dueAmount at payment time or add
- * plan_amount_history when this matters.
+ * enrolled (or first paid) through today, each charging the historical plan
+ * price (via planPriceHistory) and crediting that month's payments, plus a
+ * chronological payment ledger with the running balance. A negative
+ * running/total means the student is paid ahead (advance/credit).
  */
-import { useSessionSettings } from "@/lib/session-settings-store";
-import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
-import { db } from "@/lib/db/client";
-import { planPriceHistory } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
 
 export async function studentStatement(studentId: string): Promise<StudentStatement> {
   const [student, plans, allPayments, allAttendances] = await Promise.all([

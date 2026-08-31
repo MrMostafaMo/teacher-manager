@@ -48,8 +48,9 @@ export function sessionColumns(
               ? t("payments.sessions.warning")
               : t("payments.sessions.ok");
         const variant = r.status === "due" ? "destructive" : r.status === "warning" ? "secondary" : "outline";
-        const row = r as unknown as { isOverdue?: boolean; cyclesOverdue?: number };
+        const row = r as unknown as { isOverdue?: boolean; cyclesOverdue?: number; showPaid?: boolean };
         const showUnpaid = Boolean(row.isOverdue);
+        const showPaid = Boolean(row.showPaid);
         return (
           <span className="inline-flex items-center gap-1.5">
             <Badge variant={variant as never}>{label}</Badge>
@@ -58,6 +59,11 @@ export function sessionColumns(
                 {row.cyclesOverdue != null && row.cyclesOverdue > 1
                   ? t("payments.sessions.unpaidCycles", { count: row.cyclesOverdue })
                   : t("payments.sessions.unpaid")}
+              </Badge>
+            )}
+            {showPaid && !showUnpaid && (
+              <Badge variant="outline" className="border-success/40 text-success">
+                {t("payments.sessions.paid")}
               </Badge>
             )}
           </span>

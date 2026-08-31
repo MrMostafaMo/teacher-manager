@@ -16,10 +16,10 @@ export default function LoginPage() {
           Teacher Manager
         </div>
         <div className="space-y-3">
-          <h1 className="font-heading text-3xl font-bold leading-tight">إدارة مركزك، بلا تعقيد</h1>
-          <p className="max-w-md text-sm text-primary-foreground/80">سجّل بـ Supabase للمزامنة السحابية — أو تابع محلياً بدون حساب. بياناتك تبقى آمنة.</p>
+          <h1 className="font-heading text-3xl font-bold leading-tight">{t("auth.hero.title")}</h1>
+          <p className="max-w-md text-sm text-primary-foreground/80">{t("auth.hero.subtitle")}</p>
         </div>
-        <p className="text-xs text-primary-foreground/60">مزامنة اختيارية — تعمل بدون إنترنت</p>
+        <p className="text-xs text-primary-foreground/60">{t("auth.hero.badge")}</p>
       </div>
       <div className="flex flex-1 items-center justify-center bg-muted/30 p-4 backdrop-blur-sm">
         <div className="w-full max-w-md space-y-4">

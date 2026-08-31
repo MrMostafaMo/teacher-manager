@@ -48,6 +48,7 @@ export const attendance = {
   rosterSaved: "Attendance roster exported",
   rosterError: "Could not export the roster",
   rosterTitle: "Attendance roster",
+  table: "Attendance table",
   errors: {
     load: "Could not load attendance",
     save: "Could not save attendance",

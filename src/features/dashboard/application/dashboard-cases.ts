@@ -171,7 +171,7 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
     topDebtors,
     sessionDues: sessionDuesRows
       .filter((r) => r.status !== "ok").slice(0, 5)
-      .map((r) => ({ student: { id: r.student.id, name: r.student.name }, count: r.count, remainingSessions: r.remainingSessions, status: r.status, isOverdue: r.isOverdue, cyclesOverdue: r.cyclesOverdue })),
+      .map((r) => ({ student: { id: r.student.id, name: r.student.name }, count: r.count, remainingSessions: r.remainingSessions, status: r.status, isOverdue: r.isOverdue, cyclesOverdue: r.cyclesOverdue, showPaid: r.showPaid })),
     deltas: {
       collected: percentDelta(collected, prevCollected),
       expenses: percentDelta(expensesMonth, prevExpenses),

@@ -24,6 +24,9 @@ export const common = {
   dismiss: "Dismiss",
   confirmMessage: "Are you sure?",
   search: "Search",
+  save: "Save",
+  saving: "Saving…",
+  saved: "Saved",
   sidebar: {
     toggle: "Toggle Sidebar",
   },

@@ -60,7 +60,23 @@ describe("deriveCycle", () => {
       expect(d.cyclesOverdue).toBe(cyc);
       expect(d.isOverdue).toBe(over);
       expect(d.status).toBe(st);
+      expect(d.showPaid).toBe(false);
     }
+  });
+  it("shows 8/8 paid when raw 0 with hasPaid", () => {
+    const d = deriveCycle(0, 8, 6, true);
+    expect(d.displayCount).toBe(8);
+    expect(d.remainingSessions).toBe(0);
+    expect(d.cyclesOverdue).toBe(0);
+    expect(d.isOverdue).toBe(false);
+    expect(d.showPaid).toBe(true);
+    expect(d.status).toBe("ok");
+  });
+  it("raw 1 with hasPaid is normal 1/8 without paid badge", () => {
+    const d = deriveCycle(1, 8, 6, true);
+    expect(d.displayCount).toBe(1);
+    expect(d.showPaid).toBe(false);
+    expect(d.remainingSessions).toBe(7);
   });
 });
 describe("buildSessionDues", () => {
@@ -102,6 +118,18 @@ describe("buildSessionDues", () => {
     const s = mkStudent("s1", "PaidReset", null), p = mkPayment("s1", Date.parse("2026-08-05T10:00:00"));
     const atts = new Map<string, Array<{ date: string }>>([["s1", Array.from({ length: 8 }, (_, i) => ({ date: `2026-08-${String(i + 1).padStart(2, "0")}` }))]]);
     const r = buildSessionDues([s], new Map([["s1", [p]]]), atts, new Map(), new Map(), 8, 6)[0];
-    expect(r.rawCount).toBe(3); expect(r.count).toBe(3); expect(r.isOverdue).toBe(false);
+    expect(r.rawCount).toBe(3); expect(r.count).toBe(3); expect(r.isOverdue).toBe(false); expect(r.showPaid).toBe(false);
+  });
+  it("paid with zero later attendances shows 8/8 paid", () => {
+    const s = mkStudent("s1", "PaidZero", null);
+    const p = mkPayment("s1", Date.parse("2026-08-30T10:00:00"));
+    const atts = new Map<string, Array<{ date: string }>>([["s1", [{ date: "2026-08-01" }, { date: "2026-08-02" }]]]);
+    const r = buildSessionDues([s], new Map([["s1", [p]]]), atts, new Map(), new Map(), 8, 6)[0];
+    expect(r.rawCount).toBe(0); expect(r.count).toBe(8); expect(r.remainingSessions).toBe(0); expect(r.showPaid).toBe(true); expect(r.status).toBe("ok");
+  });
+  it("no payment with zero count stays 0/8 not paid", () => {
+    const s = mkStudent("s1", "NoPayZero", null);
+    const r = buildSessionDues([s], new Map(), new Map(), new Map(), new Map(), 8, 6)[0];
+    expect(r.rawCount).toBe(0); expect(r.count).toBe(0); expect(r.showPaid).toBe(false);
   });
 });

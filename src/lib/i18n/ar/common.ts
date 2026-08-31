@@ -26,6 +26,9 @@ export const common: Messages["common"] = {
   dismiss: "إغلاق",
   confirmMessage: "هل أنت متأكد؟",
   search: "بحث",
+  save: "حفظ",
+  saving: "جارٍ الحفظ…",
+  saved: "تم الحفظ",
   sidebar: {
     toggle: "تبديل الشريط الجانبي",
   },

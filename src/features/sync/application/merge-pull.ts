@@ -73,7 +73,9 @@ export function mergePull(remote: SyncPayload, local: LocalState): PullResult {
         continue;
       }
       if (remoteTomb !== undefined && tombstoneBeatsRow(remoteTomb, remoteTs)) {
-        if (localRow !== undefined) toDelete.push({ tableName, rowId: id });
+        if (localRow !== undefined && tombstoneBeatsRow(remoteTomb, updatedAt(localRow))) {
+          toDelete.push({ tableName, rowId: id });
+        }
         continue;
       }
       if (localRow === undefined) {

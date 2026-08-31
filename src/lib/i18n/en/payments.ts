@@ -81,4 +81,5 @@ export const payments = {
     periodInvalid: "Enter a valid period (YYYY-MM)",
     invalid: "Please check the entered values",
   },
+  table: "Payments table",
 } as const;

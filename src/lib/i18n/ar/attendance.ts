@@ -50,6 +50,7 @@ export const attendance: Messages["attendance"] = {
   rosterSaved: "تم تصدير كشف الحضور",
   rosterError: "تعذّر تصدير كشف الحضور",
   rosterTitle: "كشف الحضور",
+  table: "جدول الحضور",
   errors: {
     load: "تعذّر تحميل الحضور",
     save: "تعذّر حفظ الحضور",

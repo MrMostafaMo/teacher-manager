@@ -17,16 +17,17 @@ export const studentRepository = {
 
   async search(filters: StudentFilters = {}): Promise<Student[]> {
     const q = filters.query?.trim();
+    const escaped = q ? q.replace(/[%_\\]/g, "\\$&") : undefined;
     const rows = await db
       .select()
       .from(students)
       .where(
         and(
-          q
+          escaped
             ? or(
-                like(students.name, `%${q}%`),
-                like(students.phone, `%${q}%`),
-                like(students.guardianName, `%${q}%`),
+                like(students.name, `%${escaped}%`),
+                like(students.phone, `%${escaped}%`),
+                like(students.guardianName, `%${escaped}%`),
               )
             : undefined,
           filters.status && filters.status !== "all"
@@ -43,7 +44,8 @@ export const studentRepository = {
     await db
       .update(students)
       .set({ planId: null, updatedAt: Date.now() })
-      .where(eq(students.planId, planId));
+      .where(eq(students.planId, planId))
+      .run();
   },
 
   /** Re-attach students to a plan after its delete is undone. */
@@ -52,6 +54,7 @@ export const studentRepository = {
     await db
       .update(students)
       .set({ planId, updatedAt: Date.now() })
-      .where(inArray(students.id, studentIds));
+      .where(inArray(students.id, studentIds))
+      .run();
   },
 };

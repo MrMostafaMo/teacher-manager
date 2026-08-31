@@ -102,7 +102,7 @@ export function BatchPaymentDialog({ open, defaultPeriod, onClose, onSaved }: Pr
         />
       </Field>
 
-      <div tabIndex={0} role="region" aria-label="جدول الدفعات" className="overflow-x-auto overscroll-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]">
+      <div tabIndex={0} role="region" aria-label={t("payments.table")} className="overflow-x-auto overscroll-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-start text-muted-foreground">

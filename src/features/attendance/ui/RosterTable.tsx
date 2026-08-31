@@ -49,7 +49,7 @@ export const RosterTable = memo(function RosterTable({
 }) {
   const { t } = useTranslation();
   return (
-    <div tabIndex={0} role="region" aria-label="جدول الحضور" className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]">
+    <div tabIndex={0} role="region" aria-label={t("attendance.table")} className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/40 text-xs text-muted-foreground align-middle">

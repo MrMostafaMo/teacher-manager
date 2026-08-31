@@ -20,15 +20,18 @@ export function listPlans(): Promise<PlanWithCount[]> {
 export async function createPlan(input: PlanInput): Promise<Plan> {
   const parsed = planInputSchema.parse(input);
   const row = await planRepository.insert({ id: uuid(), ...parsed });
-  
-  await db.insert(planPriceHistory).values({
-    id: uuid(),
-    planId: row.id,
-    amount: row.amount,
-    effectiveFrom: new Date(),
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  });
+
+  await db
+    .insert(planPriceHistory)
+    .values({
+      id: uuid(),
+      planId: row.id,
+      amount: row.amount,
+      effectiveFrom: new Date(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    })
+    .run();
 
   await logActivity({
     action: "plan.create",
@@ -48,14 +51,17 @@ export async function updatePlan(id: string, input: PlanInput): Promise<Plan> {
   if (!row) throw new Error(`plan ${id} not found`);
 
   if (current && current.amount !== row.amount) {
-    await db.insert(planPriceHistory).values({
-      id: uuid(),
-      planId: row.id,
-      amount: row.amount,
-      effectiveFrom: new Date(),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
+    await db
+      .insert(planPriceHistory)
+      .values({
+        id: uuid(),
+        planId: row.id,
+        amount: row.amount,
+        effectiveFrom: new Date(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      })
+      .run();
   }
 
   await logActivity({

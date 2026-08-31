@@ -118,7 +118,8 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
               const raw = Number((r as unknown as { rawCount?: number }).rawCount ?? r.count) || 0;
               const Snum = Number(S) || 8;
               const Wnum = Number(W) || Snum - 2;
-              const d = deriveCycle(raw, Snum, Wnum);
+              const hasPaid = r.lastPaidISO != null;
+              const d = deriveCycle(raw, Snum, Wnum, hasPaid);
               const price = r.pricePerSession != null && Number.isFinite(Snum) && Snum > 0 ? Math.round((r.fullCycleAmount ?? 0) / Snum) : r.pricePerSession;
               return {
                 ...r,
@@ -126,6 +127,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
                 rawCount: raw,
                 cyclesOverdue: d.cyclesOverdue,
                 isOverdue: d.isOverdue,
+                showPaid: d.showPaid,
                 status: d.status,
                 remainingSessions: d.remainingSessions,
                 pricePerSession: price,

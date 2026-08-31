@@ -4,7 +4,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CardLink } from "@/shared/CardLink";
 import { Avatar } from "@/shared/Avatar";
-type CardRow = { student: { id: string; name: string }; count: number; remainingSessions: number; status: "ok" | "warning" | "due"; isOverdue?: boolean; cyclesOverdue?: number };
+type CardRow = { student: { id: string; name: string }; count: number; remainingSessions: number; status: "ok" | "warning" | "due"; isOverdue?: boolean; cyclesOverdue?: number; showPaid?: boolean };
 
 export function SessionDuesCard({ rows }: { rows: CardRow[] }) {
   const { t } = useTranslation();
@@ -36,6 +36,11 @@ export function SessionDuesCard({ rows }: { rows: CardRow[] }) {
                       {r.cyclesOverdue != null && r.cyclesOverdue > 1
                         ? t("payments.sessions.unpaidCycles", { count: r.cyclesOverdue })
                         : t("payments.sessions.unpaid")}
+                    </Badge>
+                  )}
+                  {r.showPaid && !r.isOverdue && (
+                    <Badge variant="outline" className="border-success/40 text-success text-[10px] px-1 py-0">
+                      {t("payments.sessions.paid")}
                     </Badge>
                   )}
                 </span>

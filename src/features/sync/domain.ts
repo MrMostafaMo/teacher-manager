@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { attendance, sessionAttendance } from "@/lib/db/tables-attendance";
-import { plans } from "@/lib/db/tables-core";
+import { planPriceHistory, plans } from "@/lib/db/tables-core";
 import { expenses, payments } from "@/lib/db/tables-payments";
 import { examResults, exams } from "@/lib/db/tables-exams";
 import { homeworkSubmissions, homeworks } from "@/lib/db/tables-homework";
@@ -29,6 +29,7 @@ export const SYNC_TABLES = [
   attendance,
   sessionAttendance,
   plans,
+  planPriceHistory,
   payments,
   expenses,
   homeworks,
@@ -50,6 +51,7 @@ export const SYNC_TABLE_NAMES: readonly string[] = [
   "attendance",
   "session_attendance",
   "plans",
+  "plan_price_history",
   "payments",
   "expenses",
   "homeworks",

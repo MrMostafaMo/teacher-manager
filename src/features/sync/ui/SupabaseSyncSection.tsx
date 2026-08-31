@@ -62,7 +62,7 @@ export function SupabaseSyncSection() {
             <Database className="size-4" />
           </span>
           Supabase
-          <span className="ms-auto rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">متصل</span>
+          <span className="ms-auto rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">{t("sync.settings.connected")}</span>
         </div>
         <p className="text-sm font-medium" dir="ltr">
           {supabaseEmail}
@@ -103,7 +103,7 @@ export function SupabaseSyncSection() {
             <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://xxx.supabase.co" dir="ltr" />
             <Input value={key} onChange={(e) => setKey(e.target.value)} placeholder="anon key" dir="ltr" />
             <Button size="sm" variant="outline" onClick={() => void handleSaveConfig()} disabled={!url.trim() || !key.trim()}>
-              حفظ
+              {t("common.save")}
             </Button>
           </div>
         </details>

@@ -112,7 +112,7 @@ export const sessionExceptions = sqliteTable(
     id: id(),
     sessionId: text("session_id")
       .notNull()
-      .references(() => groupSessions.id),
+      .references(() => groupSessions.id, { onDelete: "cascade" }),
     date: text("date").notNull(),
     type: text("type", { enum: ["cancelled", "moved"] }).notNull(),
     startTime: text("start_time"),

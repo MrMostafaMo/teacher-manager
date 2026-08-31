@@ -31,7 +31,7 @@ export function SyncReportDialog({ open, report, onClose }: SyncReportDialogProp
     >
       {hasSkew && report?.error === null && (
         <div className="mb-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/30 dark:text-amber-200 dark:ring-amber-900">
-          تمت المزامنة مع اختلاف إصدارات (محلي v{report.localVersion} ↔ سحابي v{report.remoteVersion}) — بعض الحقول/الجداول الجديدة قد لا تظهر حتى تحدّث كل الأجهزة. حدّث ثمزامن مجدداً.
+          {t("sync.report.skew", { local: report.localVersion, remote: report.remoteVersion })}
         </div>
       )}
       {report === null ? (
@@ -46,7 +46,7 @@ export function SyncReportDialog({ open, report, onClose }: SyncReportDialogProp
           <p className="text-xs text-muted-foreground">{t("sync.report.errorHint")}</p>
           {report.error === "sync.errors.versionMismatch" && (
             <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/30 dark:text-amber-200 dark:ring-amber-900">
-              النسخة المحلية v{report.localVersion} ↔ السحابية v{report.remoteVersion} — حدّث التطبيق على الجهازين ثم اضغط مزامنة الآن. بياناتك محفوظة محلياً.
+              {t("sync.report.versionDetail", { local: report.localVersion, remote: report.remoteVersion })}
             </div>
           )}
         </div>
@@ -63,7 +63,7 @@ export function SyncReportDialog({ open, report, onClose }: SyncReportDialogProp
               <th className="py-1.5 text-end font-medium">{t("sync.report.applied")}</th>
               <th className="py-1.5 text-end font-medium">{t("sync.report.deleted")}</th>
               <th className="py-1.5 text-end font-medium">{t("sync.report.pushed")}</th>
-              <th className="py-1.5 text-end font-medium">تعارض</th>
+              <th className="py-1.5 text-end font-medium">{t("sync.report.conflicts")}</th>
             </tr>
           </thead>
           <tbody>

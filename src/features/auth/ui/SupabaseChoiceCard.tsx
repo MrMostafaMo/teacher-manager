@@ -103,7 +103,7 @@ function SupabaseConfigRow() {
         onClick={() => void configureSupabase(url, key).then(() => setOpen(false))}
         disabled={!url.trim() || !key.trim()}
       >
-        حفظ
+        {t("common.save")}
       </Button>
     </div>
   );

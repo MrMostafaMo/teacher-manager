@@ -13,6 +13,9 @@ export const sync = {
     applied: "مستوردة",
     deleted: "محذوفة",
     pushed: "مرفوعة",
+    conflicts: "تعارض",
+    skew: "تمت المزامنة مع اختلاف إصدارات (محلي v{{local}} ↔ سحابي v{{remote}}) — بعض الحقول/الجداول الجديدة قد لا تظهر حتى تحدّث كل الأجهزة. حدّث ثم زامن مجدداً.",
+    versionDetail: "النسخة المحلية v{{local}} ↔ السحابية v{{remote}} — حدّث التطبيق على الجهازين ثم اضغط مزامنة الآن. بياناتك محفوظة محلياً.",
     tombstones: "تم نشر {{count}} عملية حذف للأجهزة الأخرى.",
   },
   tables: {
@@ -24,6 +27,7 @@ export const sync = {
     attendance: "الحضور",
     session_attendance: "حضور الجلسات",
     plans: "الباقات",
+    plan_price_history: "سجل أسعار الباقات",
     payments: "الدفعات",
     expenses: "المصروفات",
     homeworks: "الواجبات",
@@ -46,6 +50,7 @@ export const sync = {
   settings: {
     title: "المزامنة السحابية",
     hint: "سجّل الدخول بـ Supabase لمزامنة البيانات بين الأجهزة والاحتفاظ بنسخ احتياطية سحابية.",
+    helpLink: "كيفية الحصول على بيانات الاتصال",
     syncNow: "مزامنة الآن",
     syncDone: "اكتملت المزامنة.",
     connected: "تم الاتصال.",

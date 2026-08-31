@@ -21,7 +21,11 @@ export const payments = sqliteTable(
     paidAt: integer("paid_at").notNull(),
     ...timestamps,
   },
-  (t) => [index("payments_student").on(t.studentId), index("payments_paid_at").on(t.paidAt)],
+  (t) => [
+    index("payments_student").on(t.studentId),
+    index("payments_paid_at").on(t.paidAt),
+    index("payments_period").on(t.period),
+  ],
 );
 
 /** Outgoing costs (prizes, stationery, utilities…) — money spent by the center. */

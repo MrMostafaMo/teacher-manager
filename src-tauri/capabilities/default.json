@@ -15,22 +15,25 @@
     {
       "identifier": "fs:allow-write-file",
       "allow": [
-        { "path": "$HOME/**" },
-        { "path": "$APPCONFIG/**" }
+        { "path": "$APPCONFIG/**" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DESKTOP/**" }
       ]
     },
     {
       "identifier": "fs:allow-read-file",
       "allow": [
-        { "path": "$HOME/**" },
-        { "path": "$APPCONFIG/**" }
+        { "path": "$APPCONFIG/**" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DESKTOP/**" }
       ]
     },
     {
       "identifier": "fs:allow-copy-file",
       "allow": [
         { "path": "$APPCONFIG/**" },
-        { "path": "$HOME/**" },
         { "path": "$DOWNLOAD/**" },
         { "path": "$DOCUMENT/**" },
         { "path": "$DESKTOP/**" }
@@ -39,7 +42,6 @@
     {
       "identifier": "fs:allow-open",
       "allow": [
-        { "path": "$HOME/**" },
         { "path": "$APPCONFIG/**" },
         { "path": "$DOWNLOAD/**" },
         { "path": "$DOCUMENT/**" },
@@ -49,7 +51,6 @@
     {
       "identifier": "fs:allow-exists",
       "allow": [
-        { "path": "$HOME/**" },
         { "path": "$APPCONFIG/**" },
         { "path": "$DOWNLOAD/**" },
         { "path": "$DOCUMENT/**" },
@@ -65,7 +66,6 @@
     {
       "identifier": "fs:allow-stat",
       "allow": [
-        { "path": "$HOME/**" },
         { "path": "$APPCONFIG/**" },
         { "path": "$DOWNLOAD/**" },
         { "path": "$DOCUMENT/**" },

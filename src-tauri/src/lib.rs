@@ -140,6 +140,18 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0021_plan_price_history.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 23,
+            description: "sync trigger for plan_price_history",
+            sql: include_str!("../migrations/0022_sync_plan_price_history.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 24,
+            description: "fix session_exceptions FK cascade and payments period index",
+            sql: include_str!("../migrations/0023_fix_exceptions_fk_and_period_index.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

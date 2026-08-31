@@ -83,4 +83,5 @@ export const payments: Messages["payments"] = {
     periodInvalid: "الفترة غير صحيحة (YYYY-MM)",
     invalid: "تحقق من القيم المدخلة",
   },
+  table: "جدول الدفعات",
 };

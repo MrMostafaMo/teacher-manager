@@ -46,7 +46,7 @@ export function countNewStudents(
 ): number {
   const { start, end } = monthWindow(month);
   return students.filter((s) => {
-    const enrolled = s.enrolledOn ? Date.parse(s.enrolledOn) : s.createdAt;
+    const enrolled = s.enrolledOn ? Date.parse(`${s.enrolledOn}T00:00:00`) : s.createdAt;
     return Number.isFinite(enrolled) && enrolled >= start && enrolled < end;
   }).length;
 }

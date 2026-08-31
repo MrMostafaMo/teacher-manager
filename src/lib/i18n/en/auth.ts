@@ -1,4 +1,9 @@
 export const auth = {
+  hero: {
+    title: "Manage your center, without complexity",
+    subtitle: "Sign in with Supabase for cloud sync — or continue locally without an account. Your data stays safe.",
+    badge: "Optional sync — works offline",
+  },
   login: {
     title: "Sign in",
     subtitle: "Sign in with Supabase or continue locally",

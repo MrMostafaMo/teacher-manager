@@ -23,6 +23,11 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: check Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: cargo check
+        run: cargo check --manifest-path src-tauri/Cargo.toml
+
       - name: run tests
         run: pnpm test
 

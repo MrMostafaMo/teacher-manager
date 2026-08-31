@@ -46,6 +46,7 @@ export function SendWhatsAppDialog({ open, data, onClose }: Props) {
       setTemplates(rows);
       if (!rows.find((row) => row.id === templateId)) setTemplateId(rows[0]?.id ?? "");
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- templateId read only to preserve selection, effect should not re-run on it
   }, [open, data, t]);
 
   useEffect(() => {

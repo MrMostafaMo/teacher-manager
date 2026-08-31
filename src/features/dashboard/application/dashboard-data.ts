@@ -53,5 +53,6 @@ export interface DashboardData {
     status: "ok" | "warning" | "due";
     isOverdue?: boolean;
     cyclesOverdue?: number;
+    showPaid?: boolean;
   }>;
 }

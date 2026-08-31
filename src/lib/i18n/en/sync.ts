@@ -13,6 +13,9 @@ export const sync = {
     applied: "Applied",
     deleted: "Deleted",
     pushed: "Pushed",
+    conflicts: "Conflicts",
+    skew: "Synced with version skew (local v{{local}} ↔ remote v{{remote}}) — some new fields/tables may not appear until you update all devices. Update then sync again.",
+    versionDetail: "Local v{{local}} ↔ remote v{{remote}} — update the app on both devices then press Sync now. Your data is safe locally.",
     tombstones: "{{count}} deletion(s) pushed to other devices.",
   },
   tables: {
@@ -24,6 +27,7 @@ export const sync = {
     attendance: "Attendance",
     session_attendance: "Session attendance",
     plans: "Plans",
+    plan_price_history: "Plan price history",
     payments: "Payments",
     expenses: "Expenses",
     homeworks: "Homework",
@@ -46,6 +50,7 @@ export const sync = {
   settings: {
     title: "Cloud sync",
     hint: "Sign in with Supabase to sync data across devices and keep cloud backups.",
+    helpLink: "How to get connection details",
     syncNow: "Sync now",
     syncDone: "Sync complete.",
     connected: "Connected.",
