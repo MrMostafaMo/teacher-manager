@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
+
       - uses: pnpm/action-setup@v6
 
       - name: setup node
