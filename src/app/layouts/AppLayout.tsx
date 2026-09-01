@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { Header } from "@/app/layouts/Header";
 import { Sidebar } from "@/app/layouts/Sidebar";
+import { TitleBar } from "@/app/layouts/TitleBar";
 import { CommandPalette } from "@/shared/CommandPalette";
 import { GlobalDialogs, DATA_CHANGED_EVENT } from "@/shared/GlobalDialogs";
 import { ToastViewport } from "@/shared/ToastViewport";
@@ -50,11 +51,13 @@ export function AppLayout() {
   }, [setCommandOpen]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Header />
-        <main ref={mainRef} className="flex-1 overflow-y-auto overscroll-none p-4 sm:p-6 xl:p-8">
+    <div className="flex h-screen flex-col overflow-hidden">
+      <TitleBar />
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Header />
+          <main ref={mainRef} className="flex-1 overflow-y-auto overscroll-none p-4 sm:p-6 xl:p-8">
           <div
             key={`${pathname}:${dataVersion}`}
             className={
@@ -66,6 +69,7 @@ export function AppLayout() {
             <Outlet />
           </div>
         </main>
+        </div>
       </div>
       <CommandPalette />
       <ShortcutsOverlay />

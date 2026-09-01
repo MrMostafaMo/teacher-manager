@@ -14,6 +14,14 @@ import "@/styles/globals.css";
 applyLanguage(readInitialLanguage());
 applyTheme(readInitialTheme(), readInitialPreset());
 
+// Disable native WebKit context menu (right-click) — keep it only inside
+// editable fields where copy/paste is useful.
+document.addEventListener("contextmenu", (e) => {
+  const target = e.target as HTMLElement | null;
+  if (target?.closest("input, textarea, select, [contenteditable='true'], [contenteditable='']")) return;
+  e.preventDefault();
+});
+
 window.addEventListener("unhandledrejection", (event) => {
   console.error("[unhandledrejection]", event.reason);
 });

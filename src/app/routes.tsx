@@ -9,6 +9,14 @@ export const router = createBrowserRouter([
     lazy: async () => ({ Component: (await import("@/features/auth/ui/LoginPage")).default }),
   },
   {
+    path: "/auth/callback",
+    lazy: async () => ({ Component: (await import("@/features/auth/ui/ResetPasswordPage")).default }),
+  },
+  {
+    path: "/reset-password",
+    lazy: async () => ({ Component: (await import("@/features/auth/ui/ResetPasswordPage")).default }),
+  },
+  {
     path: "/",
     element: <AppLayout />,
     errorElement: <RouteErrorPage />,

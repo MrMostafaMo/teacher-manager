@@ -43,4 +43,18 @@ export const settings = {
     hint: "Price per session = plan amount ÷ sessions. Counter resets after each payment (all statuses count).",
     validation: "Warning must be less than sessions per cycle (1–30).",
   },
+  tabs: {
+    appearance: "Appearance",
+    preferences: "Preferences",
+    data: "Sync & Data",
+    about: "About",
+  },
+  sections: {
+    identity: "Identity & Appearance",
+    identityHint: "Your center name and how the app looks.",
+    billing: "Billing & Notifications",
+    billingHint: "Session system, alerts, and messaging.",
+    sync: "Sync & Backups",
+    syncHint: "Cloud sync and local backups.",
+  },
 } as const;
