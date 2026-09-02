@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
@@ -15,7 +15,9 @@ export function useCountUp(target: number, duration = 800): number {
   const startRef = useRef<number>(0);
   const fromRef = useRef(0);
   const countRef = useRef(count);
-  countRef.current = count;
+  useLayoutEffect(() => {
+    countRef.current = count;
+  }, [count]);
 
   useEffect(() => {
     if (target === 0) {
