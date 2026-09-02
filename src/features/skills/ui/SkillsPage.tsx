@@ -11,6 +11,7 @@ import { deleteSkill, listSkills } from "@/features/skills/application/skill-cas
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
 import type { Skill } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { notifyUndo } from "@/lib/undo-store";
 import { SkillFormDialog } from "./SkillFormDialog";
 import { useSkillsColumns } from "./skills-columns";
@@ -27,8 +28,10 @@ export default function SkillsPage() {
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
 
+  useDataChanged(bump);
+
   useEffect(() => {
-    setLoading(true);
+    if (rows.length === 0) setLoading(true);
     listSkills()
       .then(setRows)
       .catch((e) => {
@@ -94,7 +97,7 @@ export default function SkillsPage() {
 
       <Card>
         <CardContent className="p-0">
-          {loading ? (
+          {loading && rows.length === 0 ? (
             <TableRowsSkeleton rows={5} cols={4} />
           ) : rows.length === 0 ? (
             <EmptyState

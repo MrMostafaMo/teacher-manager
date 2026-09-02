@@ -14,6 +14,7 @@ import { useMemberships, buildSections } from "./attendance-sections";
 import { SummaryCards } from "./SummaryCards";
 import { MonthlySummaryTable } from "./MonthlySummaryTable";
 import { EmptyStudents } from "./EmptyStudents";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { toast } from "@/lib/toast-store";
 
 const inputClass =
@@ -33,7 +34,7 @@ export function MonthlyView({
   const { isCollapsed, toggle } = useCollapsedSections();
 
   useEffect(() => {
-    setLoading(true);
+    if (rows.length === 0) setLoading(true);
     getMonthly(month)
       .then(setRows)
       .catch((e) => {
@@ -42,7 +43,19 @@ export function MonthlyView({
         setRows([]);
       })
       .finally(() => setLoading(false));
-  }, [month]);
+  }, [month, t]);
+
+  useDataChanged(() => {
+    if (rows.length === 0) setLoading(true);
+    getMonthly(month)
+      .then(setRows)
+      .catch((e) => {
+        console.error("Failed to load monthly stats", e);
+        toast(t("attendance.errors.load"), "error");
+        setRows([]);
+      })
+      .finally(() => setLoading(false));
+  });
 
   const totals = useMemo(() => {
     let present = 0;
@@ -84,7 +97,7 @@ export function MonthlyView({
 
       
 
-      {!loading && rows.length > 0 && (
+      {rows.length > 0 && (
         <SummaryCards
           total={totals.total}
           totalLabel="attendance.summary.totalMonth"
@@ -95,7 +108,7 @@ export function MonthlyView({
 
       <Card>
         <CardContent className="p-0">
-          {loading ? (
+          {loading && rows.length === 0 ? (
             <TableRowsSkeleton rows={5} cols={3} />
           ) : rows.length === 0 ? (
             <EmptyStudents />

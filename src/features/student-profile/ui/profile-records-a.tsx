@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { ATTENDANCE_STATUSES } from "@/features/attendance/domain";
@@ -24,6 +25,7 @@ export function AttendanceSection({
 }) {
   const { t } = useTranslation();
   const columns = useAttendanceColumns();
+  const getAttendanceKey = useCallback((r: Attendance) => r.id, []);
   return (
     <ProfileSection
       title={t("profile.sections.attendance")}
@@ -46,7 +48,7 @@ export function AttendanceSection({
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.attendance")} />
       ) : (
-        <ProfileTable<Attendance> columns={columns} rows={rows} getRowKey={(r) => r.id} />
+        <ProfileTable<Attendance> columns={columns} rows={rows} getRowKey={getAttendanceKey} />
       )}
     </ProfileSection>
   );
@@ -63,6 +65,7 @@ export function PaymentsSection({
 }) {
   const { t } = useTranslation();
   const columns = usePaymentColumns();
+  const getPaymentKey = useCallback(({ payment }: PaymentHistoryRow) => payment.id, []);
   return (
     <ProfileSection
       title={t("profile.sections.payments")}
@@ -73,11 +76,7 @@ export function PaymentsSection({
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.payments")} />
       ) : (
-        <ProfileTable<PaymentHistoryRow>
-          columns={columns}
-          rows={rows}
-          getRowKey={({ payment }) => payment.id}
-        />
+        <ProfileTable<PaymentHistoryRow> columns={columns} rows={rows} getRowKey={getPaymentKey} />
       )}
     </ProfileSection>
   );
@@ -94,6 +93,7 @@ export function HomeworkSection({
 }) {
   const { t } = useTranslation();
   const columns = useHomeworkColumns();
+  const getHomeworkKey = useCallback((h: ProfileHomework) => h.id, []);
   return (
     <ProfileSection
       title={t("profile.sections.homework")}
@@ -104,7 +104,7 @@ export function HomeworkSection({
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.homework")} />
       ) : (
-        <ProfileTable<ProfileHomework> columns={columns} rows={rows} getRowKey={(h) => h.id} />
+        <ProfileTable<ProfileHomework> columns={columns} rows={rows} getRowKey={getHomeworkKey} />
       )}
     </ProfileSection>
   );

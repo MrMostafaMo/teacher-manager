@@ -14,6 +14,7 @@ import { formatMoney } from "@/lib/utils/format";
 import { RecordExpenseDialog } from "./RecordExpenseDialog";
 import { MonthPicker } from "@/shared/DatePicker";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { notifyUndo } from "@/lib/undo-store";
 import { ExpensesTable } from "./expenses-table";
 import { ExpenseCategoryChart } from "./expense-category-chart";
@@ -33,6 +34,8 @@ export default function ExpensesPage() {
   const [reloadKey, setReloadKey] = useState(0);
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
+
+  useDataChanged(bump);
 
   useEffect(() => {
     setLoading(true);
@@ -108,9 +111,9 @@ export default function ExpensesPage() {
 
       
 
-      {!loading && rows.length > 0 && <ExpenseCategoryChart rows={rows} />}
+      {rows.length > 0 && <ExpenseCategoryChart rows={rows} />}
 
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <TableRowsSkeleton rows={5} cols={4} />
       ) : rows.length === 0 ? (
         <Card>

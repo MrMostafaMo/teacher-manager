@@ -3,6 +3,7 @@ import type { AnySQLiteColumn, AnySQLiteTable } from "drizzle-orm/sqlite-core";
 import { db } from "@/lib/db/client";
 import {
   SYNC_TABLES,
+  SYNC_TABLE_NAMES,
   syncPayloadSchema,
   tableNameOf,
   type RowRef,
@@ -22,11 +23,31 @@ type IdTable = AnySQLiteTable & { id: AnySQLiteColumn };
 function toSyncRow(row: Record<string, unknown>): SyncRow {
   const out: SyncRow = {};
   for (const [key, value] of Object.entries(row)) {
-    if (typeof value === "string" || typeof value === "number" || value === null) {
+    if (value instanceof Date) {
+      out[key] = value.getTime();
+    } else if (typeof value === "string" || typeof value === "number" || value === null) {
       out[key] = value;
     }
   }
   return out;
+}
+
+function toDbRow(tableName: string, row: SyncRow): SyncRow {
+  // Drizzle's timestamp_ms columns expect Date objects — SyncRow stores numbers (or numeric strings from older payloads).
+  if (tableName === "plan_price_history") {
+    const v = row.effective_from;
+    if (typeof v === "number") {
+      return { ...row, effective_from: new Date(v) as unknown as number };
+    }
+    if (typeof v === "string" && /^\d+$/.test(v.trim())) {
+      return { ...row, effective_from: new Date(Number(v.trim())) as unknown as number };
+    }
+    if (typeof v === "string" && v.trim()) {
+      const d = new Date(v.trim());
+      if (!Number.isNaN(d.getTime())) return { ...row, effective_from: d as unknown as number };
+    }
+  }
+  return row;
 }
 
 export async function buildLocalSnapshot(): Promise<RowRef[]> {
@@ -63,7 +84,10 @@ export function parsePayload(text: string): SyncPayload {
 
 export async function applyPullResult(result: PullResult): Promise<void> {
   const byName = new Map(SYNC_TABLES.map((table) => [tableNameOf(table), table]));
-  for (const op of result.toApply) {
+  const order = new Map(SYNC_TABLE_NAMES.map((n, i) => [n, i]));
+  const sorted = [...result.toApply].sort((a, b) => (order.get(a.key.tableName) ?? 99) - (order.get(b.key.tableName) ?? 99));
+  for (const op of sorted) {
+    // ponytail: FK-safe order — parents before children
     await upsertRow(byName.get(op.key.tableName) as IdTable | undefined, op);
   }
   for (const key of result.toDelete) {
@@ -97,7 +121,7 @@ async function upsertRow(table: IdTable | undefined, op: PullOp): Promise<void> 
     throw error;
   }
   if (existing !== undefined) {
-    let rowToSet: SyncRow = op.row;
+    let rowToSet: SyncRow = toDbRow(op.key.tableName, op.row);
     for (let attempt = 0; attempt < 10; attempt++) {
       try {
         await db
@@ -107,6 +131,15 @@ async function upsertRow(table: IdTable | undefined, op: PullOp): Promise<void> 
           .run();
         return;
       } catch (error) {
+        const msg = error instanceof Error ? error.message : "";
+        if (msg.includes("FOREIGN KEY constraint failed")) {
+          console.warn(`sync upsert: FK failed for ${op.key.tableName}:${op.key.rowId}, skipping`, msg);
+          return;
+        }
+        if (msg.includes("NOT NULL constraint failed") || msg.includes("CHECK constraint failed")) {
+          console.warn(`sync upsert: constraint failed for ${op.key.tableName}:${op.key.rowId}, skipping`, msg);
+          return;
+        }
         const col = extractMissingColumn(error);
         if (col && col in rowToSet) {
           console.warn(`sync upsert: stripping unknown column ${col} for ${op.key.tableName}`);
@@ -120,13 +153,21 @@ async function upsertRow(table: IdTable | undefined, op: PullOp): Promise<void> 
     }
     return;
   }
-  let rowToInsert: SyncRow = op.row;
+  let rowToInsert: SyncRow = toDbRow(op.key.tableName, op.row);
   for (let attempt = 0; attempt < 10; attempt++) {
     try {
       await db.insert(table).values(rowToInsert as never).run();
       return;
     } catch (error) {
       const msg = error instanceof Error ? error.message : "";
+      if (msg.includes("FOREIGN KEY constraint failed")) {
+        console.warn(`sync upsert: FK failed for ${op.key.tableName}:${op.key.rowId}, skipping`, msg);
+        return;
+      }
+      if (msg.includes("NOT NULL constraint failed") || msg.includes("CHECK constraint failed")) {
+        console.warn(`sync upsert: constraint failed for ${op.key.tableName}:${op.key.rowId}, skipping`, msg);
+        return;
+      }
       const col = extractMissingColumn(error);
       if (col && col in rowToInsert) {
         console.warn(`sync upsert: stripping unknown column ${col} for ${op.key.tableName}`);

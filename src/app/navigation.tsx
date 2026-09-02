@@ -16,7 +16,7 @@ import {
   Settings,
 } from "lucide-react";
 
-export const APP_VERSION = "0.9.11";
+export const APP_VERSION = "0.10.0";
 
 export interface NavItem {
   /** Route path. */

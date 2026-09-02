@@ -15,6 +15,11 @@ export const THEME_PRESETS: readonly ThemePresetOption[] = [
   { value: "warm", labelKey: "settings.presets.warm", swatch: "bg-[oklch(0.62_0.14_50)]" },
   { value: "midnight", labelKey: "settings.presets.midnight", swatch: "bg-[oklch(0.5_0.13_255)]" },
   { value: "academy", labelKey: "settings.presets.academy", swatch: "bg-[oklch(0.56_0.21_300)]" },
+  { value: "forest", labelKey: "settings.presets.forest", swatch: "bg-[oklch(0.54_0.14_145)]" },
+  { value: "ocean", labelKey: "settings.presets.ocean", swatch: "bg-[oklch(0.54_0.13_205)]" },
+  { value: "rose", labelKey: "settings.presets.rose", swatch: "bg-[oklch(0.56_0.18_15)]" },
+  { value: "slate", labelKey: "settings.presets.slate", swatch: "bg-[oklch(0.52_0.06_260)]" },
+  { value: "contrast", labelKey: "settings.presets.contrast", swatch: "bg-[oklch(0.45_0.22_262)]" },
 ];
 
 /** Radio-style palette picker bound to the persisted theme store. */

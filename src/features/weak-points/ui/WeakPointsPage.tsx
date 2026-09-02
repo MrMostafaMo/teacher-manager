@@ -9,6 +9,7 @@ import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { buildSectionsByGroup } from "@/lib/build-grouped-sections";
 import { toast } from "@/lib/toast-store";
 import { notifyUndo } from "@/lib/undo-store";
@@ -48,6 +49,9 @@ export default function WeakPointsPage() {
     [filtered, groupsByStudent],
   );
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  useDataChanged(reload);
+
   function handleToggleResolved(row: StudentWeakPoint) {
     if (togglingId) return;
     setTogglingId(row.id);
@@ -107,7 +111,7 @@ export default function WeakPointsPage() {
         onQueryChange={setQuery}
       />
 
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <TableRowsSkeleton rows={8} cols={4} />
       ) : filtered.length === 0 ? (
         <Card>

@@ -17,6 +17,7 @@ import { exportReportExcel, exportReportPdf } from "@/features/reports/applicati
 import type { ReportData, ReportKey } from "@/features/reports/domain";
 import { formatDate } from "@/lib/utils/format";
 import { ReportExportActions, useReportColumns } from "./report-actions";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { toast } from "@/lib/toast-store";
 
 const REPORT_KEYS: ReportKey[] = [
@@ -42,6 +43,7 @@ export default function ReportsPage() {
   const [saved, setSaved] = useState<"excel" | "pdf" | null>(null);
 
   const [period, setPeriod] = useState(dayjs().format("YYYY-MM"));
+  const [reloadKey, setReloadKey] = useState(0);
 
   const translations = useCallback(
     (): ReportTranslations => ({
@@ -56,7 +58,7 @@ export default function ReportsPage() {
   );
 
   useEffect(() => {
-    setLoading(true);
+    if (!data) setLoading(true);
     const periodArg = ["students", "skills", "weakPoints"].includes(key) ? undefined : period;
     buildReportData(key, translations(), periodArg)
       .then(setData)
@@ -66,7 +68,9 @@ export default function ReportsPage() {
         setData(null);
       })
       .finally(() => setLoading(false));
-  }, [key, period, t, translations]);
+  }, [key, period, t, translations, reloadKey]);
+
+  useDataChanged(() => setReloadKey((k) => k + 1));
 
   async function handleExport(kind: "excel" | "pdf") {
     if (!data || exporting) return;
@@ -124,7 +128,7 @@ export default function ReportsPage() {
 
       <Card>
         <CardContent className="p-0">
-          {loading ? (
+          {loading && !data ? (
             <TableRowsSkeleton rows={6} cols={5} />
           ) : !data || data.rows.length === 0 ? (
             <EmptyState icon={BarChart3} title={t("reports.empty")} />

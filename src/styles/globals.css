@@ -15,14 +15,23 @@
 @import "./themes/warm.css";
 @import "./themes/midnight.css";
 @import "./themes/academy.css";
+@import "./themes/forest.css";
+@import "./themes/ocean.css";
+@import "./themes/rose.css";
+@import "./themes/slate.css";
+@import "./themes/contrast.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* Base identity tokens = the "nile" preset (default); other presets in
-   ./themes/*.css override these via the [data-theme] attribute. */
+/* ── Design tokens — three layers ──────────────────────────────
+   primitive (oklch) → semantic (--primary/--accent/--muted) → component
+   (--card/--sidebar/--chart-1..5, shadows). Presets in ./themes/*.css
+   override the semantic/component layer via [data-theme]. Derived tints
+   (--chart-tint-*) are global color-mix from --chart-1..5 (no per-preset copy).
+   Base = "nile" preset (default). */
 :root {
   --background: oklch(0.99 0.004 265);
   --foreground: oklch(0.17 0.012 265);

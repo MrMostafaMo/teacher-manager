@@ -46,7 +46,7 @@ describe("useCountUp", () => {
     expect(result.current).toBe(100);
   });
 
-  it("resets when target changes", () => {
+  it("animates from previous value when target changes", () => {
     const { result, rerender } = renderHook(({ target }) => useCountUp(target, 100), {
       initialProps: { target: 100 },
     });
@@ -58,7 +58,8 @@ describe("useCountUp", () => {
     act(() => {
       rerender({ target: 50 });
     });
-    expect(result.current).toBe(0);
+    // should stay at previous value, not reset to 0
+    expect(result.current).toBe(100);
     act(() => {
       time = 200;
       vi.advanceTimersByTime(100);

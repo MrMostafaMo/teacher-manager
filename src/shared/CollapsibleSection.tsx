@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { memo, useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 /** A section card with a collapsible header (collapse state is up to the caller). */
-export function CollapsibleSection({
+export const CollapsibleSection = memo(function CollapsibleSection({
   title,
   leading,
   meta,
@@ -58,4 +58,4 @@ export function CollapsibleSection({
       </CardContent>
     </Card>
   );
-}
+});

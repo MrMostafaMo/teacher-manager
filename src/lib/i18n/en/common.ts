@@ -27,8 +27,13 @@ export const common = {
   save: "Save",
   saving: "Saving…",
   saved: "Saved",
+  copy: "Copy",
+  copied: "Copied",
+  copyError: "Copy failed",
   sidebar: {
     toggle: "Toggle Sidebar",
+    pin: "Pin sidebar",
+    unpin: "Unpin sidebar",
   },
   commandPalette: {
     title: "Command palette",

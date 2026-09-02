@@ -12,6 +12,7 @@ import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { notifyUndo } from "@/lib/undo-store";
 import { GroupDetailDialog } from "./GroupDetailDialog";
 import { GroupFormDialog } from "./GroupFormDialog";
@@ -48,6 +49,8 @@ export default function GroupsPage() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useDataChanged(() => void reload());
 
   const detail = detailId ? rows.find((g) => g.id === detailId) : undefined;
 
@@ -107,7 +110,7 @@ export default function GroupsPage() {
 
       <Card>
         <CardContent className="p-0">
-          {loading ? (
+          {loading && rows.length === 0 ? (
             <TableRowsSkeleton rows={4} cols={3} />
           ) : rows.length === 0 ? (
             <EmptyState

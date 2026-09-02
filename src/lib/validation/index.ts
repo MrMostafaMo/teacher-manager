@@ -38,3 +38,19 @@ export const textSchema = (max: number) => z.string().trim().pipe(z.string().min
 
 /** Non-blank name / short title field. */
 export const nameSchema = textSchema(100);
+
+/** Strong password: 8+ chars, at least one lower, one upper, one digit. Matches Supabase "Strong" policy. */
+export function isStrongPassword(pw: string): boolean {
+  return pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /\d/.test(pw);
+}
+
+export function passwordWeakReason(pw: string): string | null {
+  if (pw.length < 8) return "length";
+  if (!/[a-z]/.test(pw) || !/[A-Z]/.test(pw) || !/\d/.test(pw)) return "chars";
+  return null;
+}
+
+export const passwordSchema = z
+  .string()
+  .min(8, "weak")
+  .refine((v) => isStrongPassword(v), "weak");

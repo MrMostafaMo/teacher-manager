@@ -102,7 +102,7 @@ export function StudentStatementDialog({
       description={`${studentName} · ${planLabel}`}
       className="max-w-2xl"
     >
-      {loading ? (
+      {loading && !data ? (
         <CardSkeleton lines={4} />
       ) : data ? (
         <div className="space-y-5">

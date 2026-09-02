@@ -14,6 +14,7 @@ import { StudentTrendsSection } from "@/features/student-profile/ui/StudentTrend
 import { useReportCard } from "@/features/report-card/ui/use-report-card";
 import { useIdCard } from "./use-id-card";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { ProfileFactsCard, ProfileStatsGrid } from "./profile-overview";
 import { computeProfileSummary } from "../application/profile-summary";
 import { ProfileHeader } from "./profile-header";
@@ -34,7 +35,7 @@ export default function StudentProfilePage() {
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    setLoading(true);
+    if (!data) setLoading(true);
     getStudentProfile(id)
       .then(setData)
       .catch((e) => {
@@ -44,6 +45,8 @@ export default function StudentProfilePage() {
       .finally(() => setLoading(false));
   }, [id, reloadKey, t]);
 
+  useDataChanged(() => setReloadKey((k) => k + 1));
+
   const { busy: reportCardBusy, run: runReportCard } = useReportCard(data);
   const { handleExportIdCard } = useIdCard();
 
@@ -51,7 +54,7 @@ export default function StudentProfilePage() {
     data ? profileSectionDefaults(data) : undefined,
   );
 
-  if (loading) {
+  if (loading && !data) {
     return <ProfilePageSkeleton />;
   }
   if (!data) {

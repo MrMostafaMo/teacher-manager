@@ -91,7 +91,7 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
 
         <Card>
           <CardContent className="p-0">
-            {loading ? (
+            {loading && rows.length === 0 ? (
               <div className="space-y-3 p-4">
                 <CardSkeleton lines={3} />
               </div>

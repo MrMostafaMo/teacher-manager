@@ -6,10 +6,11 @@ export function KpiGridSkeleton({ count = 9 }: { count?: number }) {
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <Card key={i}>
+        <Card key={i} className="min-h-[88px]">
           <CardContent className="space-y-2 p-4">
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-7 w-24" />
+            <Skeleton className="mt-1 h-4 w-12" />
           </CardContent>
         </Card>
       ))}
@@ -20,7 +21,7 @@ export function KpiGridSkeleton({ count = 9 }: { count?: number }) {
 /** Placeholder rows inside a bordered table while rows load. */
 export function TableRowsSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="flex min-h-[200px] flex-col justify-center overflow-x-auto">
       <div className="w-full text-sm">
         {Array.from({ length: rows }).map((_, r) => (
           <div key={r} className="flex items-center gap-6 border-b px-4 py-2.5 last:border-0">

@@ -1,45 +1,25 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DatabaseBackup, Download, HardDrive, RotateCcw, Upload } from "lucide-react";
+import { Copy, DatabaseBackup, Download, HardDrive, RotateCcw, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createBackup, restoreFromBackup, liveDbPath } from "@/features/settings/application/settings-cases";
-import { liveDbSize } from "@/features/settings/infrastructure/backup-service";
+import { SettingsCardShell } from "@/shared/SettingsCardShell";
+import { createBackup, restoreFromBackup } from "@/features/settings/application/settings-cases";
 import { toast, useToastStore } from "@/lib/toast-store";
-
-function formatSize(b: number): string {
-  if (b < 1024) return `${b} B`;
-  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
-  return `${(b / (1024 * 1024)).toFixed(2)} MB`;
-}
+import { formatSize, useDbInfo } from "./settings-data-helpers";
 
 export function SettingsDataCard({ onSavedChange }: { onSavedChange?: (s: string) => void }) {
   const { t } = useTranslation();
   const push = useToastStore((s) => s.push);
-  const [dbPath, setDbPath] = useState<string | null>(null);
-  const [pathError, setPathError] = useState(false);
-  const [dbSize, setDbSize] = useState<number | null>(null);
-  const [sizeError, setSizeError] = useState(false);
+  const { dbPath, pathError, dbSize, sizeError, loadPath, loadSize } = useDbInfo();
   const [busy, setBusy] = useState<"backup" | "restore" | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const loadPath = useCallback(() => {
-    setPathError(false);
-    setDbPath(null);
-    void liveDbPath()
-      .then(setDbPath)
-      .catch(() => setPathError(true));
-  }, []);
-  const loadSize = useCallback(() => {
-    setSizeError(false);
-    setDbSize(null);
-    void liveDbSize()
-      .then(setDbSize)
-      .catch(() => setSizeError(true));
-  }, []);
-
-  useEffect(() => { loadPath(); }, [loadPath]);
-  useEffect(() => { loadSize(); }, [loadSize]);
+  useEffect(() => {
+    if (!copied) return;
+    const id = window.setTimeout(() => setCopied(false), 1800);
+    return () => window.clearTimeout(id);
+  }, [copied]);
 
   function notifySaved(msg: string) {
     if (onSavedChange) onSavedChange(msg);
@@ -81,68 +61,74 @@ export function SettingsDataCard({ onSavedChange }: { onSavedChange?: (s: string
     }
   }
 
+  async function copyPath() {
+    if (!dbPath) return;
+    try {
+      await navigator.clipboard.writeText(dbPath);
+      setCopied(true);
+    } catch {
+      toast(t("common.copyError"), "error");
+    }
+  }
+
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-          <HardDrive className="size-4" />
-          {t("settings.data")}
-        </div>
-        <dl className="mb-4 space-y-1 text-sm text-muted-foreground">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <dt>{t("settings.dbPath")}</dt>
-            <dd className="font-mono text-xs break-all text-foreground" dir="ltr">
-              {pathError ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="text-destructive text-xs">{t("settings.loadError")}</span>
-                  <Button variant="ghost" size="xs" onClick={loadPath}>
-                    {t("common.retry")}
-                  </Button>
-                </span>
-              ) : dbPath === null ? (
-                <Skeleton className="h-3 w-48" />
-              ) : (
-                dbPath
-              )}
-            </dd>
+    <SettingsCardShell icon={HardDrive} title={t("settings.data")} description={t("settings.backupHint")}>
+      <div className="space-y-3">
+        <div className="rounded-xl bg-muted/40 p-3 ring-1 ring-border/50">
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="text-muted-foreground">{t("settings.dbPath")}</span>
+            {dbPath && (
+              <Button variant="ghost" size="xs" className="h-6 gap-1 text-xs" onClick={() => void copyPath()}>
+                <Copy className="size-3" />
+                {copied ? t("common.copied") : t("common.copy")}
+              </Button>
+            )}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <dt>{t("settings.dbSize")}</dt>
-            <dd className="text-foreground">
+          <div className="mt-1.5 rounded-lg bg-card px-3 py-2 font-mono text-xs break-all ring-1 ring-border" dir="ltr">
+            {pathError ? (
+              <span className="flex items-center gap-1.5">
+                <span className="text-destructive text-xs">{t("settings.loadError")}</span>
+                <Button variant="ghost" size="xs" onClick={loadPath}>{t("common.retry")}</Button>
+              </span>
+            ) : dbPath === null ? (
+              <Skeleton className="h-3 w-48" />
+            ) : (
+              dbPath
+            )}
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{t("settings.dbSize")}</span>
+            <span className="rounded-full bg-card px-2.5 py-1 text-xs font-medium tabular-nums ring-1 ring-border">
               {sizeError ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="text-destructive text-xs">{t("settings.loadError")}</span>
-                  <Button variant="ghost" size="xs" onClick={loadSize}>
-                    {t("common.retry")}
-                  </Button>
+                <span className="flex items-center gap-1">
+                  <span className="text-destructive">{t("settings.loadError")}</span>
+                  <Button variant="ghost" size="xs" onClick={loadSize}>{t("common.retry")}</Button>
                 </span>
               ) : dbSize === null ? (
-                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-12" />
               ) : (
                 formatSize(dbSize)
               )}
-            </dd>
+            </span>
           </div>
-        </dl>
+        </div>
+
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => void handleBackup()} disabled={busy !== null}>
-            <Download />
+          <Button onClick={() => void handleBackup()} disabled={busy !== null} className="gap-1.5">
+            <Download className="size-4" />
             {busy === "backup" ? t("settings.backingUp") : t("settings.backupAction")}
           </Button>
-          <Button variant="outline" onClick={() => void handleRestore()} disabled={busy !== null}>
-            <Upload />
+          <Button variant="outline" onClick={() => void handleRestore()} disabled={busy !== null} className="gap-1.5">
+            <Upload className="size-4" />
             {busy === "restore" ? t("settings.restoring") : t("settings.restoreAction")}
           </Button>
         </div>
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <DatabaseBackup className="size-3.5" />
-          {t("settings.backupHint")}
-        </p>
-        <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <RotateCcw className="size-3.5" />
-          {t("settings.restoreHint")}
-        </p>
-      </CardContent>
-    </Card>
+
+        <div className="flex flex-wrap gap-4 border-t pt-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5"><DatabaseBackup className="size-3.5" />{t("settings.backupHint")}</span>
+          <span className="flex items-center gap-1.5"><RotateCcw className="size-3.5" />{t("settings.restoreHint")}</span>
+        </div>
+      </div>
+    </SettingsCardShell>
   );
 }

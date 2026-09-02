@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToastStore } from "@/lib/toast-store";
-import { supabaseUpdatePassword } from "../application/supabase-auth";
+import { isStrongPassword } from "@/lib/validation";
+import { mapAuthErrorToKey, supabaseUpdatePassword } from "../application/supabase-auth";
 
 export function SupabaseChangePasswordForm() {
   const { t } = useTranslation();
@@ -13,8 +14,9 @@ export function SupabaseChangePasswordForm() {
   const [busy, setBusy] = useState(false);
 
   async function handleChange() {
-    if (newPassword.length < 6) {
-      toast({ message: t("auth.reset.passwordTooShort"), variant: "error" });
+    if (!isStrongPassword(newPassword)) {
+      const reason = newPassword.length < 8 ? t("auth.errors.weakPasswordShort") : t("auth.errors.weakPasswordChars");
+      toast({ message: reason, variant: "error" });
       return;
     }
     if (newPassword !== confirm) {
@@ -29,6 +31,11 @@ export function SupabaseChangePasswordForm() {
       setConfirm("");
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e ?? "");
+      const mappedKey = mapAuthErrorToKey(raw);
+      if (mappedKey) {
+        toast({ message: t(mappedKey), variant: "error" });
+        return;
+      }
       toast({ message: `${t("auth.reset.error")} — ${raw}`, variant: "error" });
     } finally {
       setBusy(false);

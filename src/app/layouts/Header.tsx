@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
 import { CalendarDays, Search } from "lucide-react";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { NAV_ITEMS, NAV_SECTIONS } from "@/app/navigation";
 import { useCommandStore } from "@/lib/command-store";
 import { formatDate } from "@/lib/utils/format";
+import { useNowMs } from "@/shared/useNow";
 import { NotificationDropdown } from "@/features/notifications/ui/notification-dropdown";
 import { SyncStatusBadge } from "@/features/sync/ui/SyncStatusBadge";
 
@@ -13,12 +13,7 @@ export function Header() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const setPaletteOpen = useCommandStore((s) => s.setOpen);
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 60_000);
-    return () => window.clearInterval(id);
-  }, []);
+  const now = useNowMs(60_000);
   const current =
     NAV_ITEMS.find((item) => item.to !== "/" && pathname.startsWith(item.to)) ??
     NAV_ITEMS.find((item) => item.to === pathname) ??

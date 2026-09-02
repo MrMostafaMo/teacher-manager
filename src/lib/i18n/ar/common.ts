@@ -29,8 +29,13 @@ export const common: Messages["common"] = {
   save: "حفظ",
   saving: "جارٍ الحفظ…",
   saved: "تم الحفظ",
+  copy: "نسخ",
+  copied: "تم النسخ",
+  copyError: "فشل النسخ",
   sidebar: {
     toggle: "تبديل الشريط الجانبي",
+    pin: "تثبيت الشريط الجانبي",
+    unpin: "إلغاء تثبيت الشريط الجانبي",
   },
   commandPalette: {
     title: "قائمة الأوامر",

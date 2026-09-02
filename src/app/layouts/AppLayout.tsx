@@ -4,7 +4,7 @@ import { Header } from "@/app/layouts/Header";
 import { Sidebar } from "@/app/layouts/Sidebar";
 import { TitleBar } from "@/app/layouts/TitleBar";
 import { CommandPalette } from "@/shared/CommandPalette";
-import { GlobalDialogs, DATA_CHANGED_EVENT } from "@/shared/GlobalDialogs";
+import { GlobalDialogs } from "@/shared/GlobalDialogs";
 import { ToastViewport } from "@/shared/ToastViewport";
 import { ShortcutsOverlay } from "@/shared/ShortcutsOverlay";
 import { NotificationSync } from "@/features/notifications/ui/notification-sync";
@@ -16,28 +16,18 @@ export function AppLayout() {
   const mainRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
   const setCommandOpen = useCommandStore((s) => s.setOpen);
-  const [dataVersion, setDataVersion] = useState(0);
-  const [prevPath, setPrevPath] = useState<string | null>(null);
+  const [prevPath, setPrevPath] = useState<string>(() => pathname);
 
   useShortcuts();
 
-  // Only animate the page entrance on route changes; global-dialog saves
-  // remount via dataVersion without replaying the slide-in.
   useEffect(() => {
     setPrevPath(pathname);
   }, [pathname]);
-  const animateEntrance = prevPath !== pathname;
+  const animateEntrance = prevPath !== pathname && prevPath !== null;
 
   useLayoutEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
   }, [pathname]);
-
-  // Remount the routed page when a global dialog saves, so it re-fetches.
-  useLayoutEffect(() => {
-    const onDataChanged = () => setDataVersion((v) => v + 1);
-    window.addEventListener(DATA_CHANGED_EVENT, onDataChanged);
-    return () => window.removeEventListener(DATA_CHANGED_EVENT, onDataChanged);
-  }, []);
 
   useLayoutEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -59,10 +49,10 @@ export function AppLayout() {
           <Header />
           <main ref={mainRef} className="flex-1 overflow-y-auto overscroll-none p-4 sm:p-6 xl:p-8">
           <div
-            key={`${pathname}:${dataVersion}`}
+            key={pathname}
             className={
               animateEntrance
-                ? "mx-auto max-w-[1720px] animate-in fade-in-0 zoom-in-[0.98] slide-in-from-bottom-2 duration-300 ease-out fill-mode-both"
+                ? "mx-auto max-w-[1720px] animate-in fade-in-0 slide-in-from-bottom-2 duration-150 ease-out fill-mode-both"
                 : "mx-auto max-w-[1720px]"
             }
           >

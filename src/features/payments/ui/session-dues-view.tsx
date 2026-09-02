@@ -7,9 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { sessionDues, type SessionDuesRow } from "@/features/payments/application/session-dues-cases";
 import { useSessionSettings } from "@/lib/session-settings-store";
-import { compareGroupsByName } from "@/lib/utils/group-sort";
-import { deriveCycle } from "@/features/payments/application/session-dues";
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
+import { enrichSections, enrichUngrouped, groupRows } from "./session-dues-helpers";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { DataTable } from "@/shared/DataTable";
@@ -55,19 +54,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
     return rows.filter((r) => r.status !== "ok");
   }, [rows, showAll]);
 
-  const { sections, ungrouped } = useMemo(() => {
-    const byGroup = new Map<string, { id: string; name: string; rows: SessionDuesRow[] }>();
-    const ungroupedRows: SessionDuesRow[] = [];
-    for (const r of filtered) {
-      if (r.groups.length === 0) ungroupedRows.push(r);
-      else for (const g of r.groups) {
-        let sec = byGroup.get(g.id);
-        if (!sec) { sec = { id: g.id, name: g.name, rows: [] }; byGroup.set(g.id, sec); }
-        sec.rows.push(r);
-      }
-    }
-    return { sections: [...byGroup.values()].sort((a,b)=> compareGroupsByName(a,b)), ungrouped: ungroupedRows };
-  }, [filtered]);
+  const { sections, ungrouped } = useMemo(() => groupRows(filtered), [filtered]);
 
   const adjust = useSessionAdjust(load);
   const cols = useMemo(
@@ -85,6 +72,16 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
     [t, adjust],
   );
   const { isCollapsed, toggle } = useCollapsedSections();
+  const getSessionRowKey = useCallback((r: SessionDuesRow) => r.student.id, []);
+
+  const sectionsWithEff = useMemo(
+    () => enrichSections(sections, groupSettings, sessionsPerCycle, warningAt),
+    [sections, groupSettings, sessionsPerCycle, warningAt],
+  );
+  const ungroupedEff = useMemo(
+    () => enrichUngrouped(ungrouped, sessionsPerCycle, warningAt),
+    [ungrouped, sessionsPerCycle, warningAt],
+  );
 
   return (
     <div className="space-y-3">
@@ -94,7 +91,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
         </Button>
       </div>
       
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <TableRowsSkeleton rows={5} cols={6} />
       ) : filtered.length === 0 ? (
         <Card>
@@ -107,56 +104,26 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
         </Card>
       ) : (
         <div className="space-y-4">
-          {sections.map((sec) => {
-            const cfg = groupSettings.get(sec.id);
-            const rawS = cfg?.sessionsPerCycle;
-            const rawW = cfg?.warningAt;
-            const S = rawS != null && Number.isFinite(Number(rawS)) ? Number(rawS) : Number(sessionsPerCycle) || 8;
-            const Wraw = rawW != null && Number.isFinite(Number(rawW)) ? Number(rawW) : (rawS != null && Number.isFinite(Number(rawS)) ? Number(rawS) - 2 : Number(warningAt) || 6);
-            const W = Number.isFinite(Wraw) ? Wraw : S - 2;
-            const effRows = sec.rows.map((r) => {
-              const raw = Number((r as unknown as { rawCount?: number }).rawCount ?? r.count) || 0;
-              const Snum = Number(S) || 8;
-              const Wnum = Number(W) || Snum - 2;
-              const hasPaid = r.lastPaidISO != null;
-              const d = deriveCycle(raw, Snum, Wnum, hasPaid);
-              const price = r.pricePerSession != null && Number.isFinite(Snum) && Snum > 0 ? Math.round((r.fullCycleAmount ?? 0) / Snum) : r.pricePerSession;
-              return {
-                ...r,
-                count: d.displayCount,
-                rawCount: raw,
-                cyclesOverdue: d.cyclesOverdue,
-                isOverdue: d.isOverdue,
-                showPaid: d.showPaid,
-                status: d.status,
-                remainingSessions: d.remainingSessions,
-                pricePerSession: price,
-                remainingAmount: price != null ? d.remainingSessions * price : null,
-              } as SessionDuesRow;
-            });
-            const warn = effRows.filter((r) => r.status === "warning").length;
-            const due = effRows.filter((r) => r.status === "due").length;
-            return (
-              <CollapsibleSection
-                key={sec.id}
-                title={`${sec.name} · ${S} ${t("payments.sessions.count")}`}
-                meta={`${effRows.length} · ${warn} ${t("dashboard.sessions.warning")} / ${due} ${t("dashboard.sessions.due")}`}
-                collapsed={isCollapsed(sec.id)}
-                onToggle={() => toggle(sec.id)}
-              >
-                <DataTable columns={cols} rows={effRows} getRowKey={(r) => r.student.id} />
-              </CollapsibleSection>
-            );
-          })}
-          {ungrouped.length > 0 && (
+          {sectionsWithEff.map(({ sec, effRows, warn, due, S }) => (
+            <CollapsibleSection
+              key={sec.id}
+              title={`${sec.name} · ${S} ${t("payments.sessions.count")}`}
+              meta={`${effRows.length} · ${warn} ${t("dashboard.sessions.warning")} / ${due} ${t("dashboard.sessions.due")}`}
+              collapsed={isCollapsed(sec.id)}
+              onToggle={() => toggle(sec.id)}
+            >
+              <DataTable columns={cols} rows={effRows} getRowKey={getSessionRowKey} />
+            </CollapsibleSection>
+          ))}
+          {ungroupedEff.rows.length > 0 && (
             <CollapsibleSection
               key="__ungrouped"
               title={t("payments.ungrouped")}
-              meta={`${ungrouped.length} · ${ungrouped.filter((r)=>r.status==="warning").length} ${t("dashboard.sessions.warning")} / ${ungrouped.filter((r)=>r.status==="due").length} ${t("dashboard.sessions.due")}`}
+              meta={`${ungroupedEff.rows.length} · ${ungroupedEff.warn} ${t("dashboard.sessions.warning")} / ${ungroupedEff.due} ${t("dashboard.sessions.due")}`}
               collapsed={isCollapsed("__ungrouped")}
               onToggle={() => toggle("__ungrouped")}
             >
-              <DataTable columns={cols} rows={ungrouped} getRowKey={(r) => r.student.id} />
+              <DataTable columns={cols} rows={ungroupedEff.rows} getRowKey={getSessionRowKey} />
             </CollapsibleSection>
           )}
         </div>

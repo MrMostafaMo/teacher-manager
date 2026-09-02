@@ -1,6 +1,8 @@
 export const shortcuts = {
   title: "Shortcuts",
   manage: "Manage Shortcuts",
+  hint: "Keyboard shortcuts",
+  paletteHint: "to open command palette",
   navigation: "Navigation",
   create: "Create",
   actions: "Actions",

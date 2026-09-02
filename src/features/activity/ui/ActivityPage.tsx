@@ -13,6 +13,7 @@ import { listRecentActivity, ACTION_KEYS, type ActivityLogRow } from "@/lib/acti
 import { useTimeStore } from "@/lib/time-store";
 import { ENTITY_ICONS, detailsParts } from "./activity-presentation";
 import { useActivityColumns } from "./activity-columns";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { toast } from "@/lib/toast-store";
 
 export default function ActivityPage() {
@@ -24,8 +25,11 @@ export default function ActivityPage() {
   const [query, setQuery] = useState("");
   const [entity, setEntity] = useState("all");
 
+  const [reloadKey, setReloadKey] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
+    if (rows.length === 0) setLoading(true);
     void (async () => {
       try {
         const [logs, students] = await Promise.all([
@@ -45,7 +49,9 @@ export default function ActivityPage() {
     return () => {
       cancelled = true;
     };
-  }, [t]);
+  }, [t, reloadKey]);
+
+  useDataChanged(() => setReloadKey((k) => k + 1));
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -94,7 +100,7 @@ export default function ActivityPage() {
         </Select>
       </div>
 
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <TableRowsSkeleton rows={8} cols={4} />
       ) : filtered.length === 0 ? (
         <Card>

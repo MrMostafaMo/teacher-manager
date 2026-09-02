@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { useToastStore } from "@/lib/toast-store";
 import {
   configureSupabase,
+  mapAuthErrorToKey,
   supabaseSignIn,
   supabaseSignUp,
   supabasePasswordReset,
   supabaseResendConfirmation,
 } from "../application/supabase-auth";
 import { refreshSyncUi } from "./sync-events";
+import { passwordWeakReason } from "@/lib/validation";
 
 const isManagedConfig = Boolean(import.meta.env.VITE_SUPABASE_URL);
 
@@ -30,7 +32,17 @@ export function SupabaseLoginForm() {
   const [mode, setMode] = useState<"in" | "up">("in");
 
   async function handleAuth() {
-    if (!email.trim() || password.length < 6) {
+    if (!email.trim()) {
+      toast({ message: t("auth.login.error"), variant: "error" });
+      return;
+    }
+    if (mode === "up") {
+      const reason = passwordWeakReason(password);
+      if (reason) {
+        toast({ message: t("auth.errors.weakPassword"), variant: "error" });
+        return;
+      }
+    } else if (password.length < 6) {
       toast({ message: t("auth.login.error"), variant: "error" });
       return;
     }
@@ -42,6 +54,16 @@ export function SupabaseLoginForm() {
       toast({ message: t("auth.login.connected"), variant: "success" });
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e ?? "");
+      const mappedKey = mapAuthErrorToKey(raw);
+      if (mappedKey) {
+        if (mappedKey === "auth.errors.notConfirmed" || raw.includes("email_not_confirmed")) {
+          setPendingConfirm(email.trim());
+          toast({ message: t("auth.login.checkEmail"), variant: "info" });
+          return;
+        }
+        toast({ message: t(mappedKey), variant: "error" });
+        return;
+      }
       if (raw.includes("email_not_confirmed") && mode === "up") {
         setPendingConfirm(email.trim());
         toast({ message: t("auth.login.checkEmail"), variant: "info" });
@@ -67,7 +89,9 @@ export function SupabaseLoginForm() {
       toast({ message: t("auth.login.resetSent"), variant: "success" });
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e ?? "");
-      toast({ message: `${t("auth.login.resetError")} — ${raw}`, variant: "error" });
+      const mappedKey = mapAuthErrorToKey(raw);
+      const msg = mappedKey ? t(mappedKey) : `${t("auth.login.resetError")} — ${raw}`;
+      toast({ message: msg, variant: "error" });
     } finally {
       setResetBusy(false);
     }
@@ -82,7 +106,9 @@ export function SupabaseLoginForm() {
       toast({ message: t("auth.login.resendSent"), variant: "success" });
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e ?? "");
-      toast({ message: `${t("auth.login.resendError")} — ${raw}`, variant: "error" });
+      const mappedKey = mapAuthErrorToKey(raw);
+      const msg = mappedKey ? t(mappedKey) : `${t("auth.login.resendError")} — ${raw}`;
+      toast({ message: msg, variant: "error" });
     } finally {
       setResendBusy(false);
     }

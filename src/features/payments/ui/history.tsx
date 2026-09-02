@@ -125,7 +125,7 @@ export const HistoryView = memo(function HistoryView({
 
       
 
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <TableRowsSkeleton rows={5} cols={5} />
       ) : rows.length === 0 ? (
         <Card>

@@ -49,8 +49,21 @@ export async function syncNow(reason?: string): Promise<SyncReport> {
 }
 
 export function errorKey(error: unknown): string {
-  if (error instanceof TypeError && String(error.message).toLowerCase().includes("fetch")) return "sync.errors.network";
-  if (error instanceof TypeError && String(error.message).includes("Failed to fetch")) return "sync.errors.network";
+  const msg = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  if (
+    msg.includes("failed to fetch") ||
+    msg.includes("load failed") ||
+    msg.includes("networkerror") ||
+    msg.includes("aborterror") ||
+    msg.includes("timeout") ||
+    msg.includes("network error") ||
+    (error instanceof TypeError && msg.includes("fetch"))
+  )
+    return "sync.errors.network";
+  if (msg.includes("no such table") || msg.includes("no such column") || msg.includes("has no column named")) {
+    console.error("[sync] schema mismatch", error);
+    return "sync.errors.unknown";
+  }
   if (!(error instanceof SupabaseError)) {
     console.error("[sync] unknown error", error);
     return "sync.errors.unknown";

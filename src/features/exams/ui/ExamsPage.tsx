@@ -11,6 +11,7 @@ import { listGroups } from "@/features/groups/application/group-cases";
 import type { Exam, StudyGroup } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { notifyUndo } from "@/lib/undo-store";
 import { ExamFormDialog } from "./ExamFormDialog";
 import { ExamDetailDialog } from "./ExamDetailDialog";
@@ -33,6 +34,8 @@ export default function ExamsPage() {
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
 
+  useDataChanged(bump);
+
   useEffect(() => {
     void listGroups()
       .then(setGroups)
@@ -41,7 +44,7 @@ export default function ExamsPage() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
+    if (rows.length === 0) setLoading(true);
     listExams()
       .then(setRows)
       .catch((e) => {
@@ -98,7 +101,7 @@ export default function ExamsPage() {
 
       
 
-      {loading || groupsLoading ? (
+      {(loading && rows.length === 0) || (groupsLoading && groups.length === 0) ? (
         <TableRowsSkeleton rows={5} cols={4} />
       ) : groups.length === 0 ? (
         <Card>

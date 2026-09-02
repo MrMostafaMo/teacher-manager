@@ -66,7 +66,7 @@ export function GlobalDialogs() {
   }
 
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       {dialog === "student" && (
         <StudentFormDialog open student={null} onClose={closeDialog} onSaved={handleSaved} />
       )}

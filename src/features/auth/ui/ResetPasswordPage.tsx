@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToastStore } from "@/lib/toast-store";
-import { supabaseUpdatePassword } from "@/features/sync/application/supabase-auth";
+import { supabaseUpdatePassword, mapAuthErrorToKey } from "@/features/sync/application/supabase-auth";
+import { passwordWeakReason } from "@/lib/validation";
 
 function extractRecoveryToken(): string | null {
   // Supabase sends #access_token=...&type=recovery after verify
@@ -53,8 +54,9 @@ export default function ResetPasswordPage() {
   }, [token]);
 
   async function handleSave() {
-    if (password.length < 6) {
-      toast({ message: t("auth.reset.passwordTooShort"), variant: "error" });
+    const reason = passwordWeakReason(password);
+    if (reason) {
+      toast({ message: t("auth.errors.weakPassword"), variant: "error" });
       return;
     }
     if (password !== confirm) {
@@ -72,6 +74,11 @@ export default function ResetPasswordPage() {
       void navigate("/login");
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e ?? "");
+      const mappedKey = mapAuthErrorToKey(raw);
+      if (mappedKey) {
+        toast({ message: t(mappedKey), variant: "error" });
+        return;
+      }
       toast({ message: `${t("auth.reset.error")} — ${raw}`, variant: "error" });
     } finally {
       setBusy(false);

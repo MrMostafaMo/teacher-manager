@@ -87,7 +87,7 @@ export function HomeworkDetailDialog({
       title={detail ? detail.title : t("homework.detail")}
       className="max-w-lg"
     >
-      {loading ? (
+      {loading && !detail ? (
         <CardSkeleton lines={4} />
       ) : detail ? (
         <div className="space-y-4">

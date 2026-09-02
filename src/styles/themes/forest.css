@@ -1,0 +1,64 @@
+/*
+ * Forest preset — emerald/teal "growth" feel. Applies when
+ * <html data-theme="forest">, orthogonal to the light/dark mode class
+ * (both variants are defined here).
+ */
+:root[data-theme="forest"] {
+  --background: oklch(0.985 0.008 145);
+  --card: oklch(0.998 0.004 145);
+  --popover: oklch(0.998 0.004 145);
+  --muted: oklch(0.965 0.008 145);
+  --muted-foreground: oklch(0.52 0.025 145);
+  --secondary: oklch(0.962 0.008 145);
+  --border: oklch(0.914 0.006 145);
+  --input: oklch(0.914 0.006 145);
+  --primary: oklch(0.54 0.14 145);
+  --primary-strong: oklch(0.47 0.14 145);
+  --primary-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.94 0.032 145);
+  --accent-foreground: oklch(0.38 0.09 145);
+  --ring: oklch(0.6 0.12 145);
+  --sidebar: oklch(0.98 0.006 145);
+  --sidebar-foreground: oklch(0.22 0.018 145);
+  --sidebar-border: oklch(0.92 0.008 145);
+  --sidebar-accent: oklch(0.94 0.032 145);
+  --sidebar-accent-foreground: oklch(0.38 0.09 145);
+  --chart-1: oklch(0.54 0.14 145);
+  --chart-2: oklch(0.6 0.13 85);
+  --chart-3: oklch(0.58 0.12 210);
+  --chart-4: oklch(0.62 0.14 35);
+  --chart-5: oklch(0.57 0.1 300);
+  --kpi-shadow:
+    0 1px 2px rgb(15 23 42 / 0.03), 0 2px 8px rgb(15 23 42 / 0.04),
+    0 6px 18px rgb(22 130 80 / 0.09);
+  --primary-shadow: 0 1px 2px rgb(22 130 80 / 0.22), 0 4px 12px rgb(22 130 80 / 0.16);
+}
+
+.dark[data-theme="forest"] {
+  --background: oklch(0.16 0.014 145);
+  --card: oklch(0.215 0.016 145);
+  --popover: oklch(0.215 0.016 145);
+  --muted: oklch(0.26 0.012 145);
+  --muted-foreground: oklch(0.7 0.012 145);
+  --secondary: oklch(0.26 0.012 145);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --primary: oklch(0.7 0.13 145);
+  --primary-strong: oklch(0.65 0.13 145);
+  --primary-foreground: oklch(0.24 0.06 145);
+  --accent: oklch(0.32 0.05 145);
+  --accent-foreground: oklch(0.93 0.03 145);
+  --ring: oklch(0.71 0.11 145);
+  --sidebar: oklch(0.19 0.013 145);
+  --sidebar-foreground: oklch(0.95 0.01 145);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-accent: oklch(0.32 0.05 145);
+  --sidebar-accent-foreground: oklch(0.93 0.03 145);
+  --chart-1: oklch(0.7 0.13 145);
+  --chart-2: oklch(0.74 0.12 85);
+  --chart-3: oklch(0.7 0.11 210);
+  --chart-4: oklch(0.72 0.13 35);
+  --chart-5: oklch(0.68 0.12 300);
+  --kpi-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(52 211 153 / 0.15);
+  --primary-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.3);
+}

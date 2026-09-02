@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ export function ExamsSection({
 }) {
   const { t } = useTranslation();
   const columns = useExamColumns();
+  const getExamKey = useCallback((e: ProfileExam) => e.id, []);
   return (
     <ProfileSection
       title={t("profile.sections.exams")}
@@ -38,7 +40,7 @@ export function ExamsSection({
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.exams")} />
       ) : (
-        <ProfileTable<ProfileExam> columns={columns} rows={rows} getRowKey={(e) => e.id} />
+        <ProfileTable<ProfileExam> columns={columns} rows={rows} getRowKey={getExamKey} />
       )}
     </ProfileSection>
   );
@@ -55,6 +57,7 @@ export function SessionsSection({
 }) {
   const { t } = useTranslation();
   const columns = useSessionColumns();
+  const getSessionKey = useCallback((r: ProfileSessionAttendance) => r.id, []);
   return (
     <ProfileSection
       title={t("profile.sections.sessions")}
@@ -65,11 +68,7 @@ export function SessionsSection({
       {rows.length === 0 ? (
         <ProfileEmpty text={t("profile.empty.sessions")} />
       ) : (
-        <ProfileTable<ProfileSessionAttendance>
-          columns={columns}
-          rows={rows}
-          getRowKey={(r) => r.id}
-        />
+        <ProfileTable<ProfileSessionAttendance> columns={columns} rows={rows} getRowKey={getSessionKey} />
       )}
     </ProfileSection>
   );
@@ -131,6 +130,7 @@ export function ActivitySection({
 }) {
   const { t } = useTranslation();
   const columns = useProfileActivityColumns();
+  const getActivityKey = useCallback((row: ActivityLogItem) => row.id, []);
   return (
     <ProfileSection
       title={t("profile.sections.activity")}
@@ -138,7 +138,7 @@ export function ActivitySection({
       collapsed={collapsed}
       onToggle={onToggle}
     >
-      <ProfileTable<ActivityLogItem> columns={columns} rows={rows} getRowKey={(row) => row.id} />
+      <ProfileTable<ActivityLogItem> columns={columns} rows={rows} getRowKey={getActivityKey} />
     </ProfileSection>
   );
 }

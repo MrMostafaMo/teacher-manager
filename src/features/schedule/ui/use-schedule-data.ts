@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { listGroups } from "@/features/groups/application/group-cases";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import { listScheduleExceptions } from "@/features/schedule/application/schedule-exception-cases";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
@@ -43,6 +44,8 @@ export function useScheduleData(): ScheduleData {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useDataChanged(() => void reload());
 
   return { sessions, groups, memberCounts, exceptions, loading, reload };
 }

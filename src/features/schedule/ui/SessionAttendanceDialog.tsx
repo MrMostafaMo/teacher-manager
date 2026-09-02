@@ -120,7 +120,7 @@ export function SessionAttendanceDialog({
 
         {students.length > 0 && <SessionStatusSummary students={students} draft={draft} />}
 
-        {loading ? (
+        {loading && students.length === 0 ? (
           <div className="space-y-3 p-4">
             <CardSkeleton lines={3} />
           </div>

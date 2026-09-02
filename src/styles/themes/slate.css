@@ -1,0 +1,64 @@
+/*
+ * Slate preset — desaturated slate/graphite "professional" feel. Applies when
+ * <html data-theme="slate">, orthogonal to the light/dark mode class
+ * (both variants are defined here).
+ */
+:root[data-theme="slate"] {
+  --background: oklch(0.99 0.002 260);
+  --card: oklch(1 0 0);
+  --popover: oklch(1 0 0);
+  --muted: oklch(0.967 0.003 260);
+  --muted-foreground: oklch(0.54 0.01 260);
+  --secondary: oklch(0.965 0.003 260);
+  --border: oklch(0.92 0.004 260);
+  --input: oklch(0.92 0.004 260);
+  --primary: oklch(0.52 0.06 260);
+  --primary-strong: oklch(0.45 0.06 260);
+  --primary-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.945 0.008 260);
+  --accent-foreground: oklch(0.35 0.04 260);
+  --ring: oklch(0.58 0.05 260);
+  --sidebar: oklch(0.98 0.003 260);
+  --sidebar-foreground: oklch(0.22 0.01 260);
+  --sidebar-border: oklch(0.92 0.004 260);
+  --sidebar-accent: oklch(0.945 0.008 260);
+  --sidebar-accent-foreground: oklch(0.35 0.04 260);
+  --chart-1: oklch(0.52 0.06 260);
+  --chart-2: oklch(0.58 0.08 160);
+  --chart-3: oklch(0.62 0.1 50);
+  --chart-4: oklch(0.57 0.08 300);
+  --chart-5: oklch(0.6 0.07 15);
+  --kpi-shadow:
+    0 1px 2px rgb(15 23 42 / 0.03), 0 2px 8px rgb(15 23 42 / 0.04),
+    0 6px 18px rgb(100 116 139 / 0.08);
+  --primary-shadow: 0 1px 2px rgb(100 116 139 / 0.2), 0 4px 12px rgb(100 116 139 / 0.14);
+}
+
+.dark[data-theme="slate"] {
+  --background: oklch(0.17 0.006 260);
+  --card: oklch(0.225 0.008 260);
+  --popover: oklch(0.225 0.008 260);
+  --muted: oklch(0.27 0.008 260);
+  --muted-foreground: oklch(0.71 0.008 260);
+  --secondary: oklch(0.27 0.008 260);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --primary: oklch(0.7 0.05 260);
+  --primary-strong: oklch(0.65 0.05 260);
+  --primary-foreground: oklch(0.22 0.02 260);
+  --accent: oklch(0.33 0.02 260);
+  --accent-foreground: oklch(0.94 0.01 260);
+  --ring: oklch(0.7 0.04 260);
+  --sidebar: oklch(0.2 0.007 260);
+  --sidebar-foreground: oklch(0.96 0.005 260);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-accent: oklch(0.33 0.02 260);
+  --sidebar-accent-foreground: oklch(0.94 0.01 260);
+  --chart-1: oklch(0.68 0.05 260);
+  --chart-2: oklch(0.7 0.07 160);
+  --chart-3: oklch(0.72 0.08 50);
+  --chart-4: oklch(0.68 0.07 300);
+  --chart-5: oklch(0.7 0.06 15);
+  --kpi-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(148 163 184 / 0.12);
+  --primary-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.3);
+}

@@ -164,3 +164,13 @@ export async function configureSupabase(url: string, anonKey: string): Promise<v
   await setSyncMeta(SYNC_META_KEYS.supabaseUrl, url.trim());
   await setSyncMeta(SYNC_META_KEYS.supabaseAnonKey, anonKey.trim());
 }
+
+/** Map raw Supabase Auth error text to an i18n key (or null to keep generic). */
+export function mapAuthErrorToKey(raw: string): string | null {
+  const lower = raw.toLowerCase();
+  if (lower.includes("password should contain") || lower.includes("weak_password") || lower.includes("password is too weak") || lower.includes("password should be at least")) return "auth.errors.weakPassword";
+  if (lower.includes("user already registered") || lower.includes("already registered") || lower.includes("already exists") || lower.includes("duplicate")) return "auth.errors.alreadyExists";
+  if (lower.includes("invalid login credentials") || lower.includes("invalid_grant") || lower.includes("invalid credentials")) return "auth.errors.invalidCredentials";
+  if (lower.includes("email not confirmed") || lower.includes("email_not_confirmed")) return "auth.errors.notConfirmed";
+  return null;
+}

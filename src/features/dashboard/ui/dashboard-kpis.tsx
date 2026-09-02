@@ -85,7 +85,7 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
             </div>
             <span
               aria-hidden
-              className="flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-foreground/5 animate-[pulse_0.6s_ease-in-out_1]"
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-foreground/5"
               style={{ color: accent, backgroundColor: KPI_TINT[key] }}
             >
               <Icon className="size-4.5" />

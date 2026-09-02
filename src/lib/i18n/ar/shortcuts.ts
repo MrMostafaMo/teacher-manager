@@ -3,6 +3,8 @@ import type { Messages } from "@/lib/i18n/en";
 export const shortcuts: Messages["shortcuts"] = {
   title: "الاختصارات",
   manage: "إدارة الاختصارات",
+  hint: "اختصارات لوحة المفاتيح",
+  paletteHint: "لفتح لوحة الأوامر",
   navigation: "التنقل",
   create: "إنشاء",
   actions: "إجراءات",

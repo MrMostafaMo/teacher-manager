@@ -11,6 +11,7 @@ import { listMemberships } from "@/features/groups/application/group-cases";
 import type { Student } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { notifyUndo } from "@/lib/undo-store";
 import { StudentFilters } from "./StudentFilters";
 import { StudentsDialogs } from "./students-dialogs";
@@ -60,6 +61,8 @@ export default function StudentsPage() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useDataChanged(() => void reload());
 
   const detail = detailId ? rows.find((s) => s.id === detailId) : undefined;
 
@@ -136,7 +139,7 @@ export default function StudentsPage() {
         count={rows.length}
       />
 
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <TableRowsSkeleton rows={5} cols={4} />
       ) : rows.length === 0 ? (
         <Card>

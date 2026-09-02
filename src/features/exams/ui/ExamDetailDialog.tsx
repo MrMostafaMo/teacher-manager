@@ -88,7 +88,7 @@ export function ExamDetailDialog({ open, examId, onClose, onChanged }: ExamDetai
       title={detail ? detail.title : t("exams.detail")}
       className="max-w-lg"
     >
-      {loading ? (
+      {loading && !detail ? (
         <CardSkeleton lines={4} />
       ) : detail ? (
         <div className="space-y-4">

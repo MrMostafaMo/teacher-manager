@@ -12,6 +12,7 @@ import { DailyRosterCard } from "./DailyRosterCard";
 import { DailyToolbar } from "./daily-toolbar";
 import { DailyActions } from "./daily-actions";
 import { useDailySave } from "./use-daily-save";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { toast } from "@/lib/toast-store";
 
 export function DailyView({
@@ -40,33 +41,38 @@ export function DailyView({
       .catch(() => setGroups([]));
   }, []);
 
-  async function load(date: string, groupId: string) {
-    setLoading(true);
-    try {
-      const { students, rows, hasSessionsToday, defaults } = await getDaily(
-        date,
-        groupId || undefined,
-      );
-      const byId = Object.fromEntries(rows.map((r) => [r.studentId, r.status])) as Record<
-        string,
-        AttendanceStatus
-      >;
-      setHasSessionsToday(hasSessionsToday);
-      setStudents(students);
-      setSavedStatuses(byId);
-      setDraft(Object.fromEntries(students.map((s) => [s.id, byId[s.id] ?? defaults[s.id]])));
-    } catch (e) {
-      console.error("Failed to load attendance", e);
-      toast(t("attendance.errors.load"), "error");
-      setStudents([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const load = useCallback(
+    async (date: string, groupId: string) => {
+      if (students.length === 0) setLoading(true);
+      try {
+        const { students: fetched, rows, hasSessionsToday, defaults } = await getDaily(
+          date,
+          groupId || undefined,
+        );
+        const byId = Object.fromEntries(rows.map((r) => [r.studentId, r.status])) as Record<
+          string,
+          AttendanceStatus
+        >;
+        setHasSessionsToday(hasSessionsToday);
+        setStudents(fetched);
+        setSavedStatuses(byId);
+        setDraft(Object.fromEntries(fetched.map((s) => [s.id, byId[s.id] ?? defaults[s.id]])));
+      } catch (e) {
+        console.error("Failed to load attendance", e);
+        toast(t("attendance.errors.load"), "error");
+        setStudents([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t, students.length],
+  );
 
   useEffect(() => {
     void load(date, groupId);
   }, [date, groupId]);
+
+  useDataChanged(() => void load(date, groupId));
 
   const counts = useMemo(() => {
     const c: Record<AttendanceStatus, number> = { present: 0, absent: 0, late: 0, excused: 0 };

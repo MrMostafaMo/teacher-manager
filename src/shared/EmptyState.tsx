@@ -14,7 +14,7 @@ interface EmptyStateProps {
 export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
   return (
     <div
-      className={cn("flex flex-col items-center justify-center gap-2 py-16 text-center", className)}
+      className={cn("flex min-h-[200px] flex-col items-center justify-center gap-2 py-10 text-center", className)}
     >
       <div className="relative flex size-16 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,color-mix(in_oklch,var(--primary)_12%,transparent),color-mix(in_oklch,var(--chart-5)_10%,transparent))] shadow-(--card-shadow) ring-1 ring-primary/10">
         <Icon className="size-7 text-primary" />

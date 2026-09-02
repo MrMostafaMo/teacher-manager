@@ -6,13 +6,18 @@ import "@/lib/i18n";
 import { applyLanguage } from "@/lib/i18n";
 import { bootstrapDatabase } from "@/lib/db/bootstrap";
 import { readInitialLanguage } from "@/lib/i18n/language-store";
-import { applyTheme, readInitialPreset, readInitialTheme } from "@/lib/theme/theme-store";
+import {
+  applyTheme,
+  readInitialCustomPrimary,
+  readInitialPreset,
+  readInitialTheme,
+} from "@/lib/theme/theme-store";
 import { ThemeProvider } from "@/lib/theme/theme-provider";
 import "@/styles/globals.css";
 
-// Apply persisted language/theme (mode + preset) before first paint — no flash.
+// Apply persisted language/theme (mode + preset + custom) before first paint — no flash.
 applyLanguage(readInitialLanguage());
-applyTheme(readInitialTheme(), readInitialPreset());
+applyTheme(readInitialTheme(), readInitialPreset(), readInitialCustomPrimary());
 
 // Disable native WebKit context menu (right-click) — keep it only inside
 // editable fields where copy/paste is useful.

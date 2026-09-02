@@ -1,0 +1,64 @@
+/*
+ * Rose preset — coral/rose "vibrant" feel. Applies when
+ * <html data-theme="rose">, orthogonal to the light/dark mode class
+ * (both variants are defined here).
+ */
+:root[data-theme="rose"] {
+  --background: oklch(0.985 0.007 15);
+  --card: oklch(1 0 0);
+  --popover: oklch(1 0 0);
+  --muted: oklch(0.965 0.008 15);
+  --muted-foreground: oklch(0.52 0.022 15);
+  --secondary: oklch(0.962 0.008 15);
+  --border: oklch(0.914 0.006 15);
+  --input: oklch(0.914 0.006 15);
+  --primary: oklch(0.56 0.18 15);
+  --primary-strong: oklch(0.49 0.18 15);
+  --primary-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.94 0.032 15);
+  --accent-foreground: oklch(0.42 0.13 15);
+  --ring: oklch(0.62 0.15 15);
+  --sidebar: oklch(0.975 0.008 15);
+  --sidebar-foreground: oklch(0.2 0.016 15);
+  --sidebar-border: oklch(0.91 0.012 15);
+  --sidebar-accent: oklch(0.94 0.032 15);
+  --sidebar-accent-foreground: oklch(0.42 0.13 15);
+  --chart-1: oklch(0.56 0.18 15);
+  --chart-2: oklch(0.6 0.14 35);
+  --chart-3: oklch(0.62 0.13 300);
+  --chart-4: oklch(0.55 0.13 240);
+  --chart-5: oklch(0.6 0.14 130);
+  --kpi-shadow:
+    0 1px 2px rgb(15 23 42 / 0.03), 0 2px 8px rgb(15 23 42 / 0.04),
+    0 6px 18px rgb(225 60 80 / 0.09);
+  --primary-shadow: 0 1px 2px rgb(225 60 80 / 0.22), 0 4px 12px rgb(225 60 80 / 0.16);
+}
+
+.dark[data-theme="rose"] {
+  --background: oklch(0.16 0.013 15);
+  --card: oklch(0.215 0.016 15);
+  --popover: oklch(0.215 0.016 15);
+  --muted: oklch(0.26 0.012 15);
+  --muted-foreground: oklch(0.7 0.012 15);
+  --secondary: oklch(0.26 0.012 15);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --primary: oklch(0.7 0.14 15);
+  --primary-strong: oklch(0.65 0.14 15);
+  --primary-foreground: oklch(0.25 0.06 15);
+  --accent: oklch(0.33 0.06 15);
+  --accent-foreground: oklch(0.94 0.04 15);
+  --ring: oklch(0.72 0.13 15);
+  --sidebar: oklch(0.19 0.013 15);
+  --sidebar-foreground: oklch(0.95 0.01 15);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-accent: oklch(0.33 0.06 15);
+  --sidebar-accent-foreground: oklch(0.94 0.04 15);
+  --chart-1: oklch(0.7 0.14 15);
+  --chart-2: oklch(0.72 0.13 35);
+  --chart-3: oklch(0.7 0.12 300);
+  --chart-4: oklch(0.68 0.11 240);
+  --chart-5: oklch(0.7 0.12 130);
+  --kpi-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(251 113 133 / 0.15);
+  --primary-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.3);
+}

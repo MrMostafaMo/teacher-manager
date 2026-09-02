@@ -18,6 +18,9 @@
   --accent: oklch(0.94 0.03 300);
   --accent-foreground: oklch(0.44 0.16 300);
   --ring: oklch(0.6 0.19 300);
+  --sidebar: oklch(0.975 0.01 300);
+  --sidebar-foreground: oklch(0.2 0.015 295);
+  --sidebar-border: oklch(0.91 0.012 300);
   --sidebar-accent: oklch(0.94 0.03 300);
   --sidebar-accent-foreground: oklch(0.44 0.16 300);
   --chart-1: oklch(0.57 0.21 300);
@@ -25,11 +28,6 @@
   --chart-3: oklch(0.66 0.16 20);
   --chart-4: oklch(0.55 0.16 250);
   --chart-5: oklch(0.6 0.18 270);
-  --chart-tint-1: color-mix(in oklch, var(--chart-1) 12%, transparent);
-  --chart-tint-2: color-mix(in oklch, var(--chart-2) 12%, transparent);
-  --chart-tint-3: color-mix(in oklch, var(--chart-3) 12%, transparent);
-  --chart-tint-4: color-mix(in oklch, var(--chart-4) 12%, transparent);
-  --chart-tint-5: color-mix(in oklch, var(--chart-5) 12%, transparent);
   --kpi-shadow:
     0 1px 2px rgb(15 23 42 / 0.03), 0 2px 8px rgb(15 23 42 / 0.04), 0 6px 18px rgb(147 51 234 / 0.1);
   --primary-shadow: 0 1px 2px rgb(147 51 234 / 0.22), 0 4px 12px rgb(147 51 234 / 0.16);
@@ -50,6 +48,9 @@
   --accent: oklch(0.33 0.06 300);
   --accent-foreground: oklch(0.94 0.04 300);
   --ring: oklch(0.73 0.15 300);
+  --sidebar: oklch(0.19 0.014 295);
+  --sidebar-foreground: oklch(0.95 0.01 295);
+  --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-accent: oklch(0.33 0.06 300);
   --sidebar-accent-foreground: oklch(0.94 0.04 300);
   --chart-1: oklch(0.7 0.16 300);
@@ -57,11 +58,6 @@
   --chart-3: oklch(0.74 0.12 20);
   --chart-4: oklch(0.68 0.13 250);
   --chart-5: oklch(0.7 0.14 270);
-  --chart-tint-1: color-mix(in oklch, var(--chart-1) 12%, transparent);
-  --chart-tint-2: color-mix(in oklch, var(--chart-2) 12%, transparent);
-  --chart-tint-3: color-mix(in oklch, var(--chart-3) 12%, transparent);
-  --chart-tint-4: color-mix(in oklch, var(--chart-4) 12%, transparent);
-  --chart-tint-5: color-mix(in oklch, var(--chart-5) 12%, transparent);
   --kpi-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(167 139 250 / 0.15);
   --primary-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.3);
 }

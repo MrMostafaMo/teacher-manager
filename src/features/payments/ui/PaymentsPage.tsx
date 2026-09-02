@@ -13,6 +13,7 @@ import { DuesView } from "./dues";
 import { HistoryView } from "./history";
 import { SessionDuesView } from "./session-dues-view";
 import { useSessionSettings } from "@/lib/session-settings-store";
+import { useDataChanged } from "@/shared/useDataChanged";
 
 export default function PaymentsPage() {
   const { t } = useTranslation();
@@ -36,6 +37,8 @@ export default function PaymentsPage() {
   const [reloadKey, setReloadKey] = useState(0);
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
+
+  useDataChanged(bump);
 
   const handleEdit = useCallback((p: Payment) => {
     setEditing(p);

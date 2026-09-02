@@ -43,7 +43,7 @@ export function GroupMembersSection({
         <p className="text-xs font-medium text-muted-foreground">
           {t("groups.members")} ({members.length})
         </p>
-        {loading ? (
+        {loading && members.length === 0 ? (
           <CardSkeleton lines={2} />
         ) : members.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("groups.noMembers")}</p>

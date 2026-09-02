@@ -11,9 +11,11 @@ import {
   supabaseSignUp,
   supabasePasswordReset,
   supabaseResendConfirmation,
-  configureSupabase,
+  mapAuthErrorToKey,
 } from "@/features/sync/application/supabase-auth";
 import { refreshSyncUi } from "@/features/sync/ui/sync-events";
+import { passwordWeakReason } from "@/lib/validation";
+import { SupabaseConfigRow } from "./SupabaseConfigRow";
 
 const isManagedConfig = Boolean(import.meta.env.VITE_SUPABASE_URL);
 
@@ -30,7 +32,17 @@ export function SupabaseChoiceCard() {
   const [mode, setMode] = useState<"in" | "up">("in");
 
   async function handleAuth() {
-    if (!email.trim() || password.length < 6) {
+    if (!email.trim()) {
+      toast({ message: t("auth.login.error"), variant: "error" });
+      return;
+    }
+    if (mode === "up") {
+      const reason = passwordWeakReason(password);
+      if (reason) {
+        toast({ message: t("auth.errors.weakPassword"), variant: "error" });
+        return;
+      }
+    } else if (password.length < 6) {
       toast({ message: t("auth.login.error"), variant: "error" });
       return;
     }
@@ -44,6 +56,16 @@ export function SupabaseChoiceCard() {
       void navigate("/");
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e ?? "");
+      const mappedKey = mapAuthErrorToKey(raw);
+      if (mappedKey) {
+        if (mappedKey === "auth.errors.notConfirmed" || raw.includes("email_not_confirmed")) {
+          setPendingConfirmEmail(email.trim());
+          toast({ message: t("auth.login.checkEmail"), variant: "info" });
+          return;
+        }
+        toast({ message: t(mappedKey), variant: "error" });
+        return;
+      }
       const isConfirmRequired = raw.includes("email_not_confirmed");
       if (isConfirmRequired && mode === "up") {
         setPendingConfirmEmail(email.trim());
@@ -70,7 +92,9 @@ export function SupabaseChoiceCard() {
       toast({ message: t("auth.login.resetSent"), variant: "success" });
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e ?? "");
-      toast({ message: `${t("auth.login.resetError")} — ${raw}`, variant: "error" });
+      const mappedKey = mapAuthErrorToKey(raw);
+      const msg = mappedKey ? t(mappedKey) : `${t("auth.login.resetError")} — ${raw}`;
+      toast({ message: msg, variant: "error" });
     } finally {
       setResetBusy(false);
     }
@@ -85,7 +109,9 @@ export function SupabaseChoiceCard() {
       toast({ message: t("auth.login.resendSent"), variant: "success" });
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e ?? "");
-      toast({ message: `${t("auth.login.resendError")} — ${raw}`, variant: "error" });
+      const mappedKey = mapAuthErrorToKey(raw);
+      const msg = mappedKey ? t(mappedKey) : `${t("auth.login.resendError")} — ${raw}`;
+      toast({ message: msg, variant: "error" });
     } finally {
       setResendBusy(false);
     }
@@ -146,6 +172,7 @@ export function SupabaseChoiceCard() {
         {pendingConfirmEmail && (
           <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs">
             <p className="text-amber-800">{t("auth.login.checkEmail")}</p>
+            <p className="mt-1 text-[11px] text-amber-700">{t("auth.login.checkEmailHint")}</p>
             <button
               type="button"
               onClick={() => void handleResend()}
@@ -159,35 +186,5 @@ export function SupabaseChoiceCard() {
         {!isManagedConfig && <SupabaseConfigRow />}
       </CardContent>
     </Card>
-  );
-}
-
-function SupabaseConfigRow() {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [url, setUrl] = useState("");
-  const [key, setKey] = useState("");
-
-  if (!open) {
-    return (
-      <button type="button" onClick={() => setOpen(true)} className="text-xs text-muted-foreground underline">
-        {t("sync.settings.helpLink")}
-      </button>
-    );
-  }
-
-  return (
-    <div className="space-y-2 rounded-md border p-2">
-      <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://xxx.supabase.co" dir="ltr" />
-      <Input value={key} onChange={(e) => setKey(e.target.value)} placeholder="anon key" dir="ltr" />
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => void configureSupabase(url, key).then(() => setOpen(false))}
-        disabled={!url.trim() || !key.trim()}
-      >
-        {t("common.save")}
-      </Button>
-    </div>
   );
 }

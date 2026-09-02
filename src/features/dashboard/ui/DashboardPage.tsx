@@ -1,37 +1,15 @@
-import { memo, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
-import { Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { EmptyState } from "@/shared/EmptyState";
-import { MonthPicker } from "@/shared/month-picker";
-import { useDialogStore } from "@/lib/dialog-store";
-import { Button } from "@/components/ui/button";
+import { useDataChanged } from "@/shared/useDataChanged";
 import {
   getDashboardData,
   type DashboardData,
 } from "@/features/dashboard/application/dashboard-cases";
 import { currentMonth } from "@/features/dashboard/application/dashboard-helpers";
-import {
-  HOMEWORK_COLORS,
-  monthShort,
-  type AttendancePoint,
-  type FinancePoint,
-  type HomeworkSlice,
-} from "./dashboard-chart-data";
 import { DashboardSkeleton } from "./DashboardSkeleton";
-import { buildKpis } from "./dashboard-kpi-data";
-import { KpiGrid } from "./dashboard-kpis";
-import { DashboardQuickActions } from "./DashboardQuickActions";
-import {
-  TodaySessionsCard,
-  OverdueHomeworksCard,
-  TopDebtorsCard,
-  WeakPointsCard,
-  WeakSkillsCard,
-  SessionDuesCard,
-} from "./DashboardSectionCards";
-import { AttendanceHomeworkCharts, FinanceCharts } from "./DashboardChartsSection";
+import { DashboardContent } from "./dashboard-content";
 
 type ChartStatus = "loading" | "ready" | "error";
 
@@ -41,10 +19,11 @@ export default function DashboardPage() {
   const selectedMonth = searchParams.get("month") ?? currentMonth();
   const [status, setStatus] = useState<ChartStatus>("loading");
   const [data, setData] = useState<DashboardData | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
+    if (!data) setStatus("loading");
     void (async () => {
       try {
         const d = await getDashboardData(selectedMonth);
@@ -60,7 +39,9 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedMonth]);
+  }, [selectedMonth, reloadKey]);
+
+  useDataChanged(() => setReloadKey((k) => k + 1));
 
   if (status === "error") {
     return (
@@ -72,7 +53,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (status !== "ready" || !data) {
+  if (!data) {
     return <DashboardSkeleton />;
   }
 
@@ -84,112 +65,3 @@ export default function DashboardPage() {
     />
   );
 }
-
-/** The loaded dashboard: hooks live here so the loading guards can't break hook order. */
-const DashboardContent = memo(function DashboardContent({
-  data,
-  selectedMonth,
-  onMonthChange,
-}: {
-  data: DashboardData;
-  selectedMonth: string;
-  onMonthChange: (month: string) => void;
-}) {
-  const { t } = useTranslation();
-
-  const attendanceChart = useMemo<AttendancePoint[]>(
-    () =>
-      data.attendanceTrend.map((r) => ({
-        month: monthShort(r.month),
-        present: r.present,
-        late: r.late,
-        absent: r.absent,
-        excused: r.excused,
-      })),
-    [data],
-  );
-
-  const financeChart = useMemo<FinancePoint[]>(
-    () =>
-      data.financeTrend.map((r) => ({
-        month: monthShort(r.month),
-        collected: r.collected,
-        expenses: r.expenses,
-        net: r.collected - r.expenses,
-      })),
-    [data],
-  );
-
-  const homeworkPie = useMemo<HomeworkSlice[]>(
-    () => [
-      {
-        key: "submitted",
-        value: data.homeworkSubmitted,
-        fill: HOMEWORK_COLORS.submitted,
-        label: t("homework.statusSubmitted"),
-      },
-      {
-        key: "pending",
-        value: data.homeworkPending,
-        fill: HOMEWORK_COLORS.pending,
-        label: t("homework.statusPending"),
-      },
-      {
-        key: "late",
-        value: data.homeworkLate,
-        fill: HOMEWORK_COLORS.late,
-        label: t("homework.statusLate"),
-      },
-    ],
-    [data, t],
-  );
-
-  const kpis = useMemo(() => buildKpis(data), [data]);
-  const openDialog = useDialogStore((s) => s.openDialog);
-  const isEmpty = data.totalStudents === 0;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">{t("dashboard.monthLabel")}</p>
-        <MonthPicker
-          value={selectedMonth}
-          onChange={onMonthChange}
-          ariaLabel={t("dashboard.selectMonth")}
-        />
-      </div>
-      {isEmpty ? (
-        <EmptyState
-          icon={Users}
-          title={t("dashboard.empty")}
-          description={t("dashboard.subtitle")}
-          action={<Button onClick={() => openDialog("group")}>{t("groups.add")}</Button>}
-        />
-      ) : null}
-      <DashboardQuickActions newStudents={data.deltas.newStudents} />
-      <KpiGrid kpis={kpis} />
-      
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {/* Main Column (Charts & Wide Cards) */}
-        <div className="space-y-6 xl:col-span-2">
-          <TodaySessionsCard sessions={data.todaySessions} />
-          <AttendanceHomeworkCharts
-            attendanceChart={attendanceChart}
-            homeworkPie={homeworkPie}
-            homeworkCount={data.homeworkCount}
-          />
-          <FinanceCharts financeChart={financeChart} />
-          <WeakSkillsCard skills={data.weakSkills} totalStudents={data.totalStudents} />
-        </div>
-
-        {/* Sidebar Column (Lists & Alerts) */}
-        <div className="space-y-6">
-          <SessionDuesCard rows={data.sessionDues as never} />
-          <OverdueHomeworksCard items={data.overdueHomeworks} />
-          <TopDebtorsCard debtors={data.topDebtors} />
-          <WeakPointsCard items={data.topWeakPoints} />
-        </div>
-      </div>
-    </div>
-  );
-});

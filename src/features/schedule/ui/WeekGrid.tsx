@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession, SessionException } from "@/lib/db/schema";
 import { formatDate, formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { orderedDayIndices, useWeekStore } from "@/lib/week-store";
+import { useNow } from "@/shared/useNow";
 import { applyExceptions, conflictIds } from "@/features/schedule/application/schedule-exceptions";
 import {
   HOUR_PX,
@@ -48,13 +49,9 @@ export default function WeekGrid({
   const [weekOffset, setWeekOffset] = useState(0);
   const isCurrentWeek = weekOffset === 0;
 
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 60_000);
-    return () => window.clearInterval(id);
-  }, []);
+  const now = useNow(60_000);
   const today = now.getDay();
-  const dates = weekDates(now, weekStartsOn, weekOffset);
+  const dates = useMemo(() => weekDates(now, weekStartsOn, weekOffset), [now, weekStartsOn, weekOffset]);
 
   const effectiveByDay = useMemo(
     () => applyExceptions(byDay, exceptions, dates),

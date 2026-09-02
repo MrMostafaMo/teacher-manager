@@ -33,7 +33,7 @@ export function DailyRosterCard({
   return (
     <Card>
       <CardContent className="p-0">
-        {loading ? (
+        {loading && students.length === 0 ? (
           <TableRowsSkeleton rows={5} cols={3} />
         ) : students.length === 0 ? (
           hasSessionsToday ? (

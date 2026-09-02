@@ -16,6 +16,7 @@ import { listGroups } from "@/features/groups/application/group-cases";
 import type { Homework, StudyGroup } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
+import { useDataChanged } from "@/shared/useDataChanged";
 import { notifyUndo } from "@/lib/undo-store";
 import { HomeworkFormDialog } from "./HomeworkFormDialog";
 import { HomeworkDetailDialog } from "./HomeworkDetailDialog";
@@ -42,6 +43,8 @@ export default function HomeworkPage() {
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
 
+  useDataChanged(bump);
+
   useEffect(() => {
     void listGroups()
       .then(setGroups)
@@ -50,7 +53,7 @@ export default function HomeworkPage() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
+    if (rows.length === 0) setLoading(true);
     listHomeworks()
       .then(setRows)
       .catch((e) => {
@@ -112,7 +115,7 @@ export default function HomeworkPage() {
 
       
 
-      {loading || groupsLoading ? (
+      {(loading && rows.length === 0) || (groupsLoading && groups.length === 0) ? (
         <TableRowsSkeleton rows={5} cols={4} />
       ) : groups.length === 0 ? (
         <Card>

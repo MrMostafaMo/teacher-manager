@@ -90,7 +90,7 @@ export function StudentSkillsDialog({
       title={t("skills.studentSkills", { name: studentName })}
       className="max-w-lg"
     >
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <CardSkeleton lines={4} />
       ) : rows.length === 0 ? (
         <div className="space-y-4">

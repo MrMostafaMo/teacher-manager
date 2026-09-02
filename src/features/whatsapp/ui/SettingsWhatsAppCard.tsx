@@ -2,18 +2,14 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageCircle, MessageSquarePlus, Pencil, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/shared/EmptyState";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
+import { SettingsCardShell } from "@/shared/SettingsCardShell";
 import { useToastStore } from "@/lib/toast-store";
 import type { WhatsAppTemplate } from "../domain";
-import {
-  deleteTemplate,
-  listTemplates,
-  resetTemplateDefaults,
-} from "../application/whatsapp-cases";
+import { deleteTemplate, listTemplates, resetTemplateDefaults } from "../application/whatsapp-cases";
 import { TemplateFormDialog } from "./TemplateFormDialog";
 
 export function SettingsWhatsAppCard() {
@@ -44,79 +40,46 @@ export function SettingsWhatsAppCard() {
   const rows = templates ?? [];
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <MessageCircle className="size-4" />
-            {t("whatsapp.settings.title")}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setAdding(true)}
-              disabled={!templates}
-            >
-              <Plus className="size-4" />
-              {t("whatsapp.settings.add")}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => void handleResetAll()}
-              disabled={!templates}
-            >
-              <RotateCcw className="size-4" />
-              {t("whatsapp.settings.reset")}
-            </Button>
-          </div>
+    <SettingsCardShell
+      icon={MessageCircle}
+      title={t("whatsapp.settings.title")}
+      description={t("whatsapp.settings.hint")}
+      badge={templates ? <Badge variant="secondary" className="tabular-nums">{rows.length}</Badge> : null}
+      actions={
+        <div className="flex gap-1.5">
+          <Button size="sm" variant="outline" className="h-8 gap-1 text-xs" onClick={() => setAdding(true)} disabled={!templates}>
+            <Plus className="size-3.5" />
+            {t("whatsapp.settings.add")}
+          </Button>
+          <Button size="icon-sm" variant="ghost" aria-label={t("whatsapp.settings.reset")} title={t("whatsapp.settings.reset")} onClick={() => void handleResetAll()} disabled={!templates}>
+            <RotateCcw className="size-4" />
+          </Button>
         </div>
-
-        <p className="mb-3 text-xs text-muted-foreground">{t("whatsapp.settings.hint")}</p>
-
-        {templates === null ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
-        ) : rows.length === 0 ? (
-          <EmptyState
-            icon={MessageSquarePlus}
-            title={t("whatsapp.settings.noTemplates")}
-            description={t("whatsapp.settings.noTemplatesHint")}
-          />
-        ) : (
-          <ul className="divide-y">
-            {rows.map((template) => (
-              <li key={template.id} className="flex items-center gap-2 py-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-medium">{template.name}</span>
-                    <Badge variant="secondary" className="shrink-0">
-                      {t(`whatsapp.purposes.${template.purpose}`)}
-                    </Badge>
-                  </div>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{template.text}</p>
+      }
+    >
+      {templates === null ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
+      ) : rows.length === 0 ? (
+        <EmptyState icon={MessageSquarePlus} title={t("whatsapp.settings.noTemplates")} description={t("whatsapp.settings.noTemplatesHint")} />
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((template) => (
+            <li key={template.id} className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2.5 transition-colors hover:border-primary/20 hover:bg-muted/40">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-sm font-medium">{template.name}</span>
+                  <Badge variant="secondary" className="shrink-0 text-[11px]">{t(`whatsapp.purposes.${template.purpose}`)}</Badge>
                 </div>
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  aria-label={t("whatsapp.settings.edit")}
-                  title={t("whatsapp.settings.edit")}
-                  onClick={() => setEditing(template)}
-                >
-                  <Pencil />
-                </Button>
-                <ConfirmDeleteButton
-                  armed={armed === template.id}
-                  deleteLabel={t("whatsapp.settings.delete")}
-                  confirmLabel={t("whatsapp.settings.delete")}
-                  onDelete={() => void handleDelete(template.id)}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{template.text}</p>
+              </div>
+              <Button size="icon-sm" variant="ghost" aria-label={t("whatsapp.settings.edit")} title={t("whatsapp.settings.edit")} onClick={() => setEditing(template)}>
+                <Pencil />
+              </Button>
+              <ConfirmDeleteButton armed={armed === template.id} deleteLabel={t("whatsapp.settings.delete")} confirmLabel={t("whatsapp.settings.delete")} onDelete={() => void handleDelete(template.id)} />
+            </li>
+          ))}
+        </ul>
+      )}
       <TemplateFormDialog
         open={adding || editing !== null}
         template={editing}
@@ -130,6 +93,6 @@ export function SettingsWhatsAppCard() {
           void listTemplates(t).then(setTemplates);
         }}
       />
-    </Card>
+    </SettingsCardShell>
   );
 }

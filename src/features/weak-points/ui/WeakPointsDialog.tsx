@@ -113,7 +113,7 @@ export function WeakPointsDialog({ open, studentId, onClose, onChanged }: WeakPo
       title={t("profile.sections.weakPoints")}
       className="max-w-lg"
     >
-      {loading ? (
+      {loading && rows.length === 0 ? (
         <CardSkeleton lines={4} />
       ) : loadError ? (
         <p className="text-sm text-destructive">{loadError}</p>
