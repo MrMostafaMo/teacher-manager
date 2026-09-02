@@ -6,13 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { buildSectionsByGroup } from "@/lib/build-grouped-sections";
-import { deleteStudent, listStudents } from "@/features/students/application/student-cases";
-import { listMemberships } from "@/features/groups/application/group-cases";
+import { deleteStudent, listStudentsWithGroups } from "@/features/students/application/student-cases";
 import type { Student } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { useDataChanged } from "@/shared/useDataChanged";
 import { notifyUndo } from "@/lib/undo-store";
+import { toast } from "@/lib/toast-store";
 import { StudentFilters } from "./StudentFilters";
 import { StudentsDialogs } from "./students-dialogs";
 import { StudentsEmpty } from "./StudentsTable";
@@ -38,17 +38,11 @@ export default function StudentsPage() {
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const [rowsData, memberships] = await Promise.all([
-        listStudents({ query, status }),
-        listMemberships(),
-      ]);
+      const { rows: rowsData, groupsByStudent: map } = await listStudentsWithGroups({
+        query,
+        status,
+      });
       setRows(rowsData);
-      const map = new Map<string, Array<{ id: string; name: string }>>();
-      for (const x of memberships) {
-        const arr = map.get(x.studentId) ?? [];
-        arr.push({ id: x.groupId, name: x.groupName });
-        map.set(x.studentId, arr);
-      }
       setGroupsByStudent(map);
     } catch (error) {
       console.error("Failed to load students", error);
@@ -93,6 +87,7 @@ export default function StudentsPage() {
         }
       } catch (error) {
         console.error("Failed to delete student", error);
+        toast(t("students.deleteError"), "error");
       } finally {
         clear();
       }

@@ -22,7 +22,7 @@ export async function sessionDues(): Promise<SessionDuesRow[]> {
     groupRepository.memberships(),
   ]);
   const students = activeStudents.filter(
-    (s) => !((s as unknown as { isExempt?: boolean }).isExempt) && enrolledBy(s, monthEnd(month)),
+    (s) => !s.isExempt && enrolledBy(s, monthEnd(month)),
   );
   const plansById = new Map(plans.map((p) => [p.id, p]));
   const paymentsByStudent = new Map<string, typeof payments>();

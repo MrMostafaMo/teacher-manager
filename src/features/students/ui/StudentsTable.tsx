@@ -67,6 +67,7 @@ export const StudentsTable = memo(function StudentsTable({
               className="h-auto px-0 py-0 font-medium"
               title={t("students.profile")}
               onClick={() => navigate(`/students/${s.id}`)}
+              data-copyable
             >
               {s.name}
             </Button>
@@ -76,12 +77,16 @@ export const StudentsTable = memo(function StudentsTable({
       {
         header: t("students.columns.guardian"),
         className: "text-muted-foreground",
-        render: (s) => s.guardianName ?? "—",
+        render: (s) => <span data-copyable>{s.guardianName ?? "—"}</span>,
       },
       {
         header: t("students.columns.phone"),
         className: "text-muted-foreground",
-        render: (s) => <span dir="ltr">{s.phone ?? "—"}</span>,
+        render: (s) => (
+          <span dir="ltr" data-copyable>
+            {s.phone ?? "—"}
+          </span>
+        ),
       },
       {
         header: t("students.columns.gradeLevel"),

@@ -39,7 +39,7 @@ export function StudentStatementDialog({
   const load = useCallback(() => {
     if (!studentId) return;
     setLoading(true);
-    studentStatement(studentId)
+    studentStatement(studentId, (n) => t("payments.statement.cycle", { n }))
       .then(setData)
       .catch((e) => {
         console.error("Failed to load student statement", e);
@@ -64,6 +64,7 @@ export function StudentStatementDialog({
       monthDues: t("profile.statement.monthDues"),
       total: t("profile.statement.total"),
       method: (m) => t(`payments.${m}`),
+      cycle: (n) => t("payments.statement.cycle", { n }),
     };
   }
 

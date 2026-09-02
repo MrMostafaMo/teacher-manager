@@ -114,7 +114,7 @@ export function buildSessionDues(
     const attendances = attendanceByStudent.get(student.id) ?? [];
     const plan = student.planId ? (plansById.get(student.planId) ?? null) : null;
     // ponytail: manual offset per student (extra sessions counted toward the cycle).
-    const offset = Number((student as unknown as { sessionOffset?: number }).sessionOffset ?? 0) || 0;
+    const offset = Number(student.sessionOffset ?? 0) || 0;
     const base = countSince(payments, attendances);
     const rawCount = Math.max(0, base + offset);
     const hasPaid = payments.length > 0;

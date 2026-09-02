@@ -92,7 +92,7 @@ export function computeStatement(
  * running/total means the student is paid ahead (advance/credit).
  */
 
-export async function studentStatement(studentId: string): Promise<StudentStatement> {
+export async function studentStatement(studentId: string, cycleFmt: (n: number) => string): Promise<StudentStatement> {
   const [student, plans, allPayments, allAttendances] = await Promise.all([
     studentRepository.findById(studentId),
     planRepository.list(),
@@ -154,7 +154,7 @@ export async function studentStatement(studentId: string): Promise<StudentStatem
       paidRemaining -= paid;
       running += due - paid;
       months.push({
-        period: `دورة ${i}`,
+        period: cycleFmt(i),
         due,
         paid,
         balance: due - paid,

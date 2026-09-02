@@ -53,9 +53,9 @@ export function initialStudentForm(student: Student | null): StudentFormState {
     birthDate: student?.birthDate ?? "",
     gradeLevel: student?.gradeLevel ?? "",
     photoUrl: student?.photoUrl ?? "",
-    isExempt: (student as unknown as { isExempt?: boolean })?.isExempt ?? false,
-    exemptReason: ((student as unknown as { exemptReason?: string | null })?.exemptReason as StudentFormState["exemptReason"]) ?? "",
-    exemptNote: (student as unknown as { exemptNote?: string | null })?.exemptNote ?? "",
+    isExempt: student?.isExempt ?? false,
+    exemptReason: (student?.exemptReason as StudentFormState["exemptReason"]) ?? "",
+    exemptNote: student?.exemptNote ?? "",
   };
 }
 
@@ -69,6 +69,7 @@ export function studentFormErrors(
     if (field === "enrolledOn") return t("students.errors.enrolledOnInvalid");
     if (field === "birthDate") return t("students.errors.birthDateInvalid");
     if (field === "phone" || field === "guardianPhone") return t("students.errors.phoneInvalid");
+    if (field === "exemptReason") return t("students.errors.exemptReasonRequired");
     return t("students.errors.tooLong");
   });
 }

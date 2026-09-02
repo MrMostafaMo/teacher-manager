@@ -1,6 +1,6 @@
 [package]
 name = "teacher-manager"
-version = "0.10.0"
+version = "0.10.1"
 description = "Teacher Manager — manage an educational center offline"
 authors = ["Mostafa"]
 edition = "2021"

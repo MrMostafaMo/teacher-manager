@@ -17,7 +17,7 @@ import { useDataChanged } from "@/shared/useDataChanged";
 
 export default function PaymentsPage() {
   const { t } = useTranslation();
-  const billingMode = useSessionSettings((s: any) => s.billingMode);
+  const billingMode = useSessionSettings((s) => s.billingMode);
   const [view, setView] = useState<"dues" | "history" | "sessions">(
     billingMode === "sessions" ? "sessions" : "dues"
   );

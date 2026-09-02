@@ -82,4 +82,7 @@ export const payments = {
     invalid: "Please check the entered values",
   },
   table: "Payments table",
+  statement: {
+    cycle: "Cycle {{n}}",
+  },
 } as const;

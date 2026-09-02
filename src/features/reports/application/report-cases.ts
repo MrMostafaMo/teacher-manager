@@ -58,6 +58,7 @@ export type StatementTranslations = {
   monthDues: string;
   total: string;
   method: (m: string) => string;
+  cycle: (n: number) => string;
 };
 
 /**
@@ -69,7 +70,7 @@ export async function buildStudentStatementReport(
   studentId: string,
   t: StatementTranslations,
 ): Promise<ReportData> {
-  const st = await studentStatement(studentId);
+  const st = await studentStatement(studentId, t.cycle);
   const paidIn = new Map<string, typeof st.payments>();
   for (const p of st.payments) {
     const period = p.payment.period ?? "";

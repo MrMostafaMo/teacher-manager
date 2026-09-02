@@ -120,10 +120,14 @@ export async function saveExamResults(examId: string, inputs: ExamResultInput[])
   const members = await examRepository.members(exam.groupId);
   const eligibleIds = new Set(examEligibleIds(exam, members));
 
+  // 1. Validate all inputs before touching the DB
+  const toRemove: string[] = [];
+  const toUpsert: Array<{ studentId: string; score: number; note: string | null }> = [];
+
   for (const raw of inputs) {
     const input = examResultSchema.parse(raw);
     if (input.score === null) {
-      await examRepository.removeResult(examId, input.studentId);
+      toRemove.push(input.studentId);
       continue;
     }
     if (input.score < 0 || input.score > maxScore) {
@@ -132,7 +136,16 @@ export async function saveExamResults(examId: string, inputs: ExamResultInput[])
     if (!eligibleIds.has(input.studentId)) {
       throw new Error(`student ${input.studentId} is not a member of the exam's group`);
     }
-    await examRepository.upsertResult(examId, input.studentId, input.score, input.note ?? null);
-    await logExamResult(examId, input.studentId, input.score);
+    toUpsert.push({ studentId: input.studentId, score: input.score, note: input.note ?? null });
   }
+
+  // 2. Batch all DB mutations concurrently
+  const ops = [
+    ...toRemove.map((sid) => examRepository.removeResult(examId, sid)),
+    ...toUpsert.map((u) => examRepository.upsertResult(examId, u.studentId, u.score, u.note)),
+  ];
+  await Promise.all(ops);
+
+  // 3. Log all results (fire-and-forget batched)
+  await Promise.all(toUpsert.map((u) => logExamResult(examId, u.studentId, u.score)));
 }

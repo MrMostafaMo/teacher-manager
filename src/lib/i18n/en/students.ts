@@ -65,6 +65,7 @@ export const students = {
     birthDateInvalid: "Enter a valid birth date (YYYY-MM-DD)",
     phoneInvalid: "Enter a valid phone number",
     tooLong: "Too long",
+    exemptReasonRequired: "Exemption reason is required",
   },
   deleteError: "Failed to delete student",
   classError: "Failed to change class",

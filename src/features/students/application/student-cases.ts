@@ -21,6 +21,7 @@ import {
 import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
 import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
+import { listMemberships } from "@/features/groups/application/group-cases";
 
 /**
  * Students use-cases. Validate input, write through the repository, and
@@ -29,6 +30,20 @@ import { uuid } from "@/lib/utils/uuid";
 
 export async function listStudents(filters?: StudentFilters): Promise<Student[]> {
   return studentRepository.search(filters);
+}
+
+export async function listStudentsWithGroups(filters?: StudentFilters): Promise<{ rows: Student[]; groupsByStudent: Map<string, Array<{ id: string; name: string }>> }> {
+  const [rows, memberships] = await Promise.all([
+    listStudents(filters),
+    listMemberships(),
+  ]);
+  const map = new Map<string, Array<{ id: string; name: string }>>();
+  for (const x of memberships) {
+    const arr = map.get(x.studentId) ?? [];
+    arr.push({ id: x.groupId, name: x.groupName });
+    map.set(x.studentId, arr);
+  }
+  return { rows, groupsByStudent: map };
 }
 
 export async function createStudent(input: StudentInput): Promise<Student> {

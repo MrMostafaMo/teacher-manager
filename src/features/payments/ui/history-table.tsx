@@ -36,7 +36,7 @@ export const HistoryTable = memo(function HistoryTable({
       {
         header: t("payments.student"),
         className: "font-medium",
-        render: ({ studentName }) => studentName,
+        render: ({ studentName }) => <span data-copyable>{studentName}</span>,
       },
       {
         header: t("payments.plan"),
@@ -46,12 +46,20 @@ export const HistoryTable = memo(function HistoryTable({
       {
         header: t("payments.period"),
         className: "text-muted-foreground",
-        render: ({ payment }) => <span dir="ltr">{payment.period}</span>,
+        render: ({ payment }) => (
+          <span dir="ltr" data-copyable>
+            {payment.period}
+          </span>
+        ),
       },
       {
         header: t("payments.amount"),
         className: "font-medium tabular-nums",
-        render: ({ payment }) => <span dir="ltr">{formatMoney(payment.amount)}</span>,
+        render: ({ payment }) => (
+          <span dir="ltr" data-copyable>
+            {formatMoney(payment.amount)}
+          </span>
+        ),
       },
       {
         header: t("payments.method"),

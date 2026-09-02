@@ -67,6 +67,7 @@ export const students: Messages["students"] = {
     birthDateInvalid: "تاريخ الميلاد غير صحيح (YYYY-MM-DD)",
     phoneInvalid: "رقم الهاتف غير صحيح",
     tooLong: "النص طويل جدًا",
+    exemptReasonRequired: "يجب اختيار سبب الإعفاء",
   },
   deleteError: "تعذّر حذف الطالب",
   classError: "تعذّر تغيير الفرقة",

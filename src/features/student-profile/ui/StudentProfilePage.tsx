@@ -9,6 +9,8 @@ import { StudentFormDialog } from "@/features/students/ui/StudentFormDialog";
 import { StudentSkillsDialog } from "@/features/skills/ui/StudentSkillsDialog";
 import { WeakPointsDialog } from "@/features/weak-points/ui/WeakPointsDialog";
 import { SendWhatsAppDialog } from "@/features/whatsapp/ui/SendWhatsAppDialog";
+import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { StudentStatementDialog } from "@/features/student-profile/ui/StudentStatementDialog";
 import { StudentTrendsSection } from "@/features/student-profile/ui/StudentTrendsSection";
 import { useReportCard } from "@/features/report-card/ui/use-report-card";
@@ -33,14 +35,17 @@ export default function StudentProfilePage() {
   const [statementOpen, setStatementOpen] = useState(false);
   const [whatsAppOpen, setWhatsAppOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!data) setLoading(true);
+    setError(false);
     getStudentProfile(id)
       .then(setData)
       .catch((e) => {
         console.error("Failed to load student profile", e);
         toast(t("profile.loadError"), "error");
+        setError(true);
       })
       .finally(() => setLoading(false));
   }, [id, reloadKey, t]);
@@ -56,6 +61,17 @@ export default function StudentProfilePage() {
 
   if (loading && !data) {
     return <ProfilePageSkeleton />;
+  }
+  if (error && !data) {
+    return (
+      <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 py-16 text-center">
+        <AlertTriangle className="size-10 text-destructive" />
+        <p className="text-destructive">{t("profile.loadError")}</p>
+        <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+          {t("common.retry")}
+        </Button>
+      </div>
+    );
   }
   if (!data) {
     return <p className="py-16 text-center text-destructive">{t("profile.notFound")}</p>;

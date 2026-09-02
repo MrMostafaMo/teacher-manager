@@ -84,4 +84,7 @@ export const payments: Messages["payments"] = {
     invalid: "تحقق من القيم المدخلة",
   },
   table: "جدول الدفعات",
+  statement: {
+    cycle: "دورة {{n}}",
+  },
 };

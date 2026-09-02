@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.10.1
+
+- **إصلاح الشريط الجانبي (Sidebar):** زر التثبيت لم يعد عائمًا خارج مكانه ولا يظهر عند التصغير — الآن `lg:hidden` حتى `lg:group-hover:flex` فقط؛ `lg:justify-center` لم يعد يهزم `group-hover:justify-between` بإضافة `lg:group-hover:justify-between`؛ وعرض `lg:w-16` صار يُهزم فعليًا بـ `lg:hover:w-64 / lg:focus-within:w-64` مع تعميم `lg:group-hover` على كل التسميات والعناصر (الموصى به).
+- **تحسينات دفع/طلاب/اختبارات:** إصلاح `sessionOffset` المنطقي، تجميع عمليات حفظ نتائج الاختبارات، `listStudentsWithGroups`، نسخ الحقول عبر `data-copyable` مع تحسين قائمة السياق (السماح بالنسخ داخل `data-copyable`)، وتحديث نصوص `payments.cycle` / `students`.
+- **رفع الإصدار:** توحيد `0.10.1` عبر `package.json` + `tauri.conf.json` + `Cargo.toml` + `navigation.tsx`.
+
 ## v0.9.5
 
 - **إصلاح عدّاد الحصص (8/0 → 8/1 مع لم يدفع)**: الدورة الآن دورية `modulo S` عبر `deriveCycle` في `session-dues.ts` — `8/8` ثم `1/8` مع شارة `لم يدفع` / `×N دورات` للمتأخرين، و `0/8` بعد الدفع حتى أول حضور بعده. حضور يوم الدفع يُحتسب بدقة عبر `createdAt` (حتى نفس اليوم) وعمود الحصص مثبت `dir="ltr"` لمنع قلب `8/1` في RTL. dashboard والجدول يعرضان الشارة الجديدة. لا تغيير في القاعدة.

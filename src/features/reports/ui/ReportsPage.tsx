@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BarChart3 } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
@@ -44,6 +45,7 @@ export default function ReportsPage() {
 
   const [period, setPeriod] = useState(dayjs().format("YYYY-MM"));
   const [reloadKey, setReloadKey] = useState(0);
+  const [error, setError] = useState(false);
 
   const translations = useCallback(
     (): ReportTranslations => ({
@@ -59,6 +61,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     if (!data) setLoading(true);
+    setError(false);
     const periodArg = ["students", "skills", "weakPoints"].includes(key) ? undefined : period;
     buildReportData(key, translations(), periodArg)
       .then(setData)
@@ -66,6 +69,7 @@ export default function ReportsPage() {
         console.error("Failed to build report", e);
         toast(t("reports.loadError"), "error");
         setData(null);
+        setError(true);
       })
       .finally(() => setLoading(false));
   }, [key, period, t, translations, reloadKey]);
@@ -130,6 +134,16 @@ export default function ReportsPage() {
         <CardContent className="p-0">
           {loading && !data ? (
             <TableRowsSkeleton rows={6} cols={5} />
+          ) : error ? (
+            <EmptyState
+              icon={AlertTriangle}
+              title={t("reports.loadError")}
+              action={
+                <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+                  {t("common.retry")}
+                </Button>
+              }
+            />
           ) : !data || data.rows.length === 0 ? (
             <EmptyState icon={BarChart3} title={t("reports.empty")} />
           ) : (
