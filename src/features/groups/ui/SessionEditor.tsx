@@ -4,33 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { TimePicker } from "@/shared/TimePicker";
-import { useTimeStore } from "@/lib/time-store";
-import { formatTime } from "@/lib/utils/format";
+import { DAYS, DAY_NAMES, type SessionDraft } from "./session-draft";
+import { SessionEditRow, SessionViewRow } from "./session-editor-row";
 
-export const DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
-export const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
-
-export interface SessionDraft {
-  key: string;
-  id?: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  room: string;
-}
-
-export const emptyDraft = { dayOfWeek: 0, startTime: "", endTime: "", room: "" };
+export { DAYS, DAY_NAMES, emptyDraft, type SessionDraft } from "./session-draft";
 
 interface SessionEditorProps {
   sessions: SessionDraft[];
   draft: SessionDraft;
   draftError: string;
   removingKey: string | null;
+  editingKey: string | null;
+  editingDraft: SessionDraft | null;
+  editingError: string;
   onAdd: () => void;
   onUpdateDraft: (patch: Partial<SessionDraft>) => void;
   onRemove: (key: string) => void;
+  onStartEdit: (key: string) => void;
+  onSaveEdit: () => void;
+  onCancelEdit: () => void;
+  onUpdateEditingDraft: (patch: Partial<SessionDraft>) => void;
 }
 
 export function SessionEditor({
@@ -38,12 +32,18 @@ export function SessionEditor({
   draft,
   draftError,
   removingKey,
+  editingKey,
+  editingDraft,
+  editingError,
   onAdd,
   onUpdateDraft,
   onRemove,
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
+  onUpdateEditingDraft,
 }: SessionEditorProps) {
   const { t } = useTranslation();
-  const hour24 = useTimeStore((s) => s.hour24);
   return (
     <div className="space-y-1.5">
       <Label >{t("groups.fields.schedule")}</Label>
@@ -52,24 +52,13 @@ export function SessionEditor({
           <p className="text-sm text-muted-foreground">{t("groups.sessionsEmpty")}</p>
         ) : (
           <ul className="space-y-1">
-            {sessions.map((s) => (
-              <li
-                key={s.key}
-                className="flex items-center justify-between gap-2 rounded-lg bg-muted px-2.5 py-1.5 text-sm"
-              >
-                <span className="truncate" dir="ltr">
-                  {t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} · {formatTime(s.startTime, hour24)}
-                  –{formatTime(s.endTime, hour24)}
-                  {s.room ? ` · ${s.room}` : ""}
-                </span>
-                <ConfirmDeleteButton
-                  armed={removingKey === s.key}
-                  deleteLabel={t("groups.sessionRemove")}
-                  confirmLabel={t("groups.confirmDelete")}
-                  onDelete={() => onRemove(s.key)}
-                />
-              </li>
-            ))}
+            {sessions.map((s) =>
+              editingKey === s.key && editingDraft ? (
+                <SessionEditRow key={s.key} draft={editingDraft} error={editingError} onSave={onSaveEdit} onCancel={onCancelEdit} onUpdate={onUpdateEditingDraft} />
+              ) : (
+                <SessionViewRow key={s.key} session={s} removingKey={removingKey} onRemove={onRemove} onStartEdit={onStartEdit} />
+              ),
+            )}
           </ul>
         )}
 

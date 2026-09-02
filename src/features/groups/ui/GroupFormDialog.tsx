@@ -5,7 +5,7 @@ import { ZodError } from "zod";
 import { Button } from "@/components/ui/button";
 import { studyGroupInputSchema } from "@/features/groups/domain";
 import { createGroup, updateGroup } from "@/features/groups/application/group-cases";
-import { createSession, deleteSession } from "@/features/schedule/application/schedule-cases";
+import { createSession, deleteSession, updateSession } from "@/features/schedule/application/schedule-cases";
 import type { StudyGroup } from "@/lib/db/schema";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";
@@ -43,9 +43,17 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
     draftError,
     removingKey,
     loadedIds,
+    initialById,
+    editingKey,
+    editingDraft,
+    editingError,
     addSession,
     updateDraft,
     removeSession,
+    startEdit,
+    updateEditingDraft,
+    cancelEdit,
+    saveEdit,
   } = useGroupSessions(open, group);
   // Set once the group row itself has been written — if a later step (session
   // sync) fails, we must not let a resubmit create a duplicate group.
@@ -53,6 +61,7 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
 
   useEffect(() => {
     if (!open) return;
+    groupPersisted.current = false;
     setForm({
       name: group?.name ?? "",
       subject: group?.subject ?? "",
@@ -79,6 +88,10 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (saving) return;
+    if (editingKey !== null) {
+      toast(t("groups.sessionPendingEdit"), "error");
+      return;
+    }
     setSaving(true);
     setErrors({});
     try {
@@ -97,14 +110,32 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
         if (!sessions.some((s) => s.id === id)) await deleteSession(id, { undo: false });
       }
       for (const s of sessions) {
-        if (s.id) continue;
-        await createSession({
-          groupId: row.id,
-          dayOfWeek: s.dayOfWeek,
-          startTime: s.startTime,
-          endTime: s.endTime,
-          room: s.room || undefined,
-        });
+        if (!s.id) {
+          await createSession({
+            groupId: row.id,
+            dayOfWeek: s.dayOfWeek,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            room: s.room || undefined,
+          });
+          continue;
+        }
+        const orig = initialById.current.get(s.id);
+        if (
+          orig &&
+          (orig.dayOfWeek !== s.dayOfWeek ||
+            orig.startTime !== s.startTime ||
+            orig.endTime !== s.endTime ||
+            orig.room !== s.room)
+        ) {
+          await updateSession(s.id, {
+            groupId: row.id,
+            dayOfWeek: s.dayOfWeek,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            room: s.room || undefined,
+          });
+        }
       }
       onSaved();
       onClose();
@@ -137,9 +168,16 @@ export function GroupFormDialog({ open, group, onClose, onSaved }: GroupFormDial
           draft={draft}
           draftError={draftError}
           removingKey={removingKey}
+          editingKey={editingKey}
+          editingDraft={editingDraft}
+          editingError={editingError}
           onAdd={addSession}
           onUpdateDraft={updateDraft}
           onRemove={removeSession}
+          onStartEdit={startEdit}
+          onSaveEdit={saveEdit}
+          onCancelEdit={cancelEdit}
+          onUpdateEditingDraft={updateEditingDraft}
         />
 
         
