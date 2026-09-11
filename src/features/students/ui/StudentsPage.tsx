@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { buildSectionsByGroup } from "@/lib/build-grouped-sections";
-import { deleteStudent, listStudentsWithGroups } from "@/features/students/application/student-cases";
+import { deleteStudent } from "@/features/students/application/student-cases";
 import type { Student } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
@@ -15,46 +15,24 @@ import { notifyUndo } from "@/lib/undo-store";
 import { toast } from "@/lib/toast-store";
 import { StudentFilters } from "./StudentFilters";
 import { StudentsDialogs } from "./students-dialogs";
-import { StudentsEmpty } from "./StudentsTable";
+import { StudentsEmpty, StudentsTable } from "./StudentsTable";
 import { StudentsSections } from "./student-sections";
 import { useStudentBulkSelection } from "./use-student-bulk";
+import { PAGE_SIZE, useStudentsPageData } from "./use-students-page";
 
 type StatusFilter = "all" | "active" | "inactive";
 
 export default function StudentsPage() {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const { rows, total, page, setPage, loading, groupsByStudent, reload, flat } =
+    useStudentsPageData(query, status);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Student | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const { armed: deletingId, request, clear } = useConfirmDelete();
-  const [groupsByStudent, setGroupsByStudent] = useState<
-    Map<string, Array<{ id: string; name: string }>>
-  >(new Map());
   const { isCollapsed, toggle } = useCollapsedSections();
-  const reload = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { rows: rowsData, groupsByStudent: map } = await listStudentsWithGroups({
-        query,
-        status,
-      });
-      setRows(rowsData);
-      setGroupsByStudent(map);
-    } catch (error) {
-      console.error("Failed to load students", error);
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [query, status]);
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
 
   useDataChanged(() => void reload());
 
@@ -131,7 +109,7 @@ export default function StudentsPage() {
         onQueryChange={setQuery}
         status={status}
         onStatusChange={setStatus}
-        count={rows.length}
+        count={total}
       />
 
       {loading && rows.length === 0 ? (
@@ -140,6 +118,22 @@ export default function StudentsPage() {
         <Card>
           <CardContent className="p-0">
             <StudentsEmpty hasFilters={query.trim() !== "" || status !== "all"} />
+          </CardContent>
+        </Card>
+      ) : flat ? (
+        <Card>
+          <CardContent className="p-0">
+            <StudentsTable
+              list={rows}
+              deletingId={deletingId}
+              selectedIds={selectedIds}
+              onOpen={openEdit}
+              onDelete={handleRowDelete}
+              onToggle={toggleSelection}
+              onToggleAll={(checked) => toggleAllSelection(rows, checked)}
+              groups={groupsByStudent}
+              pager={{ page, total, pageSize: PAGE_SIZE, onPageChange: setPage }}
+            />
           </CardContent>
         </Card>
       ) : (

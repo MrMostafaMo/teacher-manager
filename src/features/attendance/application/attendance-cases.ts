@@ -31,12 +31,23 @@ export interface DailyAttendance {
 
 export async function getDaily(date: string, groupId?: string): Promise<DailyAttendance> {
   const roster = groupId
-    ? {
-        students: (await groupRepository.members(groupId)).filter(
-          (s) => s.status === "active" && enrolledBy(s, date),
-        ),
-        hasSessionsToday: true,
-      }
+    ? await (async () => {
+        const group = await groupRepository.findById(groupId);
+        // Manual filter still overrides the schedule, but a missing/inactive
+        // group or one that hasn't started yet yields an empty roster.
+        if (
+          !group ||
+          group.status !== "active" ||
+          (group.startsOn != null && group.startsOn !== "" && group.startsOn > date)
+        ) {
+          return { students: [], hasSessionsToday: true };
+        }
+        const members = await groupRepository.members(groupId);
+        return {
+          students: members.filter((s) => s.status === "active" && enrolledBy(s, date)),
+          hasSessionsToday: true,
+        };
+      })()
     : await rosterForDate(date);
   const [rows, defaults] = await Promise.all([
     attendanceRepository.byDate(date),
@@ -54,12 +65,20 @@ export interface StudentMonthlyRow {
   excused: number;
 }
 
-export async function getMonthly(month: string): Promise<StudentMonthlyRow[]> {
-  const monthEndDate = monthEnd(month);
-  const [students, stats] = await Promise.all([
-    studentRepository.search({ status: "active" }),
-    attendanceRepository.monthlyStats(month),
-  ]);
+export interface MonthlyStat {
+  studentId: string;
+  present: number;
+  absent: number;
+  late: number;
+  excused: number;
+}
+
+/** Pure monthly rows over preloaded dimensions (shared by the page + dashboard). */
+export function computeMonthlyRows(
+  students: Student[],
+  stats: MonthlyStat[],
+  monthEndDate: string,
+): StudentMonthlyRow[] {
   const byId = new Map(stats.map((s) => [s.studentId, s]));
   return students
     .filter((s) => enrolledBy(s, monthEndDate))
@@ -76,6 +95,14 @@ export async function getMonthly(month: string): Promise<StudentMonthlyRow[]> {
     });
 }
 
+export async function getMonthly(month: string): Promise<StudentMonthlyRow[]> {
+  const [students, stats] = await Promise.all([
+    studentRepository.search({ status: "active" }),
+    attendanceRepository.monthlyStats(month),
+  ]);
+  return computeMonthlyRows(students, stats, monthEnd(month));
+}
+
 export async function saveDaily(input: {
   date: string;
   entries: Array<{ studentId: string; status: AttendanceStatus }>;
@@ -86,6 +113,12 @@ export async function saveDaily(input: {
   // persisted (or logged) before the day's sessions begin.
   if (parsed.date > dayjs().format("YYYY-MM-DD")) {
     throw new Error(`cannot record attendance for a future date: ${parsed.date}`);
+  }
+  // Guard against orphan rows for deleted students (FKs are off). Unknown ids
+  // are rejected instead of silently persisted.
+  const known = new Set((await studentRepository.list()).map((s) => s.id));
+  for (const e of parsed.entries) {
+    if (!known.has(e.studentId)) throw new Error(`student ${e.studentId} not found`);
   }
 
   await attendanceRepository.batchUpsert(

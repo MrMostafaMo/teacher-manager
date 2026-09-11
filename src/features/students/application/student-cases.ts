@@ -1,5 +1,3 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
 import { studentInputSchema, type StudentInput } from "@/features/students/domain";
 import {
   studentRepository,
@@ -28,11 +26,20 @@ import { listMemberships } from "@/features/groups/application/group-cases";
  * record each mutation in the activity log.
  */
 
-export async function listStudents(filters?: StudentFilters): Promise<Student[]> {
+export async function listStudents(
+  filters?: StudentFilters & { limit?: number; offset?: number },
+): Promise<Student[]> {
   return studentRepository.search(filters);
 }
 
-export async function listStudentsWithGroups(filters?: StudentFilters): Promise<{ rows: Student[]; groupsByStudent: Map<string, Array<{ id: string; name: string }>> }> {
+/** Filtered count with the same predicate as list (pager total). */
+export function countStudents(filters?: StudentFilters): Promise<number> {
+  return studentRepository.countSearch(filters);
+}
+
+export async function listStudentsWithGroups(
+  filters?: StudentFilters & { limit?: number; offset?: number },
+): Promise<{ rows: Student[]; groupsByStudent: Map<string, Array<{ id: string; name: string }>> }> {
   const [rows, memberships] = await Promise.all([
     listStudents(filters),
     listMemberships(),
@@ -91,18 +98,8 @@ export async function deleteStudent(
   const resultRows = undoEnabled ? await captureBy(examResults, examResults.studentId, id) : [];
   const skillRows = undoEnabled ? await captureBy(studentSkills, studentSkills.studentId, id) : [];
 
-  // Execute all deletions in a single batch (which is wrapped in a BEGIN/COMMIT
-  // transaction via our proxy) to prevent partial failures from orphaning rows.
-  await db.batch([
-    db.delete(studentSkills).where(eq(studentSkills.studentId, id)),
-    db.delete(attendance).where(eq(attendance.studentId, id)),
-    db.delete(payments).where(eq(payments.studentId, id)),
-    db.delete(studentGroups).where(eq(studentGroups.studentId, id)),
-    db.delete(homeworkSubmissions).where(eq(homeworkSubmissions.studentId, id)),
-    db.delete(examResults).where(eq(examResults.studentId, id)),
-    db.delete(sessionAttendance).where(eq(sessionAttendance.studentId, id)),
-    db.delete(students).where(eq(students.id, id)),
-  ]);
+  // Single atomic batch in the repository (BEGIN/COMMIT via the proxy).
+  await studentRepository.removeCascade(id);
   await logActivity({ action: "student.delete", entityType: "student", entityId: id });
   if (!undoEnabled) return null;
   return registerUndo(async () => {

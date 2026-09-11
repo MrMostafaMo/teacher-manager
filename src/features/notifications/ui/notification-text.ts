@@ -25,9 +25,11 @@ export function notificationText(item: NotifyTextInput, t: TFunction): string {
       ? t("schedule.exceptions.cancelled")
       : d.kind === "moved"
         ? t("schedule.exceptions.moved")
-        : typeof d.kind === "string"
-          ? d.kind
-          : "";
+        : d.kind === "added"
+          ? t("schedule.exceptions.added")
+          : typeof d.kind === "string"
+            ? d.kind
+            : "";
   return t(`notifications.types.${item.type}`, {
     title: typeof d.title === "string" ? d.title : "—",
     pending: typeof d.pending === "number" ? d.pending : 0,

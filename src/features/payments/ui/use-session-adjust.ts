@@ -1,10 +1,12 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { addSession, removeSession } from "@/features/payments/application/session-adjust-cases";
+import { useSessionSettings } from "@/lib/session-settings-store";
 import { toast } from "@/lib/toast-store";
 
 export function useSessionAdjust(onDone: () => void) {
   const { t } = useTranslation();
+  const sessionsPerCycle = useSessionSettings((s) => s.sessionsPerCycle);
   const [busyId, setBusyId] = useState<string | null>(null);
   const add = useCallback(
     async (studentId: string) => {
@@ -28,7 +30,7 @@ export function useSessionAdjust(onDone: () => void) {
     async (studentId: string) => {
       setBusyId(studentId);
       try {
-        await removeSession(studentId);
+        await removeSession(studentId, { sessionsPerCycle });
         // ponytail: local refresh only — global remount would reset PaymentsPage tab to "dues"
         onDone();
       } catch (e) {
@@ -40,7 +42,7 @@ export function useSessionAdjust(onDone: () => void) {
         setBusyId(null);
       }
     },
-    [t, onDone],
+    [t, onDone, sessionsPerCycle],
   );
   return { busyId, add, remove };
 }

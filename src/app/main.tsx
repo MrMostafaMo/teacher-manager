@@ -5,19 +5,15 @@ import { ErrorBoundary } from "@/shared/ErrorBoundary";
 import "@/lib/i18n";
 import { applyLanguage } from "@/lib/i18n";
 import { bootstrapDatabase } from "@/lib/db/bootstrap";
-import { readInitialLanguage } from "@/lib/i18n/language-store";
-import {
-  applyTheme,
-  readInitialCustomPrimary,
-  readInitialPreset,
-  readInitialTheme,
-} from "@/lib/theme/theme-store";
+import { readInitialSettingsSnapshot } from "@/lib/settings/settings-migrate";
+import { applyTheme } from "@/lib/theme/theme-store";
 import { ThemeProvider } from "@/lib/theme/theme-provider";
 import "@/styles/globals.css";
 
 // Apply persisted language/theme (mode + preset + custom) before first paint — no flash.
-applyLanguage(readInitialLanguage());
-applyTheme(readInitialTheme(), readInitialPreset(), readInitialCustomPrimary());
+const initialSettings = readInitialSettingsSnapshot();
+applyLanguage(initialSettings.language);
+applyTheme(initialSettings.theme, initialSettings.preset, initialSettings.customPrimary);
 
 // Disable native WebKit context menu (right-click) — keep it only inside
 // editable fields and elements marked as copyable.

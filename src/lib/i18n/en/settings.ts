@@ -16,6 +16,12 @@ export const settings = {
     slate: "Slate",
     contrast: "High Contrast",
   },
+  contrastToggle: {
+    label: "High contrast",
+    hint: "Easier to read. Turning it off restores your previous color theme.",
+    on: "On",
+    off: "Off",
+  },
   customColor: "Custom color",
   customColorHint: "Pick a primary color that overrides the current theme. Clear to restore theme colors.",
   customColorPlaceholder: "#4f46e5",
@@ -51,7 +57,7 @@ export const settings = {
     title: "Session billing",
     sessionsPerCycle: "Sessions per cycle",
     warningAt: "Warn at",
-    hint: "Price per session = plan amount ÷ sessions. Counter resets after each payment (all statuses count).",
+    hint: "Price per session = plan amount ÷ sessions. Each payment covers a full cycle and the remainder carries over (all statuses count).",
     validation: "Warning must be less than sessions per cycle (1–30).",
   },
   tabs: {

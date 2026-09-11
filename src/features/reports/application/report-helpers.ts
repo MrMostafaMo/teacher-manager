@@ -1,7 +1,6 @@
-import { db } from "@/lib/db/client";
-import { students } from "@/lib/db/schema";
 import dayjs from "dayjs";
 import { enrolledBy } from "@/lib/utils/enrollment";
+import { studentRepository } from "@/features/students/infrastructure/student-repo";
 
 export interface EnrolledStudent {
   id: string;
@@ -10,16 +9,8 @@ export interface EnrolledStudent {
   enrolledOn: string | null;
 }
 
-export async function allEnrolledStudents(): Promise<EnrolledStudent[]> {
-  return (await db
-    .select({
-      id: students.id,
-      name: students.name,
-      planId: students.planId,
-      enrolledOn: students.enrolledOn,
-    })
-    .from(students)
-    .orderBy(students.name)) as EnrolledStudent[];
+export function allEnrolledStudents(): Promise<EnrolledStudent[]> {
+  return studentRepository.listEnrolled();
 }
 
 export function todayEnrolled(rows: EnrolledStudent[]): EnrolledStudent[] {

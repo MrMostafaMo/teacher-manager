@@ -1,9 +1,9 @@
-import { and, count, desc, eq, gte, like, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, lt, sql } from "drizzle-orm";
+import dayjs from "dayjs";
 import { db } from "@/lib/db/client";
 import { attendance, type Attendance } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
-import { currentMonth, lastMonths } from "@/lib/utils/months";
 import type { AttendanceStatus } from "@/features/attendance/domain";
 
 /**
@@ -66,6 +66,9 @@ export const attendanceRepository = {
 
   /** Per-student status counts for one month ("YYYY-MM"). */
   async monthlyStats(month: string): Promise<StudentMonthlyStat[]> {
+    // Range predicate (index-friendly) instead of LIKE 'YYYY-MM-%'.
+    const start = `${month}-01`;
+    const end = dayjs(`${month}-01`).add(1, "month").format("YYYY-MM-DD");
     const rows = (await db
       .select({
         studentId: attendance.studentId,
@@ -73,7 +76,7 @@ export const attendanceRepository = {
         n: count(),
       })
       .from(attendance)
-      .where(like(attendance.date, `${month}-%`))
+      .where(and(gte(attendance.date, start), lt(attendance.date, end)))
       .groupBy(attendance.studentId, attendance.status)) as Array<{
       studentId: string;
       status: AttendanceStatus;
@@ -93,6 +96,15 @@ export const attendanceRepository = {
       byId.set(row.studentId, stat);
     }
     return [...byId.values()];
+  },
+
+  /** Per-student row counts over the whole table (session-dues aggregation). */
+  async countsByStudent(): Promise<Array<{ studentId: string; n: number }>> {
+    const rows = (await db
+      .select({ studentId: attendance.studentId, n: count() })
+      .from(attendance)
+      .groupBy(attendance.studentId)) as Array<{ studentId: string; n: number }>;
+    return rows;
   },
 
   /** Every attendance row of a student, newest first (used in the profile). */
@@ -124,36 +136,29 @@ export const attendanceRepository = {
   },
 
   /**
-   * Present/absent/late counts per month for the last `months` months ending
-   * at `endMonth` (default: the current month), zero-filled so the trend
-   * never has gaps.
+   * Status counts per (month, student) from `startMonth` onward — one grouped
+   * query backing the dashboard's monthly rows and trend chart. All-time
+   * session counts stay on `countsByStudent` (different window, not derived).
    */
-  async monthlyTrend(months: number, endMonth?: string): Promise<MonthlyTrendRow[]> {
-    const labels = lastMonths(months, endMonth ?? currentMonth());
+  async dashboardAggregates(
+    startMonth: string,
+  ): Promise<Array<{ month: string; studentId: string; status: AttendanceStatus; n: number }>> {
     const monthKey = sql`substr(${attendance.date}, 1, 7)`;
     const rows = (await db
-      .select({ month: monthKey, status: attendance.status, n: count() })
+      .select({
+        month: monthKey,
+        studentId: attendance.studentId,
+        status: attendance.status,
+        n: count(),
+      })
       .from(attendance)
-      .where(gte(attendance.date, `${labels[0]}-01`))
-      .groupBy(monthKey, attendance.status)) as Array<{
+      .where(gte(attendance.date, `${startMonth}-01`))
+      .groupBy(monthKey, attendance.studentId, attendance.status)) as Array<{
       month: string;
+      studentId: string;
       status: AttendanceStatus;
       n: number;
     }>;
-    const byMonth = new Map<string, MonthlyTrendRow>();
-    for (const r of rows) {
-      const cur = byMonth.get(r.month) ?? {
-        month: r.month,
-        present: 0,
-        absent: 0,
-        late: 0,
-        excused: 0,
-      };
-      cur[r.status] = r.n;
-      byMonth.set(r.month, cur);
-    }
-    return labels.map(
-      (m) => byMonth.get(m) ?? { month: m, present: 0, absent: 0, late: 0, excused: 0 },
-    );
+    return rows;
   },
 };

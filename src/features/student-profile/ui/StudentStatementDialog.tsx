@@ -15,6 +15,7 @@ import {
   type StatementTranslations,
 } from "@/features/reports/application/report-cases";
 import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
+import { useSessionSettings } from "@/lib/session-settings-store";
 import { StatementLedger, StatementMonthlyTable } from "./statement-tables";
 
 interface StudentStatementDialogProps {
@@ -36,17 +37,23 @@ export function StudentStatementDialog({
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<"excel" | "pdf" | null>(null);
 
+  const billingMode = useSessionSettings((s) => s.billingMode);
+  const sessionsPerCycle = useSessionSettings((s) => s.sessionsPerCycle);
+
   const load = useCallback(() => {
     if (!studentId) return;
     setLoading(true);
-    studentStatement(studentId, (n) => t("payments.statement.cycle", { n }))
+    studentStatement(studentId, (n) => t("payments.statement.cycle", { n }), {
+      billingMode,
+      sessionsPerCycle,
+    })
       .then(setData)
       .catch((e) => {
         console.error("Failed to load student statement", e);
         toast(t("profile.statement.loadError"), "error");
       })
       .finally(() => setLoading(false));
-  }, [studentId, t]);
+  }, [studentId, t, billingMode, sessionsPerCycle]);
 
   useEffect(() => {
     if (open) load();

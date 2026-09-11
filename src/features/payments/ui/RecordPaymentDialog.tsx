@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { paymentInputSchema } from "@/features/payments/domain";
 import { listPlans } from "@/features/payments/application/plan-cases";
 import { recordPayment, updatePayment } from "@/features/payments/application/payment-cases";
-import { listStudents } from "@/features/students/application/student-cases";
+import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import type { Payment, Plan, Student } from "@/lib/db/schema";
 import { Modal } from "@/shared/Modal";
 import {
@@ -38,7 +38,7 @@ export function RecordPaymentDialog({
   onSaved,
 }: RecordPaymentDialogProps) {
   const { t } = useTranslation();
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<Array<Pick<Student, "id" | "name" | "planId">>>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [form, setForm] = useState<PaymentFormState>(emptyPaymentForm(defaultPeriod));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,7 +51,8 @@ export function RecordPaymentDialog({
     if (presetAmount != null) base.amount = String(presetAmount);
     setForm(base);
     setErrors({});
-    void listStudents({ status: "active" })
+    void studentRepository
+      .searchNames({ status: "active" })
       .then(setStudents)
       .catch(() => setStudents([]));
     void listPlans()

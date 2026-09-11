@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { HomeworkListItem } from "@/features/homework/application/homework-cases";
 import type { DuesRow } from "@/features/payments/application/payment-cases";
 import type { SessionException } from "@/lib/db/schema";
-import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
-import type { StudentMonthlyRow } from "@/features/attendance/application/attendance-cases";
 import { buildNotificationItems, type NotificationSourceData } from "./build-notification-items";
 
 const month = "2026-08";
@@ -70,38 +68,25 @@ function exception(overrides: Partial<SessionException> = {}): SessionException 
     ...overrides,
   };
 }
-function skill(overrides: Partial<SkillWithWeakCount> = {}): SkillWithWeakCount {
-  return {
-    id: "k1",
-    name: "Fractions",
-    weakCount: 3,
-    trackedCount: 5,
-    createdAt: 0,
-    updatedAt: 0,
-    ...overrides,
-  };
-}
-function monthly(overrides: Partial<StudentMonthlyRow> = {}): StudentMonthlyRow {
-  return {
-    studentId: "st1",
-    name: "Ahmed",
-    present: 4,
-    absent: 6,
-    late: 0,
-    excused: 0,
-    ...overrides,
-  };
-}
 function empty(): NotificationSourceData {
   return {
     homeworks: [],
     exams: [],
     dues: [],
     exceptions: [],
+    oneOffs: [],
     skills: [],
     monthly: [],
     students: [],
     sessionDues: [],
+  };
+}
+
+function oneOff(id: string, oneOffDate: string): NotificationSourceData["oneOffs"][number] {
+  return {
+    id, groupId: "g1", groupName: "Group A", groupStatus: "active", groupStartsOn: null,
+    dayOfWeek: 4, startTime: "12:00", endTime: "13:00", room: null, oneOffDate,
+    movedFromSessionId: null, movedFromDate: null, createdAt: 0, updatedAt: 0,
   };
 }
 
@@ -155,29 +140,15 @@ describe("buildNotificationItems", () => {
     expect(items[0].details.kind).toBe("cancelled");
   });
 
-  it("generates weak-skill items for skills with weakCount > 0", () => {
+  it("generates items for upcoming one-off sessions only", () => {
     const items = buildNotificationItems(
-      { ...empty(), skills: [skill(), skill({ id: "k2", weakCount: 0 })] },
+      { ...empty(), oneOffs: [oneOff("o1", "2026-08-14"), oneOff("o2", "2026-08-01")] },
       month,
       today,
     );
-    expect(items.map((i) => i.key)).toEqual(["weak:k1"]);
+    expect(items.map((i) => i.key)).toEqual(["oneoff:o1"]);
+    expect(items[0].details.kind).toBe("added");
+    expect(items[0].details.groupName).toBe("Group A");
   });
 
-  it("flags low attendance below 70% with at least one marked day", () => {
-    const items = buildNotificationItems(
-      {
-        ...empty(),
-        monthly: [
-          monthly(), // 4/10 → 40%
-          monthly({ studentId: "st2", name: "Sara", present: 7, absent: 3 }), // 70% → excluded
-          monthly({ studentId: "st3", name: "Lina", present: 0, absent: 0, late: 0, excused: 0 }), // no marks
-        ],
-      },
-      month,
-      today,
-    );
-    expect(items.map((i) => i.key)).toEqual(["attendance:st1:2026-08"]);
-    expect(items[0].details.rate).toBe(0.4);
-  });
 });

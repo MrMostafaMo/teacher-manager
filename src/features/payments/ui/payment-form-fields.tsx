@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MonthPicker } from "@/shared/DatePicker";
+import { MonthPicker } from "@/shared/month-picker";
 import { Field } from "@/shared/Field";
 import { formatMoney } from "@/lib/utils/format";
 import type { Plan, Student } from "@/lib/db/schema";
@@ -19,7 +19,7 @@ export function PaymentFormFields({
 }: {
   form: PaymentFormState;
   errors: Record<string, string>;
-  students: Student[];
+  students: Array<Pick<Student, "id" | "name">>;
   plans: Plan[];
   onStudentChange: (studentId: string) => void;
   onPlanChange: (planId: string) => void;

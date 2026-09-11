@@ -110,6 +110,8 @@ export const DashboardContent = memo(function DashboardContent({
       <DashboardQuickActions newStudents={data.deltas.newStudents} />
       <KpiGrid kpis={kpis} />
 
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Main Column (Charts & Wide Cards) */}
         <div className="space-y-6 xl:col-span-2">

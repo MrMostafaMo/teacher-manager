@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,19 +7,12 @@ import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
 import { DataTable } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { MonthPicker } from "@/shared/month-picker";
 import { Segmented } from "@/shared/Segmented";
-import dayjs from "dayjs";
-import {
-  buildReportData,
-  type ReportTranslations,
-} from "@/features/reports/application/report-cases";
-import { exportReportExcel, exportReportPdf } from "@/features/reports/application/export-report";
-import type { ReportData, ReportKey } from "@/features/reports/domain";
-import { formatDate } from "@/lib/utils/format";
+import type { ReportKey } from "@/features/reports/domain";
 import { ReportExportActions, useReportColumns } from "./report-actions";
-import { useDataChanged } from "@/shared/useDataChanged";
-import { toast } from "@/lib/toast-store";
+import { PREVIEW_PAGE_SIZE, useReportPreview } from "./use-report-preview";
 
 const REPORT_KEYS: ReportKey[] = [
   "students",
@@ -35,70 +28,28 @@ const REPORT_KEYS: ReportKey[] = [
 ];
 
 export default function ReportsPage() {
-  const { t, i18n } = useTranslation();
-  const rtl = i18n.language?.startsWith("ar") ?? false;
-  const [key, setKey] = useState<ReportKey>("students");
-  const [data, setData] = useState<ReportData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState<"excel" | "pdf" | null>(null);
-  const [saved, setSaved] = useState<"excel" | "pdf" | null>(null);
-
-  const [period, setPeriod] = useState(dayjs().format("YYYY-MM"));
-  const [reloadKey, setReloadKey] = useState(0);
-  const [error, setError] = useState(false);
-
-  const translations = useCallback(
-    (): ReportTranslations => ({
-      title: t(`reports.types.${key}.title`),
-      headers:
-        (t(`reports.types.${key}.headers`, { returnObjects: true }) as unknown as string[]) ?? [],
-      status: (s) => (s === "active" ? t("students.statusActive") : t("students.statusInactive")),
-      category: (c) => t(`expenses.categories.${c}`),
-      weakStatus: (s) => t(`weakPoints.${s}`),
-    }),
-    [t, key],
-  );
-
-  useEffect(() => {
-    if (!data) setLoading(true);
-    setError(false);
-    const periodArg = ["students", "skills", "weakPoints"].includes(key) ? undefined : period;
-    buildReportData(key, translations(), periodArg)
-      .then(setData)
-      .catch((e) => {
-        console.error("Failed to build report", e);
-        toast(t("reports.loadError"), "error");
-        setData(null);
-        setError(true);
-      })
-      .finally(() => setLoading(false));
-  }, [key, period, t, translations, reloadKey]);
-
-  useDataChanged(() => setReloadKey((k) => k + 1));
-
-  async function handleExport(kind: "excel" | "pdf") {
-    if (!data || exporting) return;
-    setExporting(kind);
-    setSaved(null);
-    try {
-      const ok =
-        kind === "excel"
-          ? await exportReportExcel(data)
-          : await exportReportPdf(data, {
-              rtl,
-              subtitle: t("reports.generated", { date: formatDate(Date.now(), "DD-MM-YYYY") }),
-            });
-      if (ok) setSaved(kind);
-    } catch (e) {
-      console.error("Export failed", e);
-      toast(t("reports.exportError"), "error");
-    } finally {
-      setExporting(null);
-    }
-  }
+  const { t } = useTranslation();
+  const {
+    key,
+    setKey,
+    data,
+    loading,
+    exporting,
+    saved,
+    period,
+    setPeriod,
+    setReloadKey,
+    error,
+    page,
+    setPage,
+    total,
+    serverPaged,
+    handleExport,
+  } = useReportPreview();
 
   const columns = useReportColumns(data, key);
-  const getRowKey = useCallback((_: (string | number)[], i: number) => String(i), []);
+  // Content-stable keys (index suffix only disambiguates duplicate rows).
+  const getRowKey = useCallback((row: (string | number)[], i: number) => `${row.join("|")}:${i}`, []);
 
   return (
     <div className="space-y-6">
@@ -127,8 +78,11 @@ export default function ReportsPage() {
         )}
       </div>
 
-      
-      {saved && <p className="text-sm text-success">{t("reports.saved")}</p>}
+      {saved && (
+        <p role="status" aria-live="polite" className="text-sm text-success">
+          {t("reports.saved")}
+        </p>
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -146,6 +100,16 @@ export default function ReportsPage() {
             />
           ) : !data || data.rows.length === 0 ? (
             <EmptyState icon={BarChart3} title={t("reports.empty")} />
+          ) : serverPaged && total !== null ? (
+            <PaginatedTable
+              columns={columns}
+              rows={data.rows}
+              getRowKey={getRowKey}
+              page={page}
+              total={total}
+              pageSize={PREVIEW_PAGE_SIZE}
+              onPageChange={setPage}
+            />
           ) : (
             <DataTable columns={columns} rows={data.rows} getRowKey={getRowKey} />
           )}

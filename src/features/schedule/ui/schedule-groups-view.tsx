@@ -5,12 +5,15 @@ import type { GroupSession, SessionException } from "@/lib/db/schema";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { paletteFor } from "./week-layout";
 import { upcomingExceptions } from "@/features/schedule/application/schedule-exceptions";
+import { upcomingOneOffs } from "@/features/schedule/application/schedule-one-offs";
 import { SessionCard } from "./session-card";
+import { OneOffList } from "./oneoff-list";
 
 interface ScheduleGroupsViewProps {
   byGroup: Array<[string, SessionWithGroup[]]>;
   memberCounts: Record<string, number>;
   exceptions: SessionException[];
+  oneOffs: SessionWithGroup[];
   today: string;
   isCollapsed: (id: string) => boolean;
   onToggle: (id: string) => void;
@@ -25,6 +28,7 @@ export function ScheduleGroupsView({
   byGroup,
   memberCounts,
   exceptions,
+  oneOffs,
   today,
   isCollapsed,
   onToggle,
@@ -76,6 +80,12 @@ export function ScheduleGroupsView({
                 />
               ))}
             </div>
+            <OneOffList
+              oneOffs={upcomingOneOffs(oneOffs, groupId, today)}
+              deletingId={deletingId}
+              onAttend={onAttend}
+              onDelete={onDelete}
+            />
           </CollapsibleSection>
         );
       })}

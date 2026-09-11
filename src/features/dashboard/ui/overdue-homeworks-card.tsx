@@ -17,21 +17,24 @@ export function OverdueHomeworksCard({ items }: { items: DashboardData["overdueH
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("dashboard.overdue.empty")}</p>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="divide-y">
             {items.map((h) => (
               <Link
                 key={h.id}
                 to={`/homework?group=${h.groupId}`}
                 aria-label={h.title}
-                className="block rounded-lg border bg-muted/40 p-3 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="block py-2.5 transition-colors first:pt-0 last:pb-0 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-medium">{h.title}</p>
-                  <span className="shrink-0 text-xs tabular-nums text-destructive" dir="ltr">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="min-w-0 truncate text-sm font-medium">{h.title}</p>
+                  <span
+                    className="shrink-0 rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap tabular-nums text-destructive"
+                    dir="ltr"
+                  >
                     {formatDateString(h.dueDate)}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
                   {h.groupName ?? "—"} · {t("dashboard.overdue.pending", { count: h.pending })}
                 </p>
               </Link>

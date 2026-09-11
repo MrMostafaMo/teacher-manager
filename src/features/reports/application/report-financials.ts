@@ -1,44 +1,31 @@
-import { desc, eq, like, and, gte, lte } from "drizzle-orm";
-import { db } from "@/lib/db/client";
 import {
   examResults,
-  exams,
-  expenses,
-  payments,
-  studentGroups,
-  students,
-  studyGroups,
   type Exam,
   type Expense,
   type Payment,
   type Student,
 } from "@/lib/db/schema";
+import { reportRepository, type ReportPage } from "@/features/reports/infrastructure/report-repo";
 import dayjs from "dayjs";
 import type { ReportData } from "@/features/reports/domain";
 import { formatDateString } from "@/lib/utils/format";
 import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
 import type { ReportTranslations } from "./report-builders";
 
-export async function examsReport(t: ReportTranslations, period?: string): Promise<ReportData> {
-  const examsQuery = db.select().from(exams).orderBy(desc(exams.createdAt));
-  if (period) examsQuery.where(like(exams.date, `${period}-%`));
-
+export async function examsReport(
+  t: ReportTranslations,
+  period?: string,
+  page?: ReportPage,
+): Promise<ReportData> {
   const [examsRows, results, groupsRows, memberships, allStudents] = await Promise.all([
-    examsQuery,
-    db.select().from(examResults),
-    db.select().from(studyGroups),
-    db
-      .select({
-        groupId: studentGroups.groupId,
-        studentId: studentGroups.studentId,
-        enrolledOn: students.enrolledOn,
-      })
-      .from(studentGroups)
-      .innerJoin(students, eq(studentGroups.studentId, students.id)),
-    db.select().from(students),
+    reportRepository.listExams(period, page),
+    reportRepository.listExamResults(),
+    reportRepository.listGroups(),
+    reportRepository.listMembershipsWithEnrollment(),
+    reportRepository.listStudents(),
   ]);
   const groupName = new Map(
-    (groupsRows as (typeof studyGroups.$inferSelect)[]).map((g) => [g.id, g.name]),
+    (groupsRows as Array<{ id: string; name: string }>).map((g) => [g.id, g.name]),
   );
   const resultsByExam = new Map<string, (typeof examResults.$inferSelect)[]>();
   for (const r of results) {
@@ -99,14 +86,12 @@ export async function examsReport(t: ReportTranslations, period?: string): Promi
   };
 }
 
-export async function expensesReport(t: ReportTranslations, period?: string): Promise<ReportData> {
-  const query = db.select().from(expenses).orderBy(desc(expenses.spentAt));
-  if (period) {
-    const start = dayjs(`${period}-01`).startOf("month").valueOf();
-    const end = dayjs(`${period}-01`).endOf("month").valueOf();
-    query.where(and(gte(expenses.spentAt, start), lte(expenses.spentAt, end)));
-  }
-  const rows = (await query) as Expense[];
+export async function expensesReport(
+  t: ReportTranslations,
+  period?: string,
+  page?: ReportPage,
+): Promise<ReportData> {
+  const rows = (await reportRepository.listExpenses(period, page)) as Expense[];
   return {
     key: "expenses",
     title: t.title,
@@ -122,17 +107,10 @@ export async function expensesReport(t: ReportTranslations, period?: string): Pr
 }
 
 export async function financesReport(t: ReportTranslations, period?: string): Promise<ReportData> {
-  const pQuery = db.select().from(payments);
-  if (period) pQuery.where(eq(payments.period, period));
-
-  const eQuery = db.select().from(expenses);
-  if (period) {
-    const start = dayjs(`${period}-01`).startOf("month").valueOf();
-    const end = dayjs(`${period}-01`).endOf("month").valueOf();
-    eQuery.where(and(gte(expenses.spentAt, start), lte(expenses.spentAt, end)));
-  }
-
-  const [allPayments, allExpenses] = await Promise.all([pQuery, eQuery]);
+  const [allPayments, allExpenses] = await Promise.all([
+    reportRepository.listPayments(period),
+    reportRepository.listExpenses(period),
+  ]);
   const byMonth = new Map<string, { collected: number; expenses: number }>();
   for (const p of allPayments as Payment[]) {
     if (!p.period) continue;

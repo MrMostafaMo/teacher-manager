@@ -84,11 +84,13 @@ describe("persisted reads", () => {
 });
 
 describe("useThemeStore", () => {
-  it("setPreset persists to localStorage", () => {
+  it("setPreset persists to the unified settings key", async () => {
+    const { SETTINGS_KEY } = await import("@/lib/settings/settings-store");
     useThemeStore.getState().setPreset("warm");
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as {
+    const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}") as {
       state?: { preset?: string };
     };
     expect(stored.state?.preset).toBe("warm");
+    expect(useThemeStore.getState().preset).toBe("warm");
   });
 });

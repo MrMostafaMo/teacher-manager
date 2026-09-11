@@ -77,9 +77,14 @@ export const studentGroups = sqliteTable(
 );
 
 /**
- * Recurring weekly sessions of a study group (the weekly timetable).
+ * Weekly sessions of a study group (the weekly timetable).
  * `dayOfWeek` follows JS `Date#getDay()`: 0=Sunday … 6=Saturday.
  * `startTime`/`endTime` are "HH:mm" strings.
+ *
+ * A row is either recurring (`oneOffDate` NULL — fires every week) or a
+ * one-off extra/moved session (`oneOffDate` = "YYYY-MM-DD" — fires on that
+ * date only; `dayOfWeek` mirrors the date's real weekday). A moved one-off
+ * links back to its source via `movedFromSessionId`/`movedFromDate`.
  */
 export const groupSessions = sqliteTable(
   "group_sessions",
@@ -92,11 +97,18 @@ export const groupSessions = sqliteTable(
     startTime: text("start_time").notNull(),
     endTime: text("end_time").notNull(),
     room: text("room"),
+    oneOffDate: text("one_off_date"),
+    movedFromSessionId: text("moved_from_session_id"),
+    movedFromDate: text("moved_from_date"),
     ...timestamps,
   },
   (t) => [
     index("group_sessions_group").on(t.groupId),
     uniqueIndex("group_sessions_group_day_start").on(t.groupId, t.dayOfWeek, t.startTime),
+    index("group_sessions_one_off_date").on(t.oneOffDate),
+    // ponytail: the unique index above also covers one-off rows, but an exact
+    // same-group same-day same-time clash is rejected earlier in the
+    // application layer with a localized message (see one-off use-cases).
   ],
 );
 

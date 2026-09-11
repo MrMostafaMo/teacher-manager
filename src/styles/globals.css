@@ -54,6 +54,8 @@
   --input: oklch(0.914 0.005 265);
   --ring: oklch(0.56 0.15 262);
   --radius: 0.75rem;
+  /* ponytail: 11px is the dense micro size (timetable/badges/deltas); xs stays
+     12px. Progress bars h-1.5, chart bodies h-56 (homework donut h-44). */
   --success: oklch(0.53 0.13 160);
   --success-foreground: oklch(0.985 0 0);
   --warning: oklch(0.66 0.17 58);
@@ -233,6 +235,9 @@
   --shadow-popover: var(--popover-shadow);
   --shadow-kpi: var(--kpi-shadow);
 
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-subtle-pulse: subtle-pulse 2s ease-in-out infinite;
+
   --animate-toast-countdown: toast-countdown linear forwards;
 }
 
@@ -264,6 +269,16 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 /* Base layer using logical properties so layout mirrors under RTL automatically */
@@ -337,7 +352,7 @@
     height: 10px;
   }
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: color-mix(in oklch, var(--muted) 30%, transparent);
   }
   ::-webkit-scrollbar-thumb {
     background: var(--muted-foreground);
@@ -379,6 +394,20 @@
   }
   .stagger-6 {
     animation-delay: 300ms;
+  }
+
+  /* UI-polish utilities */
+  .text-gradient {
+    background: linear-gradient(135deg, var(--primary), var(--chart-5));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-effect {
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    background: color-mix(in oklch, var(--card) 80%, transparent);
   }
 }
 

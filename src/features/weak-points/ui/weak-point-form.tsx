@@ -5,7 +5,7 @@ import { ZodError } from "zod";
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/shared/DatePicker";
+import { DatePicker } from "@/shared/date-picker";
 import { Field } from "@/shared/Field";
 import { weakPointInputSchema, type WeakPointInput } from "@/features/weak-points/domain";
 import { mapZodErrors } from "@/lib/utils/zod-errors";

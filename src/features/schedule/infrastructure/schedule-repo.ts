@@ -51,25 +51,42 @@ export const scheduleRepository = {
   ): Promise<void> {
     await db
       .delete(sessionAttendance)
-      .where(and(eq(sessionAttendance.sessionId, sessionId), eq(sessionAttendance.date, date)));
+      .where(and(eq(sessionAttendance.sessionId, sessionId), eq(sessionAttendance.date, date)))
+      .run();
+    if (entries.length === 0) return;
     const ts = Date.now();
-    await db.insert(sessionAttendance).values(
-      entries.map((e) => ({
-        id: uuid(),
-        sessionId,
-        studentId: e.studentId,
-        date,
-        status: e.status,
-        createdAt: ts,
-        updatedAt: ts,
-      })),
-    );
+    await db
+      .insert(sessionAttendance)
+      .values(
+        entries.map((e) => ({
+          id: uuid(),
+          sessionId,
+          studentId: e.studentId,
+          date,
+          status: e.status,
+          createdAt: ts,
+          updatedAt: ts,
+        })),
+      )
+      .run();
   },
 
   /** Delete a session's attendance rows (used when the session is deleted). */
   async clearForSession(sessionId: string): Promise<void> {
     await db.delete(sessionAttendance).where(eq(sessionAttendance.sessionId, sessionId)).run();
     await db.delete(sessionExceptions).where(eq(sessionExceptions.sessionId, sessionId)).run();
+  },
+
+  /**
+   * Detach moved one-offs from a deleted source session: they survive as
+   * plain extra sessions instead of pointing at a missing source.
+   */
+  async clearMoveLinksForSession(sessionId: string): Promise<void> {
+    await db
+      .update(groupSessions)
+      .set({ movedFromSessionId: null, movedFromDate: null })
+      .where(eq(groupSessions.movedFromSessionId, sessionId))
+      .run();
   },
 
   /** Delete a student's session-attendance rows (used when the student is deleted). */
@@ -79,17 +96,22 @@ export const scheduleRepository = {
 
   /** Delete a student's rows on a group's session sheets (used on member removal). */
   async clearAttendanceForStudentInGroup(studentId: string, groupId: string): Promise<void> {
-    const sessions = db
+    const sessions = (await db
       .select({ id: groupSessions.id })
       .from(groupSessions)
-      .where(eq(groupSessions.groupId, groupId));
+      .where(eq(groupSessions.groupId, groupId))) as Array<{ id: string }>;
+    if (sessions.length === 0) return;
     await db
       .delete(sessionAttendance)
       .where(
         and(
           eq(sessionAttendance.studentId, studentId),
-          inArray(sessionAttendance.sessionId, sessions),
+          inArray(
+            sessionAttendance.sessionId,
+            sessions.map((s) => s.id),
+          ),
         ),
-      );
+      )
+      .run();
   },
 };

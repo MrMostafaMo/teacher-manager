@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { countSince, deriveCycle, pricePerSession, statusForCount, buildSessionDues } from "./session-dues";
+import { sessionsCoveredByPayment, uncoveredCount, deriveCycle, pricePerSession, statusForCount, buildSessionDues } from "./session-dues";
 import type { Payment, Plan, Student } from "@/lib/db/schema";
 function mkStudent(id: string, name: string, planId: string | null = null, offset = 0): Student {
   return { id, name, planId, status: "active", phone: null, guardianName: null, guardianPhone: null, notes: null, enrolledOn: "2026-01-01", birthDate: null, gradeLevel: null, photoUrl: null, sessionOffset: offset, createdAt: 0, updatedAt: 0 } as unknown as Student;
@@ -7,24 +7,41 @@ function mkStudent(id: string, name: string, planId: string | null = null, offse
 function mkPlan(id: string, amount: number): Plan {
   return { id, name: "plan", amount, billingInterval: "monthly", createdAt: 0, updatedAt: 0 } as Plan;
 }
-function mkPayment(studentId: string, paidAt: number, amount = 800): Payment {
-  return { id: `p-${paidAt}`, studentId, planId: null, amount, period: "2026-08", method: "cash", note: null, paidAt, createdAt: 0, updatedAt: 0 } as Payment;
+function mkPayment(studentId: string, paidAt: number, amount = 800, planId: string | null = null): Payment {
+  return { id: `p-${paidAt}-${amount}`, studentId, planId, amount, period: "2026-08", method: "cash", note: null, paidAt, createdAt: 0, updatedAt: 0 } as Payment;
 }
-describe("countSince", () => {
-  it("counts all when no payments", () => { expect(countSince([], [{ date: "2026-08-01" }, { date: "2026-08-02" }])).toBe(2); });
-  it("counts only after last paidAt", () => {
-    const p = mkPayment("s1", Date.parse("2026-08-05T10:00:00"));
-    expect(countSince([p], [{ date: "2026-08-04" }, { date: "2026-08-05" }, { date: "2026-08-06" }])).toBe(1);
+function atts(n: number): number {
+  return n;
+}
+describe("sessionsCoveredByPayment", () => {
+  it("full amount covers one cycle", () => { expect(sessionsCoveredByPayment(mkPayment("s", 1, 800, "pl"), mkPlan("pl", 800), 8)).toBe(8); });
+  it("double amount covers two cycles", () => { expect(sessionsCoveredByPayment(mkPayment("s", 1, 1600, "pl"), mkPlan("pl", 800), 8)).toBe(16); });
+  it("half amount covers half cycle", () => { expect(sessionsCoveredByPayment(mkPayment("s", 1, 400, "pl"), mkPlan("pl", 800), 8)).toBe(4); });
+  it("no plan falls back to one cycle", () => { expect(sessionsCoveredByPayment(mkPayment("s", 1, 50), null, 8)).toBe(8); });
+});
+describe("uncoveredCount", () => {
+  const empty = new Map<string, Plan>();
+  it("no payments returns total", () => { expect(uncoveredCount(10, [], empty, null, 8)).toBe(10); });
+  it("zero attendances stays zero even with payment", () => { expect(uncoveredCount(0, [mkPayment("s", 1)], empty, null, 8)).toBe(0); });
+  it("early payment preserves balance (3 stays 3)", () => { expect(uncoveredCount(3, [mkPayment("s", 1)], empty, null, 8)).toBe(3); });
+  it("exact cycle closes to zero (8-8=0)", () => { expect(uncoveredCount(8, [mkPayment("s", 1)], empty, null, 8)).toBe(0); });
+  it("overdue carries over (10-8=2)", () => { expect(uncoveredCount(10, [mkPayment("s", 1)], empty, null, 8)).toBe(2); });
+  it("one payment covers only one of two overdue cycles (18-8=10)", () => { expect(uncoveredCount(18, [mkPayment("s", 1)], empty, null, 8)).toBe(10); });
+  it("two payments cover two cycles (18-16=2)", () => {
+    expect(uncoveredCount(18, [mkPayment("s", 1), mkPayment("s", 2)], empty, null, 8)).toBe(2);
   });
-  it("uses max paidAt when multiple", () => {
-    const p1 = mkPayment("s1", Date.parse("2026-08-03T00:00:00")), p2 = mkPayment("s1", Date.parse("2026-08-07T00:00:00"));
-    expect(countSince([p1, p2], [{ date: "2026-08-04" }, { date: "2026-08-08" }])).toBe(1);
+  it("partial amount covers proportionally (10-min(8,4)=6)", () => {
+    const plan = mkPlan("pl", 800);
+    expect(uncoveredCount(10, [mkPayment("s", 1, 400, "pl")], new Map([["pl", plan]]), plan, 8)).toBe(6);
   });
-  it("counts excused too", () => { expect(countSince([], [{ date: "2026-08-01" }])).toBe(1); });
-  it("counts same-day only if createdAt after paidAt", () => {
-    const p = mkPayment("s1", Date.parse("2026-08-05T10:00:00"));
-    expect(countSince([p], [{ date: "2026-08-05", createdAt: Date.parse("2026-08-05T12:00:00") }])).toBe(1);
-    expect(countSince([p], [{ date: "2026-08-05", createdAt: Date.parse("2026-08-05T09:00:00") }])).toBe(0);
+  it("advance is remembered when cycles complete (3→3, then 20-16=4)", () => {
+    const ps = [mkPayment("s", 1), mkPayment("s", 2)];
+    expect(uncoveredCount(3, ps, empty, null, 8)).toBe(3);
+    expect(uncoveredCount(20, ps, empty, null, 8)).toBe(4);
+  });
+  it("applies offset before covering", () => {
+    expect(uncoveredCount(1, [], empty, null, 8, 2)).toBe(3);
+    expect(uncoveredCount(1, [], empty, null, 8, -5)).toBe(0);
   });
 });
 describe("pricePerSession", () => {
@@ -83,49 +100,55 @@ describe("buildSessionDues", () => {
   it("builds rows sorted due>warning>ok and respects price", () => {
     const s1 = mkStudent("s1", "Ahmed", "pl1"), s2 = mkStudent("s2", "Mona", "pl1"), s3 = mkStudent("s3", "Ziad", "pl1");
     const plan = mkPlan("pl1", 800);
-    const payments = new Map<string, Payment[]>([["s1", [mkPayment("s1", Date.parse("2026-07-01"))]], ["s2", [mkPayment("s2", Date.parse("2026-07-01"))]], ["s3", [mkPayment("s3", Date.parse("2026-07-01"))]]]);
-    const atts = new Map<string, Array<{ date: string }>>([["s1", Array.from({ length: 8 }, (_, i) => ({ date: `2026-08-0${i + 1}` }))], ["s2", Array.from({ length: 6 }, (_, i) => ({ date: `2026-08-0${i + 1}` }))], ["s3", Array.from({ length: 2 }, (_, i) => ({ date: `2026-08-0${i + 1}` }))]]);
-    const rows = buildSessionDues([s1, s2, s3], payments, atts, new Map([["pl1", plan]]), new Map(), 8, 6);
+    const attsMap = new Map<string, number>([["s1", atts(8)], ["s2", atts(6)], ["s3", atts(2)]]);
+    const rows = buildSessionDues([s1, s2, s3], new Map(), attsMap, new Map([["pl1", plan]]), new Map(), 8, 6);
     expect(rows[0].student.id).toBe("s1"); expect(rows[0].status).toBe("due"); expect(rows[0].pricePerSession).toBe(100); expect(rows[0].remainingAmount).toBe(0);
     expect(rows[1].status).toBe("warning"); expect(rows[2].status).toBe("ok");
   });
   it("handles no plan", () => {
     const s = mkStudent("s1", "NoPlan", null);
-    expect(buildSessionDues([s], new Map(), new Map([["s1", [{ date: "2026-08-01" }]]]), new Map(), new Map(), 8, 6)[0].pricePerSession).toBeNull();
+    expect(buildSessionDues([s], new Map(), new Map([["s1", 1]]), new Map(), new Map(), 8, 6)[0].pricePerSession).toBeNull();
   });
   it("applies sessionOffset to count", () => {
     const s = mkStudent("s1", "Offset", null, 2);
-    const r = buildSessionDues([s], new Map(), new Map([["s1", [{ date: "2026-08-01" }]]]), new Map(), new Map(), 8, 6)[0];
+    const r = buildSessionDues([s], new Map(), new Map([["s1", 1]]), new Map(), new Map(), 8, 6)[0];
     expect(r.count).toBe(3); expect(r.rawCount).toBe(3); expect(r.status).toBe("ok");
   });
   it("clamps negative offset to zero", () => {
     const s = mkStudent("s1", "Neg", null, -5);
-    const r = buildSessionDues([s], new Map(), new Map([["s1", [{ date: "2026-08-01" }]]]), new Map(), new Map(), 8, 6)[0];
+    const r = buildSessionDues([s], new Map(), new Map([["s1", 1]]), new Map(), new Map(), 8, 6)[0];
     expect(r.count).toBe(0); expect(r.rawCount).toBe(0);
   });
   it("offset can push to due", () => {
     const s = mkStudent("s1", "DueViaOffset", null, 7);
-    const r = buildSessionDues([s], new Map(), new Map([["s1", [{ date: "2026-08-01" }]]]), new Map(), new Map(), 8, 6)[0];
+    const r = buildSessionDues([s], new Map(), new Map([["s1", 1]]), new Map(), new Map(), 8, 6)[0];
     expect(r.count).toBe(8); expect(r.rawCount).toBe(8); expect(r.status).toBe("due"); expect(r.isOverdue).toBe(true);
   });
   it("wraps 9 sessions to 1/8 with unpaid badge", () => {
     const s = mkStudent("s1", "Wrap", null);
-    const atts = new Map<string, Array<{ date: string }>>([["s1", Array.from({ length: 9 }, (_, i) => ({ date: `2026-08-${String(i + 1).padStart(2, "0")}` }))]]);
-    const r = buildSessionDues([s], new Map(), atts, new Map(), new Map(), 8, 6)[0];
+    const r = buildSessionDues([s], new Map(), new Map([["s1", atts(9)]]), new Map(), new Map(), 8, 6)[0];
     expect(r.rawCount).toBe(9); expect(r.count).toBe(1); expect(r.remainingSessions).toBe(7); expect(r.cyclesOverdue).toBe(1); expect(r.isOverdue).toBe(true); expect(r.status).toBe("due");
   });
-  it("paid resets: after payment only later attendances count", () => {
-    const s = mkStudent("s1", "PaidReset", null), p = mkPayment("s1", Date.parse("2026-08-05T10:00:00"));
-    const atts = new Map<string, Array<{ date: string }>>([["s1", Array.from({ length: 8 }, (_, i) => ({ date: `2026-08-${String(i + 1).padStart(2, "0")}` }))]]);
-    const r = buildSessionDues([s], new Map([["s1", [p]]]), atts, new Map(), new Map(), 8, 6)[0];
-    expect(r.rawCount).toBe(3); expect(r.count).toBe(3); expect(r.isOverdue).toBe(false); expect(r.showPaid).toBe(false);
+  it("overdue payment carries over: 10 attendances + 1 cycle → 2/8 ok", () => {
+    const s = mkStudent("s1", "Carry", null), p = mkPayment("s1", Date.parse("2026-08-05T10:00:00"));
+    const r = buildSessionDues([s], new Map([["s1", [p]]]), new Map([["s1", atts(10)]]), new Map(), new Map(), 8, 6)[0];
+    expect(r.rawCount).toBe(2); expect(r.count).toBe(2); expect(r.isOverdue).toBe(false); expect(r.showPaid).toBe(false); expect(r.status).toBe("ok");
   });
-  it("paid with zero later attendances shows 8/8 paid", () => {
-    const s = mkStudent("s1", "PaidZero", null);
-    const p = mkPayment("s1", Date.parse("2026-08-30T10:00:00"));
-    const atts = new Map<string, Array<{ date: string }>>([["s1", [{ date: "2026-08-01" }, { date: "2026-08-02" }]]]);
-    const r = buildSessionDues([s], new Map([["s1", [p]]]), atts, new Map(), new Map(), 8, 6)[0];
-    expect(r.rawCount).toBe(0); expect(r.count).toBe(8); expect(r.remainingSessions).toBe(0); expect(r.showPaid).toBe(true); expect(r.status).toBe("ok");
+  it("early payment preserves balance: 2 attendances + payment stays 2/8", () => {
+    const s = mkStudent("s1", "Early", null), p = mkPayment("s1", Date.parse("2026-08-30T10:00:00"));
+    const r = buildSessionDues([s], new Map([["s1", [p]]]), new Map([["s1", atts(2)]]), new Map(), new Map(), 8, 6)[0];
+    expect(r.rawCount).toBe(2); expect(r.count).toBe(2); expect(r.showPaid).toBe(false); expect(r.status).toBe("ok");
+  });
+  it("exact cycle payment shows 8/8 paid", () => {
+    const s = mkStudent("s1", "Exact", null), p = mkPayment("s1", Date.parse("2026-08-30T10:00:00"));
+    const r = buildSessionDues([s], new Map([["s1", [p]]]), new Map([["s1", atts(8)]]), new Map(), new Map(), 8, 6)[0];
+    expect(r.rawCount).toBe(0); expect(r.count).toBe(8); expect(r.showPaid).toBe(true); expect(r.status).toBe("ok");
+  });
+  it("partial amount covers proportionally: 10 + half cycle → 6/8 warning", () => {
+    const s = mkStudent("s1", "Half", "pl1"), plan = mkPlan("pl1", 800);
+    const p = mkPayment("s1", Date.parse("2026-08-05T10:00:00"), 400, "pl1");
+    const r = buildSessionDues([s], new Map([["s1", [p]]]), new Map([["s1", atts(10)]]), new Map([["pl1", plan]]), new Map(), 8, 6)[0];
+    expect(r.rawCount).toBe(6); expect(r.count).toBe(6); expect(r.isOverdue).toBe(false); expect(r.status).toBe("warning");
   });
   it("no payment with zero count stays 0/8 not paid", () => {
     const s = mkStudent("s1", "NoPayZero", null);

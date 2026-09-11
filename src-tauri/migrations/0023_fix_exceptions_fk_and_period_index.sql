@@ -18,5 +18,4 @@ ALTER TABLE `__new_session_exceptions` RENAME TO `session_exceptions`;
 CREATE INDEX `session_exceptions_session` ON `session_exceptions` (`session_id`);
 CREATE UNIQUE INDEX `session_exceptions_session_date` ON `session_exceptions` (`session_id`, `date`);
 PRAGMA foreign_keys=on;
---> statement-breakpoint
 CREATE INDEX `payments_period` ON `payments` (`period`);

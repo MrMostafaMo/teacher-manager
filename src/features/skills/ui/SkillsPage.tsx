@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import { DataTable } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { deleteSkill, listSkills } from "@/features/skills/application/skill-cases";
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
 import type { Skill } from "@/lib/db/schema";
@@ -112,7 +112,12 @@ export default function SkillsPage() {
               description={t("skills.emptyHint")}
             />
           ) : (
-            <DataTable<SkillWithWeakCount> columns={columns} rows={rows} getRowKey={getRowKey} />
+            <PaginatedTable<SkillWithWeakCount>
+              columns={columns}
+              rows={rows}
+              getRowKey={getRowKey}
+              pageSize={50}
+            />
           )}
         </CardContent>
       </Card>

@@ -16,7 +16,11 @@ export type RepositoryTable = AnySQLiteTable & {
 
 export interface Repository<T extends RepositoryTable> {
   findById: (id: string) => Promise<T["$inferSelect"] | undefined>;
-  list: (options?: { limit?: number; newestFirst?: boolean }) => Promise<T["$inferSelect"][]>;
+  list: (options?: {
+    limit?: number;
+    offset?: number;
+    newestFirst?: boolean;
+  }) => Promise<T["$inferSelect"][]>;
   count: () => Promise<number>;
   insert: (
     values: Omit<T["$inferInsert"], "createdAt" | "updatedAt">,
@@ -37,11 +41,14 @@ export function createRepository<T extends RepositoryTable>(table: T): Repositor
     return row as Row | undefined;
   }
 
-  async function list(options: { limit?: number; newestFirst?: boolean } = {}): Promise<Row[]> {
+  async function list(
+    options: { limit?: number; offset?: number; newestFirst?: boolean } = {},
+  ): Promise<Row[]> {
     const order = options.newestFirst ? desc(table.createdAt) : asc(table.createdAt);
     const base = db.select().from(table).orderBy(order);
-    const query = options.limit !== undefined ? base.limit(options.limit) : base;
-    const rows = await query;
+    if (options.limit !== undefined) base.limit(options.limit);
+    if (options.offset !== undefined) base.offset(options.offset);
+    const rows = await base;
     return rows as Row[];
   }
 

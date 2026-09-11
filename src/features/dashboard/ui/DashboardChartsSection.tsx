@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ResponsiveContainer } from "recharts";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CardLink } from "@/shared/CardLink";
+import { LegendDot } from "@/shared/chart-legend";
 import { formatNumber } from "@/lib/utils/format";
 import {
   ATTENDANCE_COLORS,
@@ -34,7 +35,7 @@ export function AttendanceHomeworkCharts({
           <CardTitle className="text-sm font-medium">{t("dashboard.charts.attendance")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <LazyChart className="h-64" dir="ltr">
+          <LazyChart className="h-56" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
               <AttendanceTrendChart data={attendanceChart} />
             </ResponsiveContainer>
@@ -59,7 +60,7 @@ export function AttendanceHomeworkCharts({
               },
             ].map((item) => (
               <span key={item.key} className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                <LegendDot color={item.fill} />
                 {item.label}
               </span>
             ))}
@@ -82,7 +83,7 @@ export function AttendanceHomeworkCharts({
               {homeworkPie.map((s) => (
                 <li key={s.key} className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-2">
-                    <span className="size-2.5 rounded-full" style={{ backgroundColor: s.fill }} />
+                    <LegendDot color={s.fill} />
                     {t(HOMEWORK_STATUS_KEYS[s.key as keyof typeof HOMEWORK_STATUS_KEYS])}
                   </span>
                   <span className="tabular-nums text-muted-foreground">
@@ -114,17 +115,11 @@ export function FinanceCharts({ financeChart }: { financeChart: FinancePoint[] }
           </LazyChart>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <span
-                className="size-2.5 rounded-full"
-                style={{ backgroundColor: ATTENDANCE_COLORS.present }}
-              />
+              <LegendDot color={ATTENDANCE_COLORS.present} />
               {t("dashboard.charts.collected")}
             </span>
             <span className="flex items-center gap-1.5">
-              <span
-                className="size-2.5 rounded-full"
-                style={{ backgroundColor: ATTENDANCE_COLORS.absent }}
-              />
+              <LegendDot color={ATTENDANCE_COLORS.absent} />
               {t("dashboard.charts.expenses")}
             </span>
           </div>

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import type { Student } from "@/lib/db/schema";
-import { listStudents } from "@/features/students/application/student-cases";
+import { studentRepository } from "@/features/students/infrastructure/student-repo";
+
+type NameRow = { id: string; name: string };
 
 /**
- * Fetch students once when `open` is true, and return the top matches
- * for a given query (fuzzy name match, case-insensitive).
+ * Debounced server-side name search (SQL LIKE + LIMIT) for pickers.
  */
 export function useStudentSearch(open: boolean, query: string, limit = 5) {
-  const [all, setAll] = useState<Student[]>([]);
+  const [rows, setRows] = useState<NameRow[]>([]);
   const [debounced, setDebounced] = useState(query);
 
   useEffect(() => {
@@ -16,15 +16,16 @@ export function useStudentSearch(open: boolean, query: string, limit = 5) {
   }, [query]);
 
   useEffect(() => {
-    if (!open || !debounced.trim()) return;
-    listStudents({ status: "all" })
-      .then(setAll)
-      .catch(() => setAll([]));
-  }, [open, debounced]);
+    if (!open || !debounced.trim()) {
+      setRows([]);
+      return;
+    }
+    studentRepository
+      .searchNames({ status: "all", query: debounced.trim(), limit })
+      .then((r) => setRows(r.map((s) => ({ id: s.id, name: s.name }))))
+      .catch(() => setRows([]));
+  }, [open, debounced, limit]);
 
   if (!debounced.trim()) return [];
-  const q = debounced.trim().toLowerCase();
-  return all
-    .filter((s) => s.name.toLowerCase().includes(q))
-    .slice(0, limit);
+  return rows;
 }

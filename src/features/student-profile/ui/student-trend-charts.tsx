@@ -2,6 +2,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { formatMoney, formatNumber } from "@/lib/utils/format";
+import { RechartsTooltip } from "@/shared/chart-legend";
 import type {
   AttendanceTrendPoint,
   ExamTrendPoint,
@@ -16,33 +17,10 @@ const ATTENDANCE_COLORS = {
   excused: "var(--chart-5)",
 };
 
-function TrendTooltip({ active, payload, label, format }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl border bg-popover px-3 py-2 text-xs shadow-(--popover-shadow)">
-      <p className="mb-1 font-medium">{label}</p>
-      <div className="space-y-1">
-        {payload.map((p: any) => (
-          <div key={p.dataKey} className="flex items-center gap-2">
-            <span
-              className="size-2 shrink-0 rounded-full"
-              style={{ backgroundColor: p.color ?? p.payload?.fill }}
-            />
-            <span className="text-muted-foreground">{p.name}</span>
-            <span className="ms-auto font-semibold tabular-nums" dir="ltr">
-              {format ? format(p.value) : formatNumber(p.value)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 const formatPct = (v: number) => `${formatNumber(v)}%`;
-const attendanceTooltipContent = <TrendTooltip />;
-const pctTooltipContent = <TrendTooltip format={formatPct} />;
-const moneyTooltipContent = <TrendTooltip format={formatMoney} />;
+const attendanceTooltipContent = <RechartsTooltip />;
+const pctTooltipContent = <RechartsTooltip format={formatPct} />;
+const moneyTooltipContent = <RechartsTooltip format={formatMoney} />;
 
 /** Monthly attendance bars. Re-renders only when `data` changes. */
 export const AttendanceBars = memo(function AttendanceBars({
@@ -54,8 +32,8 @@ export const AttendanceBars = memo(function AttendanceBars({
   return (
     <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
       <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-      <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
-      <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
+      <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
+      <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} tick={{ fill: "var(--muted-foreground)" }} />
       <Tooltip content={attendanceTooltipContent} />
       <Bar
         dataKey="present"
@@ -92,13 +70,14 @@ export const ExamLine = memo(function ExamLine({ data }: { data: ExamTrendPoint[
   return (
     <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
       <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-      <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
+      <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
       <YAxis
         tickLine={false}
         axisLine={false}
         fontSize={12}
         domain={[0, 100]}
         allowDecimals={false}
+        tick={{ fill: "var(--muted-foreground)" }}
       />
       <Tooltip content={pctTooltipContent} />
       <Line
@@ -119,13 +98,14 @@ export const HomeworkBars = memo(function HomeworkBars({ data }: { data: Homewor
   return (
     <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
       <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-      <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
+      <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
       <YAxis
         tickLine={false}
         axisLine={false}
         fontSize={12}
         domain={[0, 100]}
         allowDecimals={false}
+        tick={{ fill: "var(--muted-foreground)" }}
       />
       <Tooltip content={pctTooltipContent} />
       <Bar
@@ -144,8 +124,8 @@ export const PaymentBars = memo(function PaymentBars({ data }: { data: PaymentTr
   return (
     <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
       <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-      <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
-      <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
+      <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
+      <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} tick={{ fill: "var(--muted-foreground)" }} />
       <Tooltip content={moneyTooltipContent} />
       <Bar
         dataKey="amount"

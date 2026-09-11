@@ -6,9 +6,9 @@ import { Select } from "@/components/ui/select";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import { DataTable } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { SearchInput } from "@/shared/SearchInput";
-import { listStudents } from "@/features/students/application/student-cases";
+import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import { listRecentActivity, ACTION_KEYS, type ActivityLogRow } from "@/lib/activity-log";
 import { useTimeStore } from "@/lib/time-store";
 import { ENTITY_ICONS, detailsParts } from "./activity-presentation";
@@ -34,7 +34,7 @@ export default function ActivityPage() {
       try {
         const [logs, students] = await Promise.all([
           listRecentActivity(300),
-          listStudents({ status: "all" }),
+          studentRepository.searchNames({ status: "all" }),
         ]);
         if (cancelled) return;
         setRows(logs);
@@ -118,7 +118,7 @@ export default function ActivityPage() {
           </p>
           <Card>
             <CardContent className="p-0">
-              <DataTable<ActivityLogRow> columns={columns} rows={filtered} getRowKey={getRowKey} />
+              <PaginatedTable<ActivityLogRow> columns={columns} rows={filtered} getRowKey={getRowKey} />
             </CardContent>
           </Card>
         </>

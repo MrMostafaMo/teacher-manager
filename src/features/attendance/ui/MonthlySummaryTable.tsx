@@ -2,7 +2,8 @@ import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { StudentMonthlyRow } from "@/features/attendance/application/attendance-cases";
 import { formatPercent } from "@/lib/utils/format";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 
 export const MonthlySummaryTable = memo(function MonthlySummaryTable({
   list,
@@ -55,5 +56,5 @@ export const MonthlySummaryTable = memo(function MonthlySummaryTable({
     [t, groupLabel],
   );
   const getRowKey = useCallback((r: StudentMonthlyRow) => r.studentId, []);
-  return <DataTable<StudentMonthlyRow> columns={columns} rows={list} getRowKey={getRowKey} />;
+  return <PaginatedTable<StudentMonthlyRow> columns={columns} rows={list} getRowKey={getRowKey} pageSize={50} />;
 });

@@ -10,6 +10,7 @@ export const undo = {
   exam: "Exam",
   group: "Group",
   session: "Session",
+  oneOff: "Extra session",
   member: "Membership",
   weakPoint: "Weak point",
 } as const;

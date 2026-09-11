@@ -34,8 +34,8 @@ export const AttendanceTrendChart = memo(function AttendanceTrendChart({
   return (
     <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }} role="img" aria-label={t("dashboard.charts.attendance")}>
       <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-      <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-      <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+      <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
+      <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} tick={{ fill: "var(--muted-foreground)" }} />
       <Tooltip content={chartTooltipContent} />
       <Bar
         dataKey="present"
@@ -125,8 +125,8 @@ export const FinanceAreaChart = memo(function FinanceAreaChart({
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-        <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-        <YAxis tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+        <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
+        <YAxis tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
         <Tooltip content={chartTooltipContent} />
         <Area
           type="monotone"
@@ -153,8 +153,8 @@ export const FinanceAreaChart = memo(function FinanceAreaChart({
         </linearGradient>
       </defs>
       <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-        <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-        <YAxis tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+        <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
+        <YAxis tickLine={false} axisLine={false} fontSize={12} tick={{ fill: "var(--muted-foreground)" }} />
         <Tooltip content={chartTooltipContent} />
         <Area
           type="monotone"

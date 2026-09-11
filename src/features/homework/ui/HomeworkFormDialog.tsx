@@ -11,7 +11,7 @@ import { createHomework, updateHomework } from "@/features/homework/application/
 import type { Homework, StudyGroup } from "@/lib/db/schema";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";
-import { DatePicker } from "@/shared/DatePicker";
+import { DatePicker } from "@/shared/date-picker";
 import { Field } from "@/shared/Field";
 import {
   emptyHomeworkForm,

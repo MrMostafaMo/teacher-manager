@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createGroup, updateGroup, deleteGroup } from './group-cases';
 import { groupRepository } from '@/features/groups/infrastructure/group-repo';
-import { db } from '@/lib/db/client';
+import { removeGroupCascade } from '@/features/groups/infrastructure/group-cascade';
 
 vi.mock('@/features/groups/infrastructure/group-repo', () => ({
   groupRepository: {
@@ -12,18 +12,14 @@ vi.mock('@/features/groups/infrastructure/group-repo', () => ({
   }
 }));
 
+vi.mock('@/features/groups/infrastructure/group-cascade', () => ({
+  removeGroupCascade: vi.fn(),
+}));
+
 vi.mock('@/features/schedule/application/schedule-cases', () => ({
   createSession: vi.fn(),
   deleteSession: vi.fn(),
   listSchedule: vi.fn(() => []),
-}));
-
-vi.mock('@/lib/db/client', () => ({
-  db: {
-    batch: vi.fn(),
-    delete: vi.fn(() => ({ where: vi.fn() })),
-    select: vi.fn(() => ({ from: vi.fn(() => ({ where: vi.fn(() => []) })) })),
-  }
 }));
 
 vi.mock('./group-snapshot', () => ({
@@ -58,8 +54,8 @@ describe('group-cases', () => {
     expect(groupRepository.update).toHaveBeenCalledWith('g1', expect.any(Object));
   });
 
-  it('deleteGroup should call db.batch to delete children', async () => {
+  it('deleteGroup should call removeGroupCascade to delete children', async () => {
     await deleteGroup('g1', { undo: false });
-    expect(db.batch).toHaveBeenCalled();
+    expect(removeGroupCascade).toHaveBeenCalledWith('g1');
   });
 });

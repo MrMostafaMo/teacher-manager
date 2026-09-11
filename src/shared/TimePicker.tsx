@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { PopoverShell } from "@/shared/popover-shell";
+import { triggerClass } from "@/shared/picker-shared";
 import { Select } from "@/components/ui/select";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -16,9 +17,6 @@ interface TimePickerProps {
   ariaLabel?: string;
   className?: string;
 }
-
-const triggerClass =
-  "inline-flex h-9 items-center gap-1.5 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted";
 
 export function TimePicker({ value, onChange, ariaLabel, className }: TimePickerProps) {
   const { t } = useTranslation();

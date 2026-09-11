@@ -150,9 +150,9 @@ export function SupabaseLoginForm() {
             </div>
           )}
           {pendingConfirm && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs">
-              <p className="text-amber-800">{t("auth.login.checkEmail")}</p>
-              <button type="button" onClick={() => void handleResend()} disabled={resendBusy} className="mt-1 text-xs font-medium text-amber-900 underline disabled:opacity-50">
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs dark:border-amber-900 dark:bg-amber-950/30">
+              <p className="text-amber-800 dark:text-amber-200">{t("auth.login.checkEmail")}</p>
+              <button type="button" onClick={() => void handleResend()} disabled={resendBusy} className="mt-1 text-xs font-medium text-amber-900 underline disabled:opacity-50 dark:text-amber-200">
                 {resendBusy ? t("auth.login.resendSending") : t("auth.login.resend")}
               </button>
             </div>

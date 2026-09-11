@@ -22,7 +22,7 @@ import {
   statementPeriods,
 } from "@/features/payments/application/payment-statement";
 import { currentMonth } from "@/lib/utils/months";
-import { listRecentActivity } from "@/lib/activity-log";
+import { listActivityForStudent, listRecentActivity } from "@/lib/activity-log";
 import type { Student, Attendance, Homework, Exam, SessionAttendance } from "@/lib/db/schema";
 import type { SubmissionStatus } from "@/features/homework/domain";
 
@@ -96,7 +96,8 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     scheduleRepository.sessionAttendanceByStudent(studentId),
     getStudentSkills(studentId),
     listStudentWeakPoints(studentId),
-    listRecentActivity(300),
+    // Indexed direct matches + a bounded recent scan for details.studentId refs.
+    Promise.all([listActivityForStudent(studentId, 100), listRecentActivity(100)]),
   ]);
   if (!student) throw new Error(`student ${studentId} not found`);
   const plan = (plans as PlanWithCount[]).find((p) => p.id === student.planId) ?? null;
@@ -104,7 +105,10 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
   const groups = memberships
     .filter((m) => m.studentId === studentId)
     .map((m) => ({ id: m.groupId, name: m.groupName }));
-  const scoped = activity.filter((row) => {
+  const [direct, recent] = activity;
+  const byId = new Map<string, (typeof direct)[number]>();
+  for (const row of [...direct, ...recent]) byId.set(row.id, row);
+  const scoped = [...byId.values()].filter((row) => {
     if (row.entityId === studentId) return true;
     if (row.details) {
       try {

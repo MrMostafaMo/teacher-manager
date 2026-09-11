@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DATA_CHANGED_EVENT } from "@/shared/GlobalDialogs";
 import { notifySystem } from "@/lib/notify-system";
-import { useNotificationSettings } from "@/lib/notification-settings-store";
+import { isNotificationEnabled, useNotificationSettings } from "@/lib/notification-settings-store";
 import { notificationText } from "./notification-text";
 import { useNotificationsStore } from "./notifications-store";
 
@@ -20,7 +20,10 @@ export function NotificationSync() {
       try {
         const fresh = await refresh();
         if (!mounted || !enabled || !osBanners) return;
+        const settings = useNotificationSettings.getState();
         for (const item of fresh) {
+          // Muted types persist but never banner (and never re-banner on unmute).
+          if (!isNotificationEnabled(settings, item.type)) continue;
           await notifySystem(
             t("notifications.title"),
             notificationText({ type: item.type, details: item.details }, t),

@@ -18,6 +18,12 @@ export const settings: Messages["settings"] = {
     slate: "رصاصي",
     contrast: "تباين عالي",
   },
+  contrastToggle: {
+    label: "تباين عالي",
+    hint: "أسهل للقراءة. إيقافه يعيد نظام الألوان السابق.",
+    on: "مفعّل",
+    off: "مغلق",
+  },
   customColor: "لون مخصص",
   customColorHint: "اختر لونا أساسيا يطبق فوق الثيم الحالي. اتركه فارغا للعودة لألوان الثيم.",
   customColorPlaceholder: "#4f46e5",
@@ -53,7 +59,7 @@ export const settings: Messages["settings"] = {
     title: "محاسبة الحصص",
     sessionsPerCycle: "عدد الحصص في الدورة",
     warningAt: "التنبيه عند",
-    hint: "سعر الحصة = مبلغ الخطة ÷ عدد الحصص. العداد يُصفّر بعد كل دفعة (كل الحالات تُحسب).",
+    hint: "سعر الحصة = مبلغ الخطة ÷ عدد الحصص. الدفعة تخصم دورة كاملة والباقي يكمل للدورة الجديدة (كل الحالات تُحسب).",
     validation: "التنبيه يجب أن يكون أقل من عدد الحصص (1–30).",
   },
   tabs: {

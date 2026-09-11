@@ -1,4 +1,6 @@
 import { groupSessionInputSchema, type GroupSessionInput } from "@/features/schedule/domain";
+import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
+import { exceptionRepository } from "@/features/schedule/infrastructure/exception-repo";
 import {
   scheduleRepository,
   type SessionWithGroup,
@@ -44,6 +46,9 @@ export async function createSession(input: GroupSessionInput): Promise<GroupSess
 
 export async function updateSession(id: string, input: GroupSessionInput): Promise<GroupSession> {
   const parsed = groupSessionInputSchema.parse(input);
+  const existing = await scheduleRepository.findById(id);
+  if (!existing) throw new Error(`session ${id} not found`);
+  if (isOneOff(existing)) throw new Error(`session ${id} is not a weekly session`);
   const row = await scheduleRepository.update(id, parsed);
   if (!row) throw new Error(`session ${id} not found`);
   await logActivity({
@@ -70,6 +75,7 @@ export async function deleteSession(
   const removed = await scheduleRepository.remove(id);
   if (!removed) throw new Error(`session ${id} not found`);
   await scheduleRepository.clearForSession(id);
+  await scheduleRepository.clearMoveLinksForSession(id);
   await logActivity({ action: "schedule.delete", entityType: "schedule", entityId: id });
   if (!undoEnabled) return null;
   return registerUndo(async () => {
@@ -89,10 +95,22 @@ export async function getSessionAttendance(
   session: Pick<GroupSession, "id" | "groupId">,
   date: string,
 ): Promise<SessionAttendanceSheet> {
-  const [students, rows] = await Promise.all([
+  const [full, students, rows, exceptions] = await Promise.all([
+    scheduleRepository.findById(session.id),
     groupRepository.members(session.groupId),
     scheduleRepository.sessionAttendanceBy(session.id, date),
+    exceptionRepository.listForDates([session.id], [date]),
   ]);
+  const group = full ? await groupRepository.findById(full.groupId) : null;
+  const cancelled = exceptions.some((ex) => ex.type === "cancelled" && ex.date === date);
+  // Not-started/inactive groups and cancelled occurrences yield no editable roster.
+  // One-off sessions only have a roster on their own date.
+  if (!full || !group || group.status !== "active" || (group.startsOn && group.startsOn > date) || cancelled) {
+    return { students: [], rows };
+  }
+  if (isOneOff(full) && full.oneOffDate !== date) {
+    return { students: [], rows };
+  }
   return {
     students: students.filter((s) => s.status === "active" && enrolledBy(s, date)),
     rows,
@@ -117,13 +135,18 @@ export async function saveSessionAttendance(input: {
 
   // Guard the sheet: no future dates, the session must exist, and the date
   // must fall on the session's weekday — otherwise rows land under a session
-  // that never runs that day.
+  // that never runs that day. One-off sessions record on their own date only.
+  // Cancelled occurrences are not recordable.
   const today = dayjs().format("YYYY-MM-DD");
   if (parsed.date > today) throw new Error("session attendance cannot be saved for a future date");
   const session = await scheduleRepository.findById(parsed.sessionId);
   if (!session) throw new Error(`session ${parsed.sessionId} not found`);
-  if (dayjs(parsed.date).day() !== session.dayOfWeek) {
+  if (isOneOff(session) ? parsed.date !== session.oneOffDate : dayjs(parsed.date).day() !== session.dayOfWeek) {
     throw new Error("date does not match the session's weekday");
+  }
+  const exceptions = await exceptionRepository.listForDates([parsed.sessionId], [parsed.date]);
+  if (exceptions.some((ex) => ex.type === "cancelled")) {
+    throw new Error("cannot record attendance for a cancelled occurrence");
   }
 
   await scheduleRepository.replaceSessionAttendance(parsed.sessionId, parsed.date, parsed.entries);

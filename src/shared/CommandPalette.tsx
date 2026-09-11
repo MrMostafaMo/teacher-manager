@@ -125,7 +125,7 @@ export function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[12vh] backdrop-blur-lg"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-[12vh] backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === e.currentTarget) setOpen(false);
       }}
@@ -148,7 +148,7 @@ export function CommandPalette() {
             role="combobox"
             aria-expanded="true"
             aria-controls="command-palette-list"
-            aria-activedescendant={`command-palette-option-${activeIndex}`}
+            aria-activedescendant={items.length > 0 ? `command-palette-option-${activeIndex}` : undefined}
             aria-autocomplete="list"
             className="h-12 w-full rounded-md bg-transparent text-base outline-none focus-visible:ring-1 focus-visible:ring-ring/50 placeholder:text-muted-foreground"
           />

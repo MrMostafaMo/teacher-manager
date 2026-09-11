@@ -1,5 +1,6 @@
 import type { Exam, Student } from "@/lib/db/schema";
 import { examRepository } from "@/features/exams/infrastructure/exam-repo";
+import type { MembershipWithEnrollment } from "@/features/groups/infrastructure/group-repo";
 import {
   examInputSchema,
   examResultSchema,
@@ -37,8 +38,10 @@ export interface ExamDetail extends ExamListItem {
   passRate: number | null;
 }
 
-export async function listExams(): Promise<ExamListItem[]> {
-  const rows = await examRepository.list();
+export async function listExams(preloaded?: {
+  memberships?: MembershipWithEnrollment[];
+}): Promise<ExamListItem[]> {
+  const rows = await examRepository.list(preloaded);
   return rows.map((r) => ({
     ...r,
     completion: r.memberCount > 0 ? Math.round((r.resultCount / r.memberCount) * 100) : 0,

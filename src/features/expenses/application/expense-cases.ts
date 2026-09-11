@@ -52,9 +52,3 @@ export async function updateExpense(id: string, input: ExpenseInput): Promise<Ex
 export async function listExpenses(period: string): Promise<Expense[]> {
   return expenseRepository.byMonth(period);
 }
-
-/** Total spent inside the given ISO month (YYYY-MM). */
-export async function monthlyExpenseTotal(period: string): Promise<number> {
-  const rows = await expenseRepository.byMonth(period);
-  return rows.reduce((acc, r) => acc + r.amount, 0);
-}

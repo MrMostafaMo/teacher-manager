@@ -1,34 +1,13 @@
-import { db } from "@/lib/db/client";
-import { sql, like } from "drizzle-orm";
-import { homeworks, homeworkSubmissions } from "@/lib/db/tables-homework";
-import { sessionAttendance } from "@/lib/db/tables-attendance";
-import { students, studyGroups, groupSessions } from "@/lib/db/tables-students";
-import { eq, count } from "drizzle-orm";
 import type { ReportData } from "../domain";
 import type { ReportTranslations } from "./report-builders";
+import { reportRepository, type ReportPage } from "@/features/reports/infrastructure/report-repo";
 
-export async function homeworkReport(t: ReportTranslations, period?: string): Promise<ReportData> {
-  const query = db
-    .select({
-      studentId: homeworkSubmissions.studentId,
-      studentName: students.name,
-      total: count(homeworks.id),
-      completed: count(
-        sql<number>`case when ${homeworkSubmissions.status} = 'submitted' then 1 end`,
-      ),
-      pending: count(
-        sql<number>`case when ${homeworkSubmissions.status} = 'pending' then 1 end`,
-      ),
-      late: count(
-        sql<number>`case when ${homeworkSubmissions.status} = 'late' then 1 end`,
-      ),
-    })
-    .from(homeworkSubmissions)
-    .innerJoin(homeworks, eq(homeworkSubmissions.homeworkId, homeworks.id))
-    .innerJoin(students, eq(homeworkSubmissions.studentId, students.id));
-
-  if (period) query.where(like(homeworks.dueDate, `${period}-%`));
-  const rows = await query.groupBy(homeworkSubmissions.studentId, students.name);
+export async function homeworkReport(
+  t: ReportTranslations,
+  period?: string,
+  page?: ReportPage,
+): Promise<ReportData> {
+  const rows = await reportRepository.homeworkAggregates(period, page);
 
   return {
     key: "homework",
@@ -41,31 +20,12 @@ export async function homeworkReport(t: ReportTranslations, period?: string): Pr
   };
 }
 
-export async function sessionAttendanceReport(t: ReportTranslations, period?: string): Promise<ReportData> {
-  const query = db
-    .select({
-      date: sessionAttendance.date,
-      groupName: studyGroups.name,
-      present: count(
-        sql<number>`case when ${sessionAttendance.status} = 'present' then 1 end`,
-      ),
-      absent: count(
-        sql<number>`case when ${sessionAttendance.status} = 'absent' then 1 end`,
-      ),
-      late: count(
-        sql<number>`case when ${sessionAttendance.status} = 'late' then 1 end`,
-      ),
-      excused: count(
-        sql<number>`case when ${sessionAttendance.status} = 'excused' then 1 end`,
-      ),
-      total: count(sessionAttendance.id),
-    })
-    .from(sessionAttendance)
-    .innerJoin(groupSessions, eq(sessionAttendance.sessionId, groupSessions.id))
-    .innerJoin(studyGroups, eq(groupSessions.groupId, studyGroups.id));
-
-  if (period) query.where(like(sessionAttendance.date, `${period}-%`));
-  const rows = await query.groupBy(sessionAttendance.date, studyGroups.name).orderBy(sessionAttendance.date);
+export async function sessionAttendanceReport(
+  t: ReportTranslations,
+  period?: string,
+  page?: ReportPage,
+): Promise<ReportData> {
+  const rows = await reportRepository.sessionAggregates(period, page);
 
   return {
     key: "sessionAttendance",

@@ -3,27 +3,25 @@ import { Link } from "react-router";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils/format";
 import { useCountUp } from "@/shared/useCountUp";
 import { KPI_COLOR, KPI_TINT, type KpiItem } from "./dashboard-kpi-data";
 
-function AnimatedValue({ value }: { value: string | number }) {
-  const str = String(value);
-  const match = str.match(/-?[\d,]+(\.\d+)?/);
-  const numeric = match ? parseFloat(match[0].replace(/,/g, "")) : NaN;
+function AnimatedValue({ numeric, formatted }: { numeric: number; formatted: string }) {
   const animated = useCountUp(Number.isFinite(numeric) ? numeric : 0, 800);
-  if (!Number.isFinite(numeric) || !match) return <>{value}</>;
-  const prefix = str.slice(0, match.index);
-  const suffix = str.slice((match.index ?? 0) + match[0].length);
-  const decimals = match[0].includes(".") ? match[0].split(".")[1].length : 0;
-  const display = animated.toLocaleString("en-US", {
+  if (!Number.isFinite(numeric)) return <>{formatted}</>;
+  const match = formatted.match(/-?[\d,]+(\.\d+)?/);
+  if (!match || match.index === undefined) return <>{formatted}</>;
+  const decimals = match[1] ? match[1].length - 1 : 0;
+  const display = formatNumber(animated, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
   return (
     <>
-      {prefix}
+      {formatted.slice(0, match.index)}
       {display}
-      {suffix}
+      {formatted.slice(match.index + match[0].length)}
     </>
   );
 }
@@ -70,7 +68,7 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
       {kpis.map((kpi, i) => {
-        const { key, value, icon: Icon, delta, invert, to } = kpi;
+        const { key, numeric, formatted, icon: Icon, delta, invert, to } = kpi;
         const accent = KPI_COLOR[key];
         const body = (
           <CardContent className="relative z-10 flex h-full items-start justify-between gap-2 p-4">
@@ -79,9 +77,13 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
                 {t(`dashboard.kpis.${key}`)}
               </span>
               <div className="text-2xl font-semibold tabular-nums">
-                <AnimatedValue value={value} />
+                <AnimatedValue numeric={numeric} formatted={formatted} />
               </div>
-              {delta !== undefined && <KpiDelta delta={delta} invert={invert} />}
+              {delta !== undefined && (
+                <div className="mt-2 border-t border-border/50 pt-2">
+                  <KpiDelta delta={delta} invert={invert} />
+                </div>
+              )}
             </div>
             <span
               aria-hidden
@@ -96,12 +98,11 @@ export function KpiGrid({ kpis }: { kpis: KpiItem[] }) {
           <Card
             key={key}
             style={{
-              boxShadow: "var(--kpi-shadow)",
-              animationDelay: `${i * 50}ms`,
+              animationDelay: `${i * 60}ms`,
               backgroundImage: `linear-gradient(135deg, ${KPI_TINT[key]}, transparent)`,
             }}
             className={cn(
-              "relative overflow-hidden animate-in fade-in slide-in-from-bottom-2 fill-mode-both transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
+              "relative overflow-hidden shadow-(--kpi-shadow) animate-in fade-in slide-in-from-bottom-1 fill-mode-both transition-[transform,box-shadow,border-color] duration-500 motion-reduce:animate-none hover:-translate-y-0.5 hover:shadow-[var(--card-shadow-hover)] hover:ring-primary/10",
               to && "hover:ring-primary/30",
             )}
           >

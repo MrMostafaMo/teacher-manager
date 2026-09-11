@@ -11,10 +11,20 @@ export default defineConfig(async () => ({
   plugins: [react(), tailwindcss()],
 
   build: {
-    // ponytail: desktop app loads every chunk from local disk, so no network
-    // cost from large chunks; pdf-kit (pdf-lib+fontkit) alone is ~1.13MB.
-    // The limit is set above it so the build stays quiet.
+    // Desktop app loads chunks from local disk, so large chunks are not a
+    // network cost — but keep them split so non-dashboard routes never parse
+    // charts/PDF/Excel libraries.
     chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/recharts") || id.includes("node_modules\\.recharts")) return "charts";
+          if (id.includes("node_modules/pdf-lib") || id.includes("@pdf-lib")) return "pdf";
+          if (id.includes("node_modules/xlsx") || id.includes("node_modules\\.xlsx")) return "excel";
+          return undefined;
+        },
+      },
+    },
   },
 
   resolve: {

@@ -27,7 +27,7 @@ export const CollapsibleSection = memo(function CollapsibleSection({
   const contentId = useId();
 
   return (
-    <Card>
+    <Card className={cn("transition-colors duration-300 motion-reduce:transition-none", !collapsed && "border-s-2 border-primary/50")}>
       <CardContent className="p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <Button
@@ -54,7 +54,16 @@ export const CollapsibleSection = memo(function CollapsibleSection({
           </Button>
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
-        {!collapsed && <div id={contentId}>{children}</div>}
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
+            collapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]",
+          )}
+        >
+          <div id={contentId} className="overflow-hidden">
+            {children}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

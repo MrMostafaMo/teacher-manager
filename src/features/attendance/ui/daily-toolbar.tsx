@@ -5,10 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
-import { DatePicker } from "@/shared/DatePicker";
-
-const inputClass =
-  "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
+import { DatePicker } from "@/shared/date-picker";
+import { SELECT_CLASS as inputClass } from "@/shared/picker-shared";
 
 interface DailyToolbarProps {
   date: string;

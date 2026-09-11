@@ -1,26 +1,15 @@
-import { asc, desc, eq } from "drizzle-orm";
 import dayjs from "dayjs";
-import { db } from "@/lib/db/client";
-import { students, weakPoints } from "@/lib/db/schema";
 import type { ReportData } from "@/features/reports/domain";
 import type { ReportTranslations } from "./report-builders";
+import { reportRepository, type ReportPage } from "@/features/reports/infrastructure/report-repo";
 
 /**
  * Weak points report: one flat row per weakness, ordered by student name
  * then recorded date (newest first). All weaknesses are included — the
  * status column separates active from resolved.
  */
-export async function weakPointsReport(t: ReportTranslations): Promise<ReportData> {
-  const rows = (await db
-    .select({
-      name: students.name,
-      description: weakPoints.description,
-      recordedOn: weakPoints.recordedOn,
-      resolved: weakPoints.resolved,
-    })
-    .from(weakPoints)
-    .innerJoin(students, eq(weakPoints.studentId, students.id))
-    .orderBy(asc(students.name), desc(weakPoints.recordedOn))) as Array<{
+export async function weakPointsReport(t: ReportTranslations, page?: ReportPage): Promise<ReportData> {
+  const rows = (await reportRepository.listWeakPointsJoined(page)) as Array<{
     name: string;
     description: string;
     recordedOn: number;

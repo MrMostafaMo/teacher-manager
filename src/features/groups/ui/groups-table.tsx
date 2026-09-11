@@ -2,7 +2,8 @@ import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
@@ -106,5 +107,5 @@ export const GroupsTable = memo(function GroupsTable({
     [t, hour24, sessionsByGroup, deletingId, onView, onOpen, onDelete],
   );
   const getRowKey = useCallback((g: GroupWithCount) => g.id, []);
-  return <DataTable<GroupWithCount> columns={columns} rows={rows} getRowKey={getRowKey} />;
+  return <PaginatedTable<GroupWithCount> columns={columns} rows={rows} getRowKey={getRowKey} pageSize={50} />;
 });

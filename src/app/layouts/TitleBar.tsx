@@ -4,8 +4,9 @@ import { Minus, Square, Copy, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export function TitleBar() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isMaximized, setIsMaximized] = useState(false);
+  const dir = i18n.language === "en" ? "ltr" : "rtl";
 
   useEffect(() => {
     const win = (() => {
@@ -63,7 +64,7 @@ export function TitleBar() {
         <span
           data-tauri-drag-region
           className="truncate text-xs font-semibold text-sidebar-foreground"
-          dir={document.documentElement.dir || "rtl"}
+          dir={dir}
         >
           {t("app.name")}
         </span>
@@ -73,29 +74,29 @@ export function TitleBar() {
         <button
           type="button"
           onClick={minimize}
-          aria-label="تصغير"
-          title="تصغير"
+          aria-label={t("common.window.minimize")}
+          title={t("common.window.minimize")}
           className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         >
-          <Minus className="size-3.5" />
+          <Minus aria-hidden className="size-3.5" />
         </button>
         <button
           type="button"
           onClick={toggleMaximize}
-          aria-label={isMaximized ? "استعادة" : "تكبير"}
-          title={isMaximized ? "استعادة" : "تكبير"}
+          aria-label={t(isMaximized ? "common.window.restore" : "common.window.maximize")}
+          title={t(isMaximized ? "common.window.restore" : "common.window.maximize")}
           className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         >
-          {isMaximized ? <Copy className="size-3.5" /> : <Square className="size-3.5" />}
+          {isMaximized ? <Copy aria-hidden className="size-3.5" /> : <Square aria-hidden className="size-3.5" />}
         </button>
         <button
           type="button"
           onClick={close}
-          aria-label="إغلاق"
-          title="إغلاق"
+          aria-label={t("common.window.close")}
+          title={t("common.window.close")}
           className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
         >
-          <X className="size-3.5" />
+          <X aria-hidden className="size-3.5" />
         </button>
       </div>
     </div>

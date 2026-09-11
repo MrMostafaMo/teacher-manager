@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { categoryTotals } from "@/features/expenses/application/expense-stats";
 import type { Expense } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/utils/format";
+import { LegendDot, RechartsTooltip } from "@/shared/chart-legend";
 
 const CATEGORY_COLORS = [
   "var(--chart-1)",
@@ -12,19 +13,6 @@ const CATEGORY_COLORS = [
   "var(--chart-4)",
   "var(--chart-5)",
 ];
-
-function CategoryTooltip({ active, payload }: any) {
-  if (!active || !payload?.length) return null;
-  const p = payload[0];
-  return (
-    <div className="rounded-xl border bg-popover px-3 py-2 text-xs shadow-(--popover-shadow)">
-      <p className="mb-1 font-medium">{p.name}</p>
-      <p className="font-semibold tabular-nums" dir="ltr">
-        {formatMoney(Number(p.value))}
-      </p>
-    </div>
-  );
-}
 
 /**
  * Donut of the visible month's expenses split by category. Rendered `ltr`
@@ -61,14 +49,14 @@ export function ExpenseCategoryChart({ rows }: { rows: Expense[] }) {
                   <Cell key={s.key} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip content={<CategoryTooltip />} />
+              <Tooltip content={<RechartsTooltip format={formatMoney} />} />
             </PieChart>
           </ResponsiveContainer>
         </div>
         <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs">
           {data.map((s, i) => (
             <li key={s.key} className="flex items-center gap-1.5">
-              <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} />
+              <LegendDot color={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
               <span className="text-muted-foreground">{s.name}</span>
               <span className="font-medium tabular-nums" dir="ltr">
                 {formatMoney(s.value)}

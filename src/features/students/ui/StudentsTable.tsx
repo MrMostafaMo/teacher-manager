@@ -5,6 +5,7 @@ import { Eye, Pencil, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Student } from "@/lib/db/schema";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { Avatar } from "@/shared/Avatar";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { EmptyState } from "@/shared/EmptyState";
@@ -18,6 +19,8 @@ export const StudentsTable = memo(function StudentsTable({
   onDelete,
   onToggle,
   onToggleAll,
+  groups,
+  pager,
 }: {
   list: Student[];
   deletingId: string | null;
@@ -26,6 +29,10 @@ export const StudentsTable = memo(function StudentsTable({
   onDelete: (student: Student) => void;
   onToggle: (id: string, checked: boolean) => void;
   onToggleAll: (checked: boolean) => void;
+  /** Flat paged mode: group names column (joined string). */
+  groups?: Map<string, Array<{ id: string; name: string }>>;
+  /** Server mode: flat paged table instead of section grouping. */
+  pager?: { page: number; total: number; pageSize: number; onPageChange: (page: number) => void };
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -97,6 +104,16 @@ export const StudentsTable = memo(function StudentsTable({
         header: t("students.columns.status"),
         render: (s) => <StatusBadge status={s.status} />,
       },
+      ...(groups
+        ? [
+            {
+              header: t("nav.groups"),
+              className: "text-muted-foreground",
+              render: (s: Student) =>
+                (groups.get(s.id) ?? []).map((g) => g.name).join("، ") || "—",
+            } satisfies DataTableColumn<Student>,
+          ]
+        : []),
       {
         header: "",
         className: "text-end",
@@ -130,9 +147,22 @@ export const StudentsTable = memo(function StudentsTable({
         ),
       },
     ],
-    [t, navigate, deletingId, onOpen, onDelete, selectedIds, allSelected, someSelected, onToggle, onToggleAll],
+    [t, navigate, deletingId, onOpen, onDelete, selectedIds, allSelected, someSelected, onToggle, onToggleAll, groups],
   );
   const getRowKey = useCallback((s: Student) => s.id, []);
+  if (pager) {
+    return (
+      <PaginatedTable<Student>
+        columns={columns}
+        rows={list}
+        getRowKey={getRowKey}
+        page={pager.page}
+        total={pager.total}
+        pageSize={pager.pageSize}
+        onPageChange={pager.onPageChange}
+      />
+    );
+  }
   return <DataTable<Student> columns={columns} rows={list} getRowKey={getRowKey} />;
 });
 

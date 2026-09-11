@@ -1,37 +1,16 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { shimStore } from "@/lib/settings/settings-store";
+import { DEFAULT_PRESET, isThemePreset } from "./theme-presets";
+import type { ThemePreset } from "./theme-presets";
 import { applyCustomPrimary } from "./theme-custom";
+
+export type { ThemePreset } from "./theme-presets";
+export { DEFAULT_PRESET, isThemePreset };
 
 export type Theme = "light" | "dark" | "system";
 
-/** Visual identity palette, orthogonal to the light/dark mode. */
-export type ThemePreset =
-  | "nile"
-  | "warm"
-  | "midnight"
-  | "academy"
-  | "forest"
-  | "ocean"
-  | "rose"
-  | "slate"
-  | "contrast";
-
 export const STORAGE_KEY = "tm-theme";
-export const DEFAULT_PRESET: ThemePreset = "nile";
 
-const PRESETS: readonly ThemePreset[] = [
-  "nile",
-  "warm",
-  "midnight",
-  "academy",
-  "forest",
-  "ocean",
-  "rose",
-  "slate",
-  "contrast",
-];
-
-interface ThemeState {
+export interface ThemeState {
   theme: Theme;
   preset: ThemePreset;
   customPrimary: string | null;
@@ -40,24 +19,15 @@ interface ThemeState {
   setCustomPrimary: (color: string | null) => void;
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set) => ({
-      theme: "system",
-      preset: DEFAULT_PRESET,
-      customPrimary: null,
-      setTheme: (theme) => set({ theme }),
-      setPreset: (preset) => set({ preset }),
-      setCustomPrimary: (color) => set({ customPrimary: color }),
-    }),
-    { name: STORAGE_KEY },
-  ),
-);
-
-/** Type guard for values read back from localStorage. */
-export function isThemePreset(value: unknown): value is ThemePreset {
-  return typeof value === "string" && (PRESETS as readonly string[]).includes(value);
-}
+/** Compatibility shim over the unified settings store (one release). */
+export const useThemeStore = shimStore<ThemeState>((s) => ({
+  theme: s.theme,
+  preset: s.preset,
+  customPrimary: s.customPrimary,
+  setTheme: s.setTheme,
+  setPreset: s.setPreset,
+  setCustomPrimary: s.setCustomPrimary,
+}));
 
 // Re-export custom-primary helpers (keeps this file <150, ponytail split).
 export { applyCustomPrimary, isValidHex, readInitialCustomPrimary } from "./theme-custom";

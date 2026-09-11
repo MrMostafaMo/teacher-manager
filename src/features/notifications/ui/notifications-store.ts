@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { refreshNotifications } from "@/features/notifications/application/notification-cases";
+import { isNotificationEnabled, useNotificationSettings } from "@/lib/notification-settings-store";
 import {
   dismissAllNotifications,
   dismissNotification,
@@ -25,7 +26,13 @@ interface NotificationsState {
 }
 
 async function load(): Promise<{ items: ActiveNotification[]; unread: number }> {
-  const [items, unread] = await Promise.all([listActiveNotifications(), unreadCount()]);
+  const settings = useNotificationSettings.getState();
+  const isEnabled = (type: Parameters<typeof isNotificationEnabled>[1]) =>
+    isNotificationEnabled(settings, type);
+  const [items, unread] = await Promise.all([
+    listActiveNotifications(isEnabled),
+    unreadCount(isEnabled),
+  ]);
   return { items, unread };
 }
 

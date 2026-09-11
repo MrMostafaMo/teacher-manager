@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import type { DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 
 export function ProfileSection({
   title,
@@ -45,7 +46,7 @@ export function ProfileTable<T>({ columns, rows, getRowKey }: ProfileTableProps<
   return (
     <Card>
       <CardContent className="p-0">
-        <DataTable<T> columns={columns} rows={rows} getRowKey={getRowKey} />
+        <PaginatedTable<T> columns={columns} rows={rows} getRowKey={getRowKey} pageSize={50} />
       </CardContent>
     </Card>
   );

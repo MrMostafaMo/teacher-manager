@@ -12,7 +12,10 @@ export interface BatchRow {
   checked: boolean;
 }
 
-export function buildBatchRows(students: Student[], plans: Plan[]): BatchRow[] {
+export function buildBatchRows(
+  students: Array<Pick<Student, "id" | "name" | "planId">>,
+  plans: Plan[],
+): BatchRow[] {
   const planById = new Map(plans.map((p) => [p.id, p]));
   return students.map((s) => {
     const plan = s.planId ? planById.get(s.planId) : undefined;

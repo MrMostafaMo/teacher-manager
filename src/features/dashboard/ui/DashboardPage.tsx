@@ -7,6 +7,7 @@ import {
   getDashboardData,
   type DashboardData,
 } from "@/features/dashboard/application/dashboard-cases";
+import { useSessionSettings } from "@/lib/session-settings-store";
 import { currentMonth } from "@/features/dashboard/application/dashboard-helpers";
 import { DashboardSkeleton } from "./DashboardSkeleton";
 import { DashboardContent } from "./dashboard-content";
@@ -20,13 +21,16 @@ export default function DashboardPage() {
   const [status, setStatus] = useState<ChartStatus>("loading");
   const [data, setData] = useState<DashboardData | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const billingMode = useSessionSettings((s) => s.billingMode);
+  const sessionsPerCycle = useSessionSettings((s) => s.sessionsPerCycle);
+  const warningAt = useSessionSettings((s) => s.warningAt);
 
   useEffect(() => {
     let cancelled = false;
     if (!data) setStatus("loading");
     void (async () => {
       try {
-        const d = await getDashboardData(selectedMonth);
+        const d = await getDashboardData(selectedMonth, { billingMode, sessionsPerCycle, warningAt });
         if (!cancelled) {
           setData(d);
           setStatus("ready");
@@ -39,7 +43,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedMonth, reloadKey]);
+  }, [selectedMonth, reloadKey, billingMode, sessionsPerCycle, warningAt]);
 
   useDataChanged(() => setReloadKey((k) => k + 1));
 

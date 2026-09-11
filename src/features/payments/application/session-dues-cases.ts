@@ -4,23 +4,45 @@ import { paymentRepository } from "@/features/payments/infrastructure/payment-re
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
 import { enrolledBy, monthEnd } from "@/lib/utils/enrollment";
-import { useSessionSettings } from "@/lib/session-settings-store";
+import { DEFAULT_SESSIONS_PER_CYCLE, DEFAULT_WARNING_AT } from "@/lib/session-defaults";
+import type { Payment, Plan, Student } from "@/lib/db/schema";
 import dayjs from "dayjs";
 import { buildSessionDues, type SessionDuesRow } from "./session-dues";
 
 export type { SessionDuesRow };
 
-export async function sessionDues(): Promise<SessionDuesRow[]> {
-  const { sessionsPerCycle, warningAt } = useSessionSettings.getState();
+export interface SessionDuesOpts {
+  sessionsPerCycle: number;
+  warningAt: number;
+}
+
+export interface SessionDuesDims {
+  activeStudents: Student[];
+  plans: Plan[];
+  payments: Array<Pick<Payment, "id" | "studentId" | "planId" | "amount" | "paidAt" | "period">>;
+  attendanceCounts: Array<{ studentId: string; n: number }>;
+  memberships: Array<{ studentId: string; groupId: string; groupName: string }>;
+}
+
+export async function sessionDues(
+  opts?: SessionDuesOpts,
+  dims?: SessionDuesDims,
+): Promise<SessionDuesRow[]> {
+  // Callers (UI) read the store and pass opts; tests inject directly.
+  // Defaults mirror the store defaults so the case stays store-free.
+  const sessionsPerCycle = opts?.sessionsPerCycle ?? DEFAULT_SESSIONS_PER_CYCLE;
+  const warningAt = opts?.warningAt ?? DEFAULT_WARNING_AT;
   const today = dayjs().format("YYYY-MM-DD");
   const month = today.slice(0, 7);
-  const [activeStudents, plans, payments, attendances, memberships] = await Promise.all([
-    studentRepository.search({ status: "active" }),
-    planRepository.list(),
-    paymentRepository.list(),
-    attendanceRepository.list(),
-    groupRepository.memberships(),
-  ]);
+  const [activeStudents, plans, payments, attendanceCounts, memberships] = dims
+    ? [dims.activeStudents, dims.plans, dims.payments, dims.attendanceCounts, dims.memberships]
+    : await Promise.all([
+        studentRepository.search({ status: "active" }),
+        planRepository.list(),
+        paymentRepository.listCompact(),
+        attendanceRepository.countsByStudent(),
+        groupRepository.memberships(),
+      ]);
   const students = activeStudents.filter(
     (s) => !s.isExempt && enrolledBy(s, monthEnd(month)),
   );
@@ -31,12 +53,8 @@ export async function sessionDues(): Promise<SessionDuesRow[]> {
     arr.push(p);
     paymentsByStudent.set(p.studentId, arr);
   }
-  const attendanceByStudent = new Map<string, Array<{ date: string; createdAt: number }>>();
-  for (const a of attendances) {
-    const arr = attendanceByStudent.get(a.studentId) ?? [];
-    arr.push({ date: a.date, createdAt: a.createdAt });
-    attendanceByStudent.set(a.studentId, arr);
-  }
+  // SQL GROUP BY count replaces the full attendance scan (only totals matter).
+  const attendanceByStudent = new Map(attendanceCounts.map((c) => [c.studentId, c.n]));
   const groupsByStudent = new Map<string, Array<{ id: string; name: string }>>();
   for (const m of memberships) {
     const arr = groupsByStudent.get(m.studentId) ?? [];

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession, SessionException } from "@/lib/db/schema";
+import { applyExceptions, conflictIds } from "@/features/schedule/application/schedule-exceptions";
+import { injectOneOffs } from "@/features/schedule/application/schedule-one-offs";
 import { formatDate, formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import { orderedDayIndices, useWeekStore } from "@/lib/week-store";
 import { useNow } from "@/shared/useNow";
-import { applyExceptions, conflictIds } from "@/features/schedule/application/schedule-exceptions";
 import {
   HOUR_PX,
   gridTemplate,
@@ -20,8 +21,10 @@ import { WeekHeader } from "./week-header";
 import { WeekNav } from "./week-nav";
 
 interface WeekGridProps {
-  /** Sessions bucketed by day index (0=Sunday … 6=Saturday). */
+  /** Recurring sessions bucketed by day index (0=Sunday … 6=Saturday). */
   byDay: SessionWithGroup[][];
+  /** One-off sessions injected into the visible week by their exact date. */
+  oneOffs: SessionWithGroup[];
   /** Per-occurrence cancellations/moves for the visible week. */
   exceptions: SessionException[];
   deletingId: string | null;
@@ -34,6 +37,7 @@ interface WeekGridProps {
 
 export default function WeekGrid({
   byDay,
+  oneOffs,
   exceptions,
   deletingId,
   onEdit,
@@ -54,11 +58,22 @@ export default function WeekGrid({
   const dates = useMemo(() => weekDates(now, weekStartsOn, weekOffset), [now, weekStartsOn, weekOffset]);
 
   const effectiveByDay = useMemo(
-    () => applyExceptions(byDay, exceptions, dates),
+    () =>
+      injectOneOffs(applyExceptions(byDay, exceptions, dates, daysOrder), oneOffs, dates, daysOrder),
     // eslint-disable-next-line react-hooks/preserve-manual-memoization
-    [byDay, exceptions, dates],
+    [byDay, exceptions, oneOffs, dates, daysOrder],
   );
   const conflicts = useMemo(() => conflictIds(effectiveByDay), [effectiveByDay]);
+
+  const movedTo = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const o of oneOffs) {
+      if (o.movedFromSessionId && o.movedFromDate && o.oneOffDate) {
+        map.set(`${o.movedFromSessionId}|${o.movedFromDate}`, o.oneOffDate);
+      }
+    }
+    return map;
+  }, [oneOffs]);
 
   const [rangeStart, rangeEnd] = useMemo(() => rangeFor(effectiveByDay), [effectiveByDay]);
   const totalH = ((rangeEnd - rangeStart) / 60) * HOUR_PX;
@@ -119,6 +134,7 @@ export default function WeekGrid({
                 totalH={totalH}
                 placed={layoutDay(effectiveByDay[day])}
                 conflicts={conflicts}
+                movedTo={movedTo}
                 deletingId={deletingId}
                 onEdit={onEdit}
                 onDelete={onDelete}

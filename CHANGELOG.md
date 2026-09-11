@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.11.0
+
+- **Unified settings (`tm-settings` v1):** the eight persisted slices
+  (theme, language, time, week, sidebar-pin, session, notifications,
+  shortcuts) now live in one versioned store with a one-time legacy import;
+  all legacy stores are thin compatibility shims. Boot reads once
+  (`main.tsx`, `index.html` fallback, `theme-custom.ts` fallback).
+- **High-contrast access toggle:** `contrast` left the color-swatch picker
+  for an accessibility row that remembers and restores the previous theme.
+- **Faster reads:** payment history names resolve in one `LEFT JOIN`;
+  reports read through `report-repo.ts` (paged lists + counts); session dues
+  use grouped SQL counts and compact payment rows; month filters use
+  index-friendly ranges; Arabic font load is cached; charts/pdf/excel ship
+  in separate chunks.
+- **Server paging behind thresholds:** history (500), students/dues/
+  expenses (300) switch from grouped sections to flat paged tables above
+  the threshold; badges, charts, and totals always stay global; report
+  previews page at 100 rows while Excel/PDF exports always re-fetch the
+  full set.
+- **Dashboard single pass:** ~28 IPC round-trips collapsed into one shared
+  fetch (students/plans/memberships/payments/attendance/expenses) with every
+  figure derived from the same definitions the feature pages use.
+- **Sync docs:** conflict semantics documented as last-writer-wins by design
+  (Supabase Storage honors no `If-Match`); storage policies fixed to the
+  single `sync` bucket (`{userId}/sync-data.json`, `{userId}/backups/...`).
+- **Simpler fetches:** dues and expenses load each month once (badge/chart/
+  table share the rows); deleted dead queries (`monthlyTrend`,
+  `monthlyExpenseTotal`).
+
 ## v0.10.1
 
 - **إصلاح الشريط الجانبي (Sidebar):** زر التثبيت لم يعد عائمًا خارج مكانه ولا يظهر عند التصغير — الآن `lg:hidden` حتى `lg:group-hover:flex` فقط؛ `lg:justify-center` لم يعد يهزم `group-hover:justify-between` بإضافة `lg:group-hover:justify-between`؛ وعرض `lg:w-16` صار يُهزم فعليًا بـ `lg:hover:w-64 / lg:focus-within:w-64` مع تعميم `lg:group-hover` على كل التسميات والعناصر (الموصى به).

@@ -54,7 +54,10 @@ export const ACTION_KEYS: Record<string, string> = {
   "schedule.attendance.save": "scheduleAttendanceSave",
   "schedule.exceptionCancel": "scheduleExceptionCancel",
   "schedule.exceptionMove": "scheduleExceptionMove",
+  "schedule.exceptionMoveDay": "scheduleExceptionMoveDay",
   "schedule.exceptionRestore": "scheduleExceptionRestore",
+  "schedule.oneOffCreate": "scheduleOneOffCreate",
+  "schedule.oneOffDelete": "scheduleOneOffDelete",
   "group.create": "groupCreate",
   "group.update": "groupUpdate",
   "group.delete": "groupDelete",
@@ -88,5 +91,18 @@ export async function logActivity(input: LogActivityInput): Promise<void> {
 /** Newest-first activity feed, most recent first. */
 export async function listRecentActivity(limit = 50): Promise<ActivityLogRow[]> {
   const rows = await repository.list({ limit, newestFirst: true });
+  return rows as ActivityLogRow[];
+}
+
+/** Activity scoped to one student (direct entity match; details fallback stays in the caller). */
+export async function listActivityForStudent(studentId: string, limit = 100): Promise<ActivityLogRow[]> {
+  const { db } = await import("@/lib/db/client");
+  const { eq, desc } = await import("drizzle-orm");
+  const rows = await db
+    .select()
+    .from(activityLogs)
+    .where(eq(activityLogs.entityId, studentId))
+    .orderBy(desc(activityLogs.createdAt))
+    .limit(limit);
   return rows as ActivityLogRow[];
 }

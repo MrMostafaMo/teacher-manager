@@ -1,5 +1,5 @@
 import { and, eq, lt } from "drizzle-orm";
-import { db } from "@/lib/db/client";
+import { db, queryFirst } from "@/lib/db/client";
 import { syncMeta, syncTombstones } from "@/lib/db/schema";
 import type { SyncTombstoneItem } from "../domain";
 
@@ -81,4 +81,10 @@ export async function clearTombstone(tableName: string, rowId: string): Promise<
 
 export async function pruneOldTombstones(before: number): Promise<void> {
   await db.delete(syncTombstones).where(lt(syncTombstones.deletedAt, before)).run();
+}
+
+/** Highest applied migration version (0 when the version table is missing). */
+export async function getAppliedSchemaVersion(): Promise<number> {
+  const row = await queryFirst<{ v: number | null }>("SELECT MAX(version) AS v FROM _sqlx_migrations", []);
+  return row?.v ?? 0;
 }

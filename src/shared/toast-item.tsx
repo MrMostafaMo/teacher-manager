@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useToastStore, type Toast } from "@/lib/toast-store";
-import { CHIP_TONES, ICONS, ICON_TONES } from "./toast-tokens";
+import { BAR_TONES, CHIP_TONES, ICONS, ICON_TONES } from "./toast-tokens";
 import { ToastActionButton } from "./toast-action";
 import { ToastCountdown } from "./toast-countdown";
 
@@ -38,11 +38,11 @@ export function ToastItem({ toast, onDismiss }: ToastItemProps) {
       onMouseLeave={resume}
       onFocus={pause}
       onBlur={resume}
-      className="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border bg-background px-4 py-3 shadow-(--popover-shadow) animate-in fade-in-0 slide-in-from-top-full duration-300 ease-out"
+      className="pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-xl border bg-background px-4 py-3 shadow-(--popover-shadow) animate-in fade-in-0 slide-in-from-bottom-full duration-300 ease-out"
     >
       <span
         aria-hidden="true"
-        className="absolute inset-y-0 start-0 w-1 rounded-s-xl bg-gradient-to-b from-primary to-primary-strong"
+        className={`absolute inset-y-0 start-0 w-1 rounded-s-xl bg-gradient-to-b ${BAR_TONES[toast.variant]}`}
       />
       <span
         className={cn(

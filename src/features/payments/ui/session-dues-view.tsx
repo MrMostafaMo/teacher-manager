@@ -11,7 +11,7 @@ import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { enrichSections, enrichUngrouped, groupRows } from "./session-dues-helpers";
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
-import { DataTable } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { EmptyState } from "@/shared/EmptyState";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
 import { sessionColumns } from "./session-columns";
@@ -31,7 +31,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
 
   const load = useCallback(() => {
     setLoading(true);
-    Promise.all([sessionDues(), groupRepository.list()])
+    Promise.all([sessionDues({ sessionsPerCycle, warningAt }), groupRepository.list()])
       .then(([r, groups]) => {
         setRows(r);
         const m = new Map<string, { sessionsPerCycle: number | null; warningAt: number | null }>();
@@ -43,7 +43,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
         toast(t("payments.loadError"), "error");
       })
       .finally(() => setLoading(false));
-  }, [t]);
+  }, [t, sessionsPerCycle, warningAt]);
 
   useEffect(() => {
     load();
@@ -112,7 +112,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
               collapsed={isCollapsed(sec.id)}
               onToggle={() => toggle(sec.id)}
             >
-              <DataTable columns={cols} rows={effRows} getRowKey={getSessionRowKey} />
+              <PaginatedTable columns={cols} rows={effRows} getRowKey={getSessionRowKey} pageSize={50} />
             </CollapsibleSection>
           ))}
           {ungroupedEff.rows.length > 0 && (
@@ -123,7 +123,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
               collapsed={isCollapsed("__ungrouped")}
               onToggle={() => toggle("__ungrouped")}
             >
-              <DataTable columns={cols} rows={ungroupedEff.rows} getRowKey={getSessionRowKey} />
+              <PaginatedTable columns={cols} rows={ungroupedEff.rows} getRowKey={getSessionRowKey} pageSize={50} />
             </CollapsibleSection>
           )}
         </div>

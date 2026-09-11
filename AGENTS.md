@@ -131,7 +131,7 @@ Dev app runs via `pnpm tauri dev`. To drive the real window from the CLI:
 
 ## Status
 
-Phases 1–14 complete (roadmap: `docs/roadmap.md`). Phase 13 delivered polish
+Phases 1–43 complete (roadmap: `docs/roadmap.md`). Phase 13 delivered polish
 (modal animation + reduced-motion, a11y labels, font subset trimming, CSP,
 and Linux installers: .deb/.rpm/.AppImage). Phase 14 added the weekly
 timetable: recurring `group_sessions` per day+time, `/schedule` page with a
@@ -601,31 +601,29 @@ Phase 40 added a theme-preset system and identity refinement (no schema change):
   + `align-middle`.
 - Tests: `theme-store.test.ts` (11) + `preset-picker.test.tsx` (3).
 
-Phase 41 added two-way Google Drive sync + cloud backup/restore
-(schema from Phase 39):
+Phase 41 added two-way Supabase sync + cloud backup/restore
+(schema from Phase 39; supersedes the earlier Google Drive plan — the code
+uses `SupabaseProvider`, not `drive-*`/`oauth.rs`):
 
-- **OAuth (PKCE)**: consent opens in the **system browser** (plugin-opener).
-  `src-tauri/src/oauth.rs` starts a tiny one-shot HTTP server on
-  `127.0.0.1:45467` (`start_oauth_server`, std TcpListener, no new deps); when
-  Google redirects to `http://127.0.0.1:45467/oauth?...` the server serves a
-  "you may close this page" HTML and emits the full URL as `oauth:callback`,
-  then shuts down. `src/features/sync/application/oauth-cases.ts` builds the
-  auth URL, parses the callback, and rejects with `OAuthCancelError` after 3
-  minutes with no redirect; tokens live in `sync_meta` (`oauth-client.ts`,
-  `sync-state-repo.ts`). The Client ID is user-supplied (Google Cloud
-  Console), never bundled — the settings card prefills it from `sync_meta`,
-  disables the sign-in button until it matches the desktop pattern, and shows
-  a collapsible Arabic/English one-time setup guide.
-- **Drive client**: `drive-http.ts` (generic `bearerFetch` with 401 →
-  token-refresh retry, multipart, DriveError with kinds) + `drive-client.ts`
-  (findFile/upload/downloadBytes/uploadBytes/listFiles; 412 → "conflict").
-  `uploadBytes` = media POST + PATCH `{ name, parents }`.
+- **Auth**: Supabase email/password via `supabase-auth.ts` (login/signup/
+  refresh/recovery); URL + anon key from `sync_meta` or `VITE_*` env, user
+  identity persisted in `sync_meta` (`supabase-session.ts`,
+  `sync-state-repo.ts`). Login UI in `src/features/auth/ui/`
+  (`SupabaseChoiceCard`, `SupabaseLoginForm`).
+- **Storage client**: `supabase-http.ts` (`SupabaseError` with kinds,
+  401 → refresh-and-retry) + `supabase-provider.ts` (single `sync` bucket;
+  payload at `<userId>/sync-data.json`, backups under `<userId>/backups/`).
 - **Round-based sync** (`sync-cases.ts`): `syncNow(reason)` runs
   pull → `mergePull` → `applyPullResult` (insert/update/delete + tombstone
-  clear) → re-snapshot → `mergePush` → upload (ETag/If-Match, 3 attempts on
-  412). Row-level LWW by `updated_at`; a tombstone wins only when strictly
-  newer than the row (undo/restore survives). `merge-pull.ts` /
-  `merge-push.ts` / `tombstones.ts` are pure and unit-tested.
+  clear) → re-snapshot → `mergePush` → upload (3 attempts). Row-level LWW by
+  `updated_at`; a tombstone wins only when strictly newer than the row
+  (undo/restore survives). `merge-pull.ts` / `merge-push.ts` / `tombstones.ts`
+  are pure and unit-tested.
+- **Conflict semantics are last-writer-wins by design**: Supabase Storage
+  honors no `If-Match` precondition, so the 412-conflict branch
+  (`supabase-provider.ts` upload + `sync-cases.ts` retry) is best-effort and
+  never fires against real Storage — two devices writing between syncs
+  resolve to the later upload. Documented, not silently assumed.
 - **UI**: settings card (client ID, sync now, cloud backup/restore,
   disconnect), header badge + report dialog, `SyncManager` in AppLayout
   (10s debounce on `tm:data-changed`, pull on launch, 15-min periodic;
@@ -674,7 +672,7 @@ features) that tightened every visual surface into the Nile identity:
 - Verification: `pnpm build` clean, 60 files / 371 tests green, computed-style
   audits (headless chromium) and a full theme-token audit across presets.
 
-Phase 42 made the app responsive across every screen size (no schema change):
+Phase 42b made the app responsive across every screen size (no schema change):
 
 - **Window floor lowered**: `tauri.conf.json` `minWidth` 1000→800,
   `minHeight` 680→600 (window still opens 1280×800 maximized).
@@ -699,6 +697,117 @@ Phase 42 made the app responsive across every screen size (no schema change):
   verified no body-level horizontal overflow from 360px up to 1600px via
   headless chromium, rail collapse exactly at 1024px, hover/focus expand,
   and keyboard focus expansion.
+
+Phase 43 added one-off sessions and cross-day moves (migration v25):
+
+- **Schema**: `group_sessions` gained nullable `one_off_date` (fires that
+  date only; `dayOfWeek` mirrors the date), `moved_from_session_id` and
+  `moved_from_date` (cross-day move link). Real session rows by design, so
+  `session_attendance` FKs, joins (reports/profile/WhatsApp) and whole-row
+  sync keep working with no attendance-table change.
+- **Use-cases** (`schedule-oneoff-cases.ts`, `schedule-move-day-cases.ts`):
+  `createOneOffSession` / `deleteOneOffSession` (undoable),
+  `moveOccurrenceAcrossDays` (cancel source + linked one-off, one undo),
+  `restoreMovedOccurrence`. Overlaps with the same group or room block the
+  save with `OccurrenceConflictError` (localized in the dialogs). Pure
+  helpers in `schedule-one-offs.ts` (`isOneOff`, `splitOccurrences`,
+  `effectiveSessionsForDate`, `hasOccurrenceConflict`, `injectOneOffs`,
+  `upcomingOneOffs`, `groupIdsWithOneOffs`).
+- **Timetable**: one-offs inject into the week by exact date with a teal
+  «إضافية» badge (moved ones note their origin, moved-away sources show
+  «نُقلت إلى + date»); one-off blocks offer attend/restore/delete, are not
+  draggable, and permanent editors (group form, DnD, `updateSession`) ignore
+  or reject them. Header has a «جلسة ليوم واحد» button; the occurrence
+  dialog has a third «نقل ليوم آخر» mode (any target date) plus a cancel
+  hint, and the block cancel button is now labeled «إلغاء جلسة هذا اليوم
+  فقط». Group view shows upcoming extras per group; group detail dialog
+  lists them too.
+- **Consumers**: daily roster, `todaySessions`, session sheets (one-offs
+  record on their own date only), attendance auto-defaults, and
+  notifications (upcoming one-offs reuse the `exception` type with kind
+  `added`) all include one-offs.
+- Drive-by fixes of pre-existing dirty-tree breakage (not Phase 43
+  scope): missing `>` in `student-repo.ts searchNames`, removed-but-used
+  `sumPaid` in `dashboard-cases.ts`.
+- Verification: 76 files / 478 tests green, `tsc --noEmit` clean, `pnpm
+  build` passes. Still manual: E2E in `tauri dev` (add/move/restore flows).
+
+Phase 44 unified the eight persisted settings slices into one versioned
+store (no schema change):
+
+- **Store**: `src/lib/settings/settings-store.ts` (`tm-settings`, `version:
+  1`) with `defaultSettings`, `partialize`, a `merge` that preserves new
+  shortcut defaults, full setter coverage (theme/preset/customPrimary,
+  language, hour24, weekStartsOn, pin, session slice, notification slice
+  with legacy `setEnabled`/`toggleType` aliases, shortcut actions), and a
+  `shimStore()` factory (shallow-selected subscription, lazy
+  setState/subscribe accessors so the slice ⇄ settings import cycle can't
+  break module init). `settings-migrate.ts` imports the eight legacy keys
+  once (`tm-theme/language/time/week/sidebar-pin/session-settings/
+  notification-settings/shortcuts`) with the existing per-slice validators;
+  `readInitialSettingsSnapshot()` drives the pre-paint boot.
+- **Cycle unwind**: preset constants live in leaf `theme-presets.ts` and
+  session constants in leaf `session-defaults.ts` (both re-exported by the
+  legacy files); `Object.assign` eager reads were replaced by
+  `Object.defineProperties` + factory after two real init crashes.
+- **Cutover**: all 8 legacy stores are thin shims (same hook + getState
+  API); boot is a single read (`main.tsx`, `index.html` with `tm-language`
+  fallback, `theme-custom.ts` with `tm-theme` fallback). Deleting the shims
+  is gated on one shipped release — see the checklist in the roadmap.
+- **Contrast toggle**: `contrast` left the 9-swatch picker for an
+  accessibility row in `SettingsAppearanceCard` (`lastNonContrast` restore,
+  `nile` fallback); `preset-picker.test` pins 8 swatches + absence.
+- Tests: `settings-store.test.ts` (setters + toggle memory + shortcuts) +
+  `settings-migrate.test.ts` (8-key import + corrupt + v1 passthrough).
+
+Phase 45 was a read-path performance round (no schema change):
+
+- **History JOIN**: `payment-repo.listHistory/countHistory` resolve
+  student/plan names in one `LEFT JOIN` (missing student → `—`, missing
+  plan → null); `listPaymentHistory` is a thin wrapper (+ `period` filter
+  support). Dialogs and the history filter use the `searchNames`
+  projection; `batch-form.ts` takes the narrow pick.
+- **Reports repo**: `report-repo.ts` owns every report `db.select`
+  (builders/financials/academic/weak-points are pure over it);
+  `report-helpers.allEnrolledStudents` delegates to
+  `studentRepository.listEnrolled()`. Flat lists take `{ limit, offset }`
+  with paired `count*` (`report-repo-counts.ts`); per-student reports page
+  the enrolled window via `inArray(pageIds)`; `countReportData` dispatches
+  totals (`finances` → null, unpaged).
+- **Session aggregates**: `countsByStudent` (GROUP BY replaces the full
+  attendance scan) + `listCompact` (5 columns replace full payment rows);
+  `session-dues.ts` math narrowed to `SessionPayment`, behavior identical.
+- ** LIKE→range**: `monthlyStats` and the report attendance query use
+  `>= first AND < next-first` (index-friendly); Arabic font load is cached
+  across exports; `manualChunks` splits charts/pdf/excel; `DATA_CHANGED`
+  is a scoped `CustomEvent` (`useDataChanged` accepts scopes).
+- Suite grew `payment-repo.test.ts` + `payment-cases.test.ts` +
+  `report-repo.test.ts` (mocked-`db` chaining + null branches).
+
+Phase 46 put server paging behind thresholds (no schema change):
+
+- **`PaginatedTable` server mode** (`page/total/onPageChange`; client
+  slice otherwise) + `repository.list` accepts `offset`.
+- **Threshold pattern** (grouped below, flat paged above; badges/charts/
+  totals always global): history 500/50 (`countPaymentHistory`), students
+  300/50 (`countSearch`, `use-students-page.ts`, groups column in flat
+  mode), dues 300/50 (`monthlyDuesTotals`), expenses 300/50
+  (`byMonthPaged/countByMonth`).
+- **Reports preview** pages at 100 (`countReportData` totals, page reset
+  on key/period, content-stable row keys, `role="status"` saved message);
+  **exports always re-fetch the full set**.
+- **Dashboard single pass** (`dashboard-dimensions.ts`, was ~28 IPC):
+  students/plans/memberships/compact+period payments/attendance
+  aggregates/all-time counts/expense range fetch once, every figure derives
+  via shared pures (`computeMonthlyDues`, `computeMonthlyRows`,
+  `statsForMonth`, `trendFromAggregates`, `sessionDues(dims)`,
+  `financeFigures`) — same definitions the pages use, so KPIs can't drift.
+- Per-section client paging adopted app-wide (profile tables, skills,
+  groups, plans, exams, homework, weak points, session dues, monthly
+  summary); interactive rosters and statement scrolls deliberately left.
+- Verification: 81 files / 501 tests green, `tsc --noEmit` clean, `pnpm
+  build` + `pnpm lint` (0 errors) pass. Still manual: dashboard KPI parity
+  vs feature pages in `tauri dev`, and the two-device sync check.
 
 ## GitHub (CI/CD)
 

@@ -46,7 +46,12 @@ next begins, and ends with a review checkpoint.
 | 38   | Weak points (نقاط الضعف): per-student tracking + profile section | ✅ Done |
 | 39   | Undo/restore system + standalone weak-points page + WhatsApp links + sync foundation | ✅ Done |
 | 40   | Theme presets (nile/warm/midnight/academy) + identity refinement + contrast audit | ✅ Done |
-| 41   | Two-way Google Drive sync + cloud backup/restore | ✅ Done |
+| 41   | Two-way Supabase sync + cloud backup/restore (supersedes Drive plan) | ✅ Done |
+| 42   | Design-system polish (Nile identity) + responsive icon-rail layout | ✅ Done |
+| 43   | One-off sessions + cross-day moves | ✅ Done |
+| 44   | Unified settings store (`tm-settings` v1) + 8 shims + contrast toggle | ✅ Done |
+| 45   | Read-path performance (history JOIN, reports repo, session GROUP BY) | ✅ Done |
+| 46   | Server paging behind thresholds + dashboard single-pass fetch | ✅ Done |
 
 ## Phase 20 — completed
 
@@ -976,14 +981,17 @@ green.
 
 ## Phase 41 — completed
 
-Two-way Google Drive sync + cloud backup/restore (schema from Phase 39):
-OAuth PKCE via a one-shot `127.0.0.1:45467` HTTP server in
-`src-tauri/src/oauth.rs` (system-browser consent, tokens in `sync_meta`),
-Drive HTTP client (bearer + refresh, multipart, ETag/If-Match), round-based
-sync (pull → merge → apply → snapshot → push, LWW by `updated_at`),
-settings card + header badge + `SyncManager` (launch pull, 15-min periodic,
-10s debounce on data changes), and cloud backup/restore via `VACUUM INTO`
-into a Drive `backups` folder with version-guarded restore.
+Two-way Supabase sync + cloud backup/restore (schema from Phase 39;
+supersedes the earlier Google Drive plan — the code uses `SupabaseProvider`):
+email/password auth (`supabase-auth.ts`, tokens in `sync_meta`), single
+`sync` bucket (`<userId>/sync-data.json`, backups under `<userId>/backups/`),
+round-based sync (pull → merge → apply → snapshot → push, LWW by
+`updated_at`), settings card + header badge + `SyncManager` (launch pull,
+15-min periodic, 10s debounce on data changes), and cloud backup/restore via
+`VACUUM INTO` with version-guarded restore. Conflict semantics are
+last-writer-wins by design: Supabase Storage honors no `If-Match`
+precondition, so the 412-conflict branch is best-effort and never fires
+against real Storage.
 
 ## Phase 42 — completed
 
@@ -995,3 +1003,48 @@ widened to `max-w-[1720px]` for 4K; `SummaryCards` switches to
 `sm:grid-cols-3 lg:grid-cols-6/7`; `Modal` body padding `p-4 sm:p-5`.
 Verified via headless-chromium sweeps (360–1600px, no body overflow, rail
 collapse exactly at 1024px, hover/focus expand).
+
+## Phase 43 — completed
+
+One-off sessions and cross-day moves (migration v25): `group_sessions`
+gained `one_off_date` + `moved_from_session_id/date`; use-cases
+`createOneOffSession`/`deleteOneOffSession`/`moveOccurrenceAcrossDays`/
+`restoreMovedOccurrence` with overlap guards; the timetable injects one-offs
+by exact date (teal badge, non-draggable); roster, today-sessions, sheets,
+auto-defaults, and notifications all include one-offs.
+
+## Phase 44 — completed
+
+Unified settings (no schema change): versioned `tm-settings` store
+(`settings-store.ts`, `version: 1`, shortcut-defaults-preserving merge) with
+full setter coverage and a `shimStore()` factory; `settings-migrate.ts`
+imports the eight legacy keys once with per-slice validators and drives the
+pre-paint boot (`main.tsx`, `index.html` fallback, `theme-custom.ts`
+fallback). Preset/session leaf modules (`theme-presets.ts`,
+`session-defaults.ts`) unwind the slice ⇄ settings import cycle. All 8
+legacy stores are thin shims (same hook + getState API) — deleting them is
+gated on one shipped release. The `contrast` preset left the 9-swatch picker
+for an accessibility toggle row (`lastNonContrast` restore, `nile`
+fallback).
+
+## Phase 45 — completed
+
+Read-path performance (no schema change): payment history names resolve in
+one `LEFT JOIN` (`listHistory`/`countHistory`); `report-repo.ts` owns every
+report `db.select` with `{ limit, offset }` + paired `count*`; session dues
+use `countsByStudent` (GROUP BY) + 5-column `listCompact`; `monthlyStats` and
+report attendance use index-friendly month ranges; cached Arabic font load;
+`manualChunks` for charts/pdf/excel; scoped `DATA_CHANGED` custom events.
+
+## Phase 46 — completed
+
+Server paging behind thresholds (no schema change): `PaginatedTable` server
+mode + `repository.list` offset; history 500/50, students 300/50, dues
+300/50 (global `monthlyDuesTotals` badge), expenses 300/50 (global badge +
+chart); reports preview pages at 100 with `countReportData` while exports
+re-fetch the full set; dashboard fetches 12 shared dimensions once
+(`dashboard-dimensions.ts`, was ~28 IPC) deriving every figure from the same
+pures the pages use. Per-section client paging app-wide; interactive rosters
+deliberately left. Verified: 81 files / 501 tests green, `pnpm build` +
+`pnpm lint` (0 errors) pass; still manual: dashboard KPI parity in
+`tauri dev` and the two-device sync check.

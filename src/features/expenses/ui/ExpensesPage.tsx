@@ -12,7 +12,8 @@ import { deleteExpense, listExpenses } from "@/features/expenses/application/exp
 import type { Expense } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/utils/format";
 import { RecordExpenseDialog } from "./RecordExpenseDialog";
-import { MonthPicker } from "@/shared/DatePicker";
+import { MonthPicker } from "@/shared/month-picker";
+import { SELECT_CLASS as inputClass } from "@/shared/picker-shared";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useDataChanged } from "@/shared/useDataChanged";
 import { notifyUndo } from "@/lib/undo-store";
@@ -20,22 +21,32 @@ import { ExpensesTable } from "./expenses-table";
 import { ExpenseCategoryChart } from "./expense-category-chart";
 import { toast } from "@/lib/toast-store";
 
-const inputClass =
-  "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring";
+/** Above this many rows the table pages server-side (badge/chart stay global). */
+const PAGED_LIMIT = 300;
+const PAGE_SIZE = 50;
 
 export default function ExpensesPage() {
   const { t } = useTranslation();
   const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
   const [rows, setRows] = useState<Expense[]>([]);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [recordOpen, setRecordOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const { armed: deletingId, request, clear } = useConfirmDelete();
   const [reloadKey, setReloadKey] = useState(0);
+  // Single fetch: badge + chart need the full month anyway, so the table
+  // slices the same rows instead of firing a second identical scan.
+  const paged = rows.length > PAGED_LIMIT;
+  const tableRows = paged ? rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) : rows;
 
   const bump = useCallback(() => setReloadKey((k) => k + 1), []);
 
   useDataChanged(bump);
+
+  useEffect(() => {
+    setPage(0);
+  }, [month, reloadKey]);
 
   useEffect(() => {
     setLoading(true);
@@ -109,8 +120,6 @@ export default function ExpensesPage() {
         </Badge>
       </div>
 
-      
-
       {rows.length > 0 && <ExpenseCategoryChart rows={rows} />}
 
       {loading && rows.length === 0 ? (
@@ -134,13 +143,18 @@ export default function ExpensesPage() {
         <Card>
           <CardContent className="p-0">
             <ExpensesTable
-              rows={rows}
+              rows={tableRows}
               deletingId={deletingId}
               onEdit={(r) => {
                 setEditing(r);
                 setRecordOpen(true);
               }}
               onDelete={(id) => void handleDelete(id)}
+              pager={
+                paged
+                  ? { page, total: rows.length, pageSize: PAGE_SIZE, onPageChange: setPage }
+                  : undefined
+              }
             />
           </CardContent>
         </Card>

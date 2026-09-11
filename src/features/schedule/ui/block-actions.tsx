@@ -18,8 +18,8 @@ export function BlockActions({ onOccurrence, onAttend, onEdit, onDelete }: Block
         variant="ghost"
         size="icon-xs"
         className="bg-card/80 hover:bg-card"
-        aria-label={t("schedule.exceptions.occurrence")}
-        title={t("schedule.exceptions.occurrence")}
+        aria-label={t("schedule.exceptions.cancelForDay")}
+        title={t("schedule.exceptions.cancelForDay")}
         onClick={onOccurrence}
       >
         <Ban />

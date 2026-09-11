@@ -25,7 +25,7 @@ export function Segmented<T extends string>({
     <div
       role="group"
       aria-label={ariaLabel}
-      className={cn("flex gap-1 rounded-lg bg-muted p-1", className)}
+      className={cn("relative flex gap-1 rounded-lg bg-muted p-1", className)}
     >
       {options.map((o) => {
         const active = value === o.value;
@@ -37,8 +37,9 @@ export function Segmented<T extends string>({
             aria-pressed={active}
             onClick={() => onChange(o.value)}
             className={cn(
+              "relative z-10 transition-colors duration-200",
               active
-                ? "bg-background text-foreground shadow-sm hover:bg-background"
+                ? "bg-background text-foreground shadow-sm font-medium hover:bg-background"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >

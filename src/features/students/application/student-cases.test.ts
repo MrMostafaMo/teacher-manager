@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createStudent, updateStudent, deleteStudent } from './student-cases';
 import { studentRepository } from '@/features/students/infrastructure/student-repo';
-import { db } from '@/lib/db/client';
 
 vi.mock('@/features/students/infrastructure/student-repo', () => ({
   studentRepository: {
@@ -9,14 +8,7 @@ vi.mock('@/features/students/infrastructure/student-repo', () => ({
     update: vi.fn(),
     findById: vi.fn(),
     remove: vi.fn(),
-  }
-}));
-
-vi.mock('@/lib/db/client', () => ({
-  db: {
-    batch: vi.fn(),
-    delete: vi.fn(() => ({ where: vi.fn() })),
-    select: vi.fn(() => ({ from: vi.fn(() => ({ where: vi.fn(() => []) })) })),
+    removeCascade: vi.fn(),
   }
 }));
 
@@ -52,8 +44,8 @@ describe('student-cases', () => {
     expect(studentRepository.update).toHaveBeenCalledWith('s1', expect.any(Object));
   });
 
-  it('deleteStudent should call db.batch to delete children', async () => {
+  it('deleteStudent should call removeCascade to delete children', async () => {
     await deleteStudent('s1', { undo: false });
-    expect(db.batch).toHaveBeenCalled();
+    expect(studentRepository.removeCascade).toHaveBeenCalledWith('s1');
   });
 });

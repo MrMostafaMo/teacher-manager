@@ -1,6 +1,8 @@
 import dayjs from "dayjs";
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
+import { exceptionsForDates } from "@/features/schedule/application/schedule-exception-cases";
+import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
 import type { AttendanceStatus } from "@/features/attendance/domain";
 import type { Student } from "@/lib/db/schema";
 
@@ -25,15 +27,27 @@ export async function defaultStatuses(
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const schedule = await listSchedule();
+  // Cancelled occurrences don't auto-default; moved ones use effective time.
+  // Exceptions are best-effort (tests mock the schedule without a DB).
+  const exceptions = await exceptionsForDates(
+    schedule.map((s) => s.id),
+    [date],
+  ).catch(() => []);
+  const bySessionDate = new Map(exceptions.map((ex) => [`${ex.sessionId}|${ex.date}`, ex]));
   const startByGroup = new Map<string, number>();
   for (const s of schedule) {
+    // One-offs fire on their exact date, never on the weekday rule.
+    if (isOneOff(s) ? s.oneOffDate !== date : s.dayOfWeek !== dayjs(date).day()) continue;
     if (
-      s.dayOfWeek !== dayjs(date).day() ||
       s.groupStatus !== "active" ||
-      (s.groupStartsOn != null && s.groupStartsOn > date)
+      (s.groupStartsOn != null && s.groupStartsOn !== "" && s.groupStartsOn > date)
     )
       continue;
-    const [h, m] = s.startTime.split(":").map(Number);
+    const ex = bySessionDate.get(`${s.id}|${date}`);
+    if (ex?.type === "cancelled") continue;
+    const effectiveStart = ex?.type === "moved" && ex.startTime ? ex.startTime : s.startTime;
+    const [h, m] = effectiveStart.split(":").map(Number);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) continue;
     const minutes = h * 60 + m;
     const cur = startByGroup.get(s.groupId);
     if (cur === undefined || minutes < cur) startByGroup.set(s.groupId, minutes);

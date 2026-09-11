@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import type { Expense } from "@/lib/db/schema";
 import { formatDate, formatMoney } from "@/lib/utils/format";
@@ -13,11 +14,14 @@ export function ExpensesTable({
   deletingId,
   onEdit,
   onDelete,
+  pager,
 }: {
   rows: Expense[];
   deletingId: string | null;
   onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
+  /** Server mode: flat paged table for large months. */
+  pager?: { page: number; total: number; pageSize: number; onPageChange: (page: number) => void };
 }) {
   const { t } = useTranslation();
   const columns = useMemo<DataTableColumn<Expense>[]>(
@@ -81,5 +85,18 @@ export function ExpensesTable({
     [t, deletingId, onEdit, onDelete],
   );
   const getRowKey = useCallback((r: Expense) => r.id, []);
+  if (pager) {
+    return (
+      <PaginatedTable<Expense>
+        columns={columns}
+        rows={rows}
+        getRowKey={getRowKey}
+        page={pager.page}
+        total={pager.total}
+        pageSize={pager.pageSize}
+        onPageChange={pager.onPageChange}
+      />
+    );
+  }
   return <DataTable<Expense> columns={columns} rows={rows} getRowKey={getRowKey} />;
 }

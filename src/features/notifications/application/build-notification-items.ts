@@ -5,23 +5,10 @@ import type { DuesRow } from "@/features/payments/application/payment-cases";
 import type { StudentMonthlyRow } from "@/features/attendance/application/attendance-cases";
 import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-repo";
 import type { SessionException, Student } from "@/lib/db/schema";
+import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-queries";
+import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
 import type { SessionDuesRow } from "@/features/payments/application/session-dues";
 import type { NotificationItem } from "@/features/notifications/domain";
-
-export interface NotificationSourceData {
-  homeworks: HomeworkListItem[];
-  exams: ExamListItem[];
-  dues: DuesRow[];
-  exceptions: SessionException[];
-  skills: SkillWithWeakCount[];
-  monthly: StudentMonthlyRow[];
-  students: Student[];
-  sessionDues: SessionDuesRow[];
-}
-
-/** Low-attendance threshold: rate strictly below this notifies. */
-export const LOW_ATTENDANCE_RATE = 0.7;
-
 function homeworkItem(h: HomeworkListItem): NotificationItem {
   return {
     type: "homework_overdue",
@@ -43,6 +30,14 @@ function exceptionItem(ex: SessionException): NotificationItem {
     type: "exception",
     key: `exception:${ex.id}`,
     details: { sessionId: ex.sessionId, date: ex.date, kind: ex.type },
+  };
+}
+
+function oneOffItem(o: SessionWithGroup): NotificationItem {
+  return {
+    type: "exception",
+    key: `oneoff:${o.id}`,
+    details: { sessionId: o.id, date: o.oneOffDate ?? "", kind: "added", groupName: o.groupName },
   };
 }
 
@@ -78,10 +73,10 @@ function birthdayItem(s: Student, today: string): NotificationItem {
   };
 }
 
-function sessionWarningItem(r: SessionDuesRow): NotificationItem {
+function sessionDuesItem(r: SessionDuesRow, kind: "warning" | "due"): NotificationItem {
   return {
-    type: "session_warning",
-    key: `session:warning:${r.student.id}`,
+    type: kind === "warning" ? "session_warning" : "session_due",
+    key: `session:${kind}:${r.student.id}`,
     details: {
       name: r.student.name,
       count: r.count,
@@ -91,18 +86,21 @@ function sessionWarningItem(r: SessionDuesRow): NotificationItem {
   };
 }
 
-function sessionDueItem(r: SessionDuesRow): NotificationItem {
-  return {
-    type: "session_due",
-    key: `session:due:${r.student.id}`,
-    details: {
-      name: r.student.name,
-      count: r.count,
-      required: r.remainingSessions + r.count,
-      remainingSessions: r.remainingSessions,
-    },
-  };
+export interface NotificationSourceData {
+  homeworks: HomeworkListItem[];
+  exams: ExamListItem[];
+  dues: DuesRow[];
+  exceptions: SessionException[];
+  /** One-off sessions (extra/moved) — upcoming ones notify like exceptions. */
+  oneOffs: SessionWithGroup[];
+  skills: SkillWithWeakCount[];
+  monthly: StudentMonthlyRow[];
+  students: Student[];
+  sessionDues: SessionDuesRow[];
 }
+
+/** Low-attendance threshold: rate strictly below this notifies. */
+export const LOW_ATTENDANCE_RATE = 0.7;
 
 function attendanceRate(r: StudentMonthlyRow): number {
   const marked = r.present + r.absent + r.late + r.excused;
@@ -110,7 +108,7 @@ function attendanceRate(r: StudentMonthlyRow): number {
   return (r.present + r.late + r.excused) / marked;
 }
 
-/** Build the desired notification set from the seven source lists. */
+/** Build the desired notification set from the source lists. */
 export function buildNotificationItems(
   data: NotificationSourceData,
   month: string,
@@ -120,6 +118,8 @@ export function buildNotificationItems(
   for (const h of data.homeworks) if (h.overdue) items.push(homeworkItem(h));
   for (const r of data.dues) if (r.remaining > 0) items.push(paymentItem(r, month));
   for (const ex of data.exceptions) if (ex.date >= today) items.push(exceptionItem(ex));
+  for (const o of data.oneOffs)
+    if (isOneOff(o) && (o.oneOffDate ?? "") >= today) items.push(oneOffItem(o));
   for (const s of data.skills) if (s.weakCount > 0) items.push(weakSkillItem(s));
   for (const r of data.monthly) {
     const rate = attendanceRate(r);
@@ -134,8 +134,8 @@ export function buildNotificationItems(
     items.push(birthdayItem(s, today));
   }
   for (const r of data.sessionDues) {
-    if (r.status === "warning") items.push(sessionWarningItem(r));
-    else if (r.status === "due") items.push(sessionDueItem(r));
+    if (r.status === "warning") items.push(sessionDuesItem(r, "warning"));
+    else if (r.status === "due") items.push(sessionDuesItem(r, "due"));
   }
   return items;
 }

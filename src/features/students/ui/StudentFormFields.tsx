@@ -4,7 +4,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo";
 import type { Plan } from "@/lib/db/schema";
-import { DatePicker } from "@/shared/DatePicker";
+import { DatePicker } from "@/shared/date-picker";
 import { Field } from "@/shared/Field";
 import type { StudentFormState } from "./student-form";
 

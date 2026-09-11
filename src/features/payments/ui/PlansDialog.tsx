@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/shared/Skeletons";
 import { EmptyState } from "@/shared/EmptyState";
-import { DataTable } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { deletePlan, listPlans } from "@/features/payments/application/plan-cases";
 import type { PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import type { Plan } from "@/lib/db/schema";
@@ -103,7 +103,12 @@ export function PlansDialog({ open, onClose, onChanged }: PlansDialogProps) {
                 className="py-14"
               />
             ) : (
-              <DataTable<PlanWithCount> columns={columns} rows={rows} getRowKey={getRowKey} />
+              <PaginatedTable<PlanWithCount>
+                columns={columns}
+                rows={rows}
+                getRowKey={getRowKey}
+                pageSize={50}
+              />
             )}
           </CardContent>
         </Card>

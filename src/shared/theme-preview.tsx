@@ -18,11 +18,11 @@ export function ThemePreview() {
         </span>
       </div>
       <div className="mt-3 flex gap-1.5">
-        <span className="h-2 flex-1 rounded-full bg-[var(--chart-1)]" />
-        <span className="h-2 flex-1 rounded-full bg-[var(--chart-2)]" />
-        <span className="h-2 flex-1 rounded-full bg-[var(--chart-3)]" />
-        <span className="h-2 flex-1 rounded-full bg-[var(--chart-4)]" />
-        <span className="h-2 flex-1 rounded-full bg-[var(--chart-5)]" />
+        <span className="h-2 flex-1 rounded-full bg-chart-1" />
+        <span className="h-2 flex-1 rounded-full bg-chart-2" />
+        <span className="h-2 flex-1 rounded-full bg-chart-3" />
+        <span className="h-2 flex-1 rounded-full bg-chart-4" />
+        <span className="h-2 flex-1 rounded-full bg-chart-5" />
       </div>
       <div className="mt-2 flex gap-1.5">
         <span className="h-6 flex-1 rounded-md bg-background ring-1 ring-border" />

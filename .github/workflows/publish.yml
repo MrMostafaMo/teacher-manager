@@ -19,14 +19,19 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
+            checksum: 'macOS-arm64'
           - platform: 'macos-latest'
             args: '--target x86_64-apple-darwin'
+            checksum: 'macOS-x64'
           - platform: 'windows-latest'
             args: '--target x86_64-pc-windows-msvc'
+            checksum: 'Windows-x64'
           - platform: 'windows-latest'
             args: '--target aarch64-pc-windows-msvc'
+            checksum: 'Windows-arm64'
           - platform: 'ubuntu-24.04'
             args: ''
+            checksum: 'Linux-x64'
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v7
@@ -66,7 +71,34 @@ jobs:
         with:
           tagName: app-v__VERSION__
           releaseName: 'Teacher Manager v__VERSION__'
-          releaseBody: 'See the assets below to download and install this version.'
+          releaseBody: |
+            See the assets below to download and install this version.
+
+            Verify your download against the SHA256SUMS-*.txt files:
+            Windows: certutil -hashfile <file> SHA256
+            macOS / Linux: sha256sum -c <SHA256SUMS file>
+
+            Windows Smart App Control note (unsigned build):
+            the app has no paid code-signing certificate yet, so Windows may warn
+            about an unknown publisher. Download only from this page, then:
+            Settings > Privacy & Security > Windows Security >
+            App & browser control > Smart App Control > Off, and on the blue
+            SmartScreen prompt choose More info > Run anyway.
+
+            ملاحظة لمستخدمي ويندوز:
+            النسخة غير موقّعة بشهادة مدفوعة، فقد تظهر رسالة ناشر غير معروف.
+            حمّل من هذه الصفحة فقط، ثم:
+            الإعدادات > الخصوصية والأمان > أمان Windows >
+            التحكم في التطبيق والمستعرض > Smart App Control > إيقاف،
+            وعند الشاشة الزرقاء اختر معلومات إضافية > تشغيل على أي حال.
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: generate SHA256 checksums
+        run: node scripts/generate-checksums.mjs ${{ matrix.checksum }}
+
+      - name: attach checksums to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.ref_name }}" "SHA256SUMS-${{ matrix.checksum }}.txt" --clobber

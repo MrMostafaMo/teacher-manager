@@ -13,10 +13,32 @@ export const UNDO_TTL = 5_000;
 export const MAX_UNDO_ENTRIES = 10;
 
 /**
- * Fired after any undo so pages re-fetch. Lives here (lib layer) so GlobalDialogs
- * re-exports it — importing the UI constant from undo-store would create a cycle.
+ * Fired after any mutation so pages re-fetch. Lives here (lib layer) so
+ * GlobalDialogs re-exports it — importing the UI constant from undo-store
+ * would create a cycle. Dispatched as CustomEvent<{ scope?: string }> so
+ * pages can ignore unrelated scopes; bare Events still work (global).
  */
 export const DATA_CHANGED_EVENT = "tm:data-changed";
+
+export type DataChangedScope =
+  | "students"
+  | "attendance"
+  | "groups"
+  | "payments"
+  | "homework"
+  | "exams"
+  | "skills"
+  | "schedule"
+  | "expenses"
+  | "reports"
+  | "settings"
+  | "notifications"
+  | "sync";
+
+/** Dispatch a scoped data-changed event (default = global, all pages refetch). */
+export function notifyDataChanged(scope?: DataChangedScope): void {
+  window.dispatchEvent(new CustomEvent(DATA_CHANGED_EVENT, { detail: { scope } }));
+}
 
 export interface UndoEntry {
   id: number;
@@ -29,7 +51,7 @@ let nextUndoId = 1;
 interface UndoStore {
   entries: UndoEntry[];
   register: (restore: () => Promise<void>) => number;
-  undo: (id: number) => Promise<void>;
+  undo: (id: number, scope?: DataChangedScope) => Promise<void>;
   clear: (id: number) => void;
 }
 
@@ -42,12 +64,12 @@ export const useUndoStore = create<UndoStore>((set, get) => ({
     window.setTimeout(() => get().clear(id), UNDO_TTL);
     return id;
   },
-  undo: async (id) => {
+  undo: async (id, scope?: DataChangedScope) => {
     const entry = get().entries.find((e) => e.id === id);
     if (!entry) return;
     await entry.restore();
     get().clear(id);
-    window.dispatchEvent(new Event(DATA_CHANGED_EVENT));
+    notifyDataChanged(scope);
   },
   clear: (id) => set((state) => ({ entries: state.entries.filter((e) => e.id !== id) })),
 }));

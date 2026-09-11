@@ -5,9 +5,17 @@ import type { DuesRow } from "@/features/payments/application/payment-cases";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/utils/format";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { Avatar } from "@/shared/Avatar";
 
-export const DuesTable = memo(function DuesTable({ list }: { list: DuesRow[] }) {
+export const DuesTable = memo(function DuesTable({
+  list,
+  pager,
+}: {
+  list: DuesRow[];
+  /** Server mode: flat paged table for large months. */
+  pager?: { page: number; total: number; pageSize: number; onPageChange: (page: number) => void };
+}) {
   const { t } = useTranslation();
   const columns = useMemo<DataTableColumn<DuesRow>[]>(
     () => [
@@ -65,6 +73,19 @@ export const DuesTable = memo(function DuesTable({ list }: { list: DuesRow[] }) 
     [t],
   );
   const getRowKey = useCallback((r: DuesRow) => r.student.id, []);
+  if (pager) {
+    return (
+      <PaginatedTable<DuesRow>
+        columns={columns}
+        rows={list}
+        getRowKey={getRowKey}
+        page={pager.page}
+        total={pager.total}
+        pageSize={pager.pageSize}
+        onPageChange={pager.onPageChange}
+      />
+    );
+  }
   return <DataTable<DuesRow> columns={columns} rows={list} getRowKey={getRowKey} />;
 });
 

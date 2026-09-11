@@ -1,4 +1,3 @@
-import { queryFirst } from "@/lib/db/client";
 import { uuid } from "@/lib/utils/uuid";
 import { mergePull, type LocalState } from "./merge-pull";
 import { mergePush } from "./merge-push";
@@ -9,7 +8,13 @@ import { SupabaseProvider } from "../infrastructure/supabase-provider";
 import type { SyncPayload } from "../domain";
 import { SYNC_TABLE_NAMES } from "../domain";
 import { applyPullResult, buildLocalSnapshot, parsePayload, serializePayload } from "../infrastructure/sync-snapshot";
-import { SYNC_META_KEYS, getSyncMeta, listLocalTombstones, setSyncMeta } from "../infrastructure/sync-state-repo";
+import {
+  SYNC_META_KEYS,
+  getAppliedSchemaVersion,
+  getSyncMeta,
+  listLocalTombstones,
+  setSyncMeta,
+} from "../infrastructure/sync-state-repo";
 
 const MAX_ATTEMPTS = 3;
 
@@ -20,8 +25,7 @@ export function isSyncBusy(): boolean {
 }
 
 async function localSchemaVersion(): Promise<number> {
-  const row = await queryFirst<{ v: number | null }>("SELECT MAX(version) AS v FROM _sqlx_migrations", []);
-  return row?.v ?? 0;
+  return getAppliedSchemaVersion();
 }
 
 export async function deviceName(): Promise<string> {
@@ -81,6 +85,13 @@ export function errorKey(error: unknown): string {
   }
 }
 
+/**
+ * Conflict semantics are last-writer-wins by design: Supabase Storage honors
+ * no `If-Match` precondition, so the "conflict" branch below is best-effort
+ * and never fires against real Storage — two devices writing between syncs
+ * resolve to the later upload. Row-level LWW by `updated_at` still applies
+ * inside every merged payload.
+ */
 export async function runRound(provider: SyncProvider, schemaVersion: number): Promise<SyncReport> {
   const device = await deviceName();
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {

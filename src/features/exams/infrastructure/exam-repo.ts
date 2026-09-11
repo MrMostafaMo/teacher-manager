@@ -11,6 +11,7 @@ import {
 } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
+import type { MembershipWithEnrollment } from "@/features/groups/infrastructure/group-repo";
 import { examResultQueries } from "./exam-result-queries";
 
 /**
@@ -29,7 +30,7 @@ export const examRepository = {
   ...createRepository(exams),
   ...examResultQueries,
 
-  async list(): Promise<ExamListItem[]> {
+  async list(preloaded?: { memberships?: MembershipWithEnrollment[] }): Promise<ExamListItem[]> {
     const [rows, groups, resultRows, memberships] = await Promise.all([
       db.select().from(exams).orderBy(desc(exams.createdAt)),
       db.select({ id: studyGroups.id, name: studyGroups.name }).from(studyGroups),
@@ -40,14 +41,15 @@ export const examRepository = {
           score: examResults.score,
         })
         .from(examResults),
-      db
-        .select({
-          groupId: studentGroups.groupId,
-          studentId: studentGroups.studentId,
-          enrolledOn: students.enrolledOn,
-        })
-        .from(studentGroups)
-        .innerJoin(students, eq(studentGroups.studentId, students.id)),
+      preloaded?.memberships ??
+        db
+          .select({
+            groupId: studentGroups.groupId,
+            studentId: studentGroups.studentId,
+            enrolledOn: students.enrolledOn,
+          })
+          .from(studentGroups)
+          .innerJoin(students, eq(studentGroups.studentId, students.id)),
     ]);
     const groupName = new Map((groups as StudyGroup[]).map((g) => [g.id, g.name]));
     // Stats reflect *current* members who were already enrolled by the exam's

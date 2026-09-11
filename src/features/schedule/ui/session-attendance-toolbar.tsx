@@ -3,10 +3,8 @@ import dayjs from "dayjs";
 import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/shared/DatePicker";
-
-const inputClass =
-  "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
+import { DatePicker } from "@/shared/date-picker";
+import { SELECT_CLASS as inputClass } from "@/shared/picker-shared";
 
 interface SessionAttendanceToolbarProps {
   date: string;

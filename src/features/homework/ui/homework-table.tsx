@@ -4,7 +4,8 @@ import { Pencil, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import type { HomeworkListItem } from "@/features/homework/application/homework-cases";
 import { formatDateString } from "@/lib/utils/format";
 
@@ -83,5 +84,5 @@ export const HomeworkTable = memo(function HomeworkTable({
     [t, deletingId, onDetail, onEdit, onDelete],
   );
   const getRowKey = useCallback((h: HomeworkListItem) => h.id, []);
-  return <DataTable<HomeworkListItem> columns={columns} rows={items} getRowKey={getRowKey} />;
+  return <PaginatedTable<HomeworkListItem> columns={columns} rows={items} getRowKey={getRowKey} pageSize={50} />;
 });

@@ -21,6 +21,12 @@ describe("PresetPicker", () => {
     expect(screen.getAllByRole("radio")).toHaveLength(THEME_PRESETS.length);
   });
 
+  it("hides contrast from the swatches (accessibility toggle instead)", () => {
+    expect(THEME_PRESETS).toHaveLength(8);
+    render(<PresetPicker />);
+    expect(screen.queryByRole("radio", { name: /contrast|تباين/i })).not.toBeInTheDocument();
+  });
+
   it("marks the active preset as checked", () => {
     useThemeStore.setState({ preset: "warm" });
     render(<PresetPicker />);

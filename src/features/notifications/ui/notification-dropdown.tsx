@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Bell, CheckCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/shared/EmptyState";
 import { PopoverShell } from "@/shared/popover-shell";
 import { useNotificationSettings } from "@/lib/notification-settings-store";
 import { useNotifications } from "./use-notifications";
@@ -99,11 +100,11 @@ export function NotificationDropdown() {
       </div>
 
       {loading ? (
-        <p className="px-1 py-4 text-center text-xs text-muted-foreground">{t("common.loading")}</p>
-      ) : items.length === 0 ? (
-        <p className="px-1 py-4 text-center text-xs text-muted-foreground">
-          {t("notifications.empty")}
+        <p aria-busy="true" className="px-1 py-4 text-center text-xs text-muted-foreground">
+          {t("common.loading")}
         </p>
+      ) : items.length === 0 ? (
+        <EmptyState icon={Bell} title={t("notifications.empty")} className="min-h-0 py-6" />
       ) : (
         <NotificationList items={items} onOpen={onRowClick} onDismiss={(id) => void dismiss(id)} onMute={onMute} />
       )}

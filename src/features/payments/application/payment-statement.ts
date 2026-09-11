@@ -2,11 +2,13 @@ import { attendanceRepository } from "@/features/attendance/infrastructure/atten
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
-import { db } from "@/lib/db/client";
-import { planPriceHistory, type Payment, type Student } from "@/lib/db/schema";
-import { useSessionSettings } from "@/lib/session-settings-store";
+import type { Payment, Student } from "@/lib/db/schema";
 import dayjs from "dayjs";
-import { asc, eq } from "drizzle-orm";
+
+export interface StatementBillingOpts {
+  billingMode: "calendar" | "sessions";
+  sessionsPerCycle: number;
+}
 
 export interface StatementMonth {
   /** Billed period as YYYY-MM. */
@@ -59,8 +61,10 @@ export function computeStatement(
   const sorted = [...payments].sort((a, b) => a.paidAt - b.paidAt);
   const paidByPeriod = new Map<string, number>();
   for (const p of sorted) {
-    if (!p.period) continue;
-    paidByPeriod.set(p.period, (paidByPeriod.get(p.period) ?? 0) + p.amount);
+    // Legacy/synced rows may lack a period — attribute them to the end month
+    // so the monthly table reconciles with totalPaid/totalBalance.
+    const key = p.period || endPeriod;
+    paidByPeriod.set(key, (paidByPeriod.get(key) ?? 0) + p.amount);
   }
 
   const months: StatementMonth[] = [];
@@ -92,7 +96,11 @@ export function computeStatement(
  * running/total means the student is paid ahead (advance/credit).
  */
 
-export async function studentStatement(studentId: string, cycleFmt: (n: number) => string): Promise<StudentStatement> {
+export async function studentStatement(
+  studentId: string,
+  cycleFmt: (n: number) => string,
+  opts?: StatementBillingOpts,
+): Promise<StudentStatement> {
   const [student, plans, allPayments, allAttendances] = await Promise.all([
     studentRepository.findById(studentId),
     planRepository.list(),
@@ -101,13 +109,7 @@ export async function studentStatement(studentId: string, cycleFmt: (n: number) 
   ]);
   if (!student) throw new Error(`student ${studentId} not found`);
   const plan = student.planId ? plans.find((p) => p.id === student.planId) : null;
-  const historyRows = student.planId
-    ? await db
-        .select()
-        .from(planPriceHistory)
-        .where(eq(planPriceHistory.planId, student.planId))
-        .orderBy(asc(planPriceHistory.effectiveFrom))
-    : [];
+  const historyRows = student.planId ? await planRepository.historyForPlan(student.planId) : [];
 
   const getPrice = (periodIso: string) => {
     if (!plan) return 0;
@@ -121,7 +123,9 @@ export async function studentStatement(studentId: string, cycleFmt: (n: number) 
 
   const duePerMonth = plan?.amount ?? 0; // fallback for session mode which isn't historically tracked yet
 
-  const { billingMode, sessionsPerCycle } = useSessionSettings.getState();
+  // Injected by the caller (UI reads the store); defaults keep old behavior.
+  const billingMode = opts?.billingMode ?? "calendar";
+  const sessionsPerCycle = opts?.sessionsPerCycle ?? 8;
 
   let months: StatementMonth[];
   let ledger: StatementPayment[];

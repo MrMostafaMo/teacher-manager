@@ -29,6 +29,9 @@ export function exceptionsForDates(
 
 /** Guard that the date actually falls on the session's weekday. */
 async function assertWeekday(sessionId: string, date: string): Promise<void> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !dayjs(date).isValid()) {
+    throw new Error(`invalid date: ${date}`);
+  }
   const session = await scheduleRepository.findById(sessionId);
   if (!session) throw new Error(`session ${sessionId} not found`);
   if (dayjs(date).day() !== session.dayOfWeek) {

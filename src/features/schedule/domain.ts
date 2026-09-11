@@ -45,5 +45,49 @@ export const moveSessionSchema = z
     message: "end after start",
   });
 
+const timeRange = {
+  startTime: z.string().regex(timeRegex, "invalid time"),
+  endTime: z.string().regex(timeRegex, "invalid time"),
+};
+
+/** Extra session of a group that fires on `date` only (never weekly). */
+export const oneOffSessionInputSchema = z
+  .object({
+    groupId: z.string().min(1),
+    date: z.string().regex(dateRegex, "invalid date"),
+    ...timeRange,
+    room: z.string().trim().max(100).optional(),
+  })
+  .refine((s) => s.endTime > s.startTime, {
+    path: ["endTime"],
+    message: "end after start",
+  });
+
+export type OneOffSessionInput = z.infer<typeof oneOffSessionInputSchema>;
+
+/**
+ * Move one occurrence to another date (e.g. Sunday → Monday for one week
+ * only). Same-weekday targets behave like a same-date move; anything else
+ * cancels the source occurrence and creates a linked one-off session.
+ */
+export const moveAcrossDaysSchema = z
+  .object({
+    sessionId: z.string().min(1),
+    date: z.string().regex(dateRegex, "invalid date"),
+    targetDate: z.string().regex(dateRegex, "invalid date"),
+    ...timeRange,
+    room: z.string().trim().max(100).optional(),
+  })
+  .refine((s) => s.endTime > s.startTime, {
+    path: ["endTime"],
+    message: "end after start",
+  })
+  .refine((s) => s.targetDate !== s.date, {
+    path: ["targetDate"],
+    message: "different date",
+  });
+
+export type MoveAcrossDaysInput = z.infer<typeof moveAcrossDaysSchema>;
+
 /** Weekday keys indexed by `Date#getDay()` (0=Sunday … 6=Saturday). */
 export const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;

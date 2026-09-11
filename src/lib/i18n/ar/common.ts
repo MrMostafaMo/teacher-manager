@@ -37,6 +37,12 @@ export const common: Messages["common"] = {
     pin: "تثبيت الشريط الجانبي",
     unpin: "إلغاء تثبيت الشريط الجانبي",
   },
+  window: {
+    minimize: "تصغير",
+    maximize: "تكبير",
+    restore: "استعادة",
+    close: "إغلاق",
+  },
   commandPalette: {
     title: "قائمة الأوامر",
     placeholder: "ابحث في الصفحات والإجراءات والطلاب…",

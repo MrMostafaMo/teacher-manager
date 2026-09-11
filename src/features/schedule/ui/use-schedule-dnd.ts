@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { updateSession } from "@/features/schedule/application/schedule-cases";
+import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import { toast } from "@/lib/toast-store";
 import { useTranslation } from "react-i18next";
@@ -21,7 +22,9 @@ export function useScheduleDnD(
   const moveSession = useCallback(
     async (sessionId: string, newDay: number, newStartMin: number) => {
       const session = sessions.find((s) => s.id === sessionId);
-      if (!session) return;
+      // One-off blocks are not draggable, but guard anyway: a permanent move
+      // must never rewrite a single-date session's weekday.
+      if (!session || isOneOff(session)) return;
 
       const duration = toMin(session.endTime) - toMin(session.startTime);
       const newEndMin = newStartMin + duration;

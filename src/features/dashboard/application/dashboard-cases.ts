@@ -1,18 +1,9 @@
-import { listStudents } from "@/features/students/application/student-cases";
-import { getMonthly } from "@/features/attendance/application/attendance-cases";
-import { monthlyDues } from "@/features/payments/application/payment-cases";
-import { monthlyExpenseTotal } from "@/features/expenses/application/expense-cases";
-import { listHomeworks } from "@/features/homework/application/homework-cases";
-import { listExams } from "@/features/exams/application/exam-cases";
-import { listSkills } from "@/features/skills/application/skill-cases";
-import { listSchedule } from "@/features/schedule/application/schedule-cases";
-import { listScheduleExceptions } from "@/features/schedule/application/schedule-exception-cases";
-import { listAllWeakPoints } from "@/features/weak-points/application/weak-point-cases";
+import { computeMonthlyRows } from "@/features/attendance/application/attendance-cases";
+import { computeMonthlyDues } from "@/features/payments/application/payment-cases";
 import { sessionDues } from "@/features/payments/application/session-dues-cases";
-import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
-import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
-import { expenseRepository } from "@/features/expenses/infrastructure/expense-repo";
-import { useSessionSettings } from "@/lib/session-settings-store";
+import { financeFigures, prevFinance } from "./dashboard-finance";
+import { fetchDashboardDims } from "./dashboard-dimensions";
+import { monthEnd } from "@/lib/utils/enrollment";
 import {
   countNewStudents,
   currentMonth,
@@ -20,8 +11,10 @@ import {
   monthOf,
   percentDelta,
   shiftMonth,
+  statsForMonth,
   todaySessions,
   topWeaknessStudents,
+  trendFromAggregates,
 } from "./dashboard-helpers";
 import type { DashboardData } from "./dashboard-data";
 
@@ -33,47 +26,56 @@ export type { DashboardData };
  * the feature pages show, so the dashboard can't disagree with them.
  */
 
-export async function getDashboardData(month = currentMonth()): Promise<DashboardData> {
+export async function getDashboardData(
+  month = currentMonth(),
+  opts?: { billingMode?: "calendar" | "sessions"; sessionsPerCycle?: number; warningAt?: number },
+): Promise<DashboardData> {
   const prevMonth = shiftMonth(month, -1);
   const trendMonths = lastMonths(6, month);
-  const [
+  // Single-pass dimensions: shared tables fetch once, every figure derives
+  // in JS from the same definitions the feature pages show.
+  const {
     students,
-    monthly,
-    dues,
+    plans,
+    memberships,
+    paymentsCompact,
+    attendanceAgg,
+    attendanceCounts,
+    expensesRange,
     homeworks,
     exams,
     skills,
-    trend,
     schedule,
     exceptions,
-    expensesMonth,
-    prevMonthly,
-    prevExpenses,
-    financePayments,
-    financeExpenses,
     weakPoints,
-    sessionDuesRows,
-  ] = await Promise.all([
-    listStudents({ status: "all" }),
-    getMonthly(month),
-    monthlyDues(month),
-    listHomeworks(),
-    listExams(),
-    listSkills(),
-    attendanceRepository.monthlyTrend(6, month),
-    listSchedule(),
-    listScheduleExceptions(),
-    monthlyExpenseTotal(month),
-    getMonthly(prevMonth),
-    monthlyExpenseTotal(prevMonth),
-    Promise.all(trendMonths.map((m) => paymentRepository.byPeriod(m))),
-    Promise.all(trendMonths.map((m) => expenseRepository.byMonth(m))),
-    listAllWeakPoints(),
-    sessionDues(),
-  ]);
+  } = await fetchDashboardDims(month, trendMonths);
 
+  const activeStudents = students.filter((s) => s.status === "active");
   const totalStudents = students.length;
-  const activeStudents = students.filter((s) => s.status === "active").length;
+  const activeCount = activeStudents.length;
+  const monthly = computeMonthlyRows(activeStudents, statsForMonth(attendanceAgg, month), monthEnd(month));
+  const prevMonthly = computeMonthlyRows(
+    activeStudents,
+    statsForMonth(attendanceAgg, prevMonth),
+    monthEnd(prevMonth),
+  );
+  const trend = trendFromAggregates(attendanceAgg, trendMonths);
+  const dues = computeMonthlyDues(month, {
+    activeStudents,
+    plans,
+    payments: paymentsCompact.filter((p) => p.period === month),
+    memberships,
+  });
+  const financePayments = trendMonths.map((m) => paymentsCompact.filter((p) => p.period === m));
+  const financeExpenses = trendMonths.map((m) => expensesRange.filter((e) => monthOf(e.spentAt) === m));
+  const expensesMonth = financeExpenses[financeExpenses.length - 1].reduce((a, e) => a + e.amount, 0);
+  const prevExpenses = financeExpenses[financeExpenses.length - 2].reduce((a, e) => a + e.amount, 0);
+  const sessionDuesRows = await sessionDues(
+    opts?.sessionsPerCycle !== undefined || opts?.warningAt !== undefined
+      ? { sessionsPerCycle: opts.sessionsPerCycle ?? 8, warningAt: opts.warningAt ?? 6 }
+      : undefined,
+    { activeStudents, plans, payments: paymentsCompact, attendanceCounts, memberships },
+  );
 
   const monthHw = homeworks.filter((h) => monthOf(h.dueDate ?? h.createdAt) === month);
   const monthExams = exams.filter((e) => monthOf(e.date ?? e.createdAt) === month);
@@ -82,35 +84,19 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
   const attended = monthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
   const attendanceRate = marked > 0 ? Math.round((attended / marked) * 100) : 0;
 
-  const { billingMode } = useSessionSettings.getState();
-
-  const sumPaid = (payments: Array<{ amount: number }>) =>
-    payments.reduce((a, p) => a + p.amount, 0);
-  const collected = sumPaid(financePayments[financePayments.length - 1]);
-
-  const isSessionBilling = billingMode === "sessions";
-  const outstanding = isSessionBilling
-    ? sessionDuesRows
-        .filter((r) => r.status === "due")
-        .reduce((a, r) => a + (r.remainingAmount ?? 0), 0)
-    : dues.reduce((a, r) => a + Math.max(0, r.remaining), 0);
-  const topDebtors: Array<{ id: string; name: string; remaining: number }> = isSessionBilling
-    ? sessionDuesRows
-        .filter((r) => r.status === "due" && (r.remainingAmount ?? 0) > 0)
-        .sort((a, b) => (b.remainingAmount ?? 0) - (a.remainingAmount ?? 0))
-        .slice(0, 5)
-        .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remainingAmount ?? 0 }))
-    : dues
-        .filter((r) => r.remaining > 0)
-        .sort((a, b) => b.remaining - a.remaining)
-        .slice(0, 5)
-        .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remaining }));
+  // Injected by the caller (UI reads the store); defaults to calendar.
+  const billingMode = opts?.billingMode ?? "calendar";
+  const { collected, outstanding, topDebtors } = financeFigures(
+    billingMode,
+    financePayments[financePayments.length - 1],
+    dues,
+    sessionDuesRows,
+  );
 
   const prevMarked = prevMonthly.reduce((a, r) => a + r.present + r.absent + r.late + r.excused, 0);
   const prevAttended = prevMonthly.reduce((a, r) => a + r.present + r.late + r.excused, 0);
   const prevAttendanceRate = prevMarked > 0 ? Math.round((prevAttended / prevMarked) * 100) : 0;
-  const prevCollected = sumPaid(financePayments[financePayments.length - 2]);
-  const prevNet = prevCollected - prevExpenses;
+  const { prevCollected, prevNet } = prevFinance(financePayments[financePayments.length - 2], prevExpenses);
 
   const newStudents = countNewStudents(students, month);
 
@@ -154,13 +140,13 @@ export async function getDashboardData(month = currentMonth()): Promise<Dashboar
   const daySessions = todaySessions(schedule, now, exceptions);
   const financeTrend = trendMonths.map((m, i) => ({
     month: m,
-    collected: sumPaid(financePayments[i]),
+    collected: financePayments[i].reduce((a, p) => a + p.amount, 0),
     expenses: financeExpenses[i].reduce((a, e) => a + e.amount, 0),
   }));
 
   return {
     totalStudents,
-    activeStudents,
+    activeStudents: activeCount,
     attendanceRate,
     attendanceTrend: trend,
     financeTrend,

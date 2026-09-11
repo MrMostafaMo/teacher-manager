@@ -18,6 +18,8 @@ interface DayColumnProps {
   totalH: number;
   placed: PlacedSession<SessionWithException>[];
   conflicts: Set<string>;
+  /** Target dates of cross-day moves, keyed by `${sessionId}|${sourceDate}`. */
+  movedTo: Map<string, string>;
   deletingId: string | null;
   onEdit: (s: GroupSession) => void;
   onDelete: (s: GroupSession) => void;
@@ -38,6 +40,7 @@ export function DayColumn({
   totalH,
   placed,
   conflicts,
+  movedTo,
   deletingId,
   onEdit,
   onDelete,
@@ -105,6 +108,7 @@ export function DayColumn({
           conflicted={conflicts.has(p.session.id)}
           deleting={deletingId === p.session.id}
           date={date}
+          movedToDate={movedTo.get(`${p.session.id}|${date}`) ?? null}
           onEdit={onEdit}
           onDelete={onDelete}
           onAttend={onAttend}

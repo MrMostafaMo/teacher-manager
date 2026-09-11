@@ -7,9 +7,8 @@ export function ToastViewport() {
 
   return (
     <div
-      aria-live="polite"
       aria-atomic="false"
-      className="pointer-events-none fixed bottom-4 start-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 flex-col gap-2 px-4 rtl:translate-x-1/2"
+      className="pointer-events-none fixed inset-x-0 bottom-4 z-50 mx-auto flex w-fit max-w-[min(92vw,28rem)] flex-col items-center gap-2 px-4"
     >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />

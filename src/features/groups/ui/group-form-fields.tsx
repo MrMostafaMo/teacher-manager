@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/shared/DatePicker";
+import { DatePicker } from "@/shared/date-picker";
 import { Field } from "@/shared/Field";
 
 export interface GroupFormState {

@@ -1,19 +1,12 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { shimStore } from "@/lib/settings/settings-store";
 
-interface SidebarState {
-    isPinned: boolean;
-    togglePinned: () => void;
+export interface SidebarState {
+  isPinned: boolean;
+  togglePinned: () => void;
 }
 
-export const useSidebarStore = create<SidebarState>()(
-    persist(
-        (set) => ({
-            isPinned: false,
-            togglePinned: () => set((s) => ({ isPinned: !s.isPinned })),
-        }),
-        {
-            name: "tm-sidebar-pin",
-        }
-    )
-);
+/** Compatibility shim over the unified settings store (one release). */
+export const useSidebarStore = shimStore<SidebarState>((s) => ({
+  isPinned: s.isPinned,
+  togglePinned: s.togglePinned,
+}));

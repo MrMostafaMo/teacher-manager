@@ -102,7 +102,8 @@ export const groupRepository = {
     const ts = Date.now();
     await db
       .insert(studentGroups)
-      .values({ id: uuid(), studentId, groupId, createdAt: ts, updatedAt: ts });
+      .values({ id: uuid(), studentId, groupId, createdAt: ts, updatedAt: ts })
+      .run();
   },
 
   async removeMember(studentId: string, groupId: string): Promise<boolean> {
@@ -135,4 +136,30 @@ export const groupRepository = {
       .innerJoin(studyGroups, eq(studentGroups.groupId, studyGroups.id));
     return rows as Array<{ studentId: string; groupId: string; groupName: string }>;
   },
+
+  /**
+   * Every membership with the member's enrollment date (for homework/exam
+   * eligibility). The lean `memberships()` derives from this via map.
+   */
+  async membershipsWithEnrollment(): Promise<MembershipWithEnrollment[]> {
+    const rows = await db
+      .select({
+        groupId: studentGroups.groupId,
+        groupName: studyGroups.name,
+        studentId: studentGroups.studentId,
+        enrolledOn: students.enrolledOn,
+      })
+      .from(studentGroups)
+      .innerJoin(studyGroups, eq(studentGroups.groupId, studyGroups.id))
+      .innerJoin(students, eq(studentGroups.studentId, students.id));
+    return rows as MembershipWithEnrollment[];
+  },
 };
+
+/** Membership + group name + member enrollment date (shared dimension). */
+export interface MembershipWithEnrollment {
+  groupId: string;
+  groupName: string;
+  studentId: string;
+  enrolledOn: string | null;
+}

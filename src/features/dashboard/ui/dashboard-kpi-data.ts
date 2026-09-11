@@ -11,7 +11,7 @@ import {
   Wallet,
 } from "lucide-react";
 import type { DashboardData } from "@/features/dashboard/application/dashboard-cases";
-import { formatMoney } from "@/lib/utils/format";
+import { formatMoney, formatNumber } from "@/lib/utils/format";
 
 /** Accent color per KPI category (theme-aware CSS variables). */
 export const KPI_COLOR: Record<string, string> = {
@@ -54,7 +54,10 @@ const KPI_ROUTE: Record<string, string> = {
 
 export type KpiItem = {
   key: string;
-  value: string | number;
+  /** Raw number driving the count-up animation (NaN = static, e.g. "—"). */
+  numeric: number;
+  /** Localized display string (money / % / count). */
+  formatted: string;
   icon: LucideIcon;
   delta?: number | null;
   invert?: boolean;
@@ -63,30 +66,40 @@ export type KpiItem = {
 
 export function buildKpis(data: DashboardData): KpiItem[] {
   return [
-    { key: "totalStudents", value: data.totalStudents, icon: Users, to: KPI_ROUTE.totalStudents },
+    {
+      key: "totalStudents",
+      numeric: data.totalStudents,
+      formatted: formatNumber(data.totalStudents),
+      icon: Users,
+      to: KPI_ROUTE.totalStudents,
+    },
     {
       key: "activeStudents",
-      value: data.activeStudents,
+      numeric: data.activeStudents,
+      formatted: formatNumber(data.activeStudents),
       icon: UserCheck,
       to: KPI_ROUTE.activeStudents,
     },
     {
       key: "attendanceRate",
-      value: `${data.attendanceRate}%`,
+      numeric: data.attendanceRate,
+      formatted: `${formatNumber(data.attendanceRate)}%`,
       icon: CalendarCheck,
       delta: data.deltas.attendanceRate,
       to: KPI_ROUTE.attendanceRate,
     },
     {
       key: "collected",
-      value: formatMoney(data.collected),
+      numeric: data.collected,
+      formatted: formatMoney(data.collected),
       icon: Wallet,
       delta: data.deltas.collected,
       to: KPI_ROUTE.collected,
     },
     {
       key: "expensesMonth",
-      value: formatMoney(data.expensesMonth),
+      numeric: data.expensesMonth,
+      formatted: formatMoney(data.expensesMonth),
       icon: Receipt,
       delta: data.deltas.expenses,
       invert: true,
@@ -94,26 +107,30 @@ export function buildKpis(data: DashboardData): KpiItem[] {
     },
     {
       key: "net",
-      value: formatMoney(data.net),
+      numeric: data.net,
+      formatted: formatMoney(data.net),
       icon: Scale,
       delta: data.deltas.net,
       to: KPI_ROUTE.net,
     },
     {
       key: "outstanding",
-      value: formatMoney(data.outstanding),
+      numeric: data.outstanding,
+      formatted: formatMoney(data.outstanding),
       icon: TrendingDown,
       to: KPI_ROUTE.outstanding,
     },
     {
       key: "homeworkCompletion",
-      value: `${data.homeworkCompletion}%`,
+      numeric: data.homeworkCompletion,
+      formatted: `${formatNumber(data.homeworkCompletion)}%`,
       icon: ClipboardList,
       to: KPI_ROUTE.homeworkCompletion,
     },
     {
       key: "examAverage",
-      value: data.examAverage === null ? "—" : `${data.examAverage}%`,
+      numeric: data.examAverage ?? NaN,
+      formatted: data.examAverage === null ? "—" : `${formatNumber(data.examAverage)}%`,
       icon: GraduationCap,
       to: KPI_ROUTE.examAverage,
     },

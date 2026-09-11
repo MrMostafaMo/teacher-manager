@@ -9,16 +9,14 @@ import {
 import { CollapsibleSection } from "@/shared/CollapsibleSection";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import { TableRowsSkeleton } from "@/shared/Skeletons";
-import { MonthPicker } from "@/shared/DatePicker";
+import { MonthPicker } from "@/shared/month-picker";
+import { SELECT_CLASS as inputClass } from "@/shared/picker-shared";
 import { useMemberships, buildSections } from "./attendance-sections";
 import { SummaryCards } from "./SummaryCards";
 import { MonthlySummaryTable } from "./MonthlySummaryTable";
 import { EmptyStudents } from "./EmptyStudents";
 import { useDataChanged } from "@/shared/useDataChanged";
 import { toast } from "@/lib/toast-store";
-
-const inputClass =
-  "h-9 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring dark:bg-muted/50";
 
 export function MonthlyView({
   month,

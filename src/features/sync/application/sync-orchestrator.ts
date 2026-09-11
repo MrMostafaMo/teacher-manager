@@ -1,13 +1,11 @@
 import { errorKey, runRound } from "./sync-cases";
-import { queryFirst } from "@/lib/db/client";
 import type { SyncReport } from "./sync-report";
 import { emptyReport } from "./sync-report";
 import { SupabaseProvider } from "../infrastructure/supabase-provider";
-import { pruneOldTombstones } from "../infrastructure/sync-state-repo";
+import { getAppliedSchemaVersion, pruneOldTombstones } from "../infrastructure/sync-state-repo";
 
 async function schemaVersion(): Promise<number> {
-  const row = await queryFirst<{ v: number | null }>("SELECT MAX(version) AS v FROM _sqlx_migrations", []);
-  return row?.v ?? 0;
+  return getAppliedSchemaVersion();
 }
 
 export async function syncAll(reason?: string): Promise<SyncReport> {

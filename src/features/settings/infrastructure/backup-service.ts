@@ -78,17 +78,18 @@ export async function swapDatabaseFrom(
     queryFirst<{ v: number | null }>("SELECT MAX(version) AS v FROM _sqlx_migrations", []),
   ]);
   const liveVersion = live?.v ?? null;
-  if (
-    backupVersion === null ||
-    (liveVersion !== null && backupVersion > liveVersion)
-  ) {
+  // Migrations only run forward — a backup from a different schema version
+  // (newer *or* older) cannot safely replace the live DB.
+  if (backupVersion === null || (liveVersion !== null && backupVersion !== liveVersion)) {
     return { status: "error", message: "restoreVersionMismatch" };
   }
   if (!(await confirm())) return { status: "cancelled" };
 
   // Keep a snapshot of the current DB so a failed swap can be rolled back.
+  // Checkpoint first so the file copy sees a consistent image (WAL-safe).
   const snapshotPath = dbPath + ".pre-restore";
   await remove(snapshotPath).catch(() => undefined);
+  await db.run(sql.raw("PRAGMA wal_checkpoint(TRUNCATE)")).catch(() => undefined);
   await copyFile(dbPath, snapshotPath);
 
   try {
@@ -98,6 +99,7 @@ export async function swapDatabaseFrom(
       await remove(dbPath + suffix).catch(() => undefined);
     }
     await db.select().from(appMeta).limit(1);
+    await remove(snapshotPath).catch(() => undefined);
     return { status: "done" };
   } catch (error) {
     console.error("Restore failed, rolling back", error);

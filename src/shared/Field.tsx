@@ -1,4 +1,5 @@
 import { cloneElement, isValidElement, type ReactNode } from "react";
+import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
@@ -25,8 +26,8 @@ export function Field({ id, label, required, error, className, children }: Field
         })
       : children;
   return (
-    <div className={cn("space-y-1.5", className)}>
-      <Label htmlFor={id}>
+    <div className={cn("group space-y-1.5", className)}>
+      <Label htmlFor={id} className="transition-colors duration-200 group-focus-within:text-primary">
         {label}
         {required && (
           <span className="text-destructive" aria-hidden="true">
@@ -36,7 +37,12 @@ export function Field({ id, label, required, error, className, children }: Field
         )}
       </Label>
       {control}
-      {error && <p id={errorId} className="text-xs text-destructive">{error}</p>}
+      {error && (
+        <p id={errorId} className="flex items-center gap-1.5 text-xs text-destructive">
+          <AlertCircle className="size-3" />
+          {error}
+        </p>
+      )}
     </div>
   );
 }

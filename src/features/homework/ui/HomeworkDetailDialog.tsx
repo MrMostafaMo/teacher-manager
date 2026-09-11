@@ -107,7 +107,7 @@ export function HomeworkDetailDialog({
                 {detail.completion}%
               </span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-success transition-[width]"
                 style={{ width: `${detail.completion}%` }}

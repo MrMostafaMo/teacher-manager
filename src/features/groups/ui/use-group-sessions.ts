@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { groupSessionInputSchema } from "@/features/schedule/domain";
+import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { StudyGroup } from "@/lib/db/schema";
 import { uuid } from "@/lib/utils/uuid";
@@ -37,7 +38,9 @@ export function useGroupSessions(open: boolean, group: StudyGroup | null) {
     initialById.current = new Map();
     void listSchedule()
       .then((all) => {
-        const own = all.filter((s) => s.groupId === group?.id);
+        // The group form edits the recurring timetable only — one-off
+        // sessions are managed from the schedule page.
+        const own = all.filter((s) => s.groupId === group?.id && !isOneOff(s));
         loadedIds.current = own.map((s) => s.id);
         const mapped = own.map((s) => ({
           key: s.id,

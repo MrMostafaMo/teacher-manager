@@ -39,7 +39,17 @@ describe("mergeItems", () => {
   });
 
   it("handles empty input sets", () => {
-    expect(mergeItems([], [])).toEqual({ toInsert: [], toRemove: [] });
+    expect(mergeItems([], [])).toEqual({ toInsert: [], toRemove: [], toUpdate: [] });
     expect(mergeItems([{ id: "a", key: "weak:k1" }], []).toRemove).toEqual(["a"]);
+  });
+
+  it("refreshes stale details in place", () => {
+    const { toInsert, toRemove, toUpdate } = mergeItems(
+      [{ id: "a", key: "weak:k1", details: JSON.stringify({ count: 1 }) }],
+      [{ type: "weak_skill", key: "weak:k1", details: { count: 2 } }],
+    );
+    expect(toInsert).toEqual([]);
+    expect(toRemove).toEqual([]);
+    expect(toUpdate).toEqual([{ id: "a", details: { count: 2 } }]);
   });
 });

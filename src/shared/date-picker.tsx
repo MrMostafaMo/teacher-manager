@@ -86,39 +86,43 @@ export function DatePicker({
         </button>
       </div>
       <div role="grid" aria-label={t("common.selectDate")} className="grid grid-cols-7 gap-0.5">
-        {weekdays.map((w: string) => (
-          <div
-            key={w}
-            role="columnheader"
-            className="flex size-8 items-center justify-center text-xs text-muted-foreground"
-          >
-            {w}
-          </div>
-        ))}
-        {days.map((d) => {
-          const iso = d.format("YYYY-MM-DD");
-          const inMonth = d.month() === view.month();
-          const isToday = d.isSame(today, "day");
-          const isSelected = value === iso;
-          return (
-            <button
-              key={iso}
-              type="button"
-              role="gridcell"
-              aria-selected={isSelected}
-              aria-current={isToday ? "date" : undefined}
-              onClick={() => pick(iso)}
-              className={cn(
-                "flex size-8 items-center justify-center rounded-lg text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                !inMonth && "text-muted-foreground/40 hover:text-muted-foreground",
+        <div role="row" className="col-span-7 grid grid-cols-7 gap-0.5">
+          {weekdays.map((w: string) => (
+            <div
+              key={w}
+              role="columnheader"
+              className="flex size-8 items-center justify-center text-xs text-muted-foreground"
+            >
+              {w}
+            </div>
+          ))}
+        </div>
+        <div role="row" className="col-span-7 grid grid-cols-7 gap-0.5">
+          {days.map((d) => {
+            const iso = d.format("YYYY-MM-DD");
+            const inMonth = d.month() === view.month();
+            const isToday = d.isSame(today, "day");
+            const isSelected = value === iso;
+            return (
+              <button
+                key={iso}
+                type="button"
+                role="gridcell"
+                aria-selected={isSelected}
+                aria-current={isToday ? "date" : undefined}
+                onClick={() => pick(iso)}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-lg text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  !inMonth && "text-muted-foreground/60 hover:text-muted-foreground",
                 isToday && !isSelected && "font-semibold text-primary",
                 isSelected && "bg-primary font-medium text-primary-foreground hover:bg-primary",
               )}
             >
               {d.date()}
             </button>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
       <div className="mt-1.5 flex items-center gap-1 border-t pt-1.5">
         <button

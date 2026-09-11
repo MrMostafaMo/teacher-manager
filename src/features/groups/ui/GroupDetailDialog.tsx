@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil } from "lucide-react";
+import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -8,19 +9,21 @@ import {
   getGroupDetail,
   removeStudentFromGroup,
 } from "@/features/groups/application/group-cases";
-import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import type { GroupDetail } from "@/features/groups/application/group-cases";
+import { listSchedule } from "@/features/schedule/application/schedule-cases";
+import {
+  isOneOff,
+  upcomingOneOffs,
+} from "@/features/schedule/application/schedule-one-offs";
+import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { Modal } from "@/shared/Modal";
 import { StatusBadge } from "@/features/students/ui/StatusBadge";
-import { formatTime, formatDateString } from "@/lib/utils/format";
-import { useTimeStore } from "@/lib/time-store";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { notifyUndo } from "@/lib/undo-store";
 import { GroupMembersSection } from "./group-members-section";
+import { GroupScheduleSummary } from "./group-schedule-summary";
 import { toast } from "@/lib/toast-store";
-
-const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 interface GroupDetailDialogProps {
   group: StudyGroup;
@@ -31,17 +34,24 @@ interface GroupDetailDialogProps {
 
 export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDetailDialogProps) {
   const { t } = useTranslation();
-  const hour24 = useTimeStore((s) => s.hour24);
   const [detail, setDetail] = useState<GroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const { armed: removingId, request } = useConfirmDelete();
   const [busy, setBusy] = useState(false);
   const [sessions, setSessions] = useState<GroupSession[]>([]);
+  const [extraSessions, setExtraSessions] = useState<SessionWithGroup[]>([]);
 
   useEffect(() => {
     void listSchedule()
-      .then((all) => setSessions(all.filter((s) => s.groupId === group.id)))
-      .catch(() => setSessions([]));
+      .then((all) => {
+        const own = all.filter((s) => s.groupId === group.id);
+        setSessions(own.filter((s) => !isOneOff(s)));
+        setExtraSessions(upcomingOneOffs(own, group.id, dayjs().format("YYYY-MM-DD")));
+      })
+      .catch(() => {
+        setSessions([]);
+        setExtraSessions([]);
+      });
   }, [group.id]);
 
   const reload = useCallback(async () => {
@@ -106,20 +116,7 @@ export function GroupDetailDialog({ group, onClose, onEdit, onChanged }: GroupDe
       onClose={onClose}
       title={group.name}
       description={
-        <>
-          {group.subject ? `${group.subject} · ` : ""}
-          {group.startsOn
-            ? `${t("groups.fields.startsOn")}: ${formatDateString(group.startsOn)} · `
-            : ""}
-          {sessions.length > 0
-            ? sessions
-                .map(
-                  (s) =>
-                    `${t(`schedule.days.${DAY_NAMES[s.dayOfWeek]}`)} ${formatTime(s.startTime, hour24)}–${formatTime(s.endTime, hour24)}`,
-                )
-                .join(" · ")
-            : t("groups.noSchedule")}
-        </>
+        <GroupScheduleSummary group={group} sessions={sessions} extraSessions={extraSessions} />
       }
     >
       <div className="space-y-4">

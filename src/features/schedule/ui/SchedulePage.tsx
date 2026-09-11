@@ -3,21 +3,21 @@ import { useTranslation } from "react-i18next";
 import { CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { deleteSession } from "@/features/schedule/application/schedule-cases";
+import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { GroupSession } from "@/lib/db/schema";
 import { PageHeader } from "@/shared/PageHeader";
 import { EmptyState } from "@/shared/EmptyState";
-import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useCollapsedSections } from "@/shared/useCollapsedSections";
-import { notifyUndo } from "@/lib/undo-store";
 import WeekGrid from "./WeekGrid";
-import { ScheduleFormDialog } from "./ScheduleFormDialog";
-import { SessionOccurrenceDialog } from "./SessionOccurrenceDialog";
 import { ScheduleGroupsView } from "./schedule-groups-view";
 import { ScheduleHeaderActions } from "./schedule-header-actions";
+import { OneOffSessionDialog } from "./OneOffSessionDialog";
+import { ScheduleFormDialog } from "./ScheduleFormDialog";
 import { SessionAttendanceDialog } from "./SessionAttendanceDialog";
+import { SessionOccurrenceDialog } from "./SessionOccurrenceDialog";
 import { useScheduleData } from "./use-schedule-data";
+import { useScheduleDelete } from "./use-schedule-delete";
 import { useScheduleView } from "./use-schedule-view";
 import { useScheduleDnD } from "./use-schedule-dnd";
 
@@ -26,15 +26,19 @@ export default function SchedulePage() {
   const { sessions, groups, memberCounts, exceptions, loading, reload } = useScheduleData();
   const [view, setView] = useState<"day" | "group">("day");
   const [formOpen, setFormOpen] = useState(false);
+  const [oneOffOpen, setOneOffOpen] = useState(false);
   const [editing, setEditing] = useState<GroupSession | null>(null);
-  const [attendanceSession, setAttendanceSession] = useState<SessionWithGroup | null>(null);
+  const [attendanceSession, setAttendanceSession] = useState<{
+    session: SessionWithGroup;
+    date?: string;
+  } | null>(null);
   const [occurrence, setOccurrence] = useState<{ session: SessionWithGroup; date: string } | null>(
     null,
   );
-  const { armed: deletingId, request, clear } = useConfirmDelete();
-  const { byDay, conflicts, byGroup } = useScheduleView(sessions);
+  const { byDay, conflicts, byGroup, oneOffs } = useScheduleView(sessions);
   const { isCollapsed, toggle } = useCollapsedSections();
   const { moveSession } = useScheduleDnD(sessions, reload);
+  const { deletingId, handleDelete } = useScheduleDelete(groups, reload);
 
   const dateKey = (() => {
     const d = new Date();
@@ -46,25 +50,11 @@ export default function SchedulePage() {
     setFormOpen(true);
   }
 
-  async function handleDelete(session: GroupSession) {
-    if (!request(session.id)) return;
-    try {
-      const undoId = await deleteSession(session.id);
-      void reload();
-      if (undoId !== null) {
-        const groupName = groups.find((g) => g.id === session.groupId)?.name;
-        notifyUndo(
-          undoId,
-          t("undo.deleted"),
-          `${t("undo.session")}: ${groupName ?? ""} ${session.startTime}`,
-          t("undo.undo"),
-        );
-      }
-    } catch (error) {
-      console.error("Failed to delete session", error);
-    } finally {
-      clear();
-    }
+  function handleAttend(session: SessionWithGroup) {
+    setAttendanceSession({
+      session,
+      date: isOneOff(session) ? (session.oneOffDate ?? undefined) : undefined,
+    });
   }
 
   return (
@@ -79,6 +69,7 @@ export default function SchedulePage() {
             view={view}
             onViewChange={setView}
             onCreate={() => openForm()}
+            onCreateOneOff={() => setOneOffOpen(true)}
           />
         }
       />
@@ -100,11 +91,12 @@ export default function SchedulePage() {
       ) : view === "day" ? (
         <WeekGrid
           byDay={byDay}
+          oneOffs={oneOffs}
           exceptions={exceptions}
           deletingId={deletingId}
           onEdit={openForm}
           onDelete={(s) => void handleDelete(s)}
-          onAttend={(s) => setAttendanceSession(s)}
+          onAttend={handleAttend}
           onOccurrence={(s, date) => setOccurrence({ session: s, date })}
           onMoveSession={(id, day, startMin) => void moveSession(id, day, startMin)}
         />
@@ -113,6 +105,7 @@ export default function SchedulePage() {
           byGroup={byGroup}
           memberCounts={memberCounts}
           exceptions={exceptions}
+          oneOffs={oneOffs}
           today={dateKey}
           isCollapsed={isCollapsed}
           onToggle={toggle}
@@ -120,7 +113,7 @@ export default function SchedulePage() {
           deletingId={deletingId}
           onEdit={openForm}
           onDelete={(s) => void handleDelete(s)}
-          onAttend={(s) => setAttendanceSession(s)}
+          onAttend={handleAttend}
         />
       )}
       <ScheduleFormDialog
@@ -130,9 +123,16 @@ export default function SchedulePage() {
         onClose={() => setFormOpen(false)}
         onSaved={() => void reload()}
       />
+      <OneOffSessionDialog
+        open={oneOffOpen}
+        groups={groups}
+        onClose={() => setOneOffOpen(false)}
+        onSaved={() => void reload()}
+      />
       <SessionAttendanceDialog
         open={attendanceSession !== null}
-        session={attendanceSession}
+        session={attendanceSession?.session ?? null}
+        initialDate={attendanceSession?.date}
         onClose={() => setAttendanceSession(null)}
         onSaved={() => undefined}
       />
@@ -141,10 +141,15 @@ export default function SchedulePage() {
         session={occurrence?.session ?? null}
         date={occurrence?.date ?? ""}
         exception={
-          occurrence
+          occurrence && !isOneOff(occurrence.session)
             ? (exceptions.find(
                 (ex) => ex.sessionId === occurrence.session.id && ex.date === occurrence.date,
               ) ?? null)
+            : null
+        }
+        movedFrom={
+          occurrence && isOneOff(occurrence.session)
+            ? (occurrence.session.movedFromDate ?? null)
             : null
         }
         onClose={() => setOccurrence(null)}

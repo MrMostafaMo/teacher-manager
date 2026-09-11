@@ -152,6 +152,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0023_fix_exceptions_fk_and_period_index.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 25,
+            description: "one-off group sessions + cross-day move link",
+            sql: include_str!("../migrations/0024_smiling_gladiator.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

@@ -19,7 +19,8 @@ export const THEME_PRESETS: readonly ThemePresetOption[] = [
   { value: "ocean", labelKey: "settings.presets.ocean", swatch: "bg-[oklch(0.54_0.13_205)]" },
   { value: "rose", labelKey: "settings.presets.rose", swatch: "bg-[oklch(0.56_0.18_15)]" },
   { value: "slate", labelKey: "settings.presets.slate", swatch: "bg-[oklch(0.52_0.06_260)]" },
-  { value: "contrast", labelKey: "settings.presets.contrast", swatch: "bg-[oklch(0.45_0.22_262)]" },
+  // "contrast" stays a valid stored preset but is an accessibility toggle now,
+  // not a color taste — see the contrast row in SettingsAppearanceCard.
 ];
 
 /** Radio-style palette picker bound to the persisted theme store. */

@@ -22,6 +22,13 @@ export const CHIP_TONES: Record<ToastVariant, string> = {
   info: "bg-(--chart-tint-1)",
 };
 
+/** Side-bar gradient per variant (matches the icon tone). */
+export const BAR_TONES: Record<ToastVariant, string> = {
+  success: "from-(--chart-2) to-(--chart-2)",
+  error: "from-destructive to-destructive",
+  info: "from-primary to-primary-strong",
+};
+
 /**
  * Shared Button variant for the toast action pill. Undo toasts use the brand
  * gradient CTA; the map exists so future action tones stay declarative.

@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 // Sidebar uses the same Nile tokens as cards/header: flat bg-sidebar, rounded-xl, sidebar-accent active.
+// `reveal`/`revealInline` show labels only when the rail is expanded (hover, focus, or pinned).
+const reveal = "hidden group-hover:block group-focus-within:block";
+const revealInline = "hidden group-hover:inline group-focus-within:inline";
 export function Sidebar() {
   const { t } = useTranslation();
   const { name } = useTeacherProfile();
@@ -16,8 +19,9 @@ export function Sidebar() {
   const togglePinned = useSidebarStore((s) => s.togglePinned);
   return (
     <aside
+      aria-label={t("app.name")}
       className={cn(
-        "group z-30 flex w-16 shrink-0 flex-col border-e border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out hover:w-64 focus-within:w-64 lg:hover:w-64 lg:focus-within:w-64",
+        "group z-30 flex w-16 shrink-0 flex-col overflow-hidden border-e border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out hover:w-64 focus-within:w-64 lg:hover:w-64 lg:focus-within:w-64 [@media(hover:none)]:focus-within:w-64",
         isPinned ? "lg:w-64" : "lg:w-16",
       )}
     >
@@ -32,10 +36,7 @@ export function Sidebar() {
         <div className="flex items-center gap-2.5">
           <img src="/logo.png" alt={t("app.name")} className="size-9 shrink-0 rounded-lg bg-card object-contain ring-1 ring-border" />
           <div
-            className={cn(
-              "hidden min-w-0 opacity-0 transition-opacity duration-200 group-hover:block group-hover:opacity-100 lg:group-hover:block lg:group-hover:opacity-100",
-              isPinned && "lg:block lg:opacity-100",
-            )}
+            className={cn("min-w-0", reveal, isPinned && "lg:block")}
           >
             <span className="font-heading block truncate text-sm font-semibold text-foreground">{t("app.name")}</span>
             <span className="block truncate text-[11px] text-muted-foreground">{t("app.tagline")}</span>
@@ -48,22 +49,24 @@ export function Sidebar() {
           aria-label={t(isPinned ? "common.sidebar.unpin" : "common.sidebar.pin")}
           title={t(isPinned ? "common.sidebar.unpin" : "common.sidebar.pin")}
           className={cn(
-            "hidden shrink-0 opacity-0 transition-[background-color,color,opacity] duration-200 group-hover:flex group-hover:opacity-100 lg:group-hover:flex lg:group-hover:opacity-100",
+            "hidden shrink-0 transition-[background-color,color] duration-200 group-hover:flex group-focus-within:flex [@media(hover:none)]:flex lg:group-hover:flex lg:group-focus-within:flex",
             isPinned
-              ? "bg-sidebar-accent text-sidebar-accent-foreground lg:flex lg:opacity-100"
-              : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden",
+              ? "bg-sidebar-accent text-sidebar-accent-foreground lg:flex"
+              : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           )}
         >
           {isPinned ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
         </Button>
       </div>
       <nav className="flex-1 space-y-5 overflow-y-auto overscroll-none p-2.5">
-        {NAV_SECTIONS.map((section) => (
+        {NAV_SECTIONS.map((section, index) => (
           <div key={section.id} className="space-y-1.5">
+            {index > 0 && <hr className="my-2 h-px border-0 bg-gradient-to-e from-border via-border/50 to-transparent" />}
             <p
               className={cn(
-                "hidden px-2.5 pb-1 text-[11px] font-medium tracking-wider text-muted-foreground/70 opacity-0 transition-opacity duration-200 group-hover:block group-hover:opacity-100 lg:group-hover:block lg:group-hover:opacity-100",
-                isPinned && "lg:block lg:opacity-100",
+                "px-2.5 pb-1 text-[11px] font-medium tracking-wider text-muted-foreground",
+                reveal,
+                isPinned && "lg:block",
               )}
             >
               {t(section.labelKey)}
@@ -74,26 +77,23 @@ export function Sidebar() {
                   key={item.to}
                   to={item.to}
                   end={item.to === "/"}
-                  title={t(item.labelKey)}
+                  title={!isPinned ? t(item.labelKey) : undefined}
                   className={({ isActive }) =>
                     cn(
-                      "relative flex items-center justify-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-[background-color,color] group-hover:justify-start lg:group-hover:justify-start",
+                      "relative flex items-center justify-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-[background-color,color,box-shadow] group-hover:justify-start lg:group-hover:justify-start",
                       isPinned && "lg:justify-start",
                       isActive
-                        ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                        ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-[0_0_12px_color-mix(in_oklch,var(--primary)_20%,transparent)]"
                         : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                     )
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      {isActive && <span aria-hidden="true" className="absolute inset-y-2 -start-px w-0.5 rounded-full bg-primary" />}
-                      <item.icon className="size-4 shrink-0" />
+                      {isActive && <span aria-hidden="true" className="absolute inset-y-2 -start-px w-0.5 rounded-full bg-primary shadow-[0_0_12px_color-mix(in_oklch,var(--primary)_20%,transparent)]" />}
+                      <item.icon aria-hidden className="size-4 shrink-0" />
                       <span
-                        className={cn(
-                          "hidden truncate opacity-0 transition-opacity duration-200 group-hover:inline group-hover:opacity-100 lg:group-hover:inline lg:group-hover:opacity-100",
-                          isPinned && "lg:inline lg:opacity-100",
-                        )}
+                        className={cn("truncate", revealInline, isPinned && "lg:inline")}
                       >
                         {t(item.labelKey)}
                       </span>
@@ -114,10 +114,7 @@ export function Sidebar() {
         >
           {name ? <Avatar name={name} className="size-7 text-xs" /> : <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success"><ShieldCheck className="size-4" /></div>}
           <div
-            className={cn(
-              "hidden min-w-0 text-[11px] leading-tight opacity-0 transition-opacity duration-200 group-hover:block group-hover:opacity-100 lg:group-hover:block lg:group-hover:opacity-100",
-              isPinned && "lg:block lg:opacity-100",
-            )}
+            className={cn("min-w-0 text-[11px] leading-tight", reveal, isPinned && "lg:block")}
           >
             <p className="truncate font-medium text-foreground">{name ? t("teacher.display", { name }) : t("app.name")}</p>
             <p className="truncate text-muted-foreground">{name ? `v${APP_VERSION}` : `${t("app.localData")} · v${APP_VERSION}`}</p>

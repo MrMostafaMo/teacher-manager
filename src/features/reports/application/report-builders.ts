@@ -1,19 +1,7 @@
-// ponytail: full table scans with no limit/where; add month/period filter + pagination when reports stall at 1-2k students.
-import { db } from "@/lib/db/client";
-import { like, eq } from "drizzle-orm";
-import {
-  attendance,
-  payments,
-  skills,
-  studentGroups,
-  studentSkills,
-  students,
-  studyGroups,
-  type Payment,
-  type Skill,
-  type Student,
-} from "@/lib/db/schema";
+// ponytail: full table scans with no limit/where; add pagination when reports stall at 1-2k students.
+import type { Payment, Skill, Student, StudyGroup } from "@/lib/db/schema";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
+import { reportRepository, type ReportPage } from "@/features/reports/infrastructure/report-repo";
 import type { ReportData } from "@/features/reports/domain";
 import { allEnrolledStudents, todayEnrolled } from "./report-helpers";
 
@@ -27,16 +15,14 @@ export type ReportTranslations = {
   weakStatus?: (s: string) => string;
 };
 
-export async function studentsReport(t: ReportTranslations): Promise<ReportData> {
+export async function studentsReport(t: ReportTranslations, page?: ReportPage): Promise<ReportData> {
   const [rows, groups, memberships, allPlans] = await Promise.all([
-    db.select().from(students).orderBy(students.name),
-    db.select().from(studyGroups).orderBy(studyGroups.name),
-    db.select().from(studentGroups),
+    reportRepository.listStudentsOrdered(page),
+    reportRepository.listGroupsOrdered(),
+    reportRepository.listMemberships(),
     planRepository.list(),
   ]);
-  const groupName = new Map(
-    (groups as (typeof studyGroups.$inferSelect)[]).map((g) => [g.id, g.name]),
-  );
+  const groupName = new Map((groups as StudyGroup[]).map((g) => [g.id, g.name]));
   const planById = new Map(allPlans.map((p) => [p.id, p.name]));
   const studentGroupsMap = new Map<string, string[]>();
   for (const m of memberships) {
@@ -59,10 +45,23 @@ export async function studentsReport(t: ReportTranslations): Promise<ReportData>
   };
 }
 
-export async function attendanceReport(t: ReportTranslations, period?: string): Promise<ReportData> {
-  const query = db.select().from(attendance);
-  if (period) query.where(like(attendance.date, `${period}-%`));
-  const rows = (await query) as (typeof attendance.$inferSelect)[];
+export async function attendanceReport(
+  t: ReportTranslations,
+  period?: string,
+  page?: ReportPage,
+): Promise<ReportData> {
+  const enrolled = todayEnrolled(await allEnrolledStudents());
+  const windowed =
+    page?.limit !== undefined ? enrolled.slice(page.offset ?? 0, (page.offset ?? 0) + page.limit) : enrolled;
+  const rows = (await (page?.limit !== undefined
+    ? reportRepository.listAttendanceForStudents(
+        period,
+        windowed.map((s) => s.id),
+      )
+    : reportRepository.listAttendance(period))) as Array<{
+    studentId: string;
+    status: string;
+  }>;
   const perStudent = new Map<
     string,
     { present: number; absent: number; late: number; excused: number }
@@ -79,7 +78,7 @@ export async function attendanceReport(t: ReportTranslations, period?: string): 
     key: "attendance",
     title: t.title,
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3], t.headers[4], t.headers[5]],
-    rows: todayEnrolled(await allEnrolledStudents()).map((s) => {
+    rows: windowed.map((s) => {
       const c = perStudent.get(s.id) ?? { present: 0, absent: 0, late: 0, excused: 0 };
       return [
         s.name,
@@ -93,14 +92,23 @@ export async function attendanceReport(t: ReportTranslations, period?: string): 
   };
 }
 
-export async function paymentsReport(t: ReportTranslations, period?: string): Promise<ReportData> {
-  const query = db.select().from(payments);
-  if (period) query.where(eq(payments.period, period));
-
-  const [allPayments, allPlans, allStudents] = await Promise.all([
-    query,
+export async function paymentsReport(
+  t: ReportTranslations,
+  period?: string,
+  page?: ReportPage,
+): Promise<ReportData> {
+  const allStudents = await allEnrolledStudents();
+  const enrolled = todayEnrolled(allStudents);
+  const windowed =
+    page?.limit !== undefined ? enrolled.slice(page.offset ?? 0, (page.offset ?? 0) + page.limit) : enrolled;
+  const [allPayments, allPlans] = await Promise.all([
+    page?.limit !== undefined
+      ? reportRepository.listPaymentsForStudents(
+          period,
+          windowed.map((s) => s.id),
+        )
+      : reportRepository.listPayments(period),
     planRepository.list(),
-    allEnrolledStudents(),
   ]);
   const planAmount = new Map(allPlans.map((p) => [p.id, p.amount]));
   // Due amount comes from the student's *current* plan, paid is the sum of
@@ -113,18 +121,25 @@ export async function paymentsReport(t: ReportTranslations, period?: string): Pr
     key: "payments",
     title: t.title,
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3]],
-    rows: todayEnrolled(allStudents).map((s) => {
+    rows: windowed.map((s) => {
       const due = s.planId ? (planAmount.get(s.planId) ?? 0) : 0;
       const paid = paidByStudent.get(s.id) ?? 0;
-      return [s.name, due, paid, Math.max(due - paid, 0)];
+      // Raw due - paid (may be negative = advance) so the report reconciles
+      // with dues and the statement; the dashboard clamps for "outstanding".
+      return [s.name, due, paid, due - paid];
     }),
   };
 }
 
-export async function skillsReport(t: ReportTranslations): Promise<ReportData> {
+export async function skillsReport(t: ReportTranslations, page?: ReportPage): Promise<ReportData> {
+  const enrolled = todayEnrolled(await allEnrolledStudents());
+  const windowed =
+    page?.limit !== undefined ? enrolled.slice(page.offset ?? 0, (page.offset ?? 0) + page.limit) : enrolled;
   const [skillsRows, skillLevels] = await Promise.all([
-    db.select().from(skills).orderBy(skills.name),
-    db.select().from(studentSkills),
+    reportRepository.listSkillsOrdered(),
+    page?.limit !== undefined
+      ? reportRepository.listSkillLevelsForStudents(windowed.map((s) => s.id))
+      : reportRepository.listSkillLevels(),
   ]);
   const skillName = new Map((skillsRows as Skill[]).map((s) => [s.id, s.name]));
   const perStudent = new Map<string, { tracked: number; weak: number; weakList: string[] }>();
@@ -143,7 +158,7 @@ export async function skillsReport(t: ReportTranslations): Promise<ReportData> {
     key: "skills",
     title: t.title,
     headers: [t.headers[0], t.headers[1], t.headers[2], t.headers[3]],
-    rows: todayEnrolled(await allEnrolledStudents()).map((s) => {
+    rows: windowed.map((s) => {
       const c = perStudent.get(s.id) ?? { tracked: 0, weak: 0, weakList: [] };
       return [s.name, c.tracked, c.weak, c.weakList.join("، ") || "—"];
     }),

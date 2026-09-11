@@ -13,8 +13,11 @@ function session(overrides: Partial<SessionWithGroup> = {}): SessionWithGroup {
     dayOfWeek: 0,
     startTime: "10:00",
     endTime: "11:00",
-    room: null,
-    createdAt: 0,
+  room: null,
+  oneOffDate: null,
+  movedFromSessionId: null,
+  movedFromDate: null,
+  createdAt: 0,
     updatedAt: 0,
     ...overrides,
   };
@@ -76,5 +79,17 @@ describe("useScheduleView", () => {
     );
     expect(result.current.byGroup.map(([id]) => id)).toEqual(["gA", "gB"]);
     expect(result.current.byGroup[1][1].map((s) => s.id)).toEqual(["a", "c"]);
+  });
+
+  it("keeps one-off sessions out of the weekly buckets and group cards", () => {
+    const { result } = renderHook(() =>
+      useScheduleView([
+        session({ id: "a", dayOfWeek: 1 }),
+        session({ id: "o", dayOfWeek: 1, oneOffDate: "2026-09-14" }),
+      ]),
+    );
+    expect(result.current.byDay[1].map((s) => s.id)).toEqual(["a"]);
+    expect(result.current.byGroup[0][1].map((s) => s.id)).toEqual(["a"]);
+    expect(result.current.oneOffs.map((s) => s.id)).toEqual(["o"]);
   });
 });

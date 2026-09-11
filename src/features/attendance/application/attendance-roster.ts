@@ -4,6 +4,7 @@ import {
   activeGroupIdsForDate,
   exceptionsForDates,
 } from "@/features/schedule/application/schedule-exception-cases";
+import { groupIdsWithOneOffs } from "@/features/schedule/application/schedule-one-offs";
 import { enrolledBy } from "@/lib/utils/enrollment";
 import type { Student } from "@/lib/db/schema";
 
@@ -16,7 +17,10 @@ export async function rosterForDate(
     schedule.map((s) => s.id),
     [date],
   );
-  const groupIds = [...activeGroupIdsForDate(schedule, exceptions, date)];
+  const groupIds = [
+    ...activeGroupIdsForDate(schedule, exceptions, date),
+    ...groupIdsWithOneOffs(schedule, date),
+  ];
   if (groupIds.length === 0) return { students: [], hasSessionsToday: false };
   const members = await Promise.all(groupIds.map((id) => groupRepository.members(id)));
   const byId = new Map<string, Student>();

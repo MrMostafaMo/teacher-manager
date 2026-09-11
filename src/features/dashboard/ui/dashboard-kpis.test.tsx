@@ -7,7 +7,7 @@ import type { KpiItem } from "./dashboard-kpi-data";
 import i18n from "@/lib/i18n";
 
 function kpi(key: string, overrides: Partial<KpiItem> = {}): KpiItem {
-  return { key, value: 5, icon: Users, ...overrides };
+  return { key, numeric: 5, formatted: "5", icon: Users, ...overrides };
 }
 
 beforeAll(async () => {

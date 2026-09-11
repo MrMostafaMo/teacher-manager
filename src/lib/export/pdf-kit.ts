@@ -20,11 +20,21 @@ export const mutedColor = rgb(0.4, 0.4, 0.4);
 export const gridColor = rgb(0.85, 0.85, 0.85);
 export const bandColor = rgb(0.93, 0.95, 0.97);
 
-/** Load the embedded Arabic font (fontkit-shaped). */
+let cachedFont: Promise<Font> | null = null;
+
+/** Load the embedded Arabic font (fontkit-shaped). Cached across exports. */
 export async function loadArabicFont(): Promise<Font> {
-  const response = await fetch(fontUrl);
-  const fontBuffer = new Uint8Array(await response.arrayBuffer());
-  return fontkit.create(fontBuffer);
+  if (!cachedFont) {
+    cachedFont = (async () => {
+      const response = await fetch(fontUrl);
+      const fontBuffer = new Uint8Array(await response.arrayBuffer());
+      return fontkit.create(fontBuffer);
+    })().catch((error) => {
+      cachedFont = null;
+      throw error;
+    });
+  }
+  return cachedFont;
 }
 
 /**

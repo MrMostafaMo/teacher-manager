@@ -22,7 +22,7 @@ export interface NotificationItem {
     period?: string;
     sessionId?: string;
     date?: string;
-    kind?: "cancelled" | "moved";
+    kind?: "cancelled" | "moved" | "added";
     count?: number;
     rate?: number;
     absent?: number;

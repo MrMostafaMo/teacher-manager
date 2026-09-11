@@ -11,13 +11,14 @@ import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
 import {
   studentStatement,
+  type StatementBillingOpts,
   type StatementMonth,
   type StatementPayment,
   type StudentStatement,
 } from "./payment-statement";
 
 export { studentStatement };
-export type { StatementMonth, StatementPayment, StudentStatement };
+export type { StatementBillingOpts, StatementMonth, StatementPayment, StudentStatement };
 
 /**
  * Payments use-cases. Validate input, write through the repository, and
@@ -28,16 +29,7 @@ export type { StatementMonth, StatementPayment, StudentStatement };
 export async function recordPayment(input: PaymentInput): Promise<Payment> {
   const parsed = paymentInputSchema.parse(input);
   const row = await paymentRepository.insert({ id: uuid(), ...parsed, paidAt: Date.now() });
-  // ponytail: manual session count resets with a new payment (cycle closed).
-  try {
-    const s = await studentRepository.findById(parsed.studentId);
-    if (!s) return row; // Actually, looking at the code, `s` might be null, so `s?.sessionOffset` is needed, but TS won't complain if `findById` returns `Student | null` maybe? 
-    // Wait, original: `const off = Number((s as unknown as { sessionOffset?: number })?.sessionOffset ?? 0) || 0;`
-    // I'll just use `s?.sessionOffset`
-
-  } catch {
-    /* ignore reset failure */
-  }
+  // ponytail: session counter is pure (carry-over in session-dues.ts) — no reset on payment.
   await logActivity({
     action: "payment.create",
     entityType: "payment",
@@ -81,26 +73,28 @@ export interface DuesRow {
   groups: Array<{ id: string; name: string }>;
 }
 
-export async function monthlyDues(period: string): Promise<DuesRow[]> {
-  const [activeStudents, plans, payments, memberships] = await Promise.all([
-    studentRepository.search({ status: "active" }),
-    planRepository.list(),
-    paymentRepository.byPeriod(period),
-    groupRepository.memberships(),
-  ]);
+export interface DuesDimensions {
+  activeStudents: Student[];
+  plans: Plan[];
+  payments: Array<Pick<Payment, "studentId" | "amount">>;
+  memberships: Array<{ studentId: string; groupId: string; groupName: string }>;
+}
+
+/** Pure dues math over preloaded dimensions (shared by the page + dashboard). */
+export function computeMonthlyDues(period: string, dims: DuesDimensions): DuesRow[] {
   // A student is billed from their enrollment month onward — never before it.
-  const students = activeStudents.filter(
+  const students = dims.activeStudents.filter(
     (s) => !s.isExempt && enrolledBy(s, monthEnd(period)),
   );
-  const planById = new Map(plans.map((p) => [p.id, p]));
+  const planById = new Map(dims.plans.map((p) => [p.id, p]));
   const groupsByStudent = new Map<string, Array<{ id: string; name: string }>>();
-  for (const m of memberships) {
+  for (const m of dims.memberships) {
     const arr = groupsByStudent.get(m.studentId) ?? [];
     arr.push({ id: m.groupId, name: m.groupName });
     groupsByStudent.set(m.studentId, arr);
   }
   const paidByStudent = new Map<string, number>();
-  for (const p of payments) {
+  for (const p of dims.payments) {
     paidByStudent.set(p.studentId, (paidByStudent.get(p.studentId) ?? 0) + p.amount);
   }
   return students.map((student) => {
@@ -118,6 +112,16 @@ export async function monthlyDues(period: string): Promise<DuesRow[]> {
   });
 }
 
+export async function monthlyDues(period: string): Promise<DuesRow[]> {
+  const [activeStudents, plans, payments, memberships] = await Promise.all([
+    studentRepository.search({ status: "active" }),
+    planRepository.list(),
+    paymentRepository.byPeriod(period),
+    groupRepository.memberships(),
+  ]);
+  return computeMonthlyDues(period, { activeStudents, plans, payments, memberships });
+}
+
 export interface PaymentHistoryRow {
   payment: Payment;
   studentName: string;
@@ -126,18 +130,26 @@ export interface PaymentHistoryRow {
 
 export async function listPaymentHistory(options?: {
   studentId?: string;
+  period?: string;
   limit?: number;
+  offset?: number;
 }): Promise<PaymentHistoryRow[]> {
-  const payments = options?.studentId
-    ? await paymentRepository.byStudent(options.studentId)
-    : await paymentRepository.list({ newestFirst: true, limit: options?.limit });
-  if (payments.length === 0) return [];
-  const [students, plans] = await Promise.all([studentRepository.list(), planRepository.list()]);
-  const studentById = new Map(students.map((s) => [s.id, s]));
-  const planById = new Map(plans.map((p) => [p.id, p]));
-  return payments.map((p) => ({
-    payment: p,
-    studentName: studentById.get(p.studentId)?.name ?? "—",
-    planName: p.planId ? (planById.get(p.planId)?.name ?? null) : null,
+  const rows = await paymentRepository.listHistory({
+    studentId: options?.studentId,
+    period: options?.period,
+    limit: options?.limit,
+    offset: options?.offset,
+  });
+  return rows.map((r) => ({
+    payment: r.payment,
+    studentName: r.studentName ?? "—",
+    planName: r.planName ?? null,
   }));
+}
+
+export function countPaymentHistory(options?: {
+  studentId?: string;
+  period?: string;
+}): Promise<number> {
+  return paymentRepository.countHistory({ studentId: options?.studentId, period: options?.period });
 }

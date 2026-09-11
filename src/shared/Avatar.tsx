@@ -8,11 +8,11 @@ function initialsOf(name: string): string {
 }
 
 const PALETTE = [
-  "bg-primary/10 text-primary",
-  "bg-(--chart-2)/10 text-(--chart-2)",
-  "bg-(--chart-3)/10 text-(--chart-3)",
-  "bg-(--chart-4)/10 text-(--chart-4)",
-  "bg-(--chart-5)/10 text-(--chart-5)",
+  "bg-gradient-to-br from-primary/20 to-primary/5 text-primary",
+  "bg-gradient-to-br from-chart-2/20 to-chart-2/5 text-chart-2",
+  "bg-gradient-to-br from-chart-3/20 to-chart-3/5 text-chart-3",
+  "bg-gradient-to-br from-chart-4/20 to-chart-4/5 text-chart-4",
+  "bg-gradient-to-br from-chart-5/20 to-chart-5/5 text-chart-5",
 ];
 
 export function Avatar({ name, className }: { name: string; className?: string }) {
@@ -23,7 +23,7 @@ export function Avatar({ name, className }: { name: string; className?: string }
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+        "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-shadow duration-200 hover:ring-2 hover:ring-primary/30",
         tone,
         className,
       )}

@@ -7,13 +7,21 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <script>
       // Apply persisted language synchronously to avoid an RTL/LTR flash.
+      // Reads tm-settings first, falls back to the legacy tm-language key.
       try {
-        var raw = localStorage.getItem("tm-language");
         var lang = "ar";
-        if (raw) {
-          var parsed = JSON.parse(raw);
-          var stored = parsed && parsed.state && parsed.state.language;
-          if (stored === "en" || stored === "ar") lang = stored;
+        var rawSettings = localStorage.getItem("tm-settings");
+        if (rawSettings) {
+          var parsedSettings = JSON.parse(rawSettings);
+          var s = parsedSettings && parsedSettings.state && parsedSettings.state.language;
+          if (s === "en" || s === "ar") lang = s;
+        } else {
+          var raw = localStorage.getItem("tm-language");
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            var stored = parsed && parsed.state && parsed.state.language;
+            if (stored === "en" || stored === "ar") lang = stored;
+          }
         }
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";

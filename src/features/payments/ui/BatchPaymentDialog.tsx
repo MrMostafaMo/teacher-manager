@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { listPlans } from "@/features/payments/application/plan-cases";
-import { listStudents } from "@/features/students/application/student-cases";
+import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import { recordBatchPayments } from "@/features/payments/application/batch-cases";
 import { Avatar } from "@/shared/Avatar";
 import { Field } from "@/shared/Field";
@@ -41,7 +41,7 @@ export function BatchPaymentDialog({ open, defaultPeriod, onClose, onSaved }: Pr
     setPeriod(defaultPeriod);
     setPeriodError("");
     setSaveError("");
-    Promise.all([listStudents({ status: "active" }), listPlans()])
+    Promise.all([studentRepository.searchNames({ status: "active" }), listPlans()])
       .then(([students, plans]) => setRows(buildBatchRows(students, plans)))
       .catch(() => setRows([]));
   }, [open, defaultPeriod]);

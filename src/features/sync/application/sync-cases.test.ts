@@ -53,6 +53,7 @@ vi.mock("../infrastructure/sync-state-repo", () => ({
   getSyncMeta: vi.fn(async (k: string) => meta.get(k) ?? null),
   setSyncMeta: vi.fn(async (k: string, v: string | number) => meta.set(k, String(v))),
   listLocalTombstones: vi.fn(async () => []),
+  getAppliedSchemaVersion: vi.fn(async () => 15),
 }));
 
 import { syncNow } from "./sync-cases";

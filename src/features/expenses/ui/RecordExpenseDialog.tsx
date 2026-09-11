@@ -11,7 +11,7 @@ import { expenseCategorySchema, expenseInputSchema } from "@/features/expenses/d
 import { recordExpense, updateExpense } from "@/features/expenses/application/expense-cases";
 import type { Expense } from "@/lib/db/schema";
 import { mapZodErrors } from "@/lib/utils/zod-errors";
-import { DatePicker } from "@/shared/DatePicker";
+import { DatePicker } from "@/shared/date-picker";
 import { Field } from "@/shared/Field";
 import {
   emptyExpenseForm,

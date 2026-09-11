@@ -1,11 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Undo2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { SessionWithException } from "@/features/schedule/application/schedule-exceptions";
+import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
 import type { GroupSession } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
-import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { formatTime } from "@/lib/utils/format";
 import { useTimeStore } from "@/lib/time-store";
 import {
@@ -16,8 +14,8 @@ import {
   toMin,
   type PlacedSession,
 } from "./week-layout";
-import { ExceptionBadge } from "./exception-badge";
-import { BlockActions } from "./block-actions";
+import { SessionBlockActions } from "./session-block-actions";
+import { SessionBlockBadges } from "./session-block-badges";
 
 export function SessionBlock({
   placed,
@@ -25,6 +23,7 @@ export function SessionBlock({
   conflicted,
   deleting,
   date,
+  movedToDate,
   onEdit,
   onDelete,
   onAttend,
@@ -35,6 +34,8 @@ export function SessionBlock({
   conflicted: boolean;
   deleting: boolean;
   date: string;
+  /** Target date when a cancelled occurrence was moved to another day. */
+  movedToDate: string | null;
   onEdit: (s: GroupSession) => void;
   onDelete: (s: GroupSession) => void;
   onAttend: (s: SessionWithGroup) => void;
@@ -47,12 +48,17 @@ export function SessionBlock({
 
   const exception = session.exception;
   const cancelled = exception?.type === "cancelled";
+  const oneOff = isOneOff(session);
+  const moved = oneOff && session.movedFromSessionId != null;
 
   const start = toMin(session.startTime);
   const end = toMin(session.endTime);
   const top = ((start - rangeStart) / 60) * HOUR_PX + 2;
   const lines =
-    2 + (session.room ? 1 : 0) + (conflicted && !cancelled ? 1 : 0) + (exception ? 1 : 0);
+    2 +
+    (session.room ? 1 : 0) +
+    (conflicted && !cancelled ? 1 : 0) +
+    (exception || oneOff ? 1 : 0);
   const height = Math.max(
     ((end - start) / 60) * HOUR_PX - 4,
     deleting ? CHIP_H : minBlockHeight(lines),
@@ -62,15 +68,16 @@ export function SessionBlock({
     <div
       tabIndex={0}
       role="group"
-      aria-label={`${session.groupName} ${formatTime(session.startTime, hour24)}–${formatTime(session.endTime, hour24)}`}
+      aria-label={`${session.groupName} ${formatTime(session.startTime, hour24)}–${formatTime(session.endTime, hour24)}${oneOff ? ` ${t("schedule.exceptions.added")}` : ""}`}
       className={cn(
         "group absolute overflow-hidden rounded-lg border p-1.5 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        !exception && !deleting && "cursor-grab active:cursor-grabbing",
+        !exception && !oneOff && !deleting && "cursor-grab active:cursor-grabbing",
         pal.bg,
         pal.border,
         conflicted && "ring-1 ring-destructive/60",
         deleting && "ring-2 ring-destructive",
         cancelled && "opacity-70 ring-1 ring-destructive/40",
+        oneOff && "ring-1 ring-success/40",
       )}
       style={{
         top,
@@ -78,9 +85,9 @@ export function SessionBlock({
         insetInlineStart: `calc(${(col / cols) * 100}% + 1px)`,
         width: `calc(${(1 / cols) * 100}% - 2px)`,
       }}
-      draggable={!exception && !deleting}
+      draggable={!exception && !oneOff && !deleting}
       onDragStart={(e) => {
-        if (exception || deleting) {
+        if (exception || oneOff || deleting) {
           e.preventDefault();
           return;
         }
@@ -107,45 +114,27 @@ export function SessionBlock({
             {t("schedule.room")}: {session.room}
           </p>
         )}
-        {exception && <ExceptionBadge type={exception.type} />}
-        {conflicted && !cancelled && (
-          <p className="mt-0.5 flex items-center gap-0.5 text-[11px] font-medium leading-tight text-destructive">
-            <AlertTriangle className="size-3" />
-            {t("schedule.conflict")}
-          </p>
-        )}
+        <SessionBlockBadges
+          exceptionType={exception?.type}
+          oneOff={oneOff}
+          movedToDate={movedToDate}
+          movedFromDate={session.movedFromDate ?? null}
+          conflicted={conflicted}
+        />
       </div>
 
-      {deleting ? (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-card/90">
-          <ConfirmDeleteButton
-            armed
-            deleteLabel={t("schedule.delete")}
-            confirmLabel={t("schedule.confirmDelete")}
-            onDelete={() => onDelete(session)}
-          />
-        </div>
-      ) : cancelled ? (
-        <div className="absolute end-1 top-1 z-10">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            className="bg-card/80 hover:bg-card"
-            aria-label={t("schedule.exceptions.restore")}
-            title={t("schedule.exceptions.restore")}
-            onClick={() => onOccurrence(session, date)}
-          >
-            <Undo2 />
-          </Button>
-        </div>
-      ) : (
-        <BlockActions
-          onOccurrence={() => onOccurrence(session, date)}
-          onAttend={() => onAttend(session)}
-          onEdit={() => onEdit(session)}
-          onDelete={() => onDelete(session)}
-        />
-      )}
+      <SessionBlockActions
+        session={session}
+        date={date}
+        oneOff={oneOff}
+        moved={moved}
+        cancelled={cancelled}
+        deleting={deleting}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onAttend={onAttend}
+        onOccurrence={onOccurrence}
+      />
     </div>
   );
 }

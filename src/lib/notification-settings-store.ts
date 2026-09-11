@@ -1,8 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { shimStore } from "@/lib/settings/settings-store";
 import type { NotificationType } from "@/features/notifications/domain";
-
-const STORAGE_KEY = "tm-notification-settings";
 
 export interface NotificationSettingsState {
   enabled: boolean;
@@ -13,35 +10,18 @@ export interface NotificationSettingsState {
   toggleType: (type: NotificationType) => void;
 }
 
-const ALL_TYPES_FALSE: Record<NotificationType, boolean> = {
-  homework_overdue: false,
-  payment_overdue: false,
-  exception: false,
-  weak_skill: false,
-  low_attendance: false,
-  exam_upcoming: false,
-  student_birthday: false,
-  session_warning: false,
-  session_due: false,
-};
-
-export const useNotificationSettings = create<NotificationSettingsState>()(
-  persist(
-    (set) => ({
-      enabled: true,
-      osBanners: true,
-      mutedTypes: { ...ALL_TYPES_FALSE },
-      setEnabled: (enabled) => set({ enabled }),
-      setOsBanners: (osBanners) => set({ osBanners }),
-      toggleType: (type) =>
-        set((s) => ({ mutedTypes: { ...s.mutedTypes, [type]: !s.mutedTypes[type] } })),
-    }),
-    { name: STORAGE_KEY },
-  ),
-);
+/** Compatibility shim over the unified settings store (one release). */
+export const useNotificationSettings = shimStore<NotificationSettingsState>((s) => ({
+  enabled: s.notificationsEnabled,
+  osBanners: s.osBanners,
+  mutedTypes: s.mutedTypes as Record<NotificationType, boolean>,
+  setEnabled: s.setEnabled,
+  setOsBanners: s.setOsBanners,
+  toggleType: s.toggleType as (type: NotificationType) => void,
+}));
 
 export function isNotificationEnabled(
-  settings: NotificationSettingsState,
+  settings: Pick<NotificationSettingsState, "enabled" | "mutedTypes">,
   type: NotificationType,
 ): boolean {
   return settings.enabled && !settings.mutedTypes[type];

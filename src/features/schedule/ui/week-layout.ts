@@ -23,34 +23,19 @@ const DEFAULT_END = 22 * 60;
 const MIN_SPAN = 10 * 60;
 
 /**
- * Per-group block palette (literal classes so Tailwind keeps them).
- * A group keeps one color across the whole grid (stable hash of its id).
+ * Per-group block palette from theme tokens (not literal hues) so group colors
+ * follow every preset × light/dark. A group keeps one color across the whole
+ * grid (stable hash of its id). Literal classes so Tailwind keeps them.
  */
 export const PALETTE = [
-  { bg: "bg-blue-500/10 dark:bg-blue-500/20", border: "border-blue-500/40", bar: "bg-blue-500" },
-  {
-    bg: "bg-emerald-500/10 dark:bg-emerald-500/20",
-    border: "border-emerald-500/40",
-    bar: "bg-emerald-500",
-  },
-  {
-    bg: "bg-amber-500/10 dark:bg-amber-500/20",
-    border: "border-amber-500/40",
-    bar: "bg-amber-500",
-  },
-  {
-    bg: "bg-violet-500/10 dark:bg-violet-500/20",
-    border: "border-violet-500/40",
-    bar: "bg-violet-500",
-  },
-  { bg: "bg-rose-500/10 dark:bg-rose-500/20", border: "border-rose-500/40", bar: "bg-rose-500" },
-  { bg: "bg-sky-500/10 dark:bg-sky-500/20", border: "border-sky-500/40", bar: "bg-sky-500" },
-  {
-    bg: "bg-orange-500/10 dark:bg-orange-500/20",
-    border: "border-orange-500/40",
-    bar: "bg-orange-500",
-  },
-  { bg: "bg-teal-500/10 dark:bg-teal-500/20", border: "border-teal-500/40", bar: "bg-teal-500" },
+  { bg: "bg-chart-1/10 dark:bg-chart-1/20", border: "border-chart-1/40", bar: "bg-chart-1" },
+  { bg: "bg-chart-2/10 dark:bg-chart-2/20", border: "border-chart-2/40", bar: "bg-chart-2" },
+  { bg: "bg-chart-3/10 dark:bg-chart-3/20", border: "border-chart-3/40", bar: "bg-chart-3" },
+  { bg: "bg-chart-4/10 dark:bg-chart-4/20", border: "border-chart-4/40", bar: "bg-chart-4" },
+  { bg: "bg-chart-5/10 dark:bg-chart-5/20", border: "border-chart-5/40", bar: "bg-chart-5" },
+  { bg: "bg-success/10 dark:bg-success/20", border: "border-success/40", bar: "bg-success" },
+  { bg: "bg-warning/10 dark:bg-warning/20", border: "border-warning/40", bar: "bg-warning" },
+  { bg: "bg-info/10 dark:bg-info/20", border: "border-info/40", bar: "bg-info" },
 ] as const;
 
 export function paletteFor(groupId: string) {

@@ -37,15 +37,18 @@ export function applyCustomPrimary(color: string | null): void {
 
 /** Synchronous read of the persisted custom primary (if valid hex). */
 export function readInitialCustomPrimary(): string | null {
-  try {
-    const raw = localStorage.getItem("tm-theme");
-    if (raw) {
+  const pick = (value: unknown): string | null =>
+    typeof value === "string" && isValidHex(value) ? value : null;
+  for (const key of ["tm-settings", "tm-theme"]) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
       const parsed = JSON.parse(raw) as { state?: { customPrimary?: unknown } };
-      const c = parsed?.state?.customPrimary;
-      if (typeof c === "string" && isValidHex(c)) return c;
+      const hit = pick(parsed?.state?.customPrimary);
+      if (hit) return hit;
+    } catch {
+      /* corrupted storage — try the next key */
     }
-  } catch {
-    /* corrupted storage — fall through to null */
   }
   return null;
 }

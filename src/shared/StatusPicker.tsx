@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
+import { Check } from "lucide-react";
 import { ATTENDANCE_STATUSES, type AttendanceStatus } from "@/features/attendance/domain";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +15,7 @@ const STATUS_BADGE: Record<AttendanceStatus, string> = {
   present: "border-success bg-success/15 text-success",
   absent: "border-destructive bg-destructive/10 text-destructive",
   late: "border-warning bg-warning/15 text-warning",
-  excused: "border-(--chart-5) bg-(--chart-5)/15 text-(--chart-5)",
+  excused: "border-chart-5 bg-chart-5/15 text-chart-5",
 };
 
 /** Present / absent / late / excused segmented control. Shared by daily & session sheets. */
@@ -26,7 +27,7 @@ export const StatusPicker = memo(function StatusPicker({
   value?: AttendanceStatus;
   onChange: (s: AttendanceStatus) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
@@ -35,11 +36,14 @@ export const StatusPicker = memo(function StatusPicker({
     );
     const idx = buttons.indexOf(document.activeElement as HTMLButtonElement);
     if (idx === -1) return;
-    const next = e.key === "ArrowRight" ? (idx + 1) % buttons.length : (idx - 1 + buttons.length) % buttons.length;
+    const rtl = i18n.language !== "en";
+    // In RTL the visual "forward" arrow is ArrowLeft.
+    const forward = rtl ? e.key === "ArrowLeft" : e.key === "ArrowRight";
+    const next = forward ? (idx + 1) % buttons.length : (idx - 1 + buttons.length) % buttons.length;
     buttons[next].focus();
   }
   return (
-    <div role="group" aria-label={t("attendance.columns.status")} className="flex gap-1" onKeyDown={onKeyDown}>
+    <div role="group" aria-label={t("attendance.columns.status")} className="flex flex-wrap gap-1" onKeyDown={onKeyDown}>
       {ATTENDANCE_STATUSES.map((status) => (
         <button
           key={status}
@@ -47,13 +51,14 @@ export const StatusPicker = memo(function StatusPicker({
           aria-pressed={value === status}
           onClick={() => onChange(status)}
           className={cn(
-            "rounded-lg border px-3 py-1.5 text-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring",
+            "rounded-lg border px-3 py-1.5 text-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring active:scale-95 flex items-center justify-center gap-1.5",
             value === status
-              ? STATUS_BADGE[status]
+              ? cn(STATUS_BADGE[status], "shadow-[0_0_8px_color-mix(in_oklch,currentColor_25%,transparent)]")
               : "border-input text-muted-foreground hover:bg-muted/50",
           )}
         >
-          {t(STATUS_LABEL_KEY[status])}
+          {value === status && <Check className="size-3 shrink-0" />}
+          <span>{t(STATUS_LABEL_KEY[status])}</span>
         </button>
       ))}
     </div>

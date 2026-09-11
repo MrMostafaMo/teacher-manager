@@ -1,5 +1,8 @@
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
+import type { MonthlyTrendRow } from "@/features/attendance/infrastructure/attendance-repo";
+import type { MonthlyStat } from "@/features/attendance/application/attendance-cases";
 import type { SessionException } from "@/lib/db/schema";
+import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
 import {
   currentMonth,
   lastMonths as sharedLastMonths,
@@ -39,6 +42,63 @@ export function percentDelta(current: number, previous: number): number | null {
   return Math.round(((current - previous) / previous) * 100);
 }
 
+/** One grouped attendance row from dashboardAggregates (month + student + status). */
+export interface AttendanceAggregate {
+  month: string;
+  studentId: string;
+  status: string;
+  n: number;
+}
+
+interface StatusCounters {
+  present: number;
+  absent: number;
+  late: number;
+  excused: number;
+}
+
+function emptyStat(studentId: string): MonthlyStat {
+  return { studentId, present: 0, absent: 0, late: 0, excused: 0 };
+}
+
+function addStatus(stat: StatusCounters, status: string, n: number): void {
+  if (status === "present") stat.present += n;
+  else if (status === "absent") stat.absent += n;
+  else if (status === "late") stat.late += n;
+  else stat.excused += n;
+}
+
+/** Per-student counts for one month, derived from the shared aggregates. */
+export function statsForMonth(agg: AttendanceAggregate[], month: string): MonthlyStat[] {
+  const byId = new Map<string, MonthlyStat>();
+  for (const r of agg) {
+    if (r.month !== month) continue;
+    const cur = byId.get(r.studentId) ?? emptyStat(r.studentId);
+    addStatus(cur, r.status, r.n);
+    byId.set(r.studentId, cur);
+  }
+  return [...byId.values()];
+}
+
+/** Zero-filled monthly trend rows over `labels`, derived from the aggregates. */
+export function trendFromAggregates(agg: AttendanceAggregate[], labels: string[]): MonthlyTrendRow[] {
+  const byMonth = new Map<string, MonthlyTrendRow>();
+  for (const r of agg) {
+    const cur = byMonth.get(r.month) ?? {
+      month: r.month,
+      present: 0,
+      absent: 0,
+      late: 0,
+      excused: 0,
+    };
+    addStatus(cur, r.status, r.n);
+    byMonth.set(r.month, cur);
+  }
+  return labels.map(
+    (m) => byMonth.get(m) ?? { month: m, present: 0, absent: 0, late: 0, excused: 0 },
+  );
+}
+
 /** Students whose enrollment (or creation) fell inside the month window. */
 export function countNewStudents(
   students: Array<{ enrolledOn: string | null; createdAt: number }>,
@@ -70,11 +130,18 @@ export function todaySessions(
   for (const ex of exceptions) {
     if (ex.date === todayIso) todayExceptions.set(ex.sessionId, ex);
   }
-  return sessions
+  const oneOffToday = sessions.filter(
+    (s) =>
+      isOneOff(s) &&
+      s.oneOffDate === todayIso &&
+      s.groupStatus === "active" &&
+      (s.groupStartsOn == null || s.groupStartsOn <= todayIso),
+  );
+  return [...sessions.filter((s) => !isOneOff(s)), ...oneOffToday]
     .filter(
       (s) =>
         s.groupStatus === "active" &&
-        s.dayOfWeek === now.getDay() &&
+        (isOneOff(s) ? s.oneOffDate === todayIso : s.dayOfWeek === now.getDay()) &&
         (s.groupStartsOn == null || s.groupStartsOn <= todayIso) &&
         todayExceptions.get(s.id)?.type !== "cancelled",
     )

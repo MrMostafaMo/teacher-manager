@@ -4,8 +4,8 @@ A production-quality desktop application for private teachers to manage their
 educational center — students, attendance, payments, homework, exams, skills,
 reports, and analytics.
 
-**Fully offline.** All data lives in a local SQLite database. No server, no
-internet required.
+**Offline-first.** All data lives in a local SQLite database and the app works
+without internet. Optional Supabase sync backs up and syncs across devices.
 
 ## Tech Stack
 

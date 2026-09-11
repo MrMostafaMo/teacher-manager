@@ -1,5 +1,4 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { shimStore } from "@/lib/settings/settings-store";
 
 export const LANGUAGES = [
   { code: "ar", label: "العربية", dir: "rtl" },
@@ -11,20 +10,16 @@ export type Direction = "ltr" | "rtl";
 
 export const STORAGE_KEY = "tm-language";
 
-interface LanguageState {
+export interface LanguageState {
   language: Language;
   setLanguage: (language: Language) => void;
 }
 
-export const useLanguageStore = create<LanguageState>()(
-  persist(
-    (set) => ({
-      language: "ar",
-      setLanguage: (language) => set({ language }),
-    }),
-    { name: STORAGE_KEY },
-  ),
-);
+/** Compatibility shim over the unified settings store (one release). */
+export const useLanguageStore = shimStore<LanguageState>((s) => ({
+  language: s.language,
+  setLanguage: s.setLanguage,
+}));
 
 /**
  * Synchronous read of the persisted language so `dir`/`lang` can be applied

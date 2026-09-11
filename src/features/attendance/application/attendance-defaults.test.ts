@@ -2,11 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { Student } from "@/lib/db/schema";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
+import { exceptionsForDates } from "@/features/schedule/application/schedule-exception-cases";
 import { groupRepository } from "@/features/groups/infrastructure/group-repo";
 import { defaultStatuses } from "./attendance-defaults";
 
 vi.mock("@/features/schedule/application/schedule-cases", () => ({
   listSchedule: vi.fn(),
+}));
+vi.mock("@/features/schedule/application/schedule-exception-cases", () => ({
+  exceptionsForDates: vi.fn(),
 }));
 vi.mock("@/features/groups/infrastructure/group-repo", () => ({
   groupRepository: { memberships: vi.fn() },
@@ -45,6 +49,9 @@ function session(overrides: Partial<SessionWithGroup> = {}): SessionWithGroup {
     startTime: "09:30",
     endTime: "10:30",
     room: null,
+    oneOffDate: null,
+    movedFromSessionId: null,
+    movedFromDate: null,
     createdAt: 0,
     updatedAt: 0,
     ...overrides,
@@ -56,6 +63,7 @@ describe("defaultStatuses", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 4, 13, 10, 0)); // Wednesday 10:00
     vi.mocked(listSchedule).mockResolvedValue([]);
+    vi.mocked(exceptionsForDates).mockResolvedValue([]);
     vi.mocked(groupRepository.memberships).mockResolvedValue([]);
   });
   afterEach(() => vi.useRealTimers());

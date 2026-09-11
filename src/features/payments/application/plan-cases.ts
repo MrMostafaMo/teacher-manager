@@ -2,8 +2,7 @@ import { planInputSchema, type PlanInput } from "@/features/payments/domain";
 import { planRepository, type PlanWithCount } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import { logActivity } from "@/lib/activity-log";
-import { db } from "@/lib/db/client";
-import { plans, planPriceHistory, students, type Plan } from "@/lib/db/schema";
+import { plans, students, type Plan } from "@/lib/db/schema";
 import { captureBy, captureRows, restoreRows } from "@/lib/db/snapshot";
 import { registerUndo } from "@/lib/undo-store";
 import { uuid } from "@/lib/utils/uuid";
@@ -21,26 +20,7 @@ export async function createPlan(input: PlanInput): Promise<Plan> {
   const parsed = planInputSchema.parse(input);
   const row = await planRepository.insert({ id: uuid(), ...parsed });
 
-  try {
-    await db
-      .insert(planPriceHistory)
-      .values({
-        id: uuid(),
-        planId: row.id,
-        amount: row.amount,
-        effectiveFrom: new Date(),
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      })
-      .run();
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    if (msg.includes("no such table")) {
-      console.warn("[plan] price history table missing — skipping history (needs migration v21)", error);
-    } else {
-      console.warn("[plan] price history insert failed (plan still created)", error);
-    }
-  }
+  await planRepository.recordPrice(row.id, row.amount, "create");
 
   await logActivity({
     action: "plan.create",
@@ -60,26 +40,7 @@ export async function updatePlan(id: string, input: PlanInput): Promise<Plan> {
   if (!row) throw new Error(`plan ${id} not found`);
 
   if (current && current.amount !== row.amount) {
-    try {
-      await db
-        .insert(planPriceHistory)
-        .values({
-          id: uuid(),
-          planId: row.id,
-          amount: row.amount,
-          effectiveFrom: new Date(),
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        })
-        .run();
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      if (msg.includes("no such table")) {
-        console.warn("[plan] price history table missing on update — skipping (needs migration v21)", error);
-      } else {
-        console.warn("[plan] price history insert failed on update", error);
-      }
-    }
+    await planRepository.recordPrice(row.id, row.amount, "update");
   }
 
   await logActivity({

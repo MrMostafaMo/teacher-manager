@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { studentStatement } from "@/features/payments/application/payment-cases";
+import { studentStatement, type StatementBillingOpts } from "@/features/payments/application/payment-cases";
 import type { ReportData, ReportKey } from "@/features/reports/domain";
 import {
   attendanceReport,
@@ -11,6 +11,8 @@ import {
 import { examsReport, expensesReport, financesReport } from "./report-financials";
 import { weakPointsReport } from "./report-weak-points";
 import { homeworkReport, sessionAttendanceReport } from "./report-academic";
+import { allEnrolledStudents, todayEnrolled } from "./report-helpers";
+import { reportRepository, type ReportPage } from "@/features/reports/infrastructure/report-repo";
 
 export type { ReportTranslations } from "./report-builders";
 
@@ -23,29 +25,60 @@ export type { ReportTranslations } from "./report-builders";
 export async function buildReportData(
   key: ReportKey,
   t: ReportTranslations,
-  period?: string
+  period?: string,
+  page?: ReportPage,
 ): Promise<ReportData> {
   switch (key) {
     case "students":
-      return studentsReport(t);
+      return studentsReport(t, page);
     case "attendance":
-      return attendanceReport(t, period);
+      return attendanceReport(t, period, page);
     case "exams":
-      return examsReport(t, period);
+      return examsReport(t, period, page);
     case "payments":
-      return paymentsReport(t, period);
+      return paymentsReport(t, period, page);
     case "expenses":
-      return expensesReport(t, period);
+      return expensesReport(t, period, page);
     case "finances":
       return financesReport(t, period);
     case "skills":
-      return skillsReport(t);
+      return skillsReport(t, page);
     case "weakPoints":
-      return weakPointsReport(t);
+      return weakPointsReport(t, page);
     case "homework":
-      return homeworkReport(t, period);
+      return homeworkReport(t, period, page);
     case "sessionAttendance":
-      return sessionAttendanceReport(t, period);
+      return sessionAttendanceReport(t, period, page);
+    case "statement":
+      throw new Error("statement report requires a student id");
+  }
+}
+
+/**
+ * Preview pager total per report key. Returns null for reports that stay
+ * unpaged (finances is months-aggregated and small). Exports always bypass
+ * paging and fetch the full set via buildReportData.
+ */
+export async function countReportData(key: ReportKey, period?: string): Promise<number | null> {
+  switch (key) {
+    case "students":
+      return reportRepository.countStudents();
+    case "exams":
+      return reportRepository.countExams(period);
+    case "expenses":
+      return reportRepository.countExpenses(period);
+    case "homework":
+      return reportRepository.countHomeworkGroups(period);
+    case "sessionAttendance":
+      return reportRepository.countSessionGroups(period);
+    case "weakPoints":
+      return reportRepository.countWeakPoints();
+    case "attendance":
+    case "payments":
+    case "skills":
+      return todayEnrolled(await allEnrolledStudents()).length;
+    case "finances":
+      return null;
     case "statement":
       throw new Error("statement report requires a student id");
   }
@@ -69,8 +102,9 @@ export type StatementTranslations = {
 export async function buildStudentStatementReport(
   studentId: string,
   t: StatementTranslations,
+  opts?: StatementBillingOpts,
 ): Promise<ReportData> {
-  const st = await studentStatement(studentId, t.cycle);
+  const st = await studentStatement(studentId, t.cycle, opts);
   const paidIn = new Map<string, typeof st.payments>();
   for (const p of st.payments) {
     const period = p.payment.period ?? "";

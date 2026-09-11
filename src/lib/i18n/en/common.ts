@@ -35,6 +35,12 @@ export const common = {
     pin: "Pin sidebar",
     unpin: "Unpin sidebar",
   },
+  window: {
+    minimize: "Minimize",
+    maximize: "Maximize",
+    restore: "Restore",
+    close: "Close",
+  },
   commandPalette: {
     title: "Command palette",
     placeholder: "Search pages, actions and students…",

@@ -1,6 +1,8 @@
 import type { NotificationRow } from "@/lib/db/schema";
-import type { NotificationItem } from "@/features/notifications/domain";
+import type { NotificationItem, NotificationType } from "@/features/notifications/domain";
 import { notificationRepository } from "@/features/notifications/infrastructure/notification-repo";
+
+export type NotificationFilter = (type: NotificationType) => boolean;
 
 export interface ActiveNotification {
   id: string;
@@ -23,15 +25,20 @@ function parseDetails(row: NotificationRow): ActiveNotification {
   return { ...row, details };
 }
 
-/** Non-dismissed rows, newest first, with parsed details. */
-export async function listActiveNotifications(): Promise<ActiveNotification[]> {
+/**
+ * Non-dismissed rows, newest first, with parsed details. Muted types are
+ * hidden here (not deleted) so unmuting restores them with state intact.
+ */
+export async function listActiveNotifications(isEnabled?: NotificationFilter): Promise<ActiveNotification[]> {
   const rows = await notificationRepository.listActive();
-  return [...rows].sort((a, b) => b.createdAt - a.createdAt).map(parseDetails);
+  const visible = isEnabled ? rows.filter((r) => isEnabled(r.type as NotificationType)) : rows;
+  return [...visible].sort((a, b) => b.createdAt - a.createdAt).map(parseDetails);
 }
 
-export async function unreadCount(): Promise<number> {
+export async function unreadCount(isEnabled?: NotificationFilter): Promise<number> {
   const rows = await notificationRepository.listActive();
-  return rows.filter((r) => !r.read).length;
+  const visible = isEnabled ? rows.filter((r) => isEnabled(r.type as NotificationType)) : rows;
+  return visible.filter((r) => !r.read).length;
 }
 
 export async function markNotificationRead(id: string): Promise<void> {

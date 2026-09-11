@@ -21,6 +21,8 @@ import { SessionAttendanceToolbar } from "./session-attendance-toolbar";
 interface SessionAttendanceDialogProps {
   open: boolean;
   session: SessionWithGroup | null;
+  /** Starting date — one-off sessions open on their own date. */
+  initialDate?: string;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -28,6 +30,7 @@ interface SessionAttendanceDialogProps {
 export function SessionAttendanceDialog({
   open,
   session,
+  initialDate,
   onClose,
   onSaved,
 }: SessionAttendanceDialogProps) {
@@ -60,9 +63,10 @@ export function SessionAttendanceDialog({
 
   useEffect(() => {
     if (open && session) {
-      setDate(dayjs().format("YYYY-MM-DD"));
+      const start = initialDate ?? dayjs().format("YYYY-MM-DD");
+      setDate(start);
       clear();
-      void load(session.id, session.groupId, dayjs().format("YYYY-MM-DD"));
+      void load(session.id, session.groupId, start);
     }
   }, [open, session]);
 

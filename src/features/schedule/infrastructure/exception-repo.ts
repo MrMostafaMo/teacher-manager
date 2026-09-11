@@ -38,6 +38,7 @@ export const exceptionRepository = {
   clearForSessionDate: async (sessionId: string, date: string): Promise<void> => {
     await db
       .delete(sessionExceptions)
-      .where(and(eq(sessionExceptions.sessionId, sessionId), eq(sessionExceptions.date, date)));
+      .where(and(eq(sessionExceptions.sessionId, sessionId), eq(sessionExceptions.date, date)))
+      .run();
   },
 };

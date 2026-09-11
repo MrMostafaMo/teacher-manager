@@ -8,6 +8,7 @@ import type { Payment } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/utils/format";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 
 export const methodKey: Record<string, string> = {
   cash: "payments.cash",
@@ -22,6 +23,7 @@ export const HistoryTable = memo(function HistoryTable({
   onEdit,
   onDelete,
   onReceipt,
+  pager,
 }: {
   list: PaymentHistoryRow[];
   deletingId: string | null;
@@ -29,6 +31,8 @@ export const HistoryTable = memo(function HistoryTable({
   onEdit: (payment: Payment) => void;
   onDelete: (id: string) => void;
   onReceipt: (row: PaymentHistoryRow) => void;
+  /** Server mode: flat paged table instead of relying on caller grouping. */
+  pager?: { page: number; total: number; pageSize: number; onPageChange: (page: number) => void };
 }) {
   const { t } = useTranslation();
   const columns = useMemo<DataTableColumn<PaymentHistoryRow>[]>(
@@ -103,5 +107,18 @@ export const HistoryTable = memo(function HistoryTable({
     [t, deletingId, receiptBusyId, onEdit, onDelete, onReceipt],
   );
   const getRowKey = useCallback((row: PaymentHistoryRow) => row.payment.id, []);
+  if (pager) {
+    return (
+      <PaginatedTable<PaymentHistoryRow>
+        columns={columns}
+        rows={list}
+        getRowKey={getRowKey}
+        page={pager.page}
+        total={pager.total}
+        pageSize={pager.pageSize}
+        onPageChange={pager.onPageChange}
+      />
+    );
+  }
   return <DataTable<PaymentHistoryRow> columns={columns} rows={list} getRowKey={getRowKey} />;
 });

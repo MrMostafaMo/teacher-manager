@@ -21,17 +21,16 @@ interface DataTableProps<T> {
   ariaLabel?: string;
 }
 
-// ponytail: add scope="col" and aria-busy/aria-live for skeleton state when a11y audit demands it.
 function DataTableInner<T>({ columns, rows, getRowKey, className, ariaLabel }: DataTableProps<T>) {
   return (
     <div
       tabIndex={0}
       role="region"
-      aria-label={ariaLabel ?? "data-table"}
+      aria-label={ariaLabel ?? "جدول البيانات"}
       className={cn("group/table overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [scrollbar-width:thin]", className)}
     >
       <table className="w-full text-sm">
-        <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-md shadow-sm">
+        <thead className="sticky top-0 z-10 bg-muted/40 backdrop-blur-xs shadow-sm">
           <tr className="border-b text-xs text-muted-foreground">
             {columns.map((col, i) => (
               <th
@@ -51,7 +50,7 @@ function DataTableInner<T>({ columns, rows, getRowKey, className, ariaLabel }: D
           {rows.map((row, i) => (
             <tr
               key={getRowKey(row, i)}
-              className="border-b transition-colors last:border-0 even:bg-muted/20 hover:bg-muted/40"
+              className="border-b transition-colors duration-150 last:border-0 hover:bg-accent/50 even:bg-muted/30"
             >
               {columns.map((col, i) => (
                 <td key={i} className={cn("px-4 py-3 align-middle", col.className)}>

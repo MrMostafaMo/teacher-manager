@@ -64,6 +64,12 @@ export class SupabaseProvider implements SyncProvider {
     }
   }
 
+  /**
+   * Best-effort conditional upload: `If-Match` is sent when an etag is known,
+   * but Supabase Storage honors no such precondition — expect last-writer-wins
+   * in practice (see runRound). The 412 branch below stays for interface
+   * compatibility, not because Storage emits it.
+   */
   async upload(text: string, etag: string | null): Promise<void> {
     const config = await getSupabaseConfig();
     if (!config) throw new SupabaseError("unauthorized", "not configured");

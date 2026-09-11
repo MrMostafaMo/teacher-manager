@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Pencil, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import type { ExamListItem } from "@/features/exams/application/exam-cases";
 import { formatDateString } from "@/lib/utils/format";
 
@@ -86,5 +87,5 @@ export const ExamsTable = memo(function ExamsTable({
     [t, deletingId, onDetail, onEdit, onDelete],
   );
   const getRowKey = useCallback((e: ExamListItem) => e.id, []);
-  return <DataTable<ExamListItem> columns={columns} rows={items} getRowKey={getRowKey} />;
+  return <PaginatedTable<ExamListItem> columns={columns} rows={items} getRowKey={getRowKey} pageSize={50} />;
 });

@@ -35,7 +35,7 @@ export function WeakSkillsCard({
                     }}
                   />
                 </div>
-                <div className="h-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-warning"
                     style={{ width: `${Math.min(100, (s.count / totalStudents) * 100)}%` }}

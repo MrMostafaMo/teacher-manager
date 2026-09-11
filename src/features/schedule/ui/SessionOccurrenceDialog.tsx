@@ -1,28 +1,25 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { useTranslation } from "react-i18next";
-import type { ZodError } from "zod";
 import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { moveSessionSchema } from "@/features/schedule/domain";
-import {
-  cancelOccurrence,
-  moveOccurrence,
-  restoreOccurrence,
-} from "@/features/schedule/application/schedule-exception-cases";
+import { restoreOccurrence } from "@/features/schedule/application/schedule-exception-cases";
+import { restoreMovedOccurrence } from "@/features/schedule/application/schedule-move-day-cases";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-repo";
 import type { SessionException } from "@/lib/db/schema";
 import { formatDateString } from "@/lib/utils/format";
-import { mapZodErrors } from "@/lib/utils/zod-errors";
 import { Modal } from "@/shared/Modal";
-import { OccurrenceFields } from "./occurrence-fields";
+import { notifyUndo } from "@/lib/undo-store";
 import { toast } from "@/lib/toast-store";
+import { OccurrenceForm } from "./OccurrenceForm";
 
 interface SessionOccurrenceDialogProps {
   open: boolean;
   session: SessionWithGroup | null;
   date: string;
   exception: SessionException | null;
+  /** Source date when the session is a one-off created by a cross-day move. */
+  movedFrom: string | null;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -32,63 +29,31 @@ export function SessionOccurrenceDialog({
   session,
   date,
   exception,
+  movedFrom,
   onClose,
   onSaved,
 }: SessionOccurrenceDialogProps) {
   const { t } = useTranslation();
-  const [mode, setMode] = useState<"cancel" | "move">("cancel");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [room, setRoom] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const restoring = exception !== null || movedFrom !== null;
 
-  useEffect(() => {
-    if (open && session) {
-      setMode("cancel");
-      setStartTime(session.startTime);
-      setEndTime(session.endTime);
-      setRoom(session.room ?? "");
-      setErrors({});
-      }
-  }, [open, session]);
-
-  const mapMoveErrors = (error: ZodError) =>
-    mapZodErrors(error, (_field, issue) => {
-      if (issue.message === "end after start") return t("schedule.exceptions.endAfterStart");
-      if (issue.message === "invalid time") return t("schedule.exceptions.timeRequired");
-      return t("schedule.exceptions.tooLong");
-    });
-
-  async function handleSubmit(e: FormEvent) {
+  async function handleRestore(e: FormEvent) {
     e.preventDefault();
     if (saving || !session) return;
     setSaving(true);
-    setErrors({});
     try {
-      if (exception) {
-        await restoreOccurrence(exception.id);
-      } else if (mode === "cancel") {
-        await cancelOccurrence(session.id, date);
-      } else {
-        const parsed = moveSessionSchema.safeParse({
-          sessionId: session.id,
-          date,
-          startTime,
-          endTime,
-          room,
-        });
-        if (!parsed.success) {
-          setErrors(mapMoveErrors(parsed.error));
-          return;
+      if (movedFrom) {
+        const undoId = await restoreMovedOccurrence(session.id);
+        if (undoId !== null) {
+          notifyUndo(
+            undoId,
+            t("schedule.oneOff.restoreMoved"),
+            `${session.groupName} · ${formatDateString(date)}`,
+            t("undo.undo"),
+          );
         }
-        await moveOccurrence(
-          session.id,
-          date,
-          parsed.data.startTime,
-          parsed.data.endTime,
-          parsed.data.room || undefined,
-        );
+      } else if (exception) {
+        await restoreOccurrence(exception.id);
       }
       onSaved();
       onClose();
@@ -101,43 +66,37 @@ export function SessionOccurrenceDialog({
 
   return (
     <Modal open={open} onClose={onClose} title={t("schedule.exceptions.title")}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          {session?.groupName} · {date ? formatDateString(date) : ""}
-        </p>
+      {restoring ? (
+        <form onSubmit={handleRestore} className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {session?.groupName} · {date ? formatDateString(date) : ""}
+          </p>
+          <p className="text-sm">
+            {movedFrom ? t("schedule.oneOff.restoreMoved") : t("schedule.exceptions.confirmRestore")}
+          </p>
 
-        {exception ? (
-          <p className="text-sm">{t("schedule.exceptions.confirmRestore")}</p>
-        ) : (
-          <OccurrenceFields
-            mode={mode}
-            onMode={setMode}
-            startTime={startTime}
-            endTime={endTime}
-            room={room}
-            errors={errors}
-            onStart={setStartTime}
-            onEnd={setEndTime}
-            onRoom={setRoom}
+
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" disabled={saving} className="gap-1.5">
+              <Undo2 className="size-4" />
+              {saving ? t("schedule.saving") : t("schedule.exceptions.restore")}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        session && (
+          <OccurrenceForm
+            key={`${session.id}|${date}`}
+            session={session}
+            date={date}
+            onSaved={onSaved}
+            onClose={onClose}
           />
-        )}
-
-        
-
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
-            {t("common.cancel")}
-          </Button>
-          <Button type="submit" disabled={saving} className="gap-1.5">
-            {exception && <Undo2 className="size-4" />}
-            {saving
-              ? t("schedule.saving")
-              : exception
-                ? t("schedule.exceptions.restore")
-                : t("schedule.save")}
-          </Button>
-        </div>
-      </form>
+        )
+      )}
     </Modal>
   );
 }

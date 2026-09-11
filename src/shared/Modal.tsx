@@ -34,11 +34,18 @@ export function Modal({ open, title, description, onClose, children, className }
     if (open && !dialog.open) {
       prevActiveRef.current = dialog.ownerDocument.activeElement as HTMLElement | null;
       dialog.showModal();
-      // Focus first focusable inside the modal
-      dialog.querySelector<HTMLElement>("input, select, textarea, button:not([disabled])")?.focus();
+      // Focus the first form field (skip the header close button) or
+      // an explicit [data-autofocus] target.
+      dialog
+        .querySelector<HTMLElement>(
+          "[data-autofocus], input, select, textarea, .modal-body button:not([disabled])",
+        )
+        ?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
-      prevActiveRef.current?.focus();
+      // Guard double-close: onClose also fires from the native event.
+      prevActiveRef.current?.focus?.();
+      prevActiveRef.current = null;
     }
   }, [open]);
 
@@ -68,6 +75,7 @@ export function Modal({ open, title, description, onClose, children, className }
         className,
       )}
     >
+      <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-chart-5 rounded-t-xl" />
       <div className="flex items-start justify-between gap-2 border-b bg-muted/30 px-5 py-4">
         <div className="min-w-0">
           <h3 id={titleId} className="text-base font-semibold">
@@ -83,7 +91,7 @@ export function Modal({ open, title, description, onClose, children, className }
           <X />
         </Button>
       </div>
-      <div className="max-h-[calc(90dvh-3.5rem)] overflow-y-auto overscroll-contain p-4 sm:p-5">{children}</div>
+      <div className="modal-body max-h-[calc(90dvh-3.5rem)] overflow-y-auto overscroll-contain p-5">{children}</div>
     </dialog>
   );
 }

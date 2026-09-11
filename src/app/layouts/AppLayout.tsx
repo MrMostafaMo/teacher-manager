@@ -42,12 +42,23 @@ export function AppLayout() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-12 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:text-primary-foreground"
+      >
+        تخطَّ إلى المحتوى
+      </a>
       <TitleBar />
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <Header />
-          <main ref={mainRef} className="flex-1 overflow-y-auto overscroll-none p-4 sm:p-6 xl:p-8">
+          <main
+            id="main-content"
+            ref={mainRef}
+            tabIndex={-1}
+            className="flex-1 overflow-y-auto overscroll-none p-4 focus:outline-none sm:p-6 xl:p-8"
+          >
           <div
             key={pathname}
             className={

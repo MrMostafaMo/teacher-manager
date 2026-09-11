@@ -21,7 +21,8 @@ export type SessionWithException = SessionWithGroup & {
   exception?: SessionExceptionFlag;
 };
 
-function toIso(date: Date): string {
+/** Local calendar date of a Date as "YYYY-MM-DD" (shared with one-off logic). */
+export function toIso(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
@@ -32,17 +33,30 @@ function toIso(date: Date): string {
  * Lay exceptions onto the week buckets. A cancelled occurrence keeps its slot
  * but is flagged; a moved occurrence is repositioned to its effective time and
  * flagged. Only the exact (session, date) pair is affected.
+ *
+ * `byDay` is keyed by weekday (0=Sunday … 6=Saturday) while `dates` follows
+ * the visible order (anchored on `weekStartsOn`). Pass `daysOrder` (the same
+ * array used to render columns) so each bucket maps to its real date;
+ * without it we fall back to positional mapping for single-bucket callers.
  */
 export function applyExceptions(
   byDay: SessionWithGroup[][],
   exceptions: SessionException[],
   dates: Date[],
+  daysOrder?: number[],
 ): SessionWithException[][] {
   const byKey = new Map<string, SessionException>();
   for (const ex of exceptions) byKey.set(`${ex.sessionId}|${ex.date}`, ex);
 
+  const dateByDay = new Map<number, string>();
+  if (daysOrder) {
+    daysOrder.forEach((dayIdx, pos) => {
+      dateByDay.set(dayIdx, toIso(dates[pos] ?? new Date()));
+    });
+  }
+
   return byDay.map((day, i) => {
-    const date = toIso(dates[i] ?? new Date());
+    const date = daysOrder ? (dateByDay.get(i) ?? toIso(dates[i] ?? new Date())) : toIso(dates[i] ?? new Date());
     return day.map((session) => {
       const ex = byKey.get(`${session.id}|${date}`);
       if (!ex) return session;
@@ -71,13 +85,15 @@ export function applyExceptions(
 /**
  * Ids of sessions that overlap another session in the same room within a day.
  * Times are zero-padded "HH:mm", so string comparison gives the right order.
+ * Cancelled occurrences keep their slot visually but free the room.
  */
-export function conflictIds(byDay: SessionWithGroup[][]): Set<string> {
+export function conflictIds(byDay: Array<Array<SessionWithGroup | SessionWithException>>): Set<string> {
   const ids = new Set<string>();
   for (const day of byDay) {
-    const byRoom = new Map<string, SessionWithGroup[]>();
+    const byRoom = new Map<string, Array<SessionWithGroup | SessionWithException>>();
     for (const s of day) {
       if (!s.room) continue;
+      if ((s as SessionWithException).exception?.type === "cancelled") continue;
       const list = byRoom.get(s.room);
       if (list) list.push(s);
       else byRoom.set(s.room, [s]);
@@ -99,8 +115,10 @@ export function conflictIds(byDay: SessionWithGroup[][]): Set<string> {
 }
 
 /**
- * Group ids that have at least one session on `date`'s weekday that is not
- * cancelled that date (active groups whose start date has passed only).
+ * Group ids that have at least one recurring session on `date`'s weekday
+ * that is not cancelled that date (active groups whose start date has
+ * passed only). One-off sessions are excluded here — they fire on their
+ * exact date via `groupIdsWithOneOffs`, not on every matching weekday.
  */
 export function activeGroupIdsForDate(
   sessions: SessionWithGroup[],
@@ -115,6 +133,7 @@ export function activeGroupIdsForDate(
   );
   const ids = new Set<string>();
   for (const s of sessions) {
+    if (s.oneOffDate != null && s.oneOffDate !== "") continue;
     if (
       s.dayOfWeek === day &&
       s.groupStatus === "active" &&

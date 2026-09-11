@@ -12,6 +12,7 @@ export const undo: Messages["undo"] = {
   exam: "الامتحان",
   group: "المجموعة",
   session: "الجلسة",
+  oneOff: "الحصة الإضافية",
   member: "العضوية",
   weakPoint: "نقطة الضعف",
 };

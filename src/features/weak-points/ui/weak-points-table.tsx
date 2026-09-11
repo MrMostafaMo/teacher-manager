@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { CheckCircle2, Pencil, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/shared/DataTable";
+import { type DataTableColumn } from "@/shared/DataTable";
+import { PaginatedTable } from "@/shared/PaginatedTable";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
 import { formatDate } from "@/lib/utils/format";
 import type { StudentWeakPoint } from "../application/weak-point-cases";
@@ -91,5 +92,5 @@ export function WeakPointsTable({
     [t, deletingId, renderStudent, onEdit, onToggleResolved, onDelete],
   );
   const getRowKey = useCallback((r: StudentWeakPoint) => r.id, []);
-  return <DataTable<StudentWeakPoint> columns={columns} rows={rows} getRowKey={getRowKey} />;
+  return <PaginatedTable<StudentWeakPoint> columns={columns} rows={rows} getRowKey={getRowKey} pageSize={50} />;
 }

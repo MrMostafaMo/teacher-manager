@@ -11,6 +11,7 @@ import {
 } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { effectiveDate, enrolledBy } from "@/lib/utils/enrollment";
+import type { MembershipWithEnrollment } from "@/features/groups/infrastructure/group-repo";
 import { homeworkSubmissionQueries } from "./homework-submission-queries";
 
 /**
@@ -30,7 +31,7 @@ export const homeworkRepository = {
   ...createRepository(homeworks),
   ...homeworkSubmissionQueries,
 
-  async list(): Promise<HomeworkListItem[]> {
+  async list(preloaded?: { memberships?: MembershipWithEnrollment[] }): Promise<HomeworkListItem[]> {
     const [rows, groups, subRows, memberships] = await Promise.all([
       db.select().from(homeworks).orderBy(desc(homeworks.createdAt)),
       db.select({ id: studyGroups.id, name: studyGroups.name }).from(studyGroups),
@@ -47,14 +48,15 @@ export const homeworkRepository = {
           homeworkSubmissions.status,
           homeworkSubmissions.studentId,
         ),
-      db
-        .select({
-          groupId: studentGroups.groupId,
-          studentId: studentGroups.studentId,
-          enrolledOn: students.enrolledOn,
-        })
-        .from(studentGroups)
-        .innerJoin(students, eq(studentGroups.studentId, students.id)),
+      preloaded?.memberships ??
+        db
+          .select({
+            groupId: studentGroups.groupId,
+            studentId: studentGroups.studentId,
+            enrolledOn: students.enrolledOn,
+          })
+          .from(studentGroups)
+          .innerJoin(students, eq(studentGroups.studentId, students.id)),
     ]);
     const groupName = new Map((groups as StudyGroup[]).map((g) => [g.id, g.name]));
     // Stats reflect *current* members who were already enrolled by the

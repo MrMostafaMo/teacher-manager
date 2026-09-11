@@ -7,8 +7,10 @@ import {
   monthWindow,
   percentDelta,
   shiftMonth,
+  statsForMonth,
   timeToMinutes,
   topWeaknessStudents,
+  trendFromAggregates,
   type WeaknessRow,
 } from "./dashboard-helpers";
 
@@ -140,5 +142,36 @@ describe("topWeaknessStudents", () => {
       students,
     );
     expect(result).toEqual([]);
+  });
+});
+
+describe("statsForMonth", () => {
+  const agg = [
+    { month: "2026-08", studentId: "s1", status: "present", n: 3 },
+    { month: "2026-08", studentId: "s1", status: "late", n: 1 },
+    { month: "2026-07", studentId: "s1", status: "absent", n: 5 },
+    { month: "2026-08", studentId: "s2", status: "excused", n: 2 },
+  ];
+  it("sums one month per student and ignores other months", () => {
+    expect(statsForMonth(agg, "2026-08")).toEqual([
+      { studentId: "s1", present: 3, absent: 0, late: 1, excused: 0 },
+      { studentId: "s2", present: 0, absent: 0, late: 0, excused: 2 },
+    ]);
+  });
+  it("returns empty when the month has no rows", () => {
+    expect(statsForMonth(agg, "2026-06")).toEqual([]);
+  });
+});
+
+describe("trendFromAggregates", () => {
+  it("buckets by month and zero-fills gaps", () => {
+    const agg = [
+      { month: "2026-08", studentId: "s1", status: "present", n: 3 },
+      { month: "2026-08", studentId: "s2", status: "absent", n: 1 },
+    ];
+    expect(trendFromAggregates(agg, ["2026-07", "2026-08"])).toEqual([
+      { month: "2026-07", present: 0, absent: 0, late: 0, excused: 0 },
+      { month: "2026-08", present: 3, absent: 1, late: 0, excused: 0 },
+    ]);
   });
 });

@@ -1,5 +1,8 @@
 import type { Payment, Plan, Student } from "@/lib/db/schema";
 
+/** Minimal payment shape the cycle math reads (projections welcome). */
+export type SessionPayment = Pick<Payment, "amount" | "planId" | "paidAt">;
+
 export type SessionDuesStatus = "ok" | "warning" | "due";
 
 export interface SessionDuesRow {
@@ -7,7 +10,7 @@ export interface SessionDuesRow {
   plan: Plan | null;
   /** الموضع داخل الدورة الحالية (0..S) — يُعرض كـ count */
   count: number;
-  /** العدّ الخام منذ آخر دفع (قبل الـmodulo) — للحسابات والفرز */
+  /** العدّ الخام غير المغطى بالدفع (قبل الـmodulo) — للحسابات والفرز */
   rawCount: number;
   /** عدد الدورات المكتملة بلا دفع */
   cyclesOverdue: number;
@@ -25,7 +28,7 @@ export interface SessionDuesRow {
   groups: Array<{ id: string; name: string }>;
 }
 
-function lastPayment(payments: Payment[]): Payment | null {
+function lastPayment(payments: SessionPayment[]): SessionPayment | null {
   if (payments.length === 0) return null;
   let best = payments[0];
   for (const p of payments) if (p.paidAt > best.paidAt) best = p;
@@ -37,24 +40,54 @@ function toISODate(ms: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function getLastPaidISO(payments: Payment[]): string | null {
+export function getLastPaidISO(payments: SessionPayment[]): string | null {
   const last = lastPayment(payments);
   return last ? toISODate(last.paidAt) : null;
 }
 
-export function countSince(
-  payments: Payment[],
-  attendances: Array<{ date: string; createdAt?: number }>,
+function normCycle(n: number): number {
+  const S = Number(n);
+  return Number.isFinite(S) && S > 0 ? Math.floor(S) : 8;
+}
+/** حصص الدفعة = المبلغ ÷ سعر الحصة (مقرّب)؛ وبدون خطة = دورة كاملة. */
+export function sessionsCoveredByPayment(
+  payment: Pick<Payment, "amount" | "planId">,
+  plan: Plan | null,
+  sessionsPerCycle: number,
 ): number {
-  const last = lastPayment(payments);
-  if (!last) return attendances.length;
-  let n = 0;
-  const iso = toISODate(last.paidAt);
-  for (const a of attendances) {
-    if (a.date > iso) n++;
-    else if (a.date === iso && a.createdAt != null && a.createdAt > last.paidAt) n++;
+  const S = normCycle(sessionsPerCycle);
+  if (plan && Number.isFinite(plan.amount) && plan.amount > 0) {
+    return Math.max(0, Math.round((Number(payment.amount) || 0) * S / plan.amount));
   }
-  return n;
+  return S;
+}
+export function paidSessionsTotal(
+  payments: SessionPayment[],
+  plansById: Map<string, Plan>,
+  fallbackPlan: Plan | null,
+  sessionsPerCycle: number,
+): number {
+  let total = 0;
+  for (const p of payments) {
+    total += sessionsCoveredByPayment(p, p.planId ? (plansById.get(p.planId) ?? fallbackPlan) : fallbackPlan, sessionsPerCycle);
+  }
+  return total;
+}
+/** raw = T - min(floor(T/S)*S, P): المتأخر يُكمل (10-8=2)، والمبكر يحفظ (3→3). */
+export function uncoveredCount(
+  totalAttendances: number,
+  payments: SessionPayment[],
+  plansById: Map<string, Plan>,
+  fallbackPlan: Plan | null,
+  sessionsPerCycle: number,
+  offset = 0,
+): number {
+  const T = Math.max(0, (Number(totalAttendances) || 0) + (Number(offset) || 0));
+  if (T === 0) return 0;
+  const S = normCycle(sessionsPerCycle);
+  const completed = Math.floor(T / S) * S;
+  if (completed <= 0 || payments.length === 0) return T;
+  return T - Math.min(completed, Math.max(0, paidSessionsTotal(payments, plansById, fallbackPlan, S)));
 }
 
 export function pricePerSession(plan: Plan | null, sessionsPerCycle: number): number | null {
@@ -101,8 +134,8 @@ export function deriveCycle(
 
 export function buildSessionDues(
   students: Student[],
-  paymentsByStudent: Map<string, Payment[]>,
-  attendanceByStudent: Map<string, Array<{ date: string }>>,
+  paymentsByStudent: Map<string, SessionPayment[]>,
+  attendanceCounts: Map<string, number>,
   plansById: Map<string, Plan>,
   groupsByStudent: Map<string, Array<{ id: string; name: string }>>,
   sessionsPerCycle: number,
@@ -111,12 +144,18 @@ export function buildSessionDues(
   const rows: SessionDuesRow[] = [];
   for (const student of students) {
     const payments = paymentsByStudent.get(student.id) ?? [];
-    const attendances = attendanceByStudent.get(student.id) ?? [];
+    const totalAttendances = attendanceCounts.get(student.id) ?? 0;
     const plan = student.planId ? (plansById.get(student.planId) ?? null) : null;
     // ponytail: manual offset per student (extra sessions counted toward the cycle).
     const offset = Number(student.sessionOffset ?? 0) || 0;
-    const base = countSince(payments, attendances);
-    const rawCount = Math.max(0, base + offset);
+    const rawCount = uncoveredCount(
+      totalAttendances,
+      payments,
+      plansById,
+      plan,
+      sessionsPerCycle,
+      offset,
+    );
     const hasPaid = payments.length > 0;
     const derived = deriveCycle(rawCount, sessionsPerCycle, warningAt, hasPaid);
     const price = pricePerSession(plan, sessionsPerCycle);

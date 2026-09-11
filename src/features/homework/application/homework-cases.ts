@@ -1,5 +1,6 @@
 import type { Homework } from "@/lib/db/schema";
 import { homeworkRepository } from "@/features/homework/infrastructure/homework-repo";
+import type { MembershipWithEnrollment } from "@/features/groups/infrastructure/group-repo";
 import {
   homeworkInputSchema,
   type HomeworkInput,
@@ -42,8 +43,10 @@ export interface HomeworkListItem extends Homework {
   overdue: boolean;
 }
 
-export async function listHomeworks(): Promise<HomeworkListItem[]> {
-  const rows = await homeworkRepository.list();
+export async function listHomeworks(preloaded?: {
+  memberships?: MembershipWithEnrollment[];
+}): Promise<HomeworkListItem[]> {
+  const rows = await homeworkRepository.list(preloaded);
   return rows.map((r) => ({
     ...r,
     completion: completionOf(r.submitted, r.pending, r.late),

@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Clock, Eye, Languages, MonitorCog, Moon, Palette, Sun } from "lucide-react";
+import { CalendarDays, Clock, Contrast, Eye, Languages, MonitorCog, Moon, Palette, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { LanguageSelector, ThemeSelector } from "@/shared/AppearanceControls";
 import { CustomColorPicker } from "@/shared/custom-color-picker";
 import { PresetPicker } from "@/shared/preset-picker";
+import { useSettingsStore } from "@/lib/settings/settings-store";
 import { Segmented } from "@/shared/Segmented";
 import { SettingsCardShell } from "@/shared/SettingsCardShell";
 import { ThemePreview } from "@/shared/theme-preview";
@@ -38,6 +40,9 @@ export function SettingsAppearanceCard() {
   const setWeekStartsOn = useWeekStore((s) => s.setWeekStartsOn);
   const theme = useThemeStore((s) => s.theme);
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : MonitorCog;
+  const preset = useThemeStore((s) => s.preset);
+  const setContrastEnabled = useSettingsStore((s) => s.setContrastEnabled);
+  const isContrast = preset === "contrast";
   return (
     <SettingsCardShell icon={Palette} title={t("settings.appearance")}>
       <div className="divide-y divide-border/60">
@@ -49,6 +54,19 @@ export function SettingsAppearanceCard() {
         </Row>
         <Row icon={Palette} label={t("settings.preset")}>
           <PresetPicker />
+        </Row>
+        <Row icon={Contrast} label={t("settings.contrastToggle.label")}>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t("settings.contrastToggle.hint")}</span>
+            <Button
+              variant={isContrast ? "default" : "outline"}
+              size="sm"
+              aria-pressed={isContrast}
+              onClick={() => setContrastEnabled(!isContrast)}
+            >
+              {t(isContrast ? "settings.contrastToggle.on" : "settings.contrastToggle.off")}
+            </Button>
+          </div>
         </Row>
         <div className="py-3">
           <div className="mb-2 flex items-center gap-2 text-sm">
