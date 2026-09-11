@@ -1,0 +1,13 @@
+Place app screenshots here (PNG, 1280x800 recommended — the app window size).
+
+Expected filenames (referenced by README.md and README.ar.md):
+  dashboard.png   — dashboard with KPIs, today's sessions, finance charts
+  students.png    — students list / student profile with trends
+  attendance.png  — daily attendance roster
+  schedule.png    — weekly timetable grid
+  payments.png    — payments dues + history
+  expenses.png    — expenses table + category chart
+  reports.png     — reports page with preview
+  settings.png    — settings / appearance
+
+Once added, they render automatically — no README edit needed.
