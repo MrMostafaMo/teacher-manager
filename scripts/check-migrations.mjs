@@ -36,6 +36,33 @@ function check(label, a, b) {
 check("drizzle ↔ src-tauri/migrations", drizzle, embedded);
 check("src-tauri/migrations ↔ lib.rs include_str", embedded, includes);
 
+// Byte check: the embedded copy must equal `pnpm db:sync` output for the
+// drizzle file. sqlx records a SHA-384 checksum per applied migration and
+// refuses to start when an applied migration's bytes changed — a single
+// rewritten byte bricks every existing install (all pages fail to load).
+// Released migration files are append-only history: never edit them, add a
+// new migration instead.
+const normalize = (sql) =>
+  sql
+    .split("\n")
+    .filter((line) => !line.trim().startsWith("-->"))
+    .join("\n")
+    .trim() + "\n";
+for (const f of embedded) {
+  const drizzlePath = join(drizzleDir, f);
+  if (!drizzle.includes(f)) continue;
+  const expected = normalize(readFileSync(drizzlePath, "utf8"));
+  const actual = readFileSync(join(embeddedDir, f), "utf8");
+  if (expected !== actual) {
+    failed = true;
+    console.error(
+      `error bytes: src-tauri/migrations/${f} differs from db:sync output. ` +
+        `If it is already released, revert it and add a new migration instead.`,
+    );
+  }
+}
+if (!failed) console.log(`ok bytes: ${embedded.length} files match db:sync output`);
+
 if (failed) {
   console.error("\nMigration sources out of sync. Run pnpm db:generate && pnpm db:sync, then add the new Migration entry to migrations() in src-tauri/src/lib.rs.");
   process.exit(1);

@@ -132,7 +132,7 @@ export const SessionDuesView = memo(function SessionDuesView({ reloadKey }: { re
         open={open}
         defaultPeriod={dayjs().format("YYYY-MM")}
         presetStudentId={recordRow?.student.id}
-        presetAmount={recordRow?.remainingAmount ?? recordRow?.fullCycleAmount ?? undefined}
+        presetAmount={(recordRow?.remainingAmount || recordRow?.fullCycleAmount) ?? undefined}
         onClose={() => {
           setOpen(false);
           setRecordRow(null);

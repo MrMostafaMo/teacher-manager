@@ -14,7 +14,7 @@ import {
   toMin,
   type PlacedSession,
 } from "./week-layout";
-import { SessionBlockActions } from "./session-block-actions";
+import { SessionBlockActions, SessionBlockMenu } from "./session-block-actions";
 import { SessionBlockBadges } from "./session-block-badges";
 
 export function SessionBlock({
@@ -55,86 +55,95 @@ export function SessionBlock({
   const end = toMin(session.endTime);
   const top = ((start - rangeStart) / 60) * HOUR_PX + 2;
   const lines =
-    2 +
-    (session.room ? 1 : 0) +
-    (conflicted && !cancelled ? 1 : 0) +
-    (exception || oneOff ? 1 : 0);
+    2 + (session.room ? 1 : 0) + (conflicted && !cancelled ? 1 : 0) + (exception || oneOff ? 1 : 0);
   const height = Math.max(
     ((end - start) / 60) * HOUR_PX - 4,
     deleting ? CHIP_H : minBlockHeight(lines),
   );
 
   return (
-    <div
-      tabIndex={0}
-      role="group"
-      aria-label={`${session.groupName} ${formatTime(session.startTime, hour24)}–${formatTime(session.endTime, hour24)}${oneOff ? ` ${t("schedule.exceptions.added")}` : ""}`}
-      className={cn(
-        "group absolute overflow-hidden rounded-lg border p-1.5 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        !exception && !oneOff && !deleting && "cursor-grab active:cursor-grabbing",
-        pal.bg,
-        pal.border,
-        conflicted && "ring-1 ring-destructive/60",
-        deleting && "ring-2 ring-destructive",
-        cancelled && "opacity-70 ring-1 ring-destructive/40",
-        oneOff && "ring-1 ring-success/40",
-      )}
-      style={{
-        top,
-        height,
-        insetInlineStart: `calc(${(col / cols) * 100}% + 1px)`,
-        width: `calc(${(1 / cols) * 100}% - 2px)`,
-      }}
-      draggable={!exception && !oneOff && !deleting}
-      onDragStart={(e) => {
-        if (exception || oneOff || deleting) {
-          e.preventDefault();
-          return;
-        }
-        e.dataTransfer.setData("text/plain", session.id);
-        e.dataTransfer.effectAllowed = "move";
-      }}
+    <SessionBlockMenu
+      session={session}
+      date={date}
+      oneOff={oneOff}
+      moved={moved}
+      cancelled={cancelled}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onAttend={onAttend}
+      onOccurrence={onOccurrence}
     >
-      <div className={cn("absolute inset-y-1 start-0 w-1 rounded-full", pal.bar)} />
-
-      <div className="min-w-0 ps-2 pe-1">
-        <p
-          className={cn(
-            "truncate text-xs font-semibold leading-tight",
-            cancelled && "line-through",
-          )}
-        >
-          {session.groupName}
-        </p>
-        <p className="mt-0.5 text-[11px] leading-tight tabular-nums text-muted-foreground">
-          {formatTime(session.startTime, hour24)} – {formatTime(session.endTime, hour24)}
-        </p>
-        {session.room && (
-          <p className="mt-0.5 truncate text-[11px] leading-tight text-muted-foreground">
-            {t("schedule.room")}: {session.room}
-          </p>
+      <div
+        tabIndex={0}
+        role="group"
+        aria-label={`${session.groupName} ${formatTime(session.startTime, hour24)}–${formatTime(session.endTime, hour24)}${oneOff ? ` ${t("schedule.exceptions.added")}` : ""}`}
+        className={cn(
+          "group absolute overflow-hidden rounded-lg border p-1.5 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          !exception && !oneOff && !deleting && "cursor-grab active:cursor-grabbing",
+          pal.bg,
+          pal.border,
+          conflicted && "ring-1 ring-destructive/60",
+          deleting && "ring-2 ring-destructive",
+          cancelled && "opacity-70 ring-1 ring-destructive/40",
+          oneOff && "ring-1 ring-success/40",
         )}
-        <SessionBlockBadges
-          exceptionType={exception?.type}
+        style={{
+          top,
+          height,
+          insetInlineStart: `calc(${(col / cols) * 100}% + 1px)`,
+          width: `calc(${(1 / cols) * 100}% - 2px)`,
+        }}
+        draggable={!exception && !oneOff && !deleting}
+        onDragStart={(e) => {
+          if (exception || oneOff || deleting) {
+            e.preventDefault();
+            return;
+          }
+          e.dataTransfer.setData("text/plain", session.id);
+          e.dataTransfer.effectAllowed = "move";
+        }}
+      >
+        <div className={cn("absolute inset-y-1 start-0 w-1 rounded-full", pal.bar)} />
+
+        <div className="min-w-0 ps-2 pe-1">
+          <p
+            className={cn(
+              "truncate text-xs font-semibold leading-tight",
+              cancelled && "line-through",
+            )}
+          >
+            {session.groupName}
+          </p>
+          <p className="mt-0.5 text-[11px] leading-tight tabular-nums text-muted-foreground">
+            {formatTime(session.startTime, hour24)} – {formatTime(session.endTime, hour24)}
+          </p>
+          {session.room && (
+            <p className="mt-0.5 truncate text-[11px] leading-tight text-muted-foreground">
+              {t("schedule.room")}: {session.room}
+            </p>
+          )}
+          <SessionBlockBadges
+            exceptionType={exception?.type}
+            oneOff={oneOff}
+            movedToDate={movedToDate}
+            movedFromDate={session.movedFromDate ?? null}
+            conflicted={conflicted}
+          />
+        </div>
+
+        <SessionBlockActions
+          session={session}
+          date={date}
           oneOff={oneOff}
-          movedToDate={movedToDate}
-          movedFromDate={session.movedFromDate ?? null}
-          conflicted={conflicted}
+          moved={moved}
+          cancelled={cancelled}
+          deleting={deleting}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onAttend={onAttend}
+          onOccurrence={onOccurrence}
         />
       </div>
-
-      <SessionBlockActions
-        session={session}
-        date={date}
-        oneOff={oneOff}
-        moved={moved}
-        cancelled={cancelled}
-        deleting={deleting}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onAttend={onAttend}
-        onOccurrence={onOccurrence}
-      />
-    </div>
+    </SessionBlockMenu>
   );
 }

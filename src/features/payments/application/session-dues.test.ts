@@ -139,6 +139,12 @@ describe("buildSessionDues", () => {
     const r = buildSessionDues([s], new Map([["s1", [p]]]), new Map([["s1", atts(2)]]), new Map(), new Map(), 8, 6)[0];
     expect(r.rawCount).toBe(2); expect(r.count).toBe(2); expect(r.showPaid).toBe(false); expect(r.status).toBe("ok");
   });
+  it("records payment but keeps counter: 3 attendances + full cycle stays 3/8", () => {
+    const s = mkStudent("s1", "KeepsThree", null), p = mkPayment("s1", Date.parse("2026-08-30T10:00:00"));
+    const r = buildSessionDues([s], new Map([["s1", [p]]]), new Map([["s1", atts(3)]]), new Map(), new Map(), 8, 6)[0];
+    expect(r.rawCount).toBe(3); expect(r.count).toBe(3); expect(r.showPaid).toBe(false); expect(r.status).toBe("ok");
+    expect(r.lastPaidAmount).toBe(800); expect(r.lastPaidISO).not.toBeNull();
+  });
   it("exact cycle payment shows 8/8 paid", () => {
     const s = mkStudent("s1", "Exact", null), p = mkPayment("s1", Date.parse("2026-08-30T10:00:00"));
     const r = buildSessionDues([s], new Map([["s1", [p]]]), new Map([["s1", atts(8)]]), new Map(), new Map(), 8, 6)[0];

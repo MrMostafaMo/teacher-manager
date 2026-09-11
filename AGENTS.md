@@ -35,6 +35,11 @@ guard can be skipped with `FILE_CHECK_SKIP=1 pnpm build`.
 3. Add a new `Migration { version: N+1, description, sql }` entry to the
    `migrations()` list in `src-tauri/src/lib.rs`.
 4. Migrations are embedded in the binary and applied automatically on launch.
+5. Released migration files are byte-frozen: sqlx checksums every applied
+   migration, so rewriting even one byte bricks all existing installs
+   (every page fails to load). Never edit them — add a new migration.
+   `pnpm check:migrations` enforces the freeze (embedded bytes must equal
+   `db:sync` output).
 
 Live DB location (Linux): `~/.config/com.teachermanager.app/teacher-manager.db`.
 

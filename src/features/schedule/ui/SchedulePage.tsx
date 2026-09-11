@@ -12,7 +12,6 @@ import { useCollapsedSections } from "@/shared/useCollapsedSections";
 import WeekGrid from "./WeekGrid";
 import { ScheduleGroupsView } from "./schedule-groups-view";
 import { ScheduleHeaderActions } from "./schedule-header-actions";
-import { OneOffSessionDialog } from "./OneOffSessionDialog";
 import { ScheduleFormDialog } from "./ScheduleFormDialog";
 import { SessionAttendanceDialog } from "./SessionAttendanceDialog";
 import { SessionOccurrenceDialog } from "./SessionOccurrenceDialog";
@@ -26,7 +25,6 @@ export default function SchedulePage() {
   const { sessions, groups, memberCounts, exceptions, loading, reload } = useScheduleData();
   const [view, setView] = useState<"day" | "group">("day");
   const [formOpen, setFormOpen] = useState(false);
-  const [oneOffOpen, setOneOffOpen] = useState(false);
   const [editing, setEditing] = useState<GroupSession | null>(null);
   const [attendanceSession, setAttendanceSession] = useState<{
     session: SessionWithGroup;
@@ -69,7 +67,6 @@ export default function SchedulePage() {
             view={view}
             onViewChange={setView}
             onCreate={() => openForm()}
-            onCreateOneOff={() => setOneOffOpen(true)}
           />
         }
       />
@@ -114,6 +111,7 @@ export default function SchedulePage() {
           onEdit={openForm}
           onDelete={(s) => void handleDelete(s)}
           onAttend={handleAttend}
+          onOccurrence={(s, date) => setOccurrence({ session: s, date })}
         />
       )}
       <ScheduleFormDialog
@@ -121,12 +119,6 @@ export default function SchedulePage() {
         session={editing}
         groups={groups}
         onClose={() => setFormOpen(false)}
-        onSaved={() => void reload()}
-      />
-      <OneOffSessionDialog
-        open={oneOffOpen}
-        groups={groups}
-        onClose={() => setOneOffOpen(false)}
         onSaved={() => void reload()}
       />
       <SessionAttendanceDialog

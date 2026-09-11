@@ -1,7 +1,7 @@
-import { and, count, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import dayjs from "dayjs";
 import { db } from "@/lib/db/client";
-import { attendance, type Attendance } from "@/lib/db/schema";
+import { attendance, sessionAttendance, type Attendance } from "@/lib/db/schema";
 import { createRepository } from "@/lib/db/repository";
 import { uuid } from "@/lib/utils/uuid";
 import type { AttendanceStatus } from "@/features/attendance/domain";
@@ -98,13 +98,28 @@ export const attendanceRepository = {
     return [...byId.values()];
   },
 
-  /** Per-student row counts over the whole table (session-dues aggregation). */
+  /**
+   * Per-student consumed-session counts (daily + timetable sheets) for
+   * session-dues. Absent never consumes a paid session: only
+   * present/late/excused rows count.
+   */
   async countsByStudent(): Promise<Array<{ studentId: string; n: number }>> {
-    const rows = (await db
-      .select({ studentId: attendance.studentId, n: count() })
-      .from(attendance)
-      .groupBy(attendance.studentId)) as Array<{ studentId: string; n: number }>;
-    return rows;
+    const consuming = ["present", "late", "excused"] as Array<AttendanceStatus>;
+    const [daily, sheets] = (await Promise.all([
+      db
+        .select({ studentId: attendance.studentId, n: count() })
+        .from(attendance)
+        .where(inArray(attendance.status, consuming))
+        .groupBy(attendance.studentId),
+      db
+        .select({ studentId: sessionAttendance.studentId, n: count() })
+        .from(sessionAttendance)
+        .where(inArray(sessionAttendance.status, consuming))
+        .groupBy(sessionAttendance.studentId),
+    ])) as Array<Array<{ studentId: string; n: number }>>;
+    const merged = new Map<string, number>();
+    for (const row of [...daily, ...sheets]) merged.set(row.studentId, (merged.get(row.studentId) ?? 0) + row.n);
+    return [...merged].map(([studentId, n]) => ({ studentId, n }));
   },
 
   /** Every attendance row of a student, newest first (used in the profile). */

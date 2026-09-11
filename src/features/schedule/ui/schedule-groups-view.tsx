@@ -22,6 +22,7 @@ interface ScheduleGroupsViewProps {
   onEdit: (session: GroupSession) => void;
   onDelete: (session: GroupSession) => void;
   onAttend: (session: SessionWithGroup) => void;
+  onOccurrence: (session: SessionWithGroup, date: string) => void;
 }
 
 export function ScheduleGroupsView({
@@ -37,6 +38,7 @@ export function ScheduleGroupsView({
   onEdit,
   onDelete,
   onAttend,
+  onOccurrence,
 }: ScheduleGroupsViewProps) {
   const { t } = useTranslation();
 
@@ -85,6 +87,7 @@ export function ScheduleGroupsView({
               deletingId={deletingId}
               onAttend={onAttend}
               onDelete={onDelete}
+              onOccurrence={onOccurrence}
             />
           </CollapsibleSection>
         );

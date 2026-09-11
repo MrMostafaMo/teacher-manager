@@ -48,7 +48,13 @@ describe("OneOffList", () => {
   it("renders nothing without one-offs", () => {
     const { container } = render(
       <ThemeProvider>
-        <OneOffList oneOffs={[]} deletingId={null} onAttend={() => {}} onDelete={() => {}} />
+        <OneOffList
+          oneOffs={[]}
+          deletingId={null}
+          onAttend={() => {}}
+          onDelete={() => {}}
+          onOccurrence={() => {}}
+        />
       </ThemeProvider>,
     );
     expect(container).toBeEmptyDOMElement();
@@ -61,11 +67,17 @@ describe("OneOffList", () => {
         <OneOffList
           oneOffs={[
             oneOff(),
-            oneOff({ id: "o2", oneOffDate: "2026-09-15", movedFromSessionId: "s", movedFromDate: "2026-09-13" }),
+            oneOff({
+              id: "o2",
+              oneOffDate: "2026-09-15",
+              movedFromSessionId: "s",
+              movedFromDate: "2026-09-13",
+            }),
           ]}
           deletingId={null}
           onAttend={onAttend}
           onDelete={() => {}}
+          onOccurrence={() => {}}
         />
       </ThemeProvider>,
     );

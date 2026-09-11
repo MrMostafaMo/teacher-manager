@@ -5,6 +5,9 @@ import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedu
 import type { SessionWithException } from "@/features/schedule/application/schedule-exceptions";
 import type { GroupSession } from "@/lib/db/schema";
 import { ConfirmDeleteButton } from "@/shared/ConfirmDeleteButton";
+import type { ReactNode } from "react";
+import { SessionContextMenu } from "./session-context-menu";
+import { routeSessionMenuItem, sessionMenuItems } from "./session-menu-items";
 import type { PlacedSession } from "./week-layout";
 import { BlockActions } from "./block-actions";
 
@@ -19,6 +22,37 @@ interface SessionBlockActionsProps {
   onDelete: (s: GroupSession) => void;
   onAttend: (s: SessionWithGroup) => void;
   onOccurrence: (s: SessionWithGroup, date: string) => void;
+}
+
+/** Right-click menu wrapping a block, mirroring its hover actions by state. */
+export function SessionBlockMenu({
+  session,
+  date,
+  oneOff,
+  moved,
+  cancelled,
+  onEdit,
+  onDelete,
+  onAttend,
+  onOccurrence,
+  children,
+}: Omit<SessionBlockActionsProps, "deleting"> & { children: ReactNode }) {
+  return (
+    <SessionContextMenu
+      items={sessionMenuItems({ oneOff, moved, cancelled })}
+      oneOff={oneOff}
+      onItem={(item) =>
+        routeSessionMenuItem(item, {
+          onAttend: () => onAttend(session),
+          onOccurrence: () => onOccurrence(session, date),
+          onEdit: () => onEdit(session),
+          onDelete: () => onDelete(session),
+        })
+      }
+    >
+      {children}
+    </SessionContextMenu>
+  );
 }
 
 /** Overlay + hover actions of a timetable block by its state. */

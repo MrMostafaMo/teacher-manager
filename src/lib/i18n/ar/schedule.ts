@@ -4,6 +4,11 @@ export const schedule: Messages["schedule"] = {
   subtitle: "الجدول الأسبوعي لفرقك — اليوم والوقت والقاعة لكل جلسة.",
   add: "إضافة جلسة",
   edit: "تعديل الجلسة",
+  type: {
+    label: "نوع الجلسة",
+    weekly: "أسبوعية",
+    oneoff: "ليوم واحد",
+  },
   empty: "لا توجد جلسات بعد.",
   emptyHint: "أضف أول جلسة لتبدأ ببناء الجدول.",
   loading: "جارٍ التحميل…",

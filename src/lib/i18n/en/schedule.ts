@@ -2,6 +2,11 @@ export const schedule = {
   subtitle: "Weekly timetable for your groups — day, time and room per session.",
   add: "Add session",
   edit: "Edit session",
+  type: {
+    label: "Session type",
+    weekly: "Weekly",
+    oneoff: "One-day",
+  },
   empty: "No sessions yet.",
   emptyHint: "Add your first session to start building the timetable.",
   loading: "Loading…",
