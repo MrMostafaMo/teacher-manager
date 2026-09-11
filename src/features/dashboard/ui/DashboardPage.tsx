@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDataChanged } from "@/shared/useDataChanged";
 import {
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const selectedMonth = searchParams.get("month") ?? currentMonth();
   const [status, setStatus] = useState<ChartStatus>("loading");
   const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const billingMode = useSessionSettings((s) => s.billingMode);
   const sessionsPerCycle = useSessionSettings((s) => s.sessionsPerCycle);
@@ -35,9 +37,12 @@ export default function DashboardPage() {
           setData(d);
           setStatus("ready");
         }
-      } catch (error) {
-        console.error("Dashboard load failed", error);
-        if (!cancelled) setStatus("error");
+      } catch (err) {
+        console.error("Dashboard load failed", err);
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+          setStatus("error");
+        }
       }
     })();
     return () => {
@@ -50,8 +55,26 @@ export default function DashboardPage() {
   if (status === "error") {
     return (
       <Card>
-        <CardContent className="p-6 text-sm text-muted-foreground">
-          {t("dashboard.loadError")}
+        <CardContent className="flex flex-col items-start gap-3 p-6 text-sm text-muted-foreground">
+          <p>{t("dashboard.loadError")}</p>
+          {error && (
+            <>
+              <textarea
+                readOnly
+                value={error}
+                aria-label="error-detail"
+                className="w-72 resize-none rounded border bg-muted px-3 py-2 font-mono text-xs"
+                rows={3}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void navigator.clipboard.writeText(error)}
+              >
+                {t("error.copyDetails")}
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
     );

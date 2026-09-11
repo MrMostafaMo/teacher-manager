@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.3
+
+- **Dashboard resilience:** dimensions now load with `Promise.allSettled` — one
+  failing source is logged and falls back instead of blanking the whole
+  dashboard with «تعذّر تحميل لوحة التحكم». The error card shows the
+  underlying message with a copy-details button. No schema change.
+- **Windows data recovery docs:** `README.ar.md` documents the live DB path
+  (`%APPDATA%\com.teachermanager.app\teacher-manager.db`), the
+  run-as-administrator empty-profile pitfall, and the 0.11.0 `perMachine`
+  installer note.
+
 ## v0.11.0
 
 - **Unified settings (`tm-settings` v1):** the eight persisted slices
