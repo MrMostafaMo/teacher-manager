@@ -44,6 +44,7 @@ check("src-tauri/migrations ↔ lib.rs include_str", embedded, includes);
 // new migration instead.
 const normalize = (sql) =>
   sql
+    .replace(/\r\n/g, "\n")
     .split("\n")
     .filter((line) => !line.trim().startsWith("-->"))
     .join("\n")
@@ -52,7 +53,7 @@ for (const f of embedded) {
   const drizzlePath = join(drizzleDir, f);
   if (!drizzle.includes(f)) continue;
   const expected = normalize(readFileSync(drizzlePath, "utf8"));
-  const actual = readFileSync(join(embeddedDir, f), "utf8");
+  const actual = normalize(readFileSync(join(embeddedDir, f), "utf8")); // ponytail: CRLF checkouts (Windows CI) must compare equal to LF
   if (expected !== actual) {
     failed = true;
     console.error(
