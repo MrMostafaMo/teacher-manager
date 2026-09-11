@@ -44,7 +44,14 @@ function collect(dir, acc = []) {
 
 const files = [];
 for (const sub of bundleRoots) {
-  collect(join(root, "src-tauri", "target", sub, "release", "bundle"), files);
+  // ponytail: "release" is the native layout (target/release/bundle, e.g.
+  // the Linux job with no --target); anything else is a cross-compile triple
+  // (target/<triple>/release/bundle). One branch each, no fallback scan.
+  const base =
+    sub === "release"
+      ? join(root, "src-tauri", "target", "release", "bundle")
+      : join(root, "src-tauri", "target", sub, "release", "bundle");
+  collect(base, files);
 }
 // Deduplicate (e.g. `release` visited twice when no cross-targets exist).
 const unique = [...new Set(files)].sort((a, b) => basename(a).localeCompare(basename(b)));
