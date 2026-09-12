@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/shared/EmptyState";
 import { verifySchema, type SchemaReport } from "@/lib/db/schema-check";
+import { RECREATABLE_TABLES, repairSchema } from "@/lib/db/schema-repair";
+import { toast } from "@/lib/toast-store";
 
 /**
- * Boot-time database gate: pages assume every table exists, so a damaged
- * file shows up as half-empty screens. When the check fails, block the
- * content with what is missing and where to repair it.
+ * Boot-time database gate. Missing transient tables (logs, price history)
+ * are recreated empty with a notice; anything else missing means real user
+ * data loss, so the content stays blocked with where to repair it.
  */
 export function SchemaGate({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -19,13 +21,28 @@ export function SchemaGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    void verifySchema().then((r) => {
-      if (!cancelled && !r.ok) setReport(r);
+    (async () => {
+      let current = await verifySchema();
+      if (!current.ok) {
+        const fixable = current.missingTables.filter((m) =>
+          (RECREATABLE_TABLES as readonly string[]).includes(m),
+        );
+        if (fixable.length > 0) {
+          const fixed = await repairSchema(fixable).catch(() => [] as string[]);
+          current = await verifySchema();
+          if (fixed.length > 0 && !cancelled) {
+            toast(t("error.dbRepaired", { tables: fixed.join(", ") }), "info");
+          }
+        }
+      }
+      if (!cancelled && !current.ok) setReport(current);
+    })().catch(() => {
+      if (!cancelled) setReport({ ok: false, missingTables: [], integrity: "check failed" });
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   if (!report) return <>{children}</>;
 

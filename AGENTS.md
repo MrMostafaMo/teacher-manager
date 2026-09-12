@@ -846,11 +846,17 @@ settings instead of half-empty screens. Groups/schedule/attendance load
 failures now toast the underlying error (`groups.loadError` /
 `schedule.loadError` / `attendance.errors.load` + message). `swapDatabaseFrom`
 verifies every expected table after the swap and reports the new
-`restoreIncomplete` key (settings + sync locales, rollback kept) instead of a
-false "done". Motivating case: a manually copied `.db` missing
-`group_sessions` showed empty groups/schedule + an attendance toast while
-students worked — always move the file with in-app backup/restore, never a
-manual copy of a live database.
+  `restoreIncomplete` key (settings + sync locales, rollback kept) instead of a
+  false "done". The gate is tiered since: missing transient tables
+  (`plan_price_history` + trigger, `activity_logs`, `notifications`,
+  `sync_tombstones`) are recreated empty by `schema-repair.ts` (verbatim
+  migration DDL, `IF NOT EXISTS`, pure-builder unit tests) with an info toast;
+  anything else missing keeps the blocking screen. Motivating cases: a
+  manually copied `.db` missing `group_sessions` showed empty groups/schedule
+  + an attendance toast while students worked, then a file missing only
+  `plan_price_history` (read by nothing on the main screens) wrongly bricked
+  the app — always move the file with in-app backup/restore, never a
+  manual copy of a live database.
 
 ## GitHub (CI/CD)
 

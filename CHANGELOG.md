@@ -7,7 +7,11 @@
   button, and a link to backup settings instead of half-empty screens; group/
   schedule/attendance load failures now toast the underlying error; restore
   verifies every expected table after the swap and reports `restoreIncomplete`
-  (with rollback) instead of a false "done". No schema change.
+  (with rollback) instead of a false "done". The gate is now tiered: missing
+  transient tables (`plan_price_history` + its sync trigger, `activity_logs`,
+  `notifications`, `sync_tombstones`) are recreated empty from verbatim
+  migration DDL with a notice instead of blocking the whole app. No schema
+  change.
 
 - **Session counter rebuilt from scratch:** the counter is attendance-only
   (`1/8 … 8/8` then wraps to `1/8` with a cycle number; present/late/absent
