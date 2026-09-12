@@ -72,10 +72,32 @@ const STATEMENTS: Record<string, string[]> = {
   ],
 };
 
+/** Nullable-text columns safe to ADD when missing (v25 session columns). */
+export const REPAIRABLE_COLUMNS: Record<string, Array<{ name: string; ddl: string }>> = {
+  group_sessions: [
+    { name: "one_off_date", ddl: "ALTER TABLE `group_sessions` ADD `one_off_date` text" },
+    {
+      name: "moved_from_session_id",
+      ddl: "ALTER TABLE `group_sessions` ADD `moved_from_session_id` text",
+    },
+    { name: "moved_from_date", ddl: "ALTER TABLE `group_sessions` ADD `moved_from_date` text" },
+  ],
+};
+
 /** SQL statements that recreate the given missing tables (unknown names ignored). */
 export function repairStatements(missing: string[]): string[] {
   const wanted = new Set(missing);
   return RECREATABLE_TABLES.flatMap((t) => (wanted.has(t) ? STATEMENTS[t] : []));
+}
+
+/** SQL statements that add the given missing columns (only allowlisted ones). */
+export function columnRepairStatements(missingColumns: Record<string, string[]>): string[] {
+  const out: string[] = [];
+  for (const [table, cols] of Object.entries(REPAIRABLE_COLUMNS)) {
+    const missing = new Set(missingColumns[table] ?? []);
+    for (const col of cols) if (missing.has(col.name)) out.push(col.ddl);
+  }
+  return out;
 }
 
 /** Execute the repair; resolves with the table names that were recreated. */
@@ -88,6 +110,20 @@ export async function repairSchema(missing: string[]): Promise<string[]> {
       await db.run(sql.raw(stmt));
     }
     repaired.push(table);
+  }
+  return repaired;
+}
+
+/** Execute the column repair; resolves with `table.column` labels that were added. */
+export async function repairColumns(missingColumns: Record<string, string[]>): Promise<string[]> {
+  const repaired: string[] = [];
+  for (const [table, cols] of Object.entries(REPAIRABLE_COLUMNS)) {
+    const missing = new Set(missingColumns[table] ?? []);
+    for (const col of cols) {
+      if (!missing.has(col.name)) continue;
+      await db.run(sql.raw(col.ddl));
+      repaired.push(`${table}.${col.name}`);
+    }
   }
   return repaired;
 }

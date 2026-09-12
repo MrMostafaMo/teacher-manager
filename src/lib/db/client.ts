@@ -110,6 +110,16 @@ export async function queryFirst<T = Record<string, unknown>>(
   return (rows[0] ?? undefined) as T | undefined;
 }
 
+/** Run one raw SELECT and return every row (used by schema checks). */
+export async function queryAll<T = Record<string, unknown>>(
+  sql: string,
+  params: unknown[] = [],
+): Promise<T[]> {
+  const connection = await connect();
+  const rows = await connection.select<Record<string, unknown>[]>(sql, params as unknown[]);
+  return rows as T[];
+}
+
 /** Close the connection pool (used by backup/restore and on shutdown). */
 export async function closeDatabase(): Promise<void> {
   if (sqlite) {

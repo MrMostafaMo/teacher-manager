@@ -6,13 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/shared/EmptyState";
 import { verifySchema, type SchemaReport } from "@/lib/db/schema-check";
-import { RECREATABLE_TABLES, repairSchema } from "@/lib/db/schema-repair";
+import {
+  RECREATABLE_TABLES,
+  columnRepairStatements,
+  repairColumns,
+  repairSchema,
+} from "@/lib/db/schema-repair";
 import { toast } from "@/lib/toast-store";
 
 /**
- * Boot-time database gate. Missing transient tables (logs, price history)
- * are recreated empty with a notice; anything else missing means real user
- * data loss, so the content stays blocked with where to repair it.
+ * Boot-time database gate. Missing transient tables are recreated empty and
+ * allowlisted missing columns are added, all with a notice; anything else
+ * missing means real user data loss, so the content stays blocked with where
+ * to repair it.
  */
 export function SchemaGate({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -24,20 +30,26 @@ export function SchemaGate({ children }: { children: React.ReactNode }) {
     (async () => {
       let current = await verifySchema();
       if (!current.ok) {
-        const fixable = current.missingTables.filter((m) =>
+        const fixed: string[] = [];
+        const fixableTables = current.missingTables.filter((m) =>
           (RECREATABLE_TABLES as readonly string[]).includes(m),
         );
-        if (fixable.length > 0) {
-          const fixed = await repairSchema(fixable).catch(() => [] as string[]);
+        if (fixableTables.length > 0) {
+          fixed.push(...(await repairSchema(fixableTables).catch(() => [] as string[])));
           current = await verifySchema();
-          if (fixed.length > 0 && !cancelled) {
-            toast(t("error.dbRepaired", { tables: fixed.join(", ") }), "info");
-          }
+        }
+        if (columnRepairStatements(current.missingColumns).length > 0) {
+          fixed.push(...(await repairColumns(current.missingColumns).catch(() => [] as string[])));
+          current = await verifySchema();
+        }
+        if (fixed.length > 0 && !cancelled) {
+          toast(t("error.dbRepaired", { tables: fixed.join(", ") }), "info");
         }
       }
       if (!cancelled && !current.ok) setReport(current);
     })().catch(() => {
-      if (!cancelled) setReport({ ok: false, missingTables: [], integrity: "check failed" });
+      if (!cancelled)
+        setReport({ ok: false, missingTables: [], missingColumns: {}, integrity: "check failed" });
     });
     return () => {
       cancelled = true;
@@ -46,7 +58,13 @@ export function SchemaGate({ children }: { children: React.ReactNode }) {
 
   if (!report) return <>{children}</>;
 
-  const missing = report.missingTables.join(", ") || "—";
+  const problems = [
+    ...report.missingTables,
+    ...Object.entries(report.missingColumns).flatMap(([table, cols]) =>
+      cols.map((c) => `${table}.${c}`),
+    ),
+  ];
+  const missing = problems.join(", ") || "—";
   const details = `missing: ${missing}\nintegrity: ${report.integrity}`;
   return (
     <Card>

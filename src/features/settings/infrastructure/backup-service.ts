@@ -3,7 +3,7 @@ import { copyFile, exists, remove, stat } from "@tauri-apps/plugin-fs";
 import Database from "@tauri-apps/plugin-sql";
 import { sql } from "drizzle-orm";
 import { db, closeDatabase, queryFirst } from "@/lib/db/client";
-import { EXPECTED_TABLES, listTables } from "@/lib/db/schema-check";
+import { verifySchema } from "@/lib/db/schema-check";
 import { appMeta } from "@/lib/db/schema";
 
 /** Absolute path of the live SQLite file (the SQL plugin's app-config dir). */
@@ -101,10 +101,15 @@ export async function swapDatabaseFrom(
     }
     await db.select().from(appMeta).limit(1);
     // The swap "succeeds" at the file level even when the backup is missing
-    // tables (e.g. a partial manual copy) — verify before declaring done.
-    const present = new Set(await listTables());
-    const missing = EXPECTED_TABLES.filter((t) => !present.has(t));
-    if (missing.length > 0) throw new Error(`restored file is missing tables: ${missing.join(", ")}`);
+    // tables or columns (e.g. a partial manual copy) — verify before
+    // declaring done.
+    const report = await verifySchema();
+    if (!report.ok) {
+      throw new Error(
+        `restored file failed schema check (tables: ${report.missingTables.join(", ") || "—"}; ` +
+          `columns: ${JSON.stringify(report.missingColumns)}; integrity: ${report.integrity})`,
+      );
+    }
     await remove(snapshotPath).catch(() => undefined);
     return { status: "done" };
   } catch (error) {
@@ -115,7 +120,9 @@ export async function swapDatabaseFrom(
     const raw = error instanceof Error ? error.message : "";
     return {
       status: "error",
-      message: raw.startsWith("restored file is missing tables") ? "restoreIncomplete" : "restoreError",
+      message: raw.startsWith("restored file failed schema check")
+        ? "restoreIncomplete"
+        : "restoreError",
     };
   }
 }

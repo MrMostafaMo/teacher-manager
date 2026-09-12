@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RECREATABLE_TABLES, repairStatements } from "./schema-repair";
+import { RECREATABLE_TABLES, columnRepairStatements, repairStatements } from "./schema-repair";
 
 describe("repairStatements", () => {
   it("returns no statements when nothing is missing", () => {
@@ -25,5 +25,21 @@ describe("repairStatements", () => {
     const a = repairStatements(["sync_tombstones", "activity_logs"]);
     const b = repairStatements(["activity_logs", "sync_tombstones"]);
     expect(a).toEqual(b);
+  });
+});
+
+describe("columnRepairStatements", () => {
+  it("returns no statements when nothing is missing", () => {
+    expect(columnRepairStatements({})).toEqual([]);
+  });
+  it("ignores columns that are not allowlisted", () => {
+    expect(columnRepairStatements({ group_sessions: ["group_id"], students: ["x"] })).toEqual([]);
+  });
+  it("emits ADD COLUMN for the missing v25 session columns", () => {
+    const stmts = columnRepairStatements({ group_sessions: ["one_off_date", "moved_from_date"] });
+    expect(stmts).toEqual([
+      "ALTER TABLE `group_sessions` ADD `one_off_date` text",
+      "ALTER TABLE `group_sessions` ADD `moved_from_date` text",
+    ]);
   });
 });

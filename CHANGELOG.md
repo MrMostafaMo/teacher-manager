@@ -10,8 +10,12 @@
   (with rollback) instead of a false "done". The gate is now tiered: missing
   transient tables (`plan_price_history` + its sync trigger, `activity_logs`,
   `notifications`, `sync_tombstones`) are recreated empty from verbatim
-  migration DDL with a notice instead of blocking the whole app. No schema
-  change.
+  migration DDL with a notice instead of blocking the whole app. Missing
+  `group_sessions` v25 columns (`one_off_date` and the cross-day move link)
+  are added back the same way — this alone unbreaks groups/schedule/daily
+  attendance on files that lost them, with zero data loss. Load errors and
+  the restore path now unwrap the full `cause` chain so the real SQLite
+  failure is always visible. No schema change.
 
 - **Session counter rebuilt from scratch:** the counter is attendance-only
   (`1/8 … 8/8` then wraps to `1/8` with a cycle number; present/late/absent

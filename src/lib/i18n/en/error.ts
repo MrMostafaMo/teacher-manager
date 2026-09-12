@@ -8,5 +8,5 @@ export const error = {
     "Some database tables are missing or failed a consistency check. Your data is stored locally — restore from a backup to repair it.",
   dbHealthMissing: "Missing tables",
   dbHealthSettings: "Open backup settings",
-  dbRepaired: "Recreated empty tables: {{tables}}",
+  dbRepaired: "Repaired database objects: {{tables}}",
 } as const;
