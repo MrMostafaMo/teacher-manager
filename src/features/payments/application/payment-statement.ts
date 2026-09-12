@@ -1,8 +1,10 @@
 import { attendanceRepository } from "@/features/attendance/infrastructure/attendance-repo";
+import { scheduleRepository } from "@/features/schedule/infrastructure/schedule-repo";
 import { paymentRepository } from "@/features/payments/infrastructure/payment-repo";
 import { planRepository } from "@/features/payments/infrastructure/plan-repo";
 import { studentRepository } from "@/features/students/infrastructure/student-repo";
 import type { Payment, Student } from "@/lib/db/schema";
+import { countedSessionDays } from "./statement-days";
 import dayjs from "dayjs";
 
 export interface StatementBillingOpts {
@@ -101,11 +103,12 @@ export async function studentStatement(
   cycleFmt: (n: number) => string,
   opts?: StatementBillingOpts,
 ): Promise<StudentStatement> {
-  const [student, plans, allPayments, allAttendances] = await Promise.all([
+  const [student, plans, allPayments, allAttendances, allSheets] = await Promise.all([
     studentRepository.findById(studentId),
     planRepository.list(),
     paymentRepository.byStudent(studentId),
     attendanceRepository.byStudent(studentId),
+    scheduleRepository.sessionAttendanceByStudent(studentId),
   ]);
   if (!student) throw new Error(`student ${studentId} not found`);
   const plan = student.planId ? plans.find((p) => p.id === student.planId) : null;
@@ -144,9 +147,10 @@ export async function studentStatement(
       return { payment: p, cumulativePaid: cumulative };
     });
 
-    const attendances = [...allAttendances].sort((a, b) => a.date.localeCompare(b.date));
     let running = 0;
-    const totalCycles = Math.ceil(Math.max(1, attendances.length) / sessionsPerCycle);
+    const totalCycles = Math.ceil(
+      Math.max(1, countedSessionDays(allAttendances, allSheets)) / sessionsPerCycle,
+    );
     totalDue = totalCycles * duePerMonth;
     totalBalance = totalDue - totalPaid;
 

@@ -49,10 +49,9 @@ export interface DashboardData {
   sessionDues: Array<{
     student: { id: string; name: string };
     count: number;
-    remainingSessions: number;
+    sessionsPerCycle: number;
+    cycleNumber: number;
     status: "ok" | "warning" | "due";
-    isOverdue?: boolean;
-    cyclesOverdue?: number;
-    showPaid?: boolean;
+    isPaid: boolean;
   }>;
 }

@@ -29,7 +29,7 @@ export type { StatementBillingOpts, StatementMonth, StatementPayment, StudentSta
 export async function recordPayment(input: PaymentInput): Promise<Payment> {
   const parsed = paymentInputSchema.parse(input);
   const row = await paymentRepository.insert({ id: uuid(), ...parsed, paidAt: Date.now() });
-  // ponytail: session counter is pure (carry-over in session-dues.ts) — no reset on payment.
+  // ponytail: session counter is attendance-only (session-dues.ts) — payments never move it.
   await logActivity({
     action: "payment.create",
     entityType: "payment",

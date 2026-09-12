@@ -2,7 +2,6 @@ import dayjs from "dayjs";
 import { listExams } from "@/features/exams/application/exam-cases";
 import { listHomeworks } from "@/features/homework/application/homework-cases";
 import { computeMonthlyDues } from "@/features/payments/application/payment-cases";
-import { sessionDues } from "@/features/payments/application/session-dues-cases";
 import { listSchedule } from "@/features/schedule/application/schedule-cases";
 import { listScheduleExceptions } from "@/features/schedule/application/schedule-exception-cases";
 import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
@@ -41,7 +40,6 @@ export async function refreshNotifications(): Promise<NotificationItem[]> {
     enrichedMemberships,
     paymentsCompact,
     monthlyStats,
-    attendanceCounts,
     skills,
     schedule,
     exceptions,
@@ -51,7 +49,6 @@ export async function refreshNotifications(): Promise<NotificationItem[]> {
     groupRepository.membershipsWithEnrollment(),
     paymentRepository.listCompact(),
     attendanceRepository.monthlyStats(month),
-    attendanceRepository.countsByStudent(),
     listSkills(),
     listSchedule(),
     listScheduleExceptions(),
@@ -69,16 +66,9 @@ export async function refreshNotifications(): Promise<NotificationItem[]> {
     memberships,
   });
   const monthly = computeMonthlyRows(activeStudents, monthlyStats, monthEnd(month));
-  const [homeworks, exams, sessionDuesRows] = await Promise.all([
+  const [homeworks, exams] = await Promise.all([
     listHomeworks({ memberships: enrichedMemberships }),
     listExams({ memberships: enrichedMemberships }),
-    sessionDues(undefined, {
-      activeStudents,
-      plans,
-      payments: paymentsCompact,
-      attendanceCounts,
-      memberships,
-    }),
   ]);
   const desired = buildNotificationItems(
     {
@@ -90,7 +80,6 @@ export async function refreshNotifications(): Promise<NotificationItem[]> {
       skills,
       monthly,
       students,
-      sessionDues: sessionDuesRows,
     },
     month,
     today,

@@ -5,9 +5,7 @@ export type NotificationType =
   | "weak_skill"
   | "low_attendance"
   | "exam_upcoming"
-  | "student_birthday"
-  | "session_warning"
-  | "session_due";
+  | "student_birthday";
 
 export interface NotificationItem {
   type: NotificationType;

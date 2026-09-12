@@ -99,27 +99,33 @@ export const attendanceRepository = {
   },
 
   /**
-   * Per-student consumed-session counts (daily + timetable sheets) for
-   * session-dues. Absent never consumes a paid session: only
-   * present/late/excused rows count.
+   * Per-student counted-session days (daily + timetable sheets) for
+   * session-dues. Counts present/late/absent only — excused never moves
+   * the counter. Deduped by date: a daily row + a sheet row on the same
+   * day count as one session, so recording in both places can't double it.
    */
   async countsByStudent(): Promise<Array<{ studentId: string; n: number }>> {
-    const consuming = ["present", "late", "excused"] as Array<AttendanceStatus>;
+    const consuming = ["present", "late", "absent"] as Array<AttendanceStatus>;
     const [daily, sheets] = (await Promise.all([
       db
-        .select({ studentId: attendance.studentId, n: count() })
+        .select({ studentId: attendance.studentId, date: attendance.date })
         .from(attendance)
-        .where(inArray(attendance.status, consuming))
-        .groupBy(attendance.studentId),
+        .where(inArray(attendance.status, consuming)),
       db
-        .select({ studentId: sessionAttendance.studentId, n: count() })
+        .select({ studentId: sessionAttendance.studentId, date: sessionAttendance.date })
         .from(sessionAttendance)
-        .where(inArray(sessionAttendance.status, consuming))
-        .groupBy(sessionAttendance.studentId),
-    ])) as Array<Array<{ studentId: string; n: number }>>;
-    const merged = new Map<string, number>();
-    for (const row of [...daily, ...sheets]) merged.set(row.studentId, (merged.get(row.studentId) ?? 0) + row.n);
-    return [...merged].map(([studentId, n]) => ({ studentId, n }));
+        .where(inArray(sessionAttendance.status, consuming)),
+    ])) as Array<Array<{ studentId: string; date: string }>>;
+    const days = new Map<string, Set<string>>();
+    for (const row of [...daily, ...sheets]) {
+      let set = days.get(row.studentId);
+      if (!set) {
+        set = new Set();
+        days.set(row.studentId, set);
+      }
+      set.add(row.date);
+    }
+    return [...days].map(([studentId, set]) => ({ studentId, n: set.size }));
   },
 
   /** Every attendance row of a student, newest first (used in the profile). */

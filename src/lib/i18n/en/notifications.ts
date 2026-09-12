@@ -21,8 +21,6 @@ export const notifications = {
       lowAttendance: "Low attendance",
       exam: "Upcoming exams",
       birthday: "Student birthdays",
-      sessionWarning: "Sessions warning",
-      sessionDue: "Sessions due",
     },
   },
   types: {

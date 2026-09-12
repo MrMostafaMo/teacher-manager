@@ -23,8 +23,6 @@ export const notifications: Messages["notifications"] = {
       lowAttendance: "حضور منخفض",
       exam: "امتحانات قادمة",
       birthday: "أعياد ميلاد",
-      sessionWarning: "اقتراب الحصص",
-      sessionDue: "استحقاق الحصص",
     },
   },
   types: {

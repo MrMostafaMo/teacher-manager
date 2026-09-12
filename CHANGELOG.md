@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Session counter rebuilt from scratch:** the counter is attendance-only
+  (`1/8 … 8/8` then wraps to `1/8` with a cycle number; present/late/absent
+  count, excused never does, each day counts once even when recorded in both
+  the daily roster and a session sheet). Payment is an independent
+  paid/unpaid badge per cycle (total paid ÷ plan amount) and never moves the
+  counter. Removed: proportional partial payments, manual ± session adjust,
+  per-session price/remaining, session notifications, and per-group cycle
+  settings (global only). The statement's sessions mode shares the same
+  definition. No schema change.
+
 ## v0.11.3
 
 - **Dashboard resilience:** dimensions now load with `Promise.allSettled` — one

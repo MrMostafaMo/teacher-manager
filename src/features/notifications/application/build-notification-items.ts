@@ -7,7 +7,6 @@ import type { SkillWithWeakCount } from "@/features/skills/infrastructure/skill-
 import type { SessionException, Student } from "@/lib/db/schema";
 import type { SessionWithGroup } from "@/features/schedule/infrastructure/schedule-queries";
 import { isOneOff } from "@/features/schedule/application/schedule-one-offs";
-import type { SessionDuesRow } from "@/features/payments/application/session-dues";
 import type { NotificationItem } from "@/features/notifications/domain";
 function homeworkItem(h: HomeworkListItem): NotificationItem {
   return {
@@ -73,19 +72,6 @@ function birthdayItem(s: Student, today: string): NotificationItem {
   };
 }
 
-function sessionDuesItem(r: SessionDuesRow, kind: "warning" | "due"): NotificationItem {
-  return {
-    type: kind === "warning" ? "session_warning" : "session_due",
-    key: `session:${kind}:${r.student.id}`,
-    details: {
-      name: r.student.name,
-      count: r.count,
-      required: r.remainingSessions + r.count,
-      remainingSessions: r.remainingSessions,
-    },
-  };
-}
-
 export interface NotificationSourceData {
   homeworks: HomeworkListItem[];
   exams: ExamListItem[];
@@ -96,7 +82,6 @@ export interface NotificationSourceData {
   skills: SkillWithWeakCount[];
   monthly: StudentMonthlyRow[];
   students: Student[];
-  sessionDues: SessionDuesRow[];
 }
 
 /** Low-attendance threshold: rate strictly below this notifies. */
@@ -132,10 +117,6 @@ export function buildNotificationItems(
   const mmdd = today.slice(5);
   for (const s of data.students) if (s.birthDate && s.birthDate.slice(5) === mmdd) {
     items.push(birthdayItem(s, today));
-  }
-  for (const r of data.sessionDues) {
-    if (r.status === "warning") items.push(sessionDuesItem(r, "warning"));
-    else if (r.status === "due") items.push(sessionDuesItem(r, "due"));
   }
   return items;
 }

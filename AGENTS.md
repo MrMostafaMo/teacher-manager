@@ -814,6 +814,29 @@ Phase 46 put server paging behind thresholds (no schema change):
   build` + `pnpm lint` (0 errors) pass. Still manual: dashboard KPI parity
   vs feature pages in `tauri dev`, and the two-device sync check.
 
+Phase 47 rebuilt the session counter from scratch (no schema change):
+
+- **Counter = attendance only** (`cycleOf` in `session-dues.ts`): counted
+  days are present/late/absent, deduped by date across the daily roster +
+  session sheets (`countsByStudent`); excused never moves the counter.
+  `1/8 … 8/8` then wraps to `1/8` with a 1-based `cycleNumber` (each S
+  sessions = one billed month).
+- **Payment is an independent badge** (`paidCyclesFor`: total paid ÷ plan
+  amount, floored; no plan = one cycle per payment; `isPaid` = paidCycles ≥
+  cycleNumber) — payments never move the counter. Sessions-mode finance
+  outstanding = unpaid current cycles × plan amount.
+- **Deleted**: proportional partial payments, `deriveCycle`/`uncoveredCount`/
+  `showPaid`/`cyclesOverdue`, the manual `sessionOffset` ± adjust
+  (`session-adjust-cases.ts`, `use-session-adjust.ts` — column stays unused
+  in the DB, no migration), price/remaining/last-payment columns, session
+  notifications (generation + `session_warning`/`session_due` types, toggles,
+  routes; old rows purge on next refresh), per-group `sessionsPerCycle`/
+  `warningAt` (schema, form, i18n — global settings only now), and the
+  statement's sessions mode now shares the counter definition via pure
+  `countedSessionDays` (daily + sheets, excused excluded, deduped by date).
+- Table columns are now student · `n/S` · cycle · status · paid/unpaid ·
+  record-payment; the dashboard card shows the same + paid badge.
+
 ## GitHub (CI/CD)
 
 Repo: `MrMostafaMo/teacher-manager` (private). Remote: `origin` = HTTPS.

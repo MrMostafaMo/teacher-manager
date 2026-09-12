@@ -17,13 +17,13 @@ export function financeFigures(
   sessionDuesRows: SessionDuesRow[],
 ): FinanceFigures {
   const collected = sumPaid(latestPeriodPayments);
-  // ponytail: remainingAmount is remainingSessions * price (never negative),
-  // so one clamped path covers both row shapes.
+  // Sessions mode: each cycle is a billed month — an unpaid current cycle
+  // owes the plan amount, a paid one owes nothing (counter never moves).
   const rows =
     billingMode === "sessions"
       ? sessionDuesRows
-          .filter((r) => r.status === "due")
-          .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remainingAmount ?? 0 }))
+          .filter((r) => !r.isPaid)
+          .map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.plan?.amount ?? 0 }))
       : dues.map((r) => ({ id: r.student.id, name: r.student.name, remaining: r.remaining }));
   const outstanding = rows.reduce((a, r) => a + Math.max(0, r.remaining), 0);
   const topDebtors = rows

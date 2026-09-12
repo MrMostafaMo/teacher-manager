@@ -53,7 +53,7 @@ export async function sessionDues(
     arr.push(p);
     paymentsByStudent.set(p.studentId, arr);
   }
-  // SQL GROUP BY count replaces the full attendance scan (only totals matter).
+  // Counted days per student (present/late/absent, deduped by date).
   const attendanceByStudent = new Map(attendanceCounts.map((c) => [c.studentId, c.n]));
   const groupsByStudent = new Map<string, Array<{ id: string; name: string }>>();
   for (const m of memberships) {

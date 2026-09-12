@@ -78,7 +78,6 @@ function empty(): NotificationSourceData {
     skills: [],
     monthly: [],
     students: [],
-    sessionDues: [],
   };
 }
 

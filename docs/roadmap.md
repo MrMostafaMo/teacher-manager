@@ -1048,3 +1048,15 @@ pures the pages use. Per-section client paging app-wide; interactive rosters
 deliberately left. Verified: 81 files / 501 tests green, `pnpm build` +
 `pnpm lint` (0 errors) pass; still manual: dashboard KPI parity in
 `tauri dev` and the two-device sync check.
+
+## Phase 47 — completed
+
+Session counter rebuilt from scratch (no schema change): attendance-only
+`cycleOf` (`1/8 … 8/8` → wraps to `1/8`, 1-based `cycleNumber`; counted days
+are present/late/absent deduped by date across daily + sheets in
+`countsByStudent`, excused excluded); payment is an independent paid/unpaid
+badge (`paidCyclesFor`, floored; sessions-mode finance outstanding = unpaid
+cycles × plan amount). Deleted: partial-payment math, manual sessionOffset
+adjust, price/remaining columns, session notifications
+(`session_warning`/`session_due`), per-group cycle settings; the statement's
+sessions mode shares the definition via `countedSessionDays`.
