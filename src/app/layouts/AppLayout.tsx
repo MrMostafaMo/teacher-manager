@@ -9,6 +9,7 @@ import { ToastViewport } from "@/shared/ToastViewport";
 import { ShortcutsOverlay } from "@/shared/ShortcutsOverlay";
 import { NotificationSync } from "@/features/notifications/ui/notification-sync";
 import { SyncManager } from "@/features/sync/ui/sync-events";
+import { SchemaGate } from "@/app/layouts/SchemaGate";
 import { useCommandStore } from "@/lib/command-store";
 import { useShortcuts } from "@/lib/shortcuts/use-shortcuts";
 
@@ -67,7 +68,9 @@ export function AppLayout() {
                 : "mx-auto max-w-[1720px]"
             }
           >
-            <Outlet />
+            <SchemaGate>
+              <Outlet />
+            </SchemaGate>
           </div>
         </main>
         </div>

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Database health gate:** boot-time `verifySchema()` (`PRAGMA quick_check` +
+  expected-tables check) blocks the content with the missing tables, a copy
+  button, and a link to backup settings instead of half-empty screens; group/
+  schedule/attendance load failures now toast the underlying error; restore
+  verifies every expected table after the swap and reports `restoreIncomplete`
+  (with rollback) instead of a false "done". No schema change.
+
 - **Session counter rebuilt from scratch:** the counter is attendance-only
   (`1/8 … 8/8` then wraps to `1/8` with a cycle number; present/late/absent
   count, excused never does, each day counts once even when recorded in both

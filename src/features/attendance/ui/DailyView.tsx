@@ -14,6 +14,7 @@ import { DailyActions } from "./daily-actions";
 import { useDailySave } from "./use-daily-save";
 import { useDataChanged } from "@/shared/useDataChanged";
 import { toast } from "@/lib/toast-store";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 
 export function DailyView({
   date,
@@ -59,7 +60,7 @@ export function DailyView({
         setDraft(Object.fromEntries(fetched.map((s) => [s.id, byId[s.id] ?? defaults[s.id]])));
       } catch (e) {
         console.error("Failed to load attendance", e);
-        toast(t("attendance.errors.load"), "error");
+        toast(`${t("attendance.errors.load")} — ${getErrorMessage(e)}`, "error");
         setStudents([]);
       } finally {
         setLoading(false);

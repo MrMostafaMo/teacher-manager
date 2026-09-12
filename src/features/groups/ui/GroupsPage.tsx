@@ -13,6 +13,8 @@ import type { GroupWithCount } from "@/features/groups/infrastructure/group-repo
 import type { GroupSession, StudyGroup } from "@/lib/db/schema";
 import { useConfirmDelete } from "@/shared/useConfirmDelete";
 import { useDataChanged } from "@/shared/useDataChanged";
+import { toast } from "@/lib/toast-store";
+import { getErrorMessage } from "@/lib/utils/get-error-message";
 import { notifyUndo } from "@/lib/undo-store";
 import { GroupDetailDialog } from "./GroupDetailDialog";
 import { GroupFormDialog } from "./GroupFormDialog";
@@ -40,11 +42,12 @@ export default function GroupsPage() {
       setSessionsByGroup(byGroup);
     } catch (error) {
       console.error("Failed to load groups", error);
+      toast(`${t("groups.loadError")} — ${getErrorMessage(error)}`, "error");
       setRows([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void reload();

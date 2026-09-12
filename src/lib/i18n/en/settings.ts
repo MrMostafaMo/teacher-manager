@@ -53,11 +53,13 @@ export const settings = {
   restoreCancelled: "Restore cancelled.",
   restoreVersionMismatch:
     "The backup was created by a different app version and cannot be restored. Pick a backup that matches the current version.",
+  restoreIncomplete:
+    "The backup is incomplete (some tables are missing) — local data was kept. Restore a full backup created by the app instead of a manually copied file.",
   session: {
     title: "Session billing",
     sessionsPerCycle: "Sessions per cycle",
     warningAt: "Warn at",
-    hint: "Price per session = plan amount ÷ sessions. Each payment covers a full cycle and the remainder carries over (all statuses count).",
+    hint: "Sessions count attendance only (present, late and absent — excused never counts). Each full cycle is billed like a month; paying never moves the counter.",
     validation: "Warning must be less than sessions per cycle (1–30).",
   },
   tabs: {

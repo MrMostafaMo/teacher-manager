@@ -65,6 +65,7 @@ export const sync = {
     backupError: "Backup failed.",
     restoreError: "Restore failed — local data was kept.",
     restoreVersionMismatch: "Backup is newer than the app — update the app on this device first.",
+    restoreIncomplete: "The backup is incomplete (some tables are missing) — local data was kept.",
     operationError: "The operation failed — try again.",
     autoHint: "Data syncs automatically after changes, on launch, and every 15 minutes.",
   },

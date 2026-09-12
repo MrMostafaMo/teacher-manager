@@ -837,6 +837,21 @@ Phase 47 rebuilt the session counter from scratch (no schema change):
 - Table columns are now student · `n/S` · cycle · status · paid/unpaid ·
   record-payment; the dashboard card shows the same + paid badge.
 
+Phase 47b added a database health gate (no schema change): `verifySchema()`
+in `src/lib/db/schema-check.ts` (`PRAGMA quick_check` + expected-tables
+check over `sqlite_master`, + test) runs once in `SchemaGate`
+(`src/app/layouts/SchemaGate.tsx`, mounted in `AppLayout`) and blocks the
+content with the missing tables, a copy-details button, and a link to backup
+settings instead of half-empty screens. Groups/schedule/attendance load
+failures now toast the underlying error (`groups.loadError` /
+`schedule.loadError` / `attendance.errors.load` + message). `swapDatabaseFrom`
+verifies every expected table after the swap and reports the new
+`restoreIncomplete` key (settings + sync locales, rollback kept) instead of a
+false "done". Motivating case: a manually copied `.db` missing
+`group_sessions` showed empty groups/schedule + an attendance toast while
+students worked — always move the file with in-app backup/restore, never a
+manual copy of a live database.
+
 ## GitHub (CI/CD)
 
 Repo: `MrMostafaMo/teacher-manager` (private). Remote: `origin` = HTTPS.
